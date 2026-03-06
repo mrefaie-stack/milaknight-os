@@ -116,6 +116,7 @@ model ContentItem {
   articleContent String?
   keywords       String?     // Array fallback
   clientComment  String?
+  amComment      String?
   feedbackResolved Boolean @default(false)
   
   comments       Comment[]

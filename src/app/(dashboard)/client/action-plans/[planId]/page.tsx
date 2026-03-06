@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import { PlanApprovalHeader } from "@/components/action-plan/plan-approval-header";
 import { ClientApprovalActions } from "@/components/action-plan/client-approval-actions";
 import { Badge } from "@/components/ui/badge";
-import { Image as ImageIcon, Video, AlignLeft, HelpCircle, MessageCircle } from "lucide-react";
+import { Image as ImageIcon, Video, AlignLeft, HelpCircle, MessageCircle, Printer } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default async function ClientActionPlanPage({ params }: { params: Promise<{ planId: string }> }) {
     const { planId } = await params;
@@ -35,6 +36,11 @@ export default async function ClientActionPlanPage({ params }: { params: Promise
                     <h1 className="text-3xl font-bold tracking-tight">Action Plan Review</h1>
                     <p className="text-muted-foreground font-medium">Month: {plan.month}</p>
                 </div>
+                <div className="print:hidden">
+                    <Button onClick={() => window.print()} variant="secondary" className="font-bold rounded-full border border-primary/20">
+                        <Printer className="mr-2 h-4 w-4" /> Export PDF
+                    </Button>
+                </div>
             </div>
 
             <PlanApprovalHeader planId={plan.id} status={plan.status} canApprove={true} />
@@ -62,10 +68,15 @@ export default async function ClientActionPlanPage({ params }: { params: Promise
                                     {/* Content Preview */}
                                     <div className="mt-4 space-y-4 text-sm text-foreground/90">
                                         {item.imageUrl && (
-                                            <div className="text-blue-500 underline"><a href={item.imageUrl} target="_blank">View Attached Image</a></div>
+                                            <div className="mt-3 rounded-lg overflow-hidden border border-primary/10 max-w-xs shadow-sm">
+                                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                <img src={item.imageUrl} alt="Post visual" className="w-full h-auto object-cover max-h-48 hover:scale-105 transition-transform duration-500" />
+                                            </div>
                                         )}
                                         {item.videoUrl && (
-                                            <div className="text-blue-500 underline"><a href={item.videoUrl} target="_blank">View Attached Video</a></div>
+                                            <div className="mt-3 rounded-lg overflow-hidden border border-primary/10 max-w-xs shadow-sm bg-black">
+                                                <video src={item.videoUrl} controls className="w-full h-auto max-h-48 object-contain" />
+                                            </div>
                                         )}
                                         {item.captionAr && <div><strong className="block text-muted-foreground mb-1">Arabic Caption:</strong> {item.captionAr}</div>}
                                         {item.captionEn && <div><strong className="block text-muted-foreground mb-1">English Caption:</strong> {item.captionEn}</div>}

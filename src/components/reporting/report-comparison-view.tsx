@@ -40,6 +40,7 @@ export function ReportComparisonView({ reports, role }: { reports: any[], role: 
         let totalReach = 0;
         let totalEngagement = 0;
         let totalImpressions = 0;
+        let totalSpend = 0;
 
         // Iterate through requested platforms (lowercase as stored in Prisma)
         const platforms = ['facebook', 'instagram', 'linkedin', 'tiktok', 'snapchat', 'youtube', 'google'];
@@ -50,11 +51,12 @@ export function ReportComparisonView({ reports, role }: { reports: any[], role: 
                 totalReach += (Number(pData.organicReach) || 0) + (Number(pData.paidReach) || 0);
                 totalEngagement += Number(pData.engagement) || 0;
                 totalImpressions += Number(pData.impressions) || 0;
+                totalSpend += Number(pData.spend) || 0;
             }
         });
 
         // Add SEO and Email if they exist
-        const totalTraffic = Number(metrics.seo?.score || 0); // Using score as placeholder for traffic if traffic not present
+        const seoScore = Number(metrics.seo?.score || 0);
         const emailOpenRate = Number(metrics.emailMarketing?.openRate || 0);
 
         return {
@@ -62,7 +64,8 @@ export function ReportComparisonView({ reports, role }: { reports: any[], role: 
             Reach: totalReach,
             Engagement: totalEngagement,
             Impressions: totalImpressions,
-            Traffic: totalTraffic,
+            Score: seoScore,
+            Spend: totalSpend,
             "Open Rate": emailOpenRate
         };
     });
@@ -104,6 +107,11 @@ export function ReportComparisonView({ reports, role }: { reports: any[], role: 
                             {clientName}
                         </p>
                     </div>
+                </div>
+                <div className="relative z-10 hidden md:block">
+                    <Button onClick={() => window.print()} variant="secondary" className="font-bold rounded-full h-11 px-6 border border-primary/20">
+                        <Download className="mr-2 h-4 w-4" /> Export PDF
+                    </Button>
                 </div>
             </div>
 
@@ -167,11 +175,11 @@ export function ReportComparisonView({ reports, role }: { reports: any[], role: 
                     </CardContent>
                 </Card>
 
-                {/* SEO Traffic Trend */}
+                {/* SEO Score Trend */}
                 <Card className="glass-card border-none">
                     <CardHeader>
-                        <CardTitle className="text-xl font-black">Website Traffic (SEO)</CardTitle>
-                        <CardDescription>Organic visitor growth over time</CardDescription>
+                        <CardTitle className="text-xl font-black">Website Score (SEO)</CardTitle>
+                        <CardDescription>Domain authority and health score</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <div className="h-[300px] w-full">
@@ -183,7 +191,31 @@ export function ReportComparisonView({ reports, role }: { reports: any[], role: 
                                     <Tooltip
                                         contentStyle={{ backgroundColor: 'var(--color-card)', borderColor: 'var(--color-border)', borderRadius: '12px', fontWeight: 'bold' }}
                                     />
-                                    <Line type="monotone" dataKey="Traffic" stroke="var(--color-chart-5)" strokeWidth={4} />
+                                    <Line type="monotone" dataKey="Score" stroke="var(--color-chart-5)" strokeWidth={4} />
+                                </LineChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Ad Spend Trend */}
+                <Card className="glass-card border-none">
+                    <CardHeader>
+                        <CardTitle className="text-xl font-black">Ad Spend Trend</CardTitle>
+                        <CardDescription>Total investment across all platforms</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="h-[300px] w-full">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} opacity={0.5} />
+                                    <XAxis dataKey="month" stroke="var(--color-muted-foreground)" fontSize={12} tickLine={false} axisLine={false} />
+                                    <YAxis stroke="var(--color-muted-foreground)" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(v) => `$${formatNumber(v)}`} />
+                                    <Tooltip
+                                        contentStyle={{ backgroundColor: 'var(--color-card)', borderColor: 'var(--color-border)', borderRadius: '12px', fontWeight: 'bold' }}
+                                        formatter={(value: any) => [`$${Number(value).toLocaleString()}`, 'Total Spend']}
+                                    />
+                                    <Line type="monotone" dataKey="Spend" stroke="#f97316" strokeWidth={4} />
                                 </LineChart>
                             </ResponsiveContainer>
                         </div>

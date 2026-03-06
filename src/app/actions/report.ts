@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { sendEmail } from "@/lib/email";
 
 export async function createReport(clientId: string, month: string, metricsData: any) {
     const session = await getServerSession(authOptions);
@@ -50,19 +51,37 @@ export async function publishReport(reportId: string) {
     const report = await prisma.report.update({
         where: { id: reportId },
         data: { status: "SENT" },
-        include: { client: true }
+        include: { client: { include: { user: true } } }
     });
 
     // Notify the client
-    if (report.client?.userId) {
+    if (report.client?.user) {
         await prisma.notification.create({
             data: {
-                userId: report.client.userId,
+                userId: report.client.user.id,
                 title: "New Performance Report Available",
                 message: `Your performance report for ${report.month} is ready for viewing.`,
                 type: "SYSTEM",
                 link: `/client/reports/${report.id}`
             }
+        });
+
+        // Send Email
+        await sendEmail({
+            to: report.client.user.email,
+            subject: `Performance Report - ${report.month}`,
+            html: `
+                <div style="font-family: sans-serif; padding: 20px; background: #f4f4f5; border-radius: 8px; max-width: 600px; margin: auto;">
+                    <h2 style="color: #4f46e5; margin-bottom: 20px;">MilaKnight Reports</h2>
+                    <p style="font-size: 16px;">Hello ${report.client.user.firstName},</p>
+                    <p style="font-size: 16px;">Your performance report for <strong>${report.month}</strong> is now available for review.</p>
+                    <br/>
+                    <a href="${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/client/reports/${report.id}" style="display: inline-block; padding: 12px 24px; background-color: #4f46e5; color: white; text-decoration: none; border-radius: 6px; font-weight: bold;">View Report</a>
+                    <br/><br/>
+                    <hr style="border: 0; border-top: 1px solid #e5e7eb; margin: 20px 0;"/>
+                    <p style="font-size: 12px; color: #6b7280;">If you have any questions, please reach out to your Account Manager.</p>
+                </div>
+            `
         });
     }
 

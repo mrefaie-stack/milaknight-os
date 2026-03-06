@@ -143,6 +143,13 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
                             {t("dashboard.pending_deletion")}
                         </div>
                     )}
+                    <Button
+                        onClick={() => window.print()}
+                        variant="secondary"
+                        className="font-bold rounded-full h-12 px-6 border border-primary/20"
+                    >
+                        <Printer className={`h-4 w-4 ${isRtl ? 'ml-2' : 'mr-2'}`} /> Export PDF
+                    </Button>
                 </div>
             </div>
 

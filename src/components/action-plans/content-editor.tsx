@@ -6,7 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Save, Languages } from "lucide-react";
+import { Save, Languages, MessageSquare } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+
+const PLATFORMS = [
+    "Facebook", "Instagram", "TikTok", "Snapchat", "LinkedIn", "YouTube", "Twitter"
+];
 
 import {
     Select,
@@ -42,13 +47,31 @@ export function ContentItemEditor({ item, onSave }: { item: any, onSave: (data: 
             <CardContent className="space-y-6 pt-2">
                 {/* Basic Info */}
                 <div className="grid gap-4 md:grid-cols-2">
-                    <div className="space-y-2">
-                        <Label>Platform</Label>
-                        <Input
-                            value={data.platform || ''}
-                            onChange={(e) => setData({ ...data, platform: e.target.value })}
-                            placeholder="e.g. Facebook, Instagram"
-                        />
+                    <div className="space-y-3">
+                        <Label>Platforms</Label>
+                        <div className="flex flex-wrap gap-3 pt-1">
+                            {PLATFORMS.map((plat) => {
+                                const selected = data.platform ? data.platform.split(',').map((s: string) => s.trim()) : [];
+                                const isChecked = selected.includes(plat);
+                                return (
+                                    <div key={plat} className="flex items-center space-x-1.5 bg-background border px-2 py-1 rounded-md">
+                                        <Checkbox
+                                            id={`plat-${plat}`}
+                                            checked={isChecked}
+                                            onCheckedChange={() => {
+                                                const newPlatforms = isChecked
+                                                    ? selected.filter((p: string) => p !== plat)
+                                                    : [...selected, plat];
+                                                setData({ ...data, platform: newPlatforms.join(', ') });
+                                            }}
+                                        />
+                                        <label htmlFor={`plat-${plat}`} className="text-xs font-semibold cursor-pointer">
+                                            {plat}
+                                        </label>
+                                    </div>
+                                );
+                            })}
+                        </div>
                     </div>
                     <div className="space-y-2">
                         <Label>Scheduled Date</Label>
@@ -152,6 +175,20 @@ export function ContentItemEditor({ item, onSave }: { item: any, onSave: (data: 
                             onChange={(e) => setData({ ...data, captionEn: e.target.value })}
                         />
                     </div>
+                </div>
+
+                {/* AM Comment section */}
+                <div className="space-y-2 mt-2 border-t pt-4 border-border/40">
+                    <Label className="flex items-center gap-2 text-primary font-bold">
+                        <MessageSquare className="h-4 w-4" />
+                        Account Manager Notes
+                    </Label>
+                    <Textarea
+                        className="h-24 bg-primary/5 border-primary/20 placeholder:text-primary/40 focus-visible:ring-primary/30"
+                        placeholder="Add your comments or instructions here. The client will be able to see this..."
+                        value={data.amComment || ''}
+                        onChange={(e) => setData({ ...data, amComment: e.target.value })}
+                    />
                 </div>
 
                 <div className="flex justify-end pt-2">

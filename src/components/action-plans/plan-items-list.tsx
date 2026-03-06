@@ -72,9 +72,20 @@ export function PlanItemsList({ items, planId }: { items: any[], planId: string 
                                         <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-[10px] font-black uppercase">{t("dashboard.resolved")}</Badge>
                                     )}
                                 </div>
-                                <div className="text-sm font-medium text-foreground/80 line-clamp-2">
-                                    {item.captionAr || item.articleTitle || item.pollQuestion || t("dashboard.no_content")}
+                                <div className="text-sm font-medium text-foreground/80 whitespace-pre-wrap mt-2">
+                                    {item.captionAr || item.captionEn || item.articleTitle || item.pollQuestion || t("dashboard.no_content")}
                                 </div>
+                                {item.imageUrl && (
+                                    <div className="mt-3 rounded-lg overflow-hidden border border-primary/10 max-w-[200px] shadow-sm">
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                        <img src={item.imageUrl} alt="Post visual" className="w-full h-auto object-cover max-h-48 hover:scale-105 transition-transform duration-500" />
+                                    </div>
+                                )}
+                                {item.videoUrl && (
+                                    <div className="mt-3 rounded-lg overflow-hidden border border-primary/10 max-w-[250px] shadow-sm bg-black">
+                                        <video src={item.videoUrl} controls className="w-full h-auto max-h-48 object-contain" />
+                                    </div>
+                                )}
                             </div>
                         </div>
                         <div className={`flex gap-2 w-full md:w-auto mt-4 md:mt-0 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-1 group-hover:translate-y-0 ${isRtl ? 'flex-row-reverse' : ''}`}>
@@ -106,6 +117,17 @@ export function PlanItemsList({ items, planId }: { items: any[], planId: string 
                             </Button>
                         </div>
                     </div>
+                    {item.amComment && (
+                        <div className={`p-4 rounded-xl text-sm border bg-primary/5 border-primary/20 text-foreground shadow-inner`}>
+                            <div className={`flex items-center gap-2 mb-1 font-black text-[10px] uppercase tracking-tighter text-primary ${isRtl ? 'flex-row-reverse text-right' : ''}`}>
+                                <MessageSquare className="h-3 w-3" />
+                                Account Manager Notes
+                            </div>
+                            <div className={isRtl ? 'text-right' : 'text-left'}>
+                                {item.amComment}
+                            </div>
+                        </div>
+                    )}
                     {item.clientComment && (
                         <div className={`p-4 rounded-xl text-sm border transition-all duration-300 ${item.feedbackResolved ? 'bg-muted/30 border-muted text-muted-foreground' : 'bg-orange-50 border-orange-100 text-orange-900 shadow-inner'}`}>
                             <div className={`flex items-center gap-2 mb-1 font-black text-[10px] uppercase tracking-tighter ${isRtl ? 'flex-row-reverse text-right' : ''}`}>

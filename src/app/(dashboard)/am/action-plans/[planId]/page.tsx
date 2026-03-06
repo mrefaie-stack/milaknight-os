@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { AddItemDialog } from "@/components/action-plan/add-item-dialog";
 import { PlanItemsList } from "@/components/action-plans/plan-items-list";
 import { submitForApproval, requestActionPlanDeletion, notifyClientOfActionPlanUpdate } from "@/app/actions/action-plan";
-import { Trash2, LayoutDashboard, ChevronRight } from "lucide-react";
+import { Trash2, LayoutDashboard, ChevronRight, Printer } from "lucide-react";
 import Link from "next/link";
 import { PlanApprovalHeader } from "@/components/action-plan/plan-approval-header";
 
@@ -53,7 +53,10 @@ export default async function ActionPlanBuilderPage({ params }: { params: Promis
                     <h1 className="text-4xl font-black tracking-tight">{(plan as any).client.name}</h1>
                     <p className="text-muted-foreground text-lg font-medium">Monthly Action Plan • {plan.month}</p>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex gap-3 print:hidden">
+                    <Button onClick={() => window.print()} variant="secondary" className="font-bold rounded-full h-11 px-6 border border-primary/20">
+                        <Printer className="mr-2 h-4 w-4" /> Export PDF
+                    </Button>
                     <AddItemDialog planId={plan.id} />
 
                     {plan.status === "REVISION_REQUESTED" && (

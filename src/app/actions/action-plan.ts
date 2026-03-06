@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { sendEmail } from "@/lib/email";
 
 export async function getActionPlans() {
     const session = await getServerSession(authOptions);
@@ -87,7 +88,7 @@ export async function submitForApproval(planId: string) {
     const plan = await prisma.actionPlan.update({
         where: { id: planId },
         data: { status: "PENDING" },
-        include: { client: true }
+        include: { client: { include: { user: true } } }
     });
 
     // Update all items in this plan that are DRAFT to PENDING
@@ -97,15 +98,33 @@ export async function submitForApproval(planId: string) {
     });
 
     // Notify the client
-    if (plan.client?.userId) {
+    if (plan.client?.user) {
         await prisma.notification.create({
             data: {
-                userId: plan.client.userId,
+                userId: plan.client.user.id,
                 title: "Action Plan Ready",
                 message: `Your action plan for ${plan.month} is ready for approval.`,
                 type: "SYSTEM",
                 link: `/client/action-plans`
             }
+        });
+
+        // Send Email
+        await sendEmail({
+            to: plan.client.user.email,
+            subject: `Action Plan Ready for Approval - ${plan.month}`,
+            html: `
+                <div style="font-family: sans-serif; padding: 20px; background: #f4f4f5; border-radius: 8px; max-width: 600px; margin: auto;">
+                    <h2 style="color: #4f46e5; margin-bottom: 20px;">MilaKnight Action Plans</h2>
+                    <p style="font-size: 16px;">Hello ${plan.client.user.firstName},</p>
+                    <p style="font-size: 16px;">Your action plan for <strong>${plan.month}</strong> is ready for your review and approval.</p>
+                    <br/>
+                    <a href="${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/client/action-plans/${plan.id}" style="display: inline-block; padding: 12px 24px; background-color: #4f46e5; color: white; text-decoration: none; border-radius: 6px; font-weight: bold;">Review Action Plan</a>
+                    <br/><br/>
+                    <hr style="border: 0; border-top: 1px solid #e5e7eb; margin: 20px 0;"/>
+                    <p style="font-size: 12px; color: #6b7280;">If you have any questions, please reach out to your Account Manager.</p>
+                </div>
+            `
         });
     }
 
@@ -170,7 +189,7 @@ export async function submitActionPlanFeedback(planId: string, itemFeedbacks: { 
     }
 
     // Notify the AM
-    if (plan.client?.accountManager?.id) {
+    if (plan.client?.accountManager?.email) {
         await prisma.notification.create({
             data: {
                 userId: plan.client.accountManager.id,
@@ -179,6 +198,21 @@ export async function submitActionPlanFeedback(planId: string, itemFeedbacks: { 
                 type: "SYSTEM",
                 link: `/am/action-plans/${planId}`
             }
+        });
+
+        // Send Email
+        await sendEmail({
+            to: plan.client.accountManager.email,
+            subject: `Action Plan Revisions Requested - ${plan.client.name}`,
+            html: `
+                <div style="font-family: sans-serif; padding: 20px; background: #fff8f1; border-radius: 8px; border-left: 4px solid #f97316; max-width: 600px; margin: auto;">
+                    <h2 style="color: #f97316; margin-bottom: 20px;">Revisions Requested</h2>
+                    <p style="font-size: 16px;">Hello ${plan.client.accountManager.firstName},</p>
+                    <p style="font-size: 16px;">The client <strong>${plan.client.name}</strong> has left feedback on their action plan for <strong>${plan.month}</strong>.</p>
+                    <br/>
+                    <a href="${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/am/action-plans/${plan.id}" style="display: inline-block; padding: 12px 24px; background-color: #f97316; color: white; text-decoration: none; border-radius: 6px; font-weight: bold;">Review Feedback</a>
+                </div>
+            `
         });
     }
 
@@ -212,18 +246,33 @@ export async function notifyClientOfActionPlanUpdate(planId: string) {
     const plan = await prisma.actionPlan.update({
         where: { id: planId },
         data: { status: "PENDING" }, // Back to pending so client can review and approve
-        include: { client: true }
+        include: { client: { include: { user: true } } }
     });
 
-    if (plan.client?.userId) {
+    if (plan.client?.user) {
         await prisma.notification.create({
             data: {
-                userId: plan.client.userId,
+                userId: plan.client.user.id,
                 title: "Action Plan Updated",
                 message: `Your action plan for ${plan.month} has been updated based on your feedback.`,
                 type: "SYSTEM",
-                link: `/client/action-plans`
+                link: `/client/action-plans/${plan.id}`
             }
+        });
+
+        // Send Email
+        await sendEmail({
+            to: plan.client.user.email,
+            subject: `Action Plan Updated - ${plan.month}`,
+            html: `
+                <div style="font-family: sans-serif; padding: 20px; background: #f0fdf4; border-radius: 8px; border-left: 4px solid #10b981; max-width: 600px; margin: auto;">
+                    <h2 style="color: #10b981; margin-bottom: 20px;">Action Plan Fixes Ready</h2>
+                    <p style="font-size: 16px;">Hello ${plan.client.user.firstName},</p>
+                    <p style="font-size: 16px;">Your Account Manager has addressed the feedback on your action plan for <strong>${plan.month}</strong>.</p>
+                    <br/>
+                    <a href="${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/client/action-plans/${plan.id}" style="display: inline-block; padding: 12px 24px; background-color: #10b981; color: white; text-decoration: none; border-radius: 6px; font-weight: bold;">Review Fixes</a>
+                </div>
+            `
         });
     }
 
