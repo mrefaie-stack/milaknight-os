@@ -37,7 +37,7 @@ export default async function ClientActionPlanPage({ params }: { params: Promise
             </div>
 
             <div className="grid gap-6">
-                {plan.items.map((item) => (
+                {(plan as any).items.map((item: any) => (
                     <div key={item.id} className="p-6 border rounded-xl bg-card flex flex-col gap-4">
                         <div className="flex items-start justify-between">
                             <div className="flex items-center gap-4">
@@ -95,7 +95,7 @@ export default async function ClientActionPlanPage({ params }: { params: Promise
                     </div>
                 ))}
 
-                {plan.items.length === 0 && (
+                {(plan as any).items.length === 0 && (
                     <div className="py-12 border border-dashed rounded-lg text-center bg-card/50">
                         <p className="text-muted-foreground">No items are pending your review.</p>
                     </div>

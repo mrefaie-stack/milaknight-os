@@ -20,7 +20,7 @@ export default async function ActionPlanBuilderPage({ params }: { params: Promis
 
     if (!plan) return notFound();
 
-    const hasDrafts = plan.items.some((i: any) => i.status === "DRAFT");
+    const hasDrafts = (plan as any).items.some((i: any) => i.status === "DRAFT");
 
     async function submitAction() {
         "use server";
@@ -44,12 +44,12 @@ export default async function ActionPlanBuilderPage({ params }: { params: Promis
             <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                 <Link href="/am/action-plans" className="hover:text-primary transition-colors">Action Plans</Link>
                 <ChevronRight className="h-4 w-4" />
-                <span className="text-foreground">{plan.client.name}</span>
+                <span className="text-foreground">{(plan as any).client.name}</span>
             </div>
 
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b pb-8">
                 <div>
-                    <h1 className="text-4xl font-black tracking-tight">{plan.client.name}</h1>
+                    <h1 className="text-4xl font-black tracking-tight">{(plan as any).client.name}</h1>
                     <p className="text-muted-foreground text-lg font-medium">Monthly Action Plan • {plan.month}</p>
                 </div>
                 <div className="flex gap-3">
@@ -93,9 +93,9 @@ export default async function ActionPlanBuilderPage({ params }: { params: Promis
                 </div>
             </div>
 
-            <PlanItemsList items={plan.items} planId={plan.id} />
+            <PlanItemsList items={(plan as any).items} planId={plan.id} />
 
-            {plan.items.length === 0 && (
+            {(plan as any).items.length === 0 && (
                 <div className="py-24 border-2 border-dashed rounded-2xl text-center bg-card/30 backdrop-blur-sm">
                     <div className="max-w-xs mx-auto space-y-4">
                         <div className="p-4 bg-muted rounded-full w-fit mx-auto">
