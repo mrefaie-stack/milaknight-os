@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
+import { PlanApprovalHeader } from "@/components/action-plan/plan-approval-header";
 import { ClientApprovalActions } from "@/components/action-plan/client-approval-actions";
 import { Badge } from "@/components/ui/badge";
 import { Image as ImageIcon, Video, AlignLeft, HelpCircle, MessageCircle } from "lucide-react";
@@ -32,9 +33,11 @@ export default async function ClientActionPlanPage({ params }: { params: Promise
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b pb-6">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Action Plan Review</h1>
-                    <p className="text-muted-foreground font-medium">Month: {plan.month} • <Badge variant="outline">{plan.status}</Badge></p>
+                    <p className="text-muted-foreground font-medium">Month: {plan.month}</p>
                 </div>
             </div>
+
+            <PlanApprovalHeader planId={plan.id} status={plan.status} canApprove={true} />
 
             <div className="grid gap-6">
                 {(plan as any).items.map((item: any) => (

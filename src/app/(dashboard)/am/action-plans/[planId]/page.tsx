@@ -7,6 +7,7 @@ import { PlanItemsList } from "@/components/action-plans/plan-items-list";
 import { submitForApproval, requestActionPlanDeletion, notifyClientOfActionPlanUpdate } from "@/app/actions/action-plan";
 import { Trash2, LayoutDashboard, ChevronRight } from "lucide-react";
 import Link from "next/link";
+import { PlanApprovalHeader } from "@/components/action-plan/plan-approval-header";
 
 export default async function ActionPlanBuilderPage({ params }: { params: Promise<{ planId: string }> }) {
     const { planId } = await params;
@@ -91,6 +92,8 @@ export default async function ActionPlanBuilderPage({ params }: { params: Promis
                         </div>
                     )}
                 </div>
+
+                <PlanApprovalHeader planId={plan.id} status={plan.status} />
             </div>
 
             <PlanItemsList items={(plan as any).items} planId={plan.id} />

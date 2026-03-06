@@ -64,3 +64,43 @@ export async function requestEdit(itemId: string, comment: string) {
     revalidatePath(`/am/action-plans/${item.planId}`);
     return item;
 }
+export async function approveActionPlan(planId: string) {
+    const session = await getServerSession(authOptions);
+    if (session?.user?.role !== "CLIENT" && session?.user?.role !== "ADMIN") {
+        throw new Error("Unauthorized");
+    }
+
+    // Update ActionPlan status
+    const plan = await prisma.actionPlan.update({
+        where: { id: planId },
+        data: { status: "APPROVED" },
+        include: { client: { include: { accountManager: true } } }
+    });
+
+    // Update all items in the plan to APPROVED
+    await prisma.contentItem.updateMany({
+        where: { planId },
+        data: { status: "APPROVED" }
+    });
+
+    // Notify AM
+    if (plan.client?.accountManager?.id) {
+        await prisma.notification.create({
+            data: {
+                userId: plan.client.accountManager.id,
+                title: "Action Plan Approved",
+                message: `The client ${plan.client.name} has approved the action plan for ${plan.month}.`,
+                type: "SYSTEM",
+                link: `/am/action-plans/${planId}`
+            }
+        });
+    }
+
+    revalidatePath(`/client/action-plans/${planId}`);
+    revalidatePath(`/am/action-plans/${planId}`);
+    revalidatePath("/client/action-plans");
+    revalidatePath("/am/action-plans");
+    revalidatePath("/admin/clients");
+
+    return { success: true };
+}
