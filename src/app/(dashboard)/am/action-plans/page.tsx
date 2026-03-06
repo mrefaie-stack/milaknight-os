@@ -23,7 +23,7 @@ export default async function ActionPlansPage() {
             </div>
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {plans.map((plan) => (
+                {(plans as any).map((plan: any) => (
                     <div key={plan.id} className="p-6 border rounded-xl bg-card hover:border-primary/50 transition-colors">
                         <div className="flex justify-between items-start mb-4">
                             <div>

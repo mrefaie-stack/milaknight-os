@@ -11,7 +11,7 @@ export default async function ClientReportsPage() {
                 <p className="text-muted-foreground">Review your monthly performance stats and ROI.</p>
             </div>
 
-            <ReportListClient initialReports={reports} role="CLIENT" />
+            <ReportListClient initialReports={reports as any} role="CLIENT" />
         </div>
     );
 }

@@ -21,7 +21,7 @@ export default async function ReportsPage() {
                 </Link>
             </div>
 
-            <ReportListClient initialReports={reports} role="AM" />
+            <ReportListClient initialReports={reports as any} role="AM" />
         </div>
     );
 }
