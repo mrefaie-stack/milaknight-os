@@ -4,7 +4,7 @@ import { ReportClientView } from "@/components/reporting/report-client-view";
 
 export default async function PublicReportPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
-    const report = await prisma.performanceReport.findUnique({
+    const report = await prisma.report.findUnique({
         where: { id },
         include: { client: true }
     });
