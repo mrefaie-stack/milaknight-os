@@ -76,7 +76,7 @@ export default async function AMClientDetailsPage({ params }: { params: Promise<
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        {client.reports.map((report) => (
+                        {(client as any).reports.map((report: any) => (
                             <div key={report.id} className="flex items-center justify-between p-4 rounded-xl border bg-background/50 hover:bg-background transition-colors group relative">
                                 <Link href={`/am/reports/${report.id}`} className="flex flex-col flex-1">
                                     <span className="font-bold group-hover:text-primary transition-colors">{report.month}</span>
@@ -90,7 +90,7 @@ export default async function AMClientDetailsPage({ params }: { params: Promise<
                                 </div>
                             </div>
                         ))}
-                        {client.reports.length === 0 && (
+                        {(client as any).reports.length === 0 && (
                             <div className="text-center py-8 text-muted-foreground italic text-sm">No reports generated yet.</div>
                         )}
                     </CardContent>
@@ -104,7 +104,7 @@ export default async function AMClientDetailsPage({ params }: { params: Promise<
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        {client.actionPlans.map((plan) => (
+                        {(client as any).actionPlans.map((plan: any) => (
                             <Link key={plan.id} href={`/am/action-plans/${plan.id}`} className="flex items-center justify-between p-4 rounded-xl border bg-background/50 hover:bg-background transition-colors group">
                                 <div className="flex flex-col">
                                     <span className="font-bold group-hover:text-primary transition-colors">{plan.month}</span>
@@ -113,7 +113,7 @@ export default async function AMClientDetailsPage({ params }: { params: Promise<
                                 <FolderKanban className="h-4 w-4 text-muted-foreground opacity-30" />
                             </Link>
                         ))}
-                        {client.actionPlans.length === 0 && (
+                        {(client as any).actionPlans.length === 0 && (
                             <div className="text-center py-8 text-muted-foreground italic text-sm">No action plans created yet.</div>
                         )}
                     </CardContent>

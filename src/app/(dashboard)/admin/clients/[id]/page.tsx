@@ -53,14 +53,14 @@ export default async function ClientDetailsPage({ params }: { params: Promise<{ 
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        {client.accountManager ? (
+                        {(client as any).accountManager ? (
                             <div className="flex items-center gap-3">
                                 <div className="h-10 w-10 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-600 font-bold">
-                                    {client.accountManager.firstName[0]}
+                                    {(client as any).accountManager.firstName[0]}
                                 </div>
                                 <div>
-                                    <p className="font-bold">{client.accountManager.firstName} {client.accountManager.lastName}</p>
-                                    <p className="text-xs text-muted-foreground">{client.accountManager.email}</p>
+                                    <p className="font-bold">{(client as any).accountManager.firstName} {(client as any).accountManager.lastName}</p>
+                                    <p className="text-xs text-muted-foreground">{(client as any).accountManager.email}</p>
                                 </div>
                             </div>
                         ) : (
@@ -96,7 +96,7 @@ export default async function ClientDetailsPage({ params }: { params: Promise<{ 
                         <Link href={`/admin/clients/${client.id}/reports`} className="text-xs font-bold text-primary hover:underline">View All</Link>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        {client.reports.map((report) => (
+                        {(client as any).reports.map((report: any) => (
                             <Link key={report.id} href={`/am/reports/${report.id}`} className="flex items-center justify-between p-4 rounded-xl border bg-background/50 hover:bg-background transition-colors">
                                 <div className="flex flex-col">
                                     <span className="font-bold">{report.month}</span>
@@ -105,7 +105,7 @@ export default async function ClientDetailsPage({ params }: { params: Promise<{ 
                                 <BarChart3 className="h-4 w-4 text-muted-foreground opacity-50" />
                             </Link>
                         ))}
-                        {client.reports.length === 0 && (
+                        {(client as any).reports.length === 0 && (
                             <div className="text-center py-8 text-muted-foreground italic text-sm">No reports generated yet.</div>
                         )}
                     </CardContent>
@@ -120,7 +120,7 @@ export default async function ClientDetailsPage({ params }: { params: Promise<{ 
                         <Link href={`/admin/clients/${client.id}/action-plans`} className="text-xs font-bold text-primary hover:underline">View All</Link>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        {client.actionPlans.map((plan) => (
+                        {(client as any).actionPlans.map((plan: any) => (
                             <Link key={plan.id} href={`/am/action-plans/${plan.id}`} className="flex items-center justify-between p-4 rounded-xl border bg-background/50 hover:bg-background transition-colors">
                                 <div className="flex flex-col">
                                     <span className="font-bold">{plan.month}</span>
@@ -129,7 +129,7 @@ export default async function ClientDetailsPage({ params }: { params: Promise<{ 
                                 <FolderKanban className="h-4 w-4 text-muted-foreground opacity-50" />
                             </Link>
                         ))}
-                        {client.actionPlans.length === 0 && (
+                        {(client as any).actionPlans.length === 0 && (
                             <div className="text-center py-8 text-muted-foreground italic text-sm">No action plans created yet.</div>
                         )}
                     </CardContent>

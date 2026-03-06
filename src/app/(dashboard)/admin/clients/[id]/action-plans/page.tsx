@@ -39,7 +39,7 @@ export default async function ClientActionPlansPage({ params }: { params: Promis
                 </CardHeader>
                 <div className="px-6 pb-6">
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                        {client.actionPlans.map((plan) => (
+                        {(client as any).actionPlans.map((plan: any) => (
                             <div key={plan.id} className="p-6 border rounded-xl bg-card hover:border-primary/50 transition-colors">
                                 <div className="flex justify-between items-start mb-4">
                                     <div>
@@ -76,7 +76,7 @@ export default async function ClientActionPlansPage({ params }: { params: Promis
                                 </div>
                             </div>
                         ))}
-                        {client.actionPlans.length === 0 && (
+                        {(client as any).actionPlans.length === 0 && (
                             <div className="col-span-full py-12 text-center border border-dashed rounded-xl">
                                 <p className="text-muted-foreground">No action plans created yet.</p>
                             </div>
