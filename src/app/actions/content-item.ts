@@ -14,6 +14,9 @@ export async function updateContentItem(itemId: string, data: any) {
     const item = await prisma.contentItem.update({
         where: { id: itemId },
         data: {
+            type: data.type,
+            platform: data.platform,
+            scheduledDate: data.scheduledDate ? new Date(data.scheduledDate) : null,
             captionAr: data.captionAr,
             captionEn: data.captionEn,
             articleTitle: data.articleTitle,
@@ -23,7 +26,7 @@ export async function updateContentItem(itemId: string, data: any) {
             pollOptionB: data.pollOptionB,
             imageUrl: data.imageUrl,
             videoUrl: data.videoUrl,
-            status: "DRAFT", // Reset to draft if edited? Or keep status.
+            status: "DRAFT",
         }
     });
 
