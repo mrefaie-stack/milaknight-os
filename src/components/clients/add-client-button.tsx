@@ -24,6 +24,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
+import { Textarea } from "@/components/ui/textarea";
 
 const PLATFORMS = [
     "Facebook", "Instagram", "TikTok", "Snapchat", "LinkedIn", "Google Ads", "YouTube", "SEO", "Email Marketing"
@@ -130,7 +131,7 @@ export function AddClientButton({ ams }: { ams: any[] }) {
 
                         <div className="space-y-3">
                             <Label className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Active Platforms (Determines Report Structure)</Label>
-                            <div className="grid grid-cols-3 gap-3 pt-1">
+                            <div className="pt-1">
                                 {PLATFORMS.map((platform) => (
                                     <div key={platform} className="flex items-center space-x-2">
                                         <Checkbox
@@ -143,6 +144,64 @@ export function AddClientButton({ ams }: { ams: any[] }) {
                                         </label>
                                     </div>
                                 ))}
+                            </div>
+                        </div>
+
+                        {/* Brief and Deliverables */}
+                        <div className="space-y-4 border-t pt-4">
+                            <h4 className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                                Client Brief & Deliverables
+                            </h4>
+                            <div className="space-y-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="brief">Client Brief (General context, objectives, tone of voice)</Label>
+                                    <Textarea id="brief" name="brief" className="min-h-[100px]" placeholder="Explain the client's goals and brand identity..." />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="deliverables">Monthly Deliverables</Label>
+                                    <Textarea id="deliverables" name="deliverables" className="min-h-[120px]" placeholder="30 Social Media Posts&#10;8 Video Editing Projects&#10;SEO&#10;Website Revamp" />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Social Links */}
+                        <div className="space-y-4 border-t pt-4">
+                            <h4 className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                                Social Media Links
+                            </h4>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="website">Website URL</Label>
+                                    <Input id="website" name="website" placeholder="https://..." />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="facebook">Facebook URL</Label>
+                                    <Input id="facebook" name="facebook" placeholder="https://facebook.com/..." />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="instagram">Instagram URL</Label>
+                                    <Input id="instagram" name="instagram" placeholder="https://instagram.com/..." />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="linkedin">LinkedIn URL</Label>
+                                    <Input id="linkedin" name="linkedin" placeholder="https://linkedin.com/in/..." />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="tiktok">TikTok URL</Label>
+                                    <Input id="tiktok" name="tiktok" placeholder="https://tiktok.com/@..." />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="twitter">Twitter URL</Label>
+                                    <Input id="twitter" name="twitter" placeholder="https://x.com/..." />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="snapchat">Snapchat URL</Label>
+                                    <Input id="snapchat" name="snapchat" placeholder="https://snapchat.com/add/..." />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="youtube">YouTube URL</Label>
+                                    <Input id="youtube" name="youtube" placeholder="https://youtube.com/..." />
+                                </div>
                             </div>
                         </div>
                     </div>

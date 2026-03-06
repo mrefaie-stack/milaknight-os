@@ -36,11 +36,18 @@ model Client {
   country        String?
   languages      String?   // Array fallback
   
+  // New Profile Metadata
+  brief          String?
+  deliverables   String?
+  
   // Social Links
   facebook       String?
   instagram      String?
   linkedin       String?
   tiktok         String?
+  twitter        String?
+  youtube        String?
+  snapchat       String?
   website        String?
   
   // Relations

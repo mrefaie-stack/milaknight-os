@@ -23,8 +23,9 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Edit, UserCog } from "lucide-react";
+import { Edit, UserCog, Globe } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
+import { Textarea } from "@/components/ui/textarea";
 
 export function EditClientDialog({ client, accountManagers }: { client: any, accountManagers: any[] }) {
     const { t, isRtl } = useLanguage();
@@ -39,6 +40,16 @@ export function EditClientDialog({ client, accountManagers }: { client: any, acc
         activeServices: client.activeServices || "",
         email: client.user?.email || "",
         password: "",
+        brief: client.brief || "",
+        deliverables: client.deliverables || "",
+        facebook: client.facebook || "",
+        instagram: client.instagram || "",
+        linkedin: client.linkedin || "",
+        tiktok: client.tiktok || "",
+        twitter: client.twitter || "",
+        snapchat: client.snapchat || "",
+        youtube: client.youtube || "",
+        website: client.website || "",
     });
 
     async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -53,6 +64,16 @@ export function EditClientDialog({ client, accountManagers }: { client: any, acc
                 amId: formData.amId,
                 package: formData.package,
                 activeServices: formData.activeServices,
+                brief: formData.brief,
+                deliverables: formData.deliverables,
+                facebook: formData.facebook,
+                instagram: formData.instagram,
+                linkedin: formData.linkedin,
+                tiktok: formData.tiktok,
+                twitter: formData.twitter,
+                snapchat: formData.snapchat,
+                youtube: formData.youtube,
+                website: formData.website,
             });
 
             // Update User Credentials if needed
@@ -168,6 +189,74 @@ export function EditClientDialog({ client, accountManagers }: { client: any, acc
                                         placeholder="Facebook, Instagram, Google"
                                         className={isRtl ? 'text-right' : ''}
                                     />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Brief and Deliverables */}
+                        <div className="space-y-4">
+                            <h4 className={`text-sm font-black uppercase tracking-widest text-primary flex items-center gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                                <Edit className="h-4 w-4" /> Client Brief & Deliverables
+                            </h4>
+                            <div className="grid gap-4 pl-4 border-l-2 border-primary/10">
+                                <div className="space-y-2">
+                                    <Label htmlFor="brief" className={isRtl ? 'text-right block' : ''}>Client Brief</Label>
+                                    <Textarea
+                                        id="brief"
+                                        className={`min-h-[100px] ${isRtl ? 'text-right' : ''}`}
+                                        value={formData.brief}
+                                        onChange={(e) => setFormData({ ...formData, brief: e.target.value })}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="deliverables" className={isRtl ? 'text-right block' : ''}>Monthly Deliverables</Label>
+                                    <Textarea
+                                        id="deliverables"
+                                        className={`min-h-[120px] ${isRtl ? 'text-right' : ''}`}
+                                        value={formData.deliverables}
+                                        onChange={(e) => setFormData({ ...formData, deliverables: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Social Links */}
+                        <div className="space-y-4">
+                            <h4 className={`text-sm font-black uppercase tracking-widest text-primary flex items-center gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                                <Globe className="h-4 w-4" /> Social Media Links
+                            </h4>
+                            <div className="grid grid-cols-2 gap-4 pl-4 border-l-2 border-primary/10">
+                                <div className="space-y-2">
+                                    <Label htmlFor="website" className={isRtl ? 'text-right block' : ''}>Website</Label>
+                                    <Input id="website" value={formData.website} onChange={(e) => setFormData({ ...formData, website: e.target.value })} className={isRtl ? 'text-right' : ''} />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="facebook" className={isRtl ? 'text-right block' : ''}>Facebook</Label>
+                                    <Input id="facebook" value={formData.facebook} onChange={(e) => setFormData({ ...formData, facebook: e.target.value })} className={isRtl ? 'text-right' : ''} />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="instagram" className={isRtl ? 'text-right block' : ''}>Instagram</Label>
+                                    <Input id="instagram" value={formData.instagram} onChange={(e) => setFormData({ ...formData, instagram: e.target.value })} className={isRtl ? 'text-right' : ''} />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="linkedin" className={isRtl ? 'text-right block' : ''}>LinkedIn</Label>
+                                    <Input id="linkedin" value={formData.linkedin} onChange={(e) => setFormData({ ...formData, linkedin: e.target.value })} className={isRtl ? 'text-right' : ''} />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="tiktok" className={isRtl ? 'text-right block' : ''}>TikTok</Label>
+                                    <Input id="tiktok" value={formData.tiktok} onChange={(e) => setFormData({ ...formData, tiktok: e.target.value })} className={isRtl ? 'text-right' : ''} />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="twitter" className={isRtl ? 'text-right block' : ''}>Twitter</Label>
+                                    <Input id="twitter" value={formData.twitter} onChange={(e) => setFormData({ ...formData, twitter: e.target.value })} className={isRtl ? 'text-right' : ''} />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="snapchat" className={isRtl ? 'text-right block' : ''}>Snapchat</Label>
+                                    <Input id="snapchat" value={formData.snapchat} onChange={(e) => setFormData({ ...formData, snapchat: e.target.value })} className={isRtl ? 'text-right' : ''} />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="youtube" className={isRtl ? 'text-right block' : ''}>YouTube</Label>
+                                    <Input id="youtube" value={formData.youtube} onChange={(e) => setFormData({ ...formData, youtube: e.target.value })} className={isRtl ? 'text-right' : ''} />
                                 </div>
                             </div>
                         </div>

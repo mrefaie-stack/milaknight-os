@@ -65,6 +65,20 @@ export async function createClient(data: FormData) {
     const clientPackage = data.get("package") as string || "BASIC";
     const activeServices = data.get("activeServices") as string || ""; // e.g. "Facebook,Instagram"
 
+    // New fields
+    const brief = data.get("brief") as string || "";
+    const deliverables = data.get("deliverables") as string || "";
+
+    // Social Links
+    const facebook = data.get("facebook") as string || "";
+    const instagram = data.get("instagram") as string || "";
+    const linkedin = data.get("linkedin") as string || "";
+    const tiktok = data.get("tiktok") as string || "";
+    const twitter = data.get("twitter") as string || "";
+    const snapchat = data.get("snapchat") as string || "";
+    const youtube = data.get("youtube") as string || "";
+    const website = data.get("website") as string || "";
+
     if (!name || !adminEmail || !adminPassword) {
         throw new Error("Missing required fields");
     }
@@ -94,6 +108,16 @@ export async function createClient(data: FormData) {
             user: { connect: { id: user.id } }, // Link the user
             package: clientPackage,
             activeServices: activeServices,
+            brief,
+            deliverables,
+            facebook,
+            instagram,
+            linkedin,
+            tiktok,
+            twitter,
+            snapchat,
+            youtube,
+            website,
             services: {
                 create: servicesInput ? servicesInput.split(",").map(s => ({
                     name: s.trim(),
@@ -120,6 +144,16 @@ export async function updateClient(clientId: string, data: any) {
             accountManager: data.amId && data.amId !== "none" ? { connect: { id: data.amId } } : { disconnect: true },
             package: data.package,
             activeServices: data.activeServices,
+            brief: data.brief,
+            deliverables: data.deliverables,
+            facebook: data.facebook,
+            instagram: data.instagram,
+            linkedin: data.linkedin,
+            tiktok: data.tiktok,
+            twitter: data.twitter,
+            snapchat: data.snapchat,
+            youtube: data.youtube,
+            website: data.website,
         }
     });
 

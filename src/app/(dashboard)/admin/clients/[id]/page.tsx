@@ -2,9 +2,10 @@ import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { BarChart3, FolderKanban, Globe, Mail, Users, Building, MapPin } from "lucide-react";
+import { BarChart3, FolderKanban, Globe, Mail, Users, Building, MapPin, Facebook, Instagram, Linkedin, Twitter, Youtube, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { ClientBriefDialog } from "@/components/clients/client-brief-dialog";
 
 export default async function ClientDetailsPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
@@ -36,6 +37,7 @@ export default async function ClientDetailsPage({ params }: { params: Promise<{ 
                     </div>
                 </div>
                 <div className="flex gap-3">
+                    <ClientBriefDialog brief={client.brief} />
                     {client.userId && (
                         <Link href={`/messages?userId=${client.userId}`}>
                             <Button variant="outline" className="font-bold rounded-full">Message Client</Button>
@@ -69,21 +71,65 @@ export default async function ClientDetailsPage({ params }: { params: Promise<{ 
                     </CardContent>
                 </Card>
 
-                {/* Services */}
-                <Card className="md:col-span-2 border-none shadow-sm bg-card/50 backdrop-blur-sm">
-                    <CardHeader>
-                        <CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                            <Globe className="h-4 w-4" /> Active Services
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="flex flex-wrap gap-2">
-                            {client.activeServices?.split(',').map((s: string) => (
-                                <Badge key={s} variant="secondary" className="px-3 py-1 font-bold">{s.trim()}</Badge>
-                            )) || <p className="text-muted-foreground italic text-sm">No services configured.</p>}
-                        </div>
-                    </CardContent>
-                </Card>
+                {/* Services & Deliverables */}
+                <div className="md:col-span-2 space-y-6">
+                    <Card className="border-none shadow-sm bg-card/50 backdrop-blur-sm">
+                        <CardHeader>
+                            <CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                                <Globe className="h-4 w-4" /> Active Services
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="flex flex-wrap gap-2">
+                                {client.activeServices?.split(',').map((s: string) => (
+                                    <Badge key={s} variant="secondary" className="px-3 py-1 font-bold">{s.trim()}</Badge>
+                                )) || <p className="text-muted-foreground italic text-sm">No services configured.</p>}
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="border-none shadow-sm bg-card/50 backdrop-blur-sm">
+                        <CardHeader>
+                            <CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                                <CheckCircle2 className="h-4 w-4" /> Monthly Deliverables
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            {client.deliverables ? (
+                                <div className="space-y-2">
+                                    {client.deliverables.split('\n').map((item, idx) => (
+                                        item.trim() && (
+                                            <div key={idx} className="flex items-center gap-3 text-sm font-medium">
+                                                <div className="h-1.5 w-1.5 rounded-full bg-primary" />
+                                                {item.trim()}
+                                            </div>
+                                        )
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="text-muted-foreground italic text-sm">No deliverables specified.</p>
+                            )}
+                        </CardContent>
+                    </Card>
+                </div>
+            </div>
+
+            {/* Social Links Ribbon */}
+            <div className="flex flex-wrap items-center gap-3 bg-card/30 backdrop-blur-sm p-4 rounded-2xl border">
+                <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground mr-2">Brand Presence:</span>
+
+                {client.website && <Link href={client.website} target="_blank" className="p-2 bg-background hover:bg-primary/10 rounded-full transition-colors border"><Globe className="h-5 w-5" /></Link>}
+                {client.facebook && <Link href={client.facebook} target="_blank" className="p-2 bg-background hover:bg-blue-500/10 hover:text-blue-500 rounded-full transition-colors border"><Facebook className="h-5 w-5" /></Link>}
+                {client.instagram && <Link href={client.instagram} target="_blank" className="p-2 bg-background hover:bg-pink-500/10 hover:text-pink-500 rounded-full transition-colors border"><Instagram className="h-5 w-5" /></Link>}
+                {client.linkedin && <Link href={client.linkedin} target="_blank" className="p-2 bg-background hover:bg-blue-600/10 hover:text-blue-600 rounded-full transition-colors border"><Linkedin className="h-5 w-5" /></Link>}
+                {client.twitter && <Link href={client.twitter} target="_blank" className="p-2 bg-background hover:bg-sky-500/10 hover:text-sky-500 rounded-full transition-colors border"><Twitter className="h-5 w-5" /></Link>}
+                {client.tiktok && <Link href={client.tiktok} target="_blank" className="p-2 bg-background hover:bg-black/10 dark:hover:bg-white/10 hover:text-black dark:hover:text-white rounded-full transition-colors border"><span className="font-bold text-sm px-1 leading-none">TT</span></Link>}
+                {client.youtube && <Link href={client.youtube} target="_blank" className="p-2 bg-background hover:bg-red-500/10 hover:text-red-500 rounded-full transition-colors border"><Youtube className="h-5 w-5" /></Link>}
+                {client.snapchat && <Link href={client.snapchat} target="_blank" className="p-2 bg-background hover:bg-yellow-500/10 hover:text-yellow-500 rounded-full transition-colors border"><span className="font-bold text-sm px-1 leading-none">SC</span></Link>}
+
+                {!client.website && !client.facebook && !client.instagram && !client.linkedin && !client.twitter && !client.tiktok && !client.youtube && !client.snapchat && (
+                    <span className="text-muted-foreground italic text-sm">No social links provided.</span>
+                )}
             </div>
 
             <div className="grid gap-6 md:grid-cols-2">

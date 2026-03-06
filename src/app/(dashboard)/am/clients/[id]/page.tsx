@@ -2,9 +2,10 @@ import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { BarChart3, FolderKanban, Globe, Mail, Users, Building, ChevronRight } from "lucide-react";
+import { BarChart3, FolderKanban, Globe, Mail, Users, Building, ChevronRight, Facebook, Instagram, Linkedin, Twitter, Youtube, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { ClientBriefDialog } from "@/components/clients/client-brief-dialog";
 
 export default async function AMClientDetailsPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
@@ -42,6 +43,7 @@ export default async function AMClientDetailsPage({ params }: { params: Promise<
                     </div>
                 </div>
                 <div className="flex gap-3">
+                    <ClientBriefDialog brief={client.brief} />
                     <Link href={`/am/reports/create?clientId=${client.id}`}>
                         <Button className="font-bold rounded-full">Create New Report</Button>
                     </Link>
@@ -52,22 +54,6 @@ export default async function AMClientDetailsPage({ params }: { params: Promise<
             </div>
 
             <div className="grid gap-6 md:grid-cols-2">
-                {/* Active Services */}
-                <Card className="col-span-full border-none shadow-sm bg-card/50 backdrop-blur-sm">
-                    <CardHeader>
-                        <CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                            <Globe className="h-4 w-4" /> Active Services
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="flex flex-wrap gap-2">
-                            {client.activeServices?.split(',').map((s: string) => (
-                                <Badge key={s} variant="secondary" className="px-3 py-1 font-bold">{s.trim()}</Badge>
-                            )) || <p className="text-muted-foreground italic text-sm">No services configured.</p>}
-                        </div>
-                    </CardContent>
-                </Card>
-
                 {/* Recent Reports */}
                 <Card className="border-none shadow-sm bg-card/50 backdrop-blur-sm">
                     <CardHeader className="flex flex-row items-center justify-between">
@@ -119,6 +105,6 @@ export default async function AMClientDetailsPage({ params }: { params: Promise<
                     </CardContent>
                 </Card>
             </div>
-        </div>
+        </div >
     );
 }
