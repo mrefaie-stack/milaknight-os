@@ -26,7 +26,7 @@ export default async function DeletionsPage() {
             </div>
 
             <div className="grid gap-6">
-                {requests.map((request) => (
+                {(requests as any).map((request: any) => (
                     <Card key={request.id} className="border-none shadow-sm bg-card/50 backdrop-blur-sm overflow-hidden border-l-4 border-l-orange-500">
                         <CardHeader className="flex flex-row items-center justify-between py-4">
                             <div className="flex items-center gap-4">

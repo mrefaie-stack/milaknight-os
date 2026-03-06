@@ -30,9 +30,9 @@ export default async function ClientDashboardPage() {
         );
     }
 
-    const allReports = client.reports;
+    const allReports: any[] = (client as any).reports;
     const latestReport = allReports[0];
-    const latestPlan = client.actionPlans[0];
+    const latestPlan = (client as any).actionPlans[0];
 
     return (
         <ClientDashboardView

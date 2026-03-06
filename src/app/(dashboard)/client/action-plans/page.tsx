@@ -14,7 +14,7 @@ export default async function ClientActionPlansPage() {
             </div>
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {plans.map((plan) => {
+                {(plans as any).map((plan: any) => {
                     const pendingCount = plan.items.filter((i: any) => i.status === "PENDING").length;
 
                     return (

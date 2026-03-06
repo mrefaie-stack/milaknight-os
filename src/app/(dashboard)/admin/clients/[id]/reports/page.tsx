@@ -36,7 +36,7 @@ export default async function ClientReportsPage({ params }: { params: Promise<{ 
                     <CardDescription>Review and manage generated reports.</CardDescription>
                 </CardHeader>
                 <div className="px-6 pb-6">
-                    <ReportListClient initialReports={client.reports} role="ADMIN" />
+                    <ReportListClient initialReports={(client as any).reports} role="ADMIN" />
                 </div>
             </Card>
         </div>

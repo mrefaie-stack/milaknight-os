@@ -38,7 +38,7 @@ export default async function AdminTeamPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {team.map((member) => (
+                        {(team as any).map((member: any) => (
                             <TableRow key={member.id} className="hover:bg-muted/30 transition-colors">
                                 <TableCell className="font-semibold">{member.firstName} {member.lastName}</TableCell>
                                 <TableCell className="text-muted-foreground">{member.email}</TableCell>
