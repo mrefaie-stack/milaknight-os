@@ -11,6 +11,8 @@ export default async function PublicReportPage({ params }: { params: Promise<{ i
 
     if (!report) return notFound();
 
+    const metrics: any = typeof report.metrics === 'string' ? JSON.parse(report.metrics) : report.metrics;
+
     return (
         <div className="min-h-screen bg-background">
             {/* Adding a simple top bar to show this is a public view */}
@@ -22,7 +24,7 @@ export default async function PublicReportPage({ params }: { params: Promise<{ i
                 Live Public Report
             </div>
             <div className="p-4 md:p-8">
-                <ReportClientView report={report} metrics={report.metrics as any} role="PUBLIC" />
+                <ReportClientView report={report} metrics={metrics} role="PUBLIC" />
             </div>
         </div>
     );
