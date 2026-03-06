@@ -24,7 +24,16 @@
             "REVISION_REQUESTED": "طلب تعديل من العميل",
             "SENT": "تم الإرسال للعميل"
         },
-        "compare_reports": "قارن التقارير"
+        "compare_reports": "قارن التقارير",
+        "view_details": "عرض التفاصيل",
+        "mark_read": "تحديد كمقروء",
+        "no_results": "لم يتم العثور على نتائج",
+        "combined": "المجموع",
+        "interactions": "التفاعلات",
+        "compare_same_client_error": "عذراً، لا يمكن مقارنة التقارير إلا لنفس العميل.",
+        "select_more_reports": "يرجى تحديد تقريرين على الأقل للمقارنة.",
+        "compare": "مقارنة",
+        "messages_empty": "لا توجد محادثات"
     },
     "sidebar": {
         "menu": "القائمة الرئيسية",
@@ -163,6 +172,8 @@
         "new_password": "كلمة المرور الجديدة",
         "leave_blank": "اتركه فارغاً للإبقاء على الحالية",
         "updating": "جاري التحديث...",
+        "pending_deletion": "قيد الحذف",
+        "seo_notes": "ملاحظات تحسين محركات البحث",
         "types": {
             "POST": "منشور صوري",
             "VIDEO": "فيديو / ريلز",

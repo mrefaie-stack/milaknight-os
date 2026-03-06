@@ -2,7 +2,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { DashboardSidebar } from "@/components/dashboard/sidebar";
-import { UserNav } from "@/components/dashboard/user-nav";
+import { MobileHeader } from "@/components/layout/mobile-header";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
     const session = await getServerSession(authOptions);
@@ -19,12 +19,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
             <DashboardSidebar role={session.user.role} user={session.user} />
 
-            <main className="flex-1 flex flex-col items-stretch overflow-hidden relative z-10">
-                <header className="h-16 border-b border-border bg-background/50 backdrop-blur-sm flex items-center justify-end px-6 md:hidden">
-                    <UserNav user={session.user} />
-                </header>
-                <div className="flex-1 overflow-auto p-6 md:p-8 custom-scrollbar">
-                    <div className="mx-auto max-w-6xl reveal-animation">
+            <main className="flex-1 flex flex-col items-stretch overflow-hidden relative z-10 w-full">
+                <MobileHeader role={session.user.role} user={session.user} />
+                <div className="flex-1 overflow-auto p-4 md:p-8 custom-scrollbar relative z-10">
+                    <div className="mx-auto max-w-6xl reveal-animation pb-20 md:pb-0">
                         {children}
                     </div>
                 </div>
@@ -32,3 +30,4 @@ export default async function DashboardLayout({ children }: { children: React.Re
         </div>
     );
 }
+

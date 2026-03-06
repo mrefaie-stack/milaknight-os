@@ -30,7 +30,11 @@
         "combined": "Combined",
         "views": "Views",
         "interactions": "Interactions",
-        "compare_reports": "Compare Reports"
+        "compare_reports": "Compare Reports",
+        "compare_same_client_error": "Sorry, you can only compare reports for the same client.",
+        "select_more_reports": "Please select at least 2 reports to compare.",
+        "compare": "Compare",
+        "messages_empty": "No conversations"
     },
     "sidebar": {
         "menu": "Main Menu",
@@ -143,6 +147,8 @@
         "strategic_plan": "Strategic Content & Growth Plan",
         "efficiency_review": "Efficiency & Engagement Review",
         "metrics_analyzed": "ANALYZED",
+        "pending_deletion": "Pending Deletion",
+        "seo_notes": "SEO Notes",
         "no_plan_yet": "Your first action plan is being prepared.",
         "no_report_yet": "Reports are generated monthly based on performance.",
         "feedback_pending": "Feedback Pending",

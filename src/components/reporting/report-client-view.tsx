@@ -110,6 +110,20 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
                             <Send className={`h-4 w-4 ${isRtl ? 'ml-2' : 'mr-2'}`} /> {isPublishing ? t("dashboard.publishing") : t("dashboard.publish")}
                         </Button>
                     )}
+                    {role === "AM" && (
+                        <Button
+                            onClick={() => {
+                                const url = `${window.location.origin}/p/report/${report.id}`;
+                                navigator.clipboard.writeText(url);
+                                toast.success("Public link copied to clipboard!");
+                            }}
+                            variant="outline"
+                            className="font-bold rounded-full h-12 px-6"
+                        >
+                            <Share2 className={`h-4 w-4 ${isRtl ? 'ml-2' : 'mr-2'}`} /> Copy Public Link
+                        </Button>
+                    )}
+
                     {role === "AM" && !isDeletionRequested && (
                         <Button
                             onClick={handleDeleteRequest}
