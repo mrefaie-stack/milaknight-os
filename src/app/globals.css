@@ -1,0 +1,350 @@
+@import "tailwindcss";
+
+@plugin "tailwindcss-animate";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+}
+
+:root {
+  --background: oklch(0.98 0.01 220);
+  /* Soft cool white */
+  --foreground: oklch(0.15 0.02 240);
+  /* Deep slate */
+  --card: oklch(1 0 0 / 0.8);
+  --card-foreground: oklch(0.15 0.02 240);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.15 0.02 240);
+
+  /* Primary Brand Color: Vibrant Indigo */
+  --primary: oklch(0.6 0.2 280);
+  --primary-foreground: oklch(0.98 0.01 260);
+
+  --secondary: oklch(0.96 0.02 220);
+  --secondary-foreground: oklch(0.2 0.03 240);
+  --muted: oklch(0.94 0.02 220 / 0.8);
+  --muted-foreground: oklch(0.45 0.04 240);
+  --accent: oklch(0.6 0.2 280 / 0.1);
+  --accent-foreground: oklch(0.4 0.15 280);
+  --destructive: oklch(0.55 0.2 25);
+  --destructive-foreground: oklch(0.98 0.01 260);
+  --border: oklch(0.9 0.03 220);
+  --input: oklch(0.9 0.03 220);
+  --ring: oklch(0.6 0.2 280);
+
+  --radius: 1.25rem;
+  /* Rounder, modern corners */
+
+  /* Mesh Gradient Colors - Softer for Light Mode */
+  --mesh-1: oklch(0.9 0.06 280 / 0.4);
+  --mesh-2: oklch(0.85 0.08 220 / 0.3);
+  --mesh-3: oklch(0.92 0.05 320 / 0.4);
+
+  /* Vivid Chart Colors */
+  --chart-1: oklch(0.65 0.2 40);
+  --chart-2: oklch(0.6 0.15 180);
+  --chart-3: oklch(0.4 0.1 230);
+  --chart-4: oklch(0.8 0.2 85);
+  --chart-5: oklch(0.7 0.2 70);
+}
+
+.dark {
+  --background: oklch(0.1 0.02 280);
+  --foreground: oklch(0.98 0.01 260);
+  --card: oklch(0.15 0.04 280 / 0.6);
+  --card-foreground: oklch(0.98 0.01 260);
+  --popover: oklch(0.12 0.04 280);
+  --popover-foreground: oklch(0.98 0.01 260);
+
+  --primary: oklch(0.7 0.2 280);
+  --primary-foreground: oklch(0.1 0.02 280);
+
+  --secondary: oklch(0.18 0.04 280);
+  --secondary-foreground: oklch(0.98 0.01 260);
+  --muted: oklch(0.18 0.04 280 / 0.5);
+  --muted-foreground: oklch(0.6 0.04 280);
+  --accent: oklch(0.7 0.2 280 / 0.15);
+  --accent-foreground: oklch(0.8 0.1 280);
+  --destructive: oklch(0.45 0.15 25);
+  --destructive-foreground: oklch(0.98 0.01 260);
+  --border: oklch(0.2 0.05 280 / 0.4);
+  --input: oklch(0.2 0.05 280 / 0.4);
+  --ring: oklch(0.7 0.2 280);
+
+  /* Dimmed mesh for dark mode */
+  --mesh-1: oklch(0.4 0.15 280 / 0.1);
+  --mesh-2: oklch(0.3 0.12 220 / 0.1);
+  --mesh-3: oklch(0.45 0.1 320 / 0.1);
+}
+
+@layer utilities {
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(var(--primary-rgb), 0.1);
+    border-radius: 10px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(var(--primary-rgb), 0.2);
+  }
+
+  .animate-shimmer {
+    animation: shimmer 2s infinite linear;
+  }
+}
+
+/* Print Enhancements */
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+  }
+
+  .print-hidden {
+    display: none !important;
+  }
+
+  .glass-card {
+    background: white !important;
+    backdrop-filter: none !important;
+    border: 1px solid #eee !important;
+    box-shadow: none !important;
+  }
+
+  /* Force visibility of details */
+  .recharts-responsive-container {
+    width: 100% !important;
+    height: 400px !important;
+    display: block !important;
+  }
+
+  canvas {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+
+  /* Ensure background colors print */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .page-break {
+    page-break-before: always;
+  }
+}
+
+@layer base {
+
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-border, currentColor);
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    @apply antialiased selection:bg-primary/20 selection:text-primary;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-card backdrop-blur-xl border border-white/10;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.08);
+  }
+
+  .dark .glass-card {
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  }
+
+  .mesh-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    overflow: hidden;
+    background: var(--background);
+  }
+
+  .mesh-background::before {
+    content: "";
+    position: absolute;
+    width: 200%;
+    height: 200%;
+    top: -50%;
+    left: -50%;
+    background-image:
+      radial-gradient(at 0% 0%, var(--mesh-1) 0, transparent 50%),
+      radial-gradient(at 100% 0%, var(--mesh-2) 0, transparent 50%),
+      radial-gradient(at 50% 100%, var(--mesh-3) 0, transparent 50%);
+    filter: blur(80px);
+    opacity: 0.8;
+    animation: mesh-float 20s ease-in-out infinite alternate;
+  }
+
+  .premium-gradient-text {
+    @apply bg-gradient-to-br from-primary via-primary/80 to-indigo-400 bg-clip-text text-transparent font-black tracking-tighter;
+  }
+
+  .reveal-animation {
+    @apply animate-in fade-in slide-in-from-bottom-4 duration-700 ease-out fill-mode-both;
+  }
+
+  .hover-lift {
+    @apply transition-transform duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-primary/10;
+  }
+}
+
+@keyframes mesh-float {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+
+  50% {
+    transform: translate(5%, 5%) rotate(5deg);
+  }
+
+  100% {
+    transform: translate(-2%, 10%) rotate(-3deg);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.shimmer-effect {
+  @apply relative overflow-hidden;
+}
+
+.shimmer-effect::after {
+  content: "";
+  @apply absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent;
+  animation: shimmer 2s infinite;
+}
+
+/* Print specific styles for the PDF generation */
+@media print {
+  @page {
+    margin: 1cm;
+    size: A4;
+  }
+
+  body {
+    background-color: white !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .print\:hidden {
+    display: none !important;
+  }
+
+  .print\:block {
+    display: block !important;
+  }
+
+  /* Force backgrounds and borders to show up in PDF */
+  .bg-card,
+  .bg-muted,
+  .bg-primary,
+  .bg-emerald-500,
+  .bg-blue-500,
+  .bg-orange-500,
+  .bg-purple-500 {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .border,
+  .border-l-4,
+  .border-l-8 {
+    border-color: #e5e7eb !important;
+    /* light gray fallback */
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Prevent cards from breaking across pages awkwardly */
+  .Card,
+  .card,
+  div[class*="Card"] {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    margin-bottom: 20px !important;
+    border: 1px solid #eeeeee !important;
+    box-shadow: none !important;
+  }
+
+  /* Ensure text is high contrast and readable */
+  .text-muted-foreground {
+    color: #666666 !important;
+  }
+
+  .text-transparent {
+    color: var(--primary) !important;
+    background-clip: unset !important;
+    -webkit-background-clip: unset !important;
+  }
+
+  /* Optimize charts for print volume */
+  .recharts-responsive-container {
+    width: 100% !important;
+    height: 350px !important;
+  }
+
+  .recharts-legend-wrapper {
+    position: relative !important;
+  }
+}

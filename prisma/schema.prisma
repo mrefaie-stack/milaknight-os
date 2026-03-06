@@ -1,0 +1,190 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  password       String
+  role           String    @default("CLIENT") // Enums fallback
+  firstName      String
+  lastName       String
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  
+  // Relations
+  clients        Client[]  @relation("AccountManagerClients")
+  clientProfile  Client?   @relation("ClientUser")
+  comments       Comment[]
+  sentMessages   Message[]      @relation("SentMessages")
+  receivedMessages Message[]   @relation("ReceivedMessages")
+  notifications  Notification[]
+  activityLogs   ActivityLog[]
+  deletionRequests DeletionRequest[]
+}
+
+model Client {
+  id             String    @id @default(cuid())
+  name           String
+  logoUrl        String?
+  industry       String?
+  country        String?
+  languages      String?   // Array fallback
+  
+  // Social Links
+  facebook       String?
+  instagram      String?
+  linkedin       String?
+  tiktok         String?
+  website        String?
+  
+  // Relations
+  amId           String?
+  accountManager User?     @relation("AccountManagerClients", fields: [amId], references: [id])
+  
+  userId         String?   @unique
+  user           User?     @relation("ClientUser", fields: [userId], references: [id], onDelete: Cascade)
+  
+  package        String?   @default("BASIC") // e.g., "BASIC", "PREMIUM", "ENTERPRISE"
+  activeServices String?   // Comma separated list of active platforms for this client
+  
+  services       Service[]
+  actionPlans    ActionPlan[]
+  reports        Report[]
+  
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+model Service {
+  id             String    @id @default(cuid())
+  clientId       String
+  client         Client    @relation(fields: [clientId], references: [id])
+  name           String    // e.g., "Social Media", "SEO"
+  details        String    // Json fallback
+}
+
+model ActionPlan {
+  id             String    @id @default(cuid())
+  clientId       String
+  client         Client    @relation(fields: [clientId], references: [id])
+  month          String    // e.g., "2026-03"
+  status         String    @default("DRAFT") // DRAFT, PENDING, APPROVED, REVISION_REQUESTED
+  
+  items          ContentItem[]
+  
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+model ContentItem {
+  id             String      @id @default(cuid())
+  planId         String
+  plan           ActionPlan  @relation(fields: [planId], references: [id], onDelete: Cascade)
+  type           String      // Type enum fallback
+  status         String      @default("DRAFT") // Status enum fallback
+  
+  // Common
+  platform       String?     // "Facebook", "Instagram", etc.
+  scheduledDate  DateTime?
+  
+  // Content specifics
+  imageUrl       String?
+  videoUrl       String?
+  captionAr      String?
+  captionEn      String?
+  
+  // Poll
+  pollQuestion   String?
+  pollOptionA    String?
+  pollOptionB    String?
+  
+  // Article
+  articleTitle   String?
+  articleContent String?
+  keywords       String?     // Array fallback
+  clientComment  String?
+  feedbackResolved Boolean @default(false)
+  
+  comments       Comment[]
+  
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+model Comment {
+  id             String      @id @default(cuid())
+  itemId         String
+  item           ContentItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User        @relation(fields: [userId], references: [id])
+  text           String
+  
+  createdAt      DateTime  @default(now())
+}
+
+model Report {
+  id             String    @id @default(cuid())
+  clientId       String
+  client         Client    @relation(fields: [clientId], references: [id])
+  month          String
+  
+  // Stored as String for SQLite
+  metrics        String      
+  status         String    @default("DRAFT") // DRAFT, SENT, VIEWED
+  
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+model Notification {
+  id             String    @id @default(cuid())
+  userId         String
+  user           User      @relation(fields: [userId], references: [id])
+  title          String
+  message        String
+  type           String?   // e.g., "REMINDER", "SYSTEM", "CHAT", "PLAN_READY"
+  isRead         Boolean   @default(false)
+  link           String?
+  
+  createdAt      DateTime  @default(now())
+}
+
+model Message {
+  id             String    @id @default(cuid())
+  senderId       String
+  sender         User      @relation("SentMessages", fields: [senderId], references: [id])
+  receiverId     String
+  receiver       User      @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  text           String
+  isRead         Boolean   @default(false)
+  
+  createdAt      DateTime  @default(now())
+}
+
+model ActivityLog {
+  id             String    @id @default(cuid())
+  userId         String
+  user           User      @relation(fields: [userId], references: [id])
+  action         String    // e.g., "created Action Plan"
+  entityType     String    // e.g., "ActionPlan"
+  entityId       String
+  
+  createdAt      DateTime  @default(now())
+}
+
+model DeletionRequest {
+  id             String    @id @default(cuid())
+  entityType     String    // "Report" or "ActionPlan"
+  entityId       String
+  status         String    @default("PENDING") // PENDING, APPROVED, REJECTED
+  requestedById  String
+  requestedBy    User      @relation(fields: [requestedById], references: [id])
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
