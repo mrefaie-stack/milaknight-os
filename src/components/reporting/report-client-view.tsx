@@ -225,19 +225,19 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
                     )}
                     {hasPaidReach && (
                         <Card className="bg-teal-500/5 border-none shadow-none">
-                            <CardHeader className={`pb-2 ${isRtl ? 'text-right' : 'text-left'}`}><CardTitle className="text-[10px] uppercase font-black tracking-widest text-muted-foreground">Paid Reach</CardTitle></CardHeader>
+                            <CardHeader className={`pb-2 ${isRtl ? 'text-right' : 'text-left'}`}><CardTitle className="text-[10px] uppercase font-black tracking-widest text-muted-foreground">{t("reports.paid_reach")}</CardTitle></CardHeader>
                             <CardContent className={isRtl ? 'text-right' : 'text-left'}>
                                 <div className="text-2xl md:text-4xl font-black italic text-teal-500">{globalTotals.paidReach.toLocaleString()}</div>
-                                <div className="text-[10px] text-teal-500 font-bold mt-2">Targeted Audience</div>
+                                <div className="text-[10px] text-teal-500 font-bold mt-2">{t("reports.targeted_audience")}</div>
                             </CardContent>
                         </Card>
                     )}
                     {hasConversions && (
                         <Card className="bg-rose-500/5 border-none shadow-none">
-                            <CardHeader className={`pb-2 ${isRtl ? 'text-right' : 'text-left'}`}><CardTitle className="text-[10px] uppercase font-black tracking-widest text-muted-foreground">Conversions</CardTitle></CardHeader>
+                            <CardHeader className={`pb-2 ${isRtl ? 'text-right' : 'text-left'}`}><CardTitle className="text-[10px] uppercase font-black tracking-widest text-muted-foreground">{t("reports.conversions")}</CardTitle></CardHeader>
                             <CardContent className={isRtl ? 'text-right' : 'text-left'}>
                                 <div className="text-2xl md:text-4xl font-black italic text-rose-500">{globalTotals.conversions.toLocaleString()}</div>
-                                <div className="text-[10px] text-rose-500 font-bold mt-2">Completed Actions</div>
+                                <div className="text-[10px] text-rose-500 font-bold mt-2">{t("reports.completed_actions")}</div>
                             </CardContent>
                         </Card>
                     )}
@@ -330,8 +330,8 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
                     {hasSpend && (
                         <Card className="border-none shadow-sm bg-card/40 backdrop-blur-sm p-4 md:p-6">
                             <CardHeader className={`px-0 pt-0 ${isRtl ? 'text-right' : ''}`}>
-                                <CardTitle className="text-xl font-black">Ad Spend Distribution</CardTitle>
-                                <p className="text-sm text-muted-foreground">Budget allocation per platform</p>
+                                <CardTitle className="text-xl font-black">{t("reports.spend_dist")}</CardTitle>
+                                <p className="text-sm text-muted-foreground">{t("reports.spend_dist_sub")}</p>
                             </CardHeader>
                             <CardContent className="h-[280px] px-0">
                                 <ResponsiveContainer width="100%" height="100%">
@@ -352,8 +352,8 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
                     {hasViews && (
                         <Card className="border-none shadow-sm bg-card/40 backdrop-blur-sm p-4 md:p-6">
                             <CardHeader className={`px-0 pt-0 ${isRtl ? 'text-right' : ''}`}>
-                                <CardTitle className="text-xl font-black">Video Views</CardTitle>
-                                <p className="text-sm text-muted-foreground">Total video plays per platform</p>
+                                <CardTitle className="text-xl font-black">{t("reports.video_views")}</CardTitle>
+                                <p className="text-sm text-muted-foreground">{t("reports.video_views_sub")}</p>
                             </CardHeader>
                             <CardContent className="h-[280px] px-0">
                                 <ResponsiveContainer width="100%" height="100%">
@@ -404,8 +404,8 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
                                             { label: t('reports.engagements'), value: data.engagement, color: 'text-emerald-500' },
                                             { label: t('reports.growth'), value: data.followers, color: 'text-purple-500' },
                                             { label: t('common.views'), value: data.views, color: 'text-pink-500' },
-                                            { label: 'Paid Reach', value: data.paidReach, color: 'text-teal-500' },
-                                            { label: 'Conversions', value: data.conversions, color: 'text-rose-500' },
+                                            { label: t('reports.paid_reach'), value: data.paidReach, color: 'text-teal-500' },
+                                            { label: t('reports.conversions'), value: data.conversions, color: 'text-rose-500' },
                                         ].map((item, i) => (item.value || 0) > 0 ? (
                                             <div key={i} className={`p-4 rounded-2xl bg-muted/20 border border-border/50 print:bg-white print:border ${isRtl ? 'text-right' : 'text-left'}`}>
                                                 <div className="text-[10px] font-black uppercase text-muted-foreground mb-1">{item.label}</div>
@@ -472,7 +472,7 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
                     <CardHeader className="bg-purple-500/5 py-6 px-10">
                         <div className={`flex items-center gap-4 ${isRtl ? 'flex-row-reverse' : ''}`}>
                             <Globe className="h-6 w-6 text-purple-500" />
-                            <CardTitle className="text-2xl font-black">{isRtl ? 'تحسين محركات البحث' : 'Search Engine Optimization'}</CardTitle>
+                            <CardTitle className="text-2xl font-black">{t("reports.seo_title")}</CardTitle>
                         </div>
                     </CardHeader>
                     <CardContent className="p-10 grid md:grid-cols-2 gap-12">
@@ -482,7 +482,7 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
                                 <p className="text-2xl font-black italic">"{metrics.seo?.rank || t("dashboard.authority_growth")}"</p>
                             </div>
                             <div className={`p-6 bg-emerald-500/5 rounded-2xl border border-emerald-500/10 ${isRtl ? 'text-right' : ''}`}>
-                                <h4 className="text-xs font-black text-emerald-600 uppercase mb-2 tracking-widest">{isRtl ? 'الأداء التقني' : 'Technical Performance'}</h4>
+                                <h4 className="text-xs font-black text-emerald-600 uppercase mb-2 tracking-widest">{t("reports.technical_performance")}</h4>
                                 <p className="text-sm font-bold leading-relaxed">{metrics.seo?.notes || t("dashboard.seo_notes")}</p>
                             </div>
                         </div>
