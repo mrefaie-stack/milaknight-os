@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Printer, Facebook, Instagram, Video, Share2, Linkedin, Search, Youtube, TrendingUp, DollarSign, Target, Globe, BarChart3, Send, Mail, Trash2 } from "lucide-react";
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend } from "recharts";
 import { publishReport, requestReportDeletion } from "@/app/actions/report";
+import { ExportPdfButton } from "@/components/action-plan/export-pdf-button";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -88,7 +89,7 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
     };
 
     return (
-        <div className="space-y-12 max-w-6xl mx-auto pb-20 print:p-0 px-4 md:px-0" dir={isRtl ? "rtl" : "ltr"}>
+        <div className="space-y-12 max-w-6xl mx-auto pb-20 print:p-0 px-4 md:px-0" dir={isRtl ? "rtl" : "ltr"} id="pdf-content">
             {/* Header */}
             <div className={`flex flex-col md:flex-row md:items-end justify-between gap-6 print:flex-col print:items-start print:gap-2 print:mb-8 ${isRtl ? 'md:flex-row-reverse' : ''}`}>
                 <div className={`space-y-1 ${isRtl ? 'md:text-right' : 'md:text-left'} print:text-left`}>
@@ -99,7 +100,7 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
                         {report.client.name} • {report.month}
                     </p>
                 </div>
-                <div className={`flex gap-3 justify-center print:hidden ${isRtl ? 'flex-row-reverse' : ''}`}>
+                <div className={`flex gap-3 justify-center print:hidden ${isRtl ? 'flex-row-reverse' : ''}`} data-html2canvas-ignore="true">
                     {status === "DRAFT" && (
                         <Button
                             onClick={handlePublish}
@@ -143,13 +144,7 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
                             {t("dashboard.pending_deletion")}
                         </div>
                     )}
-                    <Button
-                        onClick={() => window.print()}
-                        variant="secondary"
-                        className="font-bold rounded-full h-12 px-6 border border-primary/20"
-                    >
-                        <Printer className={`h-4 w-4 ${isRtl ? 'ml-2' : 'mr-2'}`} /> Export PDF
-                    </Button>
+                    <ExportPdfButton fileName={`Report-${report.month}`} className="font-bold rounded-full h-12 px-6 border border-primary/20" />
                 </div>
             </div>
 

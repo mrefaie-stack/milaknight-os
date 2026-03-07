@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Download, GitCompare } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "@/contexts/language-context";
+import { ExportPdfButton } from "@/components/action-plan/export-pdf-button";
 import {
     LineChart,
     Line,
@@ -77,7 +78,7 @@ export function ReportComparisonView({ reports, role }: { reports: any[], role: 
     };
 
     return (
-        <div className="space-y-8 print-container max-w-6xl mx-auto" dir={isRtl ? "rtl" : "ltr"}>
+        <div className="space-y-8 print-container max-w-6xl mx-auto" dir={isRtl ? "rtl" : "ltr"} id="pdf-content">
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 p-8 rounded-3xl bg-card border-none glass-card relative overflow-hidden print:hidden">
                 <div className="absolute top-0 right-0 p-8 opacity-5">
@@ -108,10 +109,8 @@ export function ReportComparisonView({ reports, role }: { reports: any[], role: 
                         </p>
                     </div>
                 </div>
-                <div className="relative z-10 hidden md:block">
-                    <Button onClick={() => window.print()} variant="secondary" className="font-bold rounded-full h-11 px-6 border border-primary/20">
-                        <Download className="mr-2 h-4 w-4" /> Export PDF
-                    </Button>
+                <div className="relative z-10 hidden md:block" data-html2canvas-ignore="true">
+                    <ExportPdfButton fileName={`Comparison-${clientName}`} className="font-bold rounded-full h-11 px-6 border border-primary/20" />
                 </div>
             </div>
 

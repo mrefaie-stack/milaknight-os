@@ -41,7 +41,7 @@ export default async function ActionPlanBuilderPage({ params }: { params: Promis
     });
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-8" id="pdf-content">
             {/* Breadcrumbs */}
             <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                 <Link href="/am/action-plans" className="hover:text-primary transition-colors">Action Plans</Link>
@@ -54,8 +54,8 @@ export default async function ActionPlanBuilderPage({ params }: { params: Promis
                     <h1 className="text-4xl font-black tracking-tight">{(plan as any).client.name}</h1>
                     <p className="text-muted-foreground text-lg font-medium">Monthly Action Plan • {plan.month}</p>
                 </div>
-                <div className="flex gap-3 print:hidden">
-                    <ExportPdfButton />
+                <div className="flex gap-3 print:hidden" data-html2canvas-ignore="true">
+                    <ExportPdfButton fileName={`ActionPlan-${plan.month}`} />
                     <AddItemDialog planId={plan.id} />
 
                     {plan.status === "REVISION_REQUESTED" && (

@@ -31,14 +31,14 @@ export default async function ClientActionPlanPage({ params }: { params: Promise
     };
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6" id="pdf-content">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b pb-6">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Action Plan Review</h1>
                     <p className="text-muted-foreground font-medium">Month: {plan.month}</p>
                 </div>
-                <div className="print:hidden">
-                    <ExportPdfButton className="font-bold rounded-full border border-primary/20" />
+                <div className="print:hidden" data-html2canvas-ignore="true">
+                    <ExportPdfButton fileName={`ActionPlan-${plan.month}`} className="font-bold rounded-full border border-primary/20" />
                 </div>
             </div>
 
