@@ -61,7 +61,7 @@ export function PlanApprovalHeader({ planId, status, canApprove = false }: { pla
                 <Dialog open={open} onOpenChange={setOpen}>
                     <DialogTrigger asChild>
                         <button className="relative inline-flex h-12 overflow-hidden rounded-full p-[2px] focus:outline-none group/btn shadow-xl shadow-primary/20">
-                            <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#F97316_0%,#EA580C_50%,#F97316_100%)]" />
+                            <span data-html2canvas-ignore="true" className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#F97316_0%,#EA580C_50%,#F97316_100%)]" />
                             <span className="inline-flex h-full w-full cursor-pointer items-center justify-center rounded-full bg-slate-950 px-8 py-1 text-sm font-black text-white backdrop-blur-3xl group-hover/btn:bg-slate-900 transition-colors uppercase tracking-widest">
                                 {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle2 className="h-4 w-4 mr-2" />}
                                 Approve Entire Plan

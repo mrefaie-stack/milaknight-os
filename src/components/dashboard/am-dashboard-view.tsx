@@ -75,7 +75,7 @@ export function ClientAMDashboard({ clients, userName }: { clients: any[], userN
                             <CardContent className={isRtl ? 'text-right' : 'text-left'}>
                                 <div className="text-4xl font-black tracking-tighter">{stat.value}</div>
                             </CardContent>
-                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:animate-shimmer pointer-events-none" />
+                            <div className="absolute inset-0 classic-shimmer animate-shimmer -translate-x-full pointer-events-none" />
                         </Card>
                     </motion.div>
                 ))}

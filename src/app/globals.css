@@ -130,6 +130,10 @@
   .animate-shimmer {
     animation: shimmer 2s infinite linear;
   }
+
+  .classic-shimmer {
+    background-image: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.05), transparent);
+  }
 }
 
 /* Print Enhancements */
@@ -139,7 +143,8 @@
     color: black !important;
   }
 
-  .print-hidden {
+  .print-hidden,
+  .mesh-background {
     display: none !important;
   }
 
@@ -228,7 +233,11 @@
   }
 
   .premium-gradient-text {
-    @apply bg-gradient-to-br from-primary via-primary/80 to-indigo-400 bg-clip-text text-transparent font-black tracking-tighter;
+    background-image: linear-gradient(to bottom right, var(--primary), rgba(129, 140, 248, 0.8), #818cf8);
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    @apply font-black tracking-tighter;
   }
 
   .reveal-animation {
@@ -270,7 +279,9 @@
 
 .shimmer-effect::after {
   content: "";
-  @apply absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent;
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.1), transparent);
   animation: shimmer 2s infinite;
 }
 
