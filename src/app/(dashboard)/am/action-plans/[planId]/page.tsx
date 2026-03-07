@@ -5,10 +5,10 @@ import { Badge } from "@/components/ui/badge";
 import { AddItemDialog } from "@/components/action-plan/add-item-dialog";
 import { PlanItemsList } from "@/components/action-plans/plan-items-list";
 import { submitForApproval, requestActionPlanDeletion, notifyClientOfActionPlanUpdate } from "@/app/actions/action-plan";
-import { Trash2, LayoutDashboard, ChevronRight, Printer } from "lucide-react";
+import { Trash2, LayoutDashboard, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { PlanApprovalHeader } from "@/components/action-plan/plan-approval-header";
-import { ExportPdfButton } from "@/components/action-plan/export-pdf-button";
+import { DownloadActionPlanButton } from "@/components/action-plan/download-action-plan-button";
 
 export default async function ActionPlanBuilderPage({ params }: { params: Promise<{ planId: string }> }) {
     const { planId } = await params;
@@ -55,7 +55,7 @@ export default async function ActionPlanBuilderPage({ params }: { params: Promis
                     <p className="text-muted-foreground text-lg font-medium">Monthly Action Plan • {plan.month}</p>
                 </div>
                 <div className="flex gap-3 print:hidden" data-html2canvas-ignore="true">
-                    <ExportPdfButton fileName={`ActionPlan-${plan.month}`} />
+                    <DownloadActionPlanButton plan={plan} items={(plan as any).items} />
                     <AddItemDialog planId={plan.id} />
 
                     {plan.status === "REVISION_REQUESTED" && (

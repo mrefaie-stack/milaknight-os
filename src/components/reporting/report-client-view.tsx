@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Printer, Facebook, Instagram, Video, Share2, Linkedin, Search, Youtube, TrendingUp, DollarSign, Target, Globe, BarChart3, Send, Mail, Trash2, Download, Loader2 } from "lucide-react";
-import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend } from "recharts";
+import { Bar, BarChart, Pie, PieChart, Cell, RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, CartesianGrid } from "recharts";
 import { publishReport, requestReportDeletion } from "@/app/actions/report";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -248,6 +248,72 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
                     </ResponsiveContainer>
                 </CardContent>
             </Card>
+
+            {/* Two-column charts: Pie + Followers Bar */}
+            {activePlatforms.length > 0 && (
+                <div className="grid gap-8 grid-cols-1 lg:grid-cols-2">
+                    {/* Impressions Distribution Pie Chart */}
+                    <Card className="border-none shadow-sm bg-card/40 backdrop-blur-sm p-4 md:p-6">
+                        <CardHeader className={`px-0 pt-0 ${isRtl ? 'text-right' : ''}`}>
+                            <CardTitle className="text-xl font-black">{t("reports.impressions")} Distribution</CardTitle>
+                            <p className="text-sm text-muted-foreground">Breakdown by platform</p>
+                        </CardHeader>
+                        <CardContent className="h-[300px] px-0">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <PieChart>
+                                    <Pie
+                                        data={chartData}
+                                        dataKey="impressions"
+                                        nameKey="name"
+                                        cx="50%"
+                                        cy="45%"
+                                        outerRadius={90}
+                                        innerRadius={50}
+                                        paddingAngle={3}
+                                        label={({ name, percent }: any) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
+                                        labelLine={false}
+                                    >
+                                        {chartData.map((_, index) => (
+                                            <Cell key={index} fill={["#3b82f6", "#10b981", "#f97316", "#a855f7", "#ef4444", "#eab308", "#06b6d4"][index % 7]} />
+                                        ))}
+                                    </Pie>
+                                    <Tooltip
+                                        contentStyle={{ borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(10,10,20,0.9)', boxShadow: '0 25px 50px -12px rgb(0 0 0 / 0.5)' }}
+                                        formatter={(value: any) => [value?.toLocaleString(), 'Impressions']}
+                                    />
+                                    <Legend />
+                                </PieChart>
+                            </ResponsiveContainer>
+                        </CardContent>
+                    </Card>
+
+                    {/* Followers Chart */}
+                    <Card className="border-none shadow-sm bg-card/40 backdrop-blur-sm p-4 md:p-6">
+                        <CardHeader className={`px-0 pt-0 ${isRtl ? 'text-right' : ''}`}>
+                            <CardTitle className="text-xl font-black">New Followers</CardTitle>
+                            <p className="text-sm text-muted-foreground">Growth per platform this period</p>
+                        </CardHeader>
+                        <CardContent className="h-[300px] px-0">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={chartData} layout="vertical" margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                                    <XAxis type="number" fontSize={11} tickLine={false} axisLine={false} />
+                                    <YAxis dataKey="name" type="category" fontSize={11} tickLine={false} axisLine={false} width={70} />
+                                    <Tooltip
+                                        contentStyle={{ borderRadius: '16px', background: 'rgba(10,10,20,0.9)', border: '1px solid rgba(255,255,255,0.1)' }}
+                                        formatter={(v: any) => [v?.toLocaleString(), 'Followers']}
+                                    />
+                                    <Bar dataKey="followers" name="Followers" radius={[0, 8, 8, 0]} barSize={24}>
+                                        {chartData.map((_, i) => (
+                                            <Cell key={i} fill={["#a855f7", "#3b82f6", "#10b981", "#f97316", "#ef4444", "#eab308", "#06b6d4"][i % 7]} />
+                                        ))}
+                                    </Bar>
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </CardContent>
+                    </Card>
+                </div>
+            )}
 
             {/* Individual Platform Deep Dives */}
             <div className="space-y-16 print:space-y-8">
