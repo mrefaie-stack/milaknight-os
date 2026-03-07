@@ -1,12 +1,8 @@
 /**
- * Action Plan PDF generator — ALL data included.
- * - Embeds images from URLs where possible
- * - Shows captions (both Arabic and English as text)
- * - Shows video links
- * - Shows AM comments + client comments
- * - Shows poll questions + options
- * - Shows article title + content
+ * Action Plan PDF generator — ALL data included, Arabic text fully supported.
+ * Uses canvas-based rendering for Arabic text (proper RTL + ligatures).
  */
+import { renderArabicTextImage, containsArabic } from "./pdf-arabic-helper";
 
 const PRIMARY: [number, number, number] = [100, 60, 180];
 const DARK: [number, number, number] = [20, 20, 35];
@@ -231,88 +227,124 @@ export async function generateActionPlanPdf(plan: any, items: any[]) {
             }
         }
 
-        // Captions & Content
-        const contentRows: [string, string][] = [];
-        if (item.captionEn) contentRows.push(["Caption (English)", item.captionEn]);
-        // Arabic: jsPDF can't render RTL correctly so we note it
-        if (item.captionAr) {
-            // Try to output as-is; characters will appear but reversed/disconnected
-            contentRows.push(["Caption (Arabic)", item.captionAr]);
-        }
-        if (item.articleTitle) contentRows.push(["Article Title", item.articleTitle]);
-        if (item.articleContent) contentRows.push(["Article Content / Link", item.articleContent]);
-        if (item.pollQuestion) {
-            contentRows.push(["Poll Question", item.pollQuestion]);
-            if (item.pollOptionA) contentRows.push(["Option A", item.pollOptionA]);
-            if (item.pollOptionB) contentRows.push(["Option B", item.pollOptionB]);
+        // English caption — normal jsPDF text
+        if (item.captionEn) {
+            if (y + 18 > pageH - 18) { doc.addPage(); y = 20; }
+            doc.setFillColor(LIGHT_GRAY[0], LIGHT_GRAY[1], LIGHT_GRAY[2]);
+            doc.roundedRect(margin + 3, y, contentW - 6, 6, 1, 1, "F");
+            doc.setTextColor(MID_GRAY[0], MID_GRAY[1], MID_GRAY[2]);
+            doc.setFontSize(6);
+            doc.setFont("helvetica", "bold");
+            doc.text("CAPTION (ENGLISH)", margin + 6, y + 4.5);
+            y += 8;
+            const enLines: string[] = doc.splitTextToSize(item.captionEn, contentW - 10);
+            doc.setFontSize(8.5);
+            doc.setFont("helvetica", "normal");
+            doc.setTextColor(DARK[0], DARK[1], DARK[2]);
+            for (const line of enLines) {
+                if (y + 6 > pageH - 18) { doc.addPage(); y = 20; }
+                doc.text(line, margin + 4, y);
+                y += 5.5;
+            }
+            y += 4;
         }
 
-        if (contentRows.length > 0) {
-            if (y + 30 > pageH - 18) { doc.addPage(); y = 20; }
+        // Arabic caption — canvas-rendered image (proper RTL + ligatures)
+        if (item.captionAr) {
+            if (y + 16 > pageH - 18) { doc.addPage(); y = 20; }
+            doc.setFillColor(LIGHT_GRAY[0], LIGHT_GRAY[1], LIGHT_GRAY[2]);
+            doc.roundedRect(margin + 3, y, contentW - 6, 6, 1, 1, "F");
+            doc.setTextColor(MID_GRAY[0], MID_GRAY[1], MID_GRAY[2]);
+            doc.setFontSize(6);
+            doc.setFont("helvetica", "bold");
+            doc.text("CAPTION (ARABIC)", margin + 6, y + 4.5);
+            y += 8;
+            try {
+                const arImg = renderArabicTextImage(item.captionAr, contentW - 6, 22);
+                if (y + arImg.heightMm > pageH - 18) { doc.addPage(); y = 20; }
+                doc.addImage(arImg.dataUrl, "PNG", margin + 3, y, arImg.widthMm, arImg.heightMm);
+                y += arImg.heightMm + 4;
+            } catch { y += 4; }
+        }
+
+        // Article fields
+        if (item.articleTitle || item.articleContent) {
+            const artRows: [string, string][] = [];
+            if (item.articleTitle) artRows.push(["Article Title", item.articleTitle]);
+            if (item.articleContent) artRows.push(["Content / Link", item.articleContent]);
+            if (y + 20 > pageH - 18) { doc.addPage(); y = 20; }
             autoTable(doc, {
                 startY: y,
-                body: contentRows,
+                body: artRows,
                 styles: { fontSize: 8.5, cellPadding: 3.5, overflow: "linebreak" },
                 columnStyles: { 0: { fontStyle: "bold", fillColor: LIGHT_GRAY, cellWidth: 42, textColor: MID_GRAY }, 1: { textColor: DARK } },
                 margin: { left: margin + 3, right: margin },
                 theme: "plain",
             });
             // @ts-ignore
-            y = (doc as any).lastAutoTable.finalY + 2;
+            y = (doc as any).lastAutoTable.finalY + 4;
         }
 
-        // AM Comment
+        // Poll
+        if (item.pollQuestion) {
+            if (y + 16 > pageH - 18) { doc.addPage(); y = 20; }
+            doc.setFillColor(255, 244, 230);
+            doc.roundedRect(margin + 3, y, contentW - 6, 6, 1, 1, "F");
+            doc.setTextColor(ORANGE[0], ORANGE[1], ORANGE[2]);
+            doc.setFontSize(6);
+            doc.setFont("helvetica", "bold");
+            doc.text("POLL", margin + 6, y + 4.5);
+            y += 8;
+            const pollImg = renderArabicTextImage(item.pollQuestion, contentW - 6, 22);
+            if (y + pollImg.heightMm > pageH - 18) { doc.addPage(); y = 20; }
+            doc.addImage(pollImg.dataUrl, "PNG", margin + 3, y, pollImg.widthMm, pollImg.heightMm);
+            y += pollImg.heightMm + 2;
+            if (item.pollOptionA) {
+                const aImg = renderArabicTextImage(`A. ${item.pollOptionA}`, contentW / 2 - 4, 18);
+                doc.addImage(aImg.dataUrl, "PNG", margin + 3, y, aImg.widthMm, aImg.heightMm);
+            }
+            if (item.pollOptionB) {
+                const bImg = renderArabicTextImage(`B. ${item.pollOptionB}`, contentW / 2 - 4, 18);
+                doc.addImage(bImg.dataUrl, "PNG", margin + 3 + contentW / 2, y, bImg.widthMm, bImg.heightMm);
+            }
+            if (item.pollOptionA || item.pollOptionB) y += 12;
+            y += 4;
+        }
+
+        // AM Comment — canvas-render if Arabic, plain text if English
         if (item.amComment) {
-            if (y + 20 > pageH - 18) { doc.addPage(); y = 20; }
+            if (y + 22 > pageH - 18) { doc.addPage(); y = 20; }
             doc.setFillColor(PURPLE[0], PURPLE[1], PURPLE[2]);
-            doc.rect(margin + 3, y, 3, 12, "F");
+            doc.rect(margin + 3, y, 3, 7, "F");
             doc.setFillColor(240, 235, 255);
-            doc.roundedRect(margin + 6, y, contentW - 9, 12, 2, 2, "F");
+            doc.roundedRect(margin + 6, y, contentW - 9, 7, 2, 2, "F");
             doc.setTextColor(100, 60, 180);
             doc.setFontSize(6.5);
             doc.setFont("helvetica", "bold");
-            doc.text("ACCOUNT MANAGER NOTES", margin + 10, y + 4.5);
-            doc.setFontSize(8.5);
-            doc.setFont("helvetica", "normal");
-            doc.setTextColor(DARK[0], DARK[1], DARK[2]);
-            const commentLines: string[] = doc.splitTextToSize(item.amComment, contentW - 14);
-            doc.text(commentLines[0], margin + 10, y + 9);
-            y += 14;
-            if (commentLines.length > 1) {
-                for (let l = 1; l < commentLines.length; l++) {
-                    if (y + 6 > pageH - 18) { doc.addPage(); y = 20; }
-                    doc.text(commentLines[l], margin + 10, y);
-                    y += 5;
-                }
-            }
-            y += 2;
+            doc.text("ACCOUNT MANAGER NOTES", margin + 10, y + 5);
+            y += 9;
+            const amImg = renderArabicTextImage(item.amComment, contentW - 10, 22, "#1a1a2e", "#f0ebff");
+            if (y + amImg.heightMm > pageH - 18) { doc.addPage(); y = 20; }
+            doc.addImage(amImg.dataUrl, "PNG", margin + 6, y, amImg.widthMm, amImg.heightMm);
+            y += amImg.heightMm + 4;
         }
 
-        // Client Comment
+        // Client Comment — canvas-render for proper Arabic support
         if (item.clientComment) {
-            if (y + 20 > pageH - 18) { doc.addPage(); y = 20; }
+            if (y + 22 > pageH - 18) { doc.addPage(); y = 20; }
             doc.setFillColor(ORANGE[0], ORANGE[1], ORANGE[2]);
-            doc.rect(margin + 3, y, 3, 12, "F");
+            doc.rect(margin + 3, y, 3, 7, "F");
             doc.setFillColor(255, 245, 235);
-            doc.roundedRect(margin + 6, y, contentW - 9, 12, 2, 2, "F");
+            doc.roundedRect(margin + 6, y, contentW - 9, 7, 2, 2, "F");
             doc.setTextColor(ORANGE[0], ORANGE[1], ORANGE[2]);
             doc.setFontSize(6.5);
             doc.setFont("helvetica", "bold");
-            doc.text(`CLIENT FEEDBACK ${item.feedbackResolved ? "(RESOLVED)" : "(PENDING)"}`, margin + 10, y + 4.5);
-            doc.setFontSize(8.5);
-            doc.setFont("helvetica", "normal");
-            doc.setTextColor(DARK[0], DARK[1], DARK[2]);
-            const fbLines: string[] = doc.splitTextToSize(item.clientComment, contentW - 14);
-            doc.text(fbLines[0], margin + 10, y + 9);
-            y += 14;
-            if (fbLines.length > 1) {
-                for (let l = 1; l < fbLines.length; l++) {
-                    if (y + 6 > pageH - 18) { doc.addPage(); y = 20; }
-                    doc.text(fbLines[l], margin + 10, y);
-                    y += 5;
-                }
-            }
-            y += 2;
+            doc.text(`CLIENT FEEDBACK ${item.feedbackResolved ? "(RESOLVED)" : "(PENDING)"}`, margin + 10, y + 5);
+            y += 9;
+            const fbImg = renderArabicTextImage(item.clientComment, contentW - 10, 22, "#7c3d12", "#fff5eb");
+            if (y + fbImg.heightMm > pageH - 18) { doc.addPage(); y = 20; }
+            doc.addImage(fbImg.dataUrl, "PNG", margin + 6, y, fbImg.widthMm, fbImg.heightMm);
+            y += fbImg.heightMm + 4;
         }
 
         y += 8; // space between items
