@@ -266,19 +266,21 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
                     <p className="text-sm text-muted-foreground">{t("reports.compare_metrics")}</p>
                 </CardHeader>
                 <CardContent className="h-[300px] md:h-[400px] w-full pt-10 px-0">
-                    <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                            <XAxis dataKey="name" fontSize={12} fontWeight="700" tickLine={false} axisLine={false} reversed={isRtl} />
-                            <YAxis fontSize={12} tickLine={false} axisLine={false} orientation={isRtl ? 'right' : 'left'} />
-                            <Tooltip
-                                cursor={{ fill: 'rgba(255,255,255,0.05)' }}
-                                contentStyle={{ borderRadius: '20px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)', boxShadow: '0 25px 50px -12px rgb(0 0 0 / 0.5)' }}
-                            />
-                            <Legend wrapperStyle={{ paddingTop: '20px' }} />
-                            <Bar dataKey="impressions" name={t("reports.impressions")} fill="#3b82f6" radius={[10, 10, 0, 0]} barSize={40} />
-                            <Bar dataKey="engagement" name={t("reports.interactions")} fill="#10b981" radius={[10, 10, 0, 0]} barSize={40} />
-                        </BarChart>
-                    </ResponsiveContainer>
+                    <div dir="ltr">
+                        <ResponsiveContainer width="100%" height={340}>
+                            <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                                <XAxis dataKey="name" fontSize={12} fontWeight="700" tickLine={false} axisLine={false} />
+                                <YAxis fontSize={12} tickLine={false} axisLine={false} />
+                                <Tooltip
+                                    cursor={{ fill: 'rgba(255,255,255,0.05)' }}
+                                    contentStyle={{ borderRadius: '16px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(15,15,25,0.95)', backdropFilter: 'blur(10px)', color: '#fff' }}
+                                />
+                                <Legend wrapperStyle={{ paddingTop: '20px' }} />
+                                <Bar dataKey="impressions" name={t("reports.impressions")} fill="#3b82f6" radius={[10, 10, 0, 0]} barSize={40} />
+                                <Bar dataKey="engagement" name={t("reports.interactions")} fill="#10b981" radius={[10, 10, 0, 0]} barSize={40} />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
                 </CardContent>
             </Card>
 
@@ -292,16 +294,18 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
                             <p className="text-sm text-muted-foreground">Breakdown by platform</p>
                         </CardHeader>
                         <CardContent className="h-[280px] px-0">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <PieChart>
-                                    <Pie data={chartData} dataKey="impressions" nameKey="name" cx="50%" cy="45%" outerRadius={85} innerRadius={45} paddingAngle={3}
-                                        label={({ name, percent }: any) => `${name} ${((percent || 0) * 100).toFixed(0)}%`} labelLine={false}>
-                                        {chartData.map((_, index) => (<Cell key={index} fill={["#3b82f6", "#10b981", "#f97316", "#a855f7", "#ef4444", "#eab308", "#06b6d4"][index % 7]} />))}
-                                    </Pie>
-                                    <Tooltip contentStyle={{ borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(10,10,20,0.9)' }} formatter={(v: any) => [v?.toLocaleString(), 'Impressions']} />
-                                    <Legend />
-                                </PieChart>
-                            </ResponsiveContainer>
+                            <div dir="ltr">
+                                <ResponsiveContainer width="100%" height={280}>
+                                    <PieChart>
+                                        <Pie data={chartData} dataKey="impressions" nameKey="name" cx="50%" cy="45%" outerRadius={85} innerRadius={45} paddingAngle={3}
+                                            label={({ name, percent }: any) => `${name} ${((percent || 0) * 100).toFixed(0)}%`} labelLine={false}>
+                                            {chartData.map((_, index) => (<Cell key={index} fill={["#3b82f6", "#10b981", "#f97316", "#a855f7", "#ef4444", "#eab308", "#06b6d4"][index % 7]} />))}
+                                        </Pie>
+                                        <Tooltip contentStyle={{ borderRadius: '16px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(15,15,25,0.95)', color: '#fff' }} formatter={(v: any) => [v?.toLocaleString(), t("reports.impressions")]} />
+                                        <Legend />
+                                    </PieChart>
+                                </ResponsiveContainer>
+                            </div>
                         </CardContent>
                     </Card>
 
@@ -312,17 +316,19 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
                             <p className="text-sm text-muted-foreground">Growth per platform this period</p>
                         </CardHeader>
                         <CardContent className="h-[280px] px-0">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={chartData} layout="vertical" margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                                    <XAxis type="number" fontSize={11} tickLine={false} axisLine={false} />
-                                    <YAxis dataKey="name" type="category" fontSize={11} tickLine={false} axisLine={false} width={70} />
-                                    <Tooltip contentStyle={{ borderRadius: '16px', background: 'rgba(10,10,20,0.9)', border: '1px solid rgba(255,255,255,0.1)' }} formatter={(v: any) => [v?.toLocaleString(), 'Followers']} />
-                                    <Bar dataKey="followers" name="Followers" radius={[0, 8, 8, 0]} barSize={22}>
-                                        {chartData.map((_, i) => (<Cell key={i} fill={["#a855f7", "#3b82f6", "#10b981", "#f97316", "#ef4444", "#eab308", "#06b6d4"][i % 7]} />))}
-                                    </Bar>
-                                </BarChart>
-                            </ResponsiveContainer>
+                            <div dir="ltr">
+                                <ResponsiveContainer width="100%" height={280}>
+                                    <BarChart data={chartData} layout="vertical" margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                                        <XAxis type="number" fontSize={11} tickLine={false} axisLine={false} />
+                                        <YAxis dataKey="name" type="category" fontSize={11} tickLine={false} axisLine={false} width={70} />
+                                        <Tooltip contentStyle={{ borderRadius: '16px', background: 'rgba(15,15,25,0.95)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff' }} formatter={(v: any) => [v?.toLocaleString(), t("reports.growth")]} />
+                                        <Bar dataKey="followers" name={t("reports.new_followers")} radius={[0, 8, 8, 0]} barSize={22}>
+                                            {chartData.map((_, i) => (<Cell key={i} fill={["#a855f7", "#3b82f6", "#10b981", "#f97316", "#ef4444", "#eab308", "#06b6d4"][i % 7]} />))}
+                                        </Bar>
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </div>
                         </CardContent>
                     </Card>
 
@@ -334,16 +340,18 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
                                 <p className="text-sm text-muted-foreground">{t("reports.spend_dist_sub")}</p>
                             </CardHeader>
                             <CardContent className="h-[280px] px-0">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <PieChart>
-                                        <Pie data={spendData} dataKey="spend" nameKey="name" cx="50%" cy="45%" outerRadius={85} innerRadius={45} paddingAngle={3}
-                                            label={({ name, percent }: any) => `${name} ${((percent || 0) * 100).toFixed(0)}%`} labelLine={false}>
-                                            {spendData.map((_, i) => (<Cell key={i} fill={["#f97316", "#ef4444", "#eab308", "#3b82f6", "#a855f7", "#10b981", "#06b6d4"][i % 7]} />))}
-                                        </Pie>
-                                        <Tooltip contentStyle={{ borderRadius: '16px', background: 'rgba(10,10,20,0.9)', border: '1px solid rgba(255,255,255,0.1)' }} formatter={(v: any) => [`$${v?.toLocaleString()}`, 'Spend']} />
-                                        <Legend />
-                                    </PieChart>
-                                </ResponsiveContainer>
+                                <div dir="ltr">
+                                    <ResponsiveContainer width="100%" height={280}>
+                                        <PieChart>
+                                            <Pie data={spendData} dataKey="spend" nameKey="name" cx="50%" cy="45%" outerRadius={85} innerRadius={45} paddingAngle={3}
+                                                label={({ name, percent }: any) => `${name} ${((percent || 0) * 100).toFixed(0)}%`} labelLine={false}>
+                                                {spendData.map((_, i) => (<Cell key={i} fill={["#f97316", "#ef4444", "#eab308", "#3b82f6", "#a855f7", "#10b981", "#06b6d4"][i % 7]} />))}
+                                            </Pie>
+                                            <Tooltip contentStyle={{ borderRadius: '16px', background: 'rgba(15,15,25,0.95)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff' }} formatter={(v: any) => [`$${v?.toLocaleString()}`, t("reports.investment")]} />
+                                            <Legend />
+                                        </PieChart>
+                                    </ResponsiveContainer>
+                                </div>
                             </CardContent>
                         </Card>
                     )}
@@ -356,17 +364,19 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
                                 <p className="text-sm text-muted-foreground">{t("reports.video_views_sub")}</p>
                             </CardHeader>
                             <CardContent className="h-[280px] px-0">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <BarChart data={extendedChartData.filter(d => d.views > 0)} layout="vertical" margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                                        <XAxis type="number" fontSize={11} tickLine={false} axisLine={false} />
-                                        <YAxis dataKey="name" type="category" fontSize={11} tickLine={false} axisLine={false} width={70} />
-                                        <Tooltip contentStyle={{ borderRadius: '16px', background: 'rgba(10,10,20,0.9)', border: '1px solid rgba(255,255,255,0.1)' }} formatter={(v: any) => [v?.toLocaleString(), 'Views']} />
-                                        <Bar dataKey="views" name="Views" radius={[0, 8, 8, 0]} barSize={22} fill="#ec4899">
-                                            {extendedChartData.filter(d => d.views > 0).map((_, i) => (<Cell key={i} fill={["#ec4899", "#f97316", "#06b6d4", "#8b5cf6"][i % 4]} />))}
-                                        </Bar>
-                                    </BarChart>
-                                </ResponsiveContainer>
+                                <div dir="ltr">
+                                    <ResponsiveContainer width="100%" height={280}>
+                                        <BarChart data={extendedChartData.filter(d => d.views > 0)} layout="vertical" margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
+                                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                                            <XAxis type="number" fontSize={11} tickLine={false} axisLine={false} />
+                                            <YAxis dataKey="name" type="category" fontSize={11} tickLine={false} axisLine={false} width={70} />
+                                            <Tooltip contentStyle={{ borderRadius: '16px', background: 'rgba(15,15,25,0.95)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff' }} formatter={(v: any) => [v?.toLocaleString(), t("common.views")]} />
+                                            <Bar dataKey="views" name={t("common.views")} radius={[0, 8, 8, 0]} barSize={22} fill="#ec4899">
+                                                {extendedChartData.filter(d => d.views > 0).map((_, i) => (<Cell key={i} fill={["#ec4899", "#f97316", "#06b6d4", "#8b5cf6"][i % 4]} />))}
+                                            </Bar>
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </div>
                             </CardContent>
                         </Card>
                     )}
