@@ -1,7 +1,9 @@
 /**
  * Data-driven PDF report generator using jsPDF — COMPLETE data coverage.
  * Every field shown on the website also appears here.
+ * Arabic text is rendered via canvas (full RTL + ligature support).
  */
+import { renderArabicTextImage, containsArabic } from "./pdf-arabic-helper";
 
 const PLATFORM_NAMES: Record<string, string> = {
     facebook: "Facebook",
@@ -126,16 +128,24 @@ export async function generateReportPdf(report: any, metrics: any) {
         doc.text("STRATEGIC SUMMARY", margin + 8, y + 5.5);
         y += 10;
 
-        const lines: string[] = doc.splitTextToSize(metrics.summary, cW);
-        doc.setTextColor(DARK[0], DARK[1], DARK[2]);
-        doc.setFontSize(9);
-        doc.setFont("helvetica", "normal");
-        for (const line of lines) {
-            checkPage(7);
-            doc.text(line, margin, y);
-            y += 5.5;
+        // Use canvas renderer for Arabic/mixed text (correct RTL + ligatures)
+        if (containsArabic(metrics.summary)) {
+            const summaryImg = renderArabicTextImage(metrics.summary, cW, 20, "#1a1a2e", "#f9f9fc");
+            checkPage(summaryImg.heightMm);
+            doc.addImage(summaryImg.dataUrl, "PNG", margin, y, summaryImg.widthMm, summaryImg.heightMm);
+            y += summaryImg.heightMm + 6;
+        } else {
+            const lines: string[] = doc.splitTextToSize(metrics.summary, cW);
+            doc.setTextColor(DARK[0], DARK[1], DARK[2]);
+            doc.setFontSize(9);
+            doc.setFont("helvetica", "normal");
+            for (const line of lines) {
+                checkPage(7);
+                doc.text(line, margin, y);
+                y += 5.5;
+            }
+            y += 6;
         }
-        y += 6;
     }
 
     // ─── PLATFORM PERFORMANCE TABLE (FULL) ───────────────────────────────────

@@ -99,7 +99,27 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
         followers: activePlatforms.reduce((acc, key) => acc + (Number(metrics.platforms[key].followers) || 0), 0),
         conversions: activePlatforms.reduce((acc, key) => acc + (Number(metrics.platforms[key].conversions) || 0), 0),
         spend: activePlatforms.reduce((acc, key) => acc + (Number(metrics.platforms[key].spend) || 0), 0),
+        paidReach: activePlatforms.reduce((acc, key) => acc + (Number(metrics.platforms[key].paidReach) || 0), 0),
+        views: activePlatforms.reduce((acc, key) => acc + (Number(metrics.platforms[key].views) || 0), 0),
     };
+
+    // Extended chart data
+    const extendedChartData = activePlatforms.map(key => ({
+        name: PLATFORM_NAMES[key as keyof typeof PLATFORM_NAMES] || key,
+        impressions: metrics.platforms[key].impressions || 0,
+        engagement: metrics.platforms[key].engagement || 0,
+        followers: metrics.platforms[key].followers || 0,
+        views: metrics.platforms[key].views || 0,
+        spend: metrics.platforms[key].spend || 0,
+        paidReach: metrics.platforms[key].paidReach || 0,
+        conversions: metrics.platforms[key].conversions || 0,
+    }));
+
+    const spendData = extendedChartData.filter(d => d.spend > 0);
+    const hasSpend = spendData.length > 0;
+    const hasViews = globalTotals.views > 0;
+    const hasPaidReach = globalTotals.paidReach > 0;
+    const hasConversions = globalTotals.conversions > 0;
 
     return (
         <div className="space-y-12 max-w-6xl mx-auto pb-20 print:p-0 px-4 md:px-0" dir={isRtl ? "rtl" : "ltr"} id="pdf-content">
@@ -169,47 +189,60 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
                 </div>
             </div>
 
-            {/* Global Performance Matrix */}
-            <div className={`grid gap-6 grid-cols-2 md:grid-cols-4 ${isRtl ? 'flex-row-reverse' : ''}`}>
-                <Card className="bg-primary/5 border-none shadow-none backdrop-blur-md">
-                    <CardHeader className={`pb-2 ${isRtl ? 'text-right' : 'text-left'}`}>
-                        <CardTitle className="text-[10px] uppercase font-black tracking-widest text-muted-foreground">{t("reports.impressions")}</CardTitle>
-                    </CardHeader>
-                    <CardContent className={isRtl ? 'text-right' : 'text-left'}>
-                        <div className="text-2xl md:text-4xl font-black italic">{(globalTotals.impressions).toLocaleString()}</div>
-                        <div className={`text-[10px] text-emerald-500 font-bold mt-2 flex items-center gap-1 ${isRtl ? 'flex-row-reverse' : ''}`}>
-                            <TrendingUp className="h-3 w-3" /> {t("common.combined")}
-                        </div>
-                    </CardContent>
-                </Card>
-                <Card className="bg-blue-500/5 border-none shadow-none">
-                    <CardHeader className={`pb-2 ${isRtl ? 'text-right' : 'text-left'}`}>
-                        <CardTitle className="text-[10px] uppercase font-black tracking-widest text-muted-foreground">{t("reports.engagements")}</CardTitle>
-                    </CardHeader>
-                    <CardContent className={isRtl ? 'text-right' : 'text-left'}>
-                        <div className="text-2xl md:text-4xl font-black italic">{(globalTotals.engagement).toLocaleString()}</div>
-                        <div className={`text-[10px] text-blue-500 font-bold mt-2 flex items-center gap-1 ${isRtl ? 'flex-row-reverse' : ''}`}>{t("reports.interactions")}</div>
-                    </CardContent>
-                </Card>
-                <Card className="bg-purple-500/5 border-none shadow-none">
-                    <CardHeader className={`pb-2 ${isRtl ? 'text-right' : 'text-left'}`}>
-                        <CardTitle className="text-[10px] uppercase font-black tracking-widest text-muted-foreground">{t("reports.growth")}</CardTitle>
-                    </CardHeader>
-                    <CardContent className={isRtl ? 'text-right' : 'text-left'}>
-                        <div className="text-2xl md:text-4xl font-black italic">{(globalTotals.followers).toLocaleString()}</div>
-                        <div className="text-[10px] text-purple-500 font-bold mt-2">{t("reports.new_followers")}</div>
-                    </CardContent>
-                </Card>
-                <Card className="bg-orange-500/5 border-none shadow-none">
-                    <CardHeader className={`pb-2 ${isRtl ? 'text-right' : 'text-left'}`}>
-                        <CardTitle className="text-[10px] uppercase font-black tracking-widest text-muted-foreground">{t("reports.investment")}</CardTitle>
-                    </CardHeader>
-                    <CardContent className={isRtl ? 'text-right' : 'text-left'}>
-                        <div className="text-2xl md:text-4xl font-black italic">${(globalTotals.spend).toLocaleString()}</div>
-                        <div className="text-[10px] text-orange-500 font-bold mt-2">{t("reports.paid_media")}</div>
-                    </CardContent>
-                </Card>
+            {/* Global Performance Matrix — Row 1 */}
+            <div className={`grid gap-4 grid-cols-2 md:grid-cols-4 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                {[
+                    { label: t("reports.impressions"), value: globalTotals.impressions, color: 'bg-primary/5', valueColor: '', sub: t("common.combined"), subColor: 'text-emerald-500', icon: <TrendingUp className="h-3 w-3" /> },
+                    { label: t("reports.engagements"), value: globalTotals.engagement, color: 'bg-blue-500/5', valueColor: '', sub: t("reports.interactions"), subColor: 'text-blue-500', icon: null },
+                    { label: t("reports.growth"), value: globalTotals.followers, color: 'bg-purple-500/5', valueColor: '', sub: t("reports.new_followers"), subColor: 'text-purple-500', icon: null },
+                    { label: t("reports.investment"), value: null, rawValue: `$${(globalTotals.spend).toLocaleString()}`, color: 'bg-orange-500/5', valueColor: '', sub: t("reports.paid_media"), subColor: 'text-orange-500', icon: <DollarSign className="h-3 w-3" /> },
+                ].map((card) => (
+                    <Card key={card.label} className={`${card.color} border-none shadow-none backdrop-blur-md`}>
+                        <CardHeader className={`pb-2 ${isRtl ? 'text-right' : 'text-left'}`}>
+                            <CardTitle className="text-[10px] uppercase font-black tracking-widest text-muted-foreground">{card.label}</CardTitle>
+                        </CardHeader>
+                        <CardContent className={isRtl ? 'text-right' : 'text-left'}>
+                            <div className="text-2xl md:text-4xl font-black italic">{card.rawValue ?? (card.value || 0).toLocaleString()}</div>
+                            <div className={`text-[10px] font-bold mt-2 flex items-center gap-1 ${card.subColor} ${isRtl ? 'flex-row-reverse' : ''}`}>
+                                {card.icon}{card.sub}
+                            </div>
+                        </CardContent>
+                    </Card>
+                ))}
             </div>
+
+            {/* Global Performance Matrix — Row 2: extra metrics when available */}
+            {(hasViews || hasPaidReach || hasConversions) && (
+                <div className={`grid gap-4 grid-cols-2 md:grid-cols-${[hasViews, hasPaidReach, hasConversions].filter(Boolean).length} mt-0`}>
+                    {hasViews && (
+                        <Card className="bg-pink-500/5 border-none shadow-none">
+                            <CardHeader className={`pb-2 ${isRtl ? 'text-right' : 'text-left'}`}><CardTitle className="text-[10px] uppercase font-black tracking-widest text-muted-foreground">{t("common.views")}</CardTitle></CardHeader>
+                            <CardContent className={isRtl ? 'text-right' : 'text-left'}>
+                                <div className="text-2xl md:text-4xl font-black italic text-pink-500">{globalTotals.views.toLocaleString()}</div>
+                                <div className="text-[10px] text-pink-500 font-bold mt-2">Video Plays</div>
+                            </CardContent>
+                        </Card>
+                    )}
+                    {hasPaidReach && (
+                        <Card className="bg-teal-500/5 border-none shadow-none">
+                            <CardHeader className={`pb-2 ${isRtl ? 'text-right' : 'text-left'}`}><CardTitle className="text-[10px] uppercase font-black tracking-widest text-muted-foreground">Paid Reach</CardTitle></CardHeader>
+                            <CardContent className={isRtl ? 'text-right' : 'text-left'}>
+                                <div className="text-2xl md:text-4xl font-black italic text-teal-500">{globalTotals.paidReach.toLocaleString()}</div>
+                                <div className="text-[10px] text-teal-500 font-bold mt-2">Targeted Audience</div>
+                            </CardContent>
+                        </Card>
+                    )}
+                    {hasConversions && (
+                        <Card className="bg-rose-500/5 border-none shadow-none">
+                            <CardHeader className={`pb-2 ${isRtl ? 'text-right' : 'text-left'}`}><CardTitle className="text-[10px] uppercase font-black tracking-widest text-muted-foreground">Conversions</CardTitle></CardHeader>
+                            <CardContent className={isRtl ? 'text-right' : 'text-left'}>
+                                <div className="text-2xl md:text-4xl font-black italic text-rose-500">{globalTotals.conversions.toLocaleString()}</div>
+                                <div className="text-[10px] text-rose-500 font-bold mt-2">Completed Actions</div>
+                            </CardContent>
+                        </Card>
+                    )}
+                </div>
+            )}
 
             {/* Executive Summary */}
             <Card className="border-none bg-card/40 backdrop-blur-xl shadow-2xl overflow-hidden ring-1 ring-white/10">
@@ -251,67 +284,92 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
 
             {/* Two-column charts: Pie + Followers Bar */}
             {activePlatforms.length > 0 && (
-                <div className="grid gap-8 grid-cols-1 lg:grid-cols-2">
-                    {/* Impressions Distribution Pie Chart */}
+                <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
+                    {/* Impressions Distribution Pie */}
                     <Card className="border-none shadow-sm bg-card/40 backdrop-blur-sm p-4 md:p-6">
                         <CardHeader className={`px-0 pt-0 ${isRtl ? 'text-right' : ''}`}>
                             <CardTitle className="text-xl font-black">{t("reports.impressions")} Distribution</CardTitle>
                             <p className="text-sm text-muted-foreground">Breakdown by platform</p>
                         </CardHeader>
-                        <CardContent className="h-[300px] px-0">
+                        <CardContent className="h-[280px] px-0">
                             <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
-                                    <Pie
-                                        data={chartData}
-                                        dataKey="impressions"
-                                        nameKey="name"
-                                        cx="50%"
-                                        cy="45%"
-                                        outerRadius={90}
-                                        innerRadius={50}
-                                        paddingAngle={3}
-                                        label={({ name, percent }: any) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
-                                        labelLine={false}
-                                    >
-                                        {chartData.map((_, index) => (
-                                            <Cell key={index} fill={["#3b82f6", "#10b981", "#f97316", "#a855f7", "#ef4444", "#eab308", "#06b6d4"][index % 7]} />
-                                        ))}
+                                    <Pie data={chartData} dataKey="impressions" nameKey="name" cx="50%" cy="45%" outerRadius={85} innerRadius={45} paddingAngle={3}
+                                        label={({ name, percent }: any) => `${name} ${((percent || 0) * 100).toFixed(0)}%`} labelLine={false}>
+                                        {chartData.map((_, index) => (<Cell key={index} fill={["#3b82f6", "#10b981", "#f97316", "#a855f7", "#ef4444", "#eab308", "#06b6d4"][index % 7]} />))}
                                     </Pie>
-                                    <Tooltip
-                                        contentStyle={{ borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(10,10,20,0.9)', boxShadow: '0 25px 50px -12px rgb(0 0 0 / 0.5)' }}
-                                        formatter={(value: any) => [value?.toLocaleString(), 'Impressions']}
-                                    />
+                                    <Tooltip contentStyle={{ borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(10,10,20,0.9)' }} formatter={(v: any) => [v?.toLocaleString(), 'Impressions']} />
                                     <Legend />
                                 </PieChart>
                             </ResponsiveContainer>
                         </CardContent>
                     </Card>
 
-                    {/* Followers Chart */}
+                    {/* Followers horizontal bar */}
                     <Card className="border-none shadow-sm bg-card/40 backdrop-blur-sm p-4 md:p-6">
                         <CardHeader className={`px-0 pt-0 ${isRtl ? 'text-right' : ''}`}>
                             <CardTitle className="text-xl font-black">New Followers</CardTitle>
                             <p className="text-sm text-muted-foreground">Growth per platform this period</p>
                         </CardHeader>
-                        <CardContent className="h-[300px] px-0">
+                        <CardContent className="h-[280px] px-0">
                             <ResponsiveContainer width="100%" height="100%">
                                 <BarChart data={chartData} layout="vertical" margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
                                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
                                     <XAxis type="number" fontSize={11} tickLine={false} axisLine={false} />
                                     <YAxis dataKey="name" type="category" fontSize={11} tickLine={false} axisLine={false} width={70} />
-                                    <Tooltip
-                                        contentStyle={{ borderRadius: '16px', background: 'rgba(10,10,20,0.9)', border: '1px solid rgba(255,255,255,0.1)' }}
-                                        formatter={(v: any) => [v?.toLocaleString(), 'Followers']}
-                                    />
-                                    <Bar dataKey="followers" name="Followers" radius={[0, 8, 8, 0]} barSize={24}>
-                                        {chartData.map((_, i) => (
-                                            <Cell key={i} fill={["#a855f7", "#3b82f6", "#10b981", "#f97316", "#ef4444", "#eab308", "#06b6d4"][i % 7]} />
-                                        ))}
+                                    <Tooltip contentStyle={{ borderRadius: '16px', background: 'rgba(10,10,20,0.9)', border: '1px solid rgba(255,255,255,0.1)' }} formatter={(v: any) => [v?.toLocaleString(), 'Followers']} />
+                                    <Bar dataKey="followers" name="Followers" radius={[0, 8, 8, 0]} barSize={22}>
+                                        {chartData.map((_, i) => (<Cell key={i} fill={["#a855f7", "#3b82f6", "#10b981", "#f97316", "#ef4444", "#eab308", "#06b6d4"][i % 7]} />))}
                                     </Bar>
                                 </BarChart>
                             </ResponsiveContainer>
                         </CardContent>
                     </Card>
+
+                    {/* Spend Distribution — only when spend data exists */}
+                    {hasSpend && (
+                        <Card className="border-none shadow-sm bg-card/40 backdrop-blur-sm p-4 md:p-6">
+                            <CardHeader className={`px-0 pt-0 ${isRtl ? 'text-right' : ''}`}>
+                                <CardTitle className="text-xl font-black">Ad Spend Distribution</CardTitle>
+                                <p className="text-sm text-muted-foreground">Budget allocation per platform</p>
+                            </CardHeader>
+                            <CardContent className="h-[280px] px-0">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <PieChart>
+                                        <Pie data={spendData} dataKey="spend" nameKey="name" cx="50%" cy="45%" outerRadius={85} innerRadius={45} paddingAngle={3}
+                                            label={({ name, percent }: any) => `${name} ${((percent || 0) * 100).toFixed(0)}%`} labelLine={false}>
+                                            {spendData.map((_, i) => (<Cell key={i} fill={["#f97316", "#ef4444", "#eab308", "#3b82f6", "#a855f7", "#10b981", "#06b6d4"][i % 7]} />))}
+                                        </Pie>
+                                        <Tooltip contentStyle={{ borderRadius: '16px', background: 'rgba(10,10,20,0.9)', border: '1px solid rgba(255,255,255,0.1)' }} formatter={(v: any) => [`$${v?.toLocaleString()}`, 'Spend']} />
+                                        <Legend />
+                                    </PieChart>
+                                </ResponsiveContainer>
+                            </CardContent>
+                        </Card>
+                    )}
+
+                    {/* Video Views bar — only when views data exists */}
+                    {hasViews && (
+                        <Card className="border-none shadow-sm bg-card/40 backdrop-blur-sm p-4 md:p-6">
+                            <CardHeader className={`px-0 pt-0 ${isRtl ? 'text-right' : ''}`}>
+                                <CardTitle className="text-xl font-black">Video Views</CardTitle>
+                                <p className="text-sm text-muted-foreground">Total video plays per platform</p>
+                            </CardHeader>
+                            <CardContent className="h-[280px] px-0">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <BarChart data={extendedChartData.filter(d => d.views > 0)} layout="vertical" margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                                        <XAxis type="number" fontSize={11} tickLine={false} axisLine={false} />
+                                        <YAxis dataKey="name" type="category" fontSize={11} tickLine={false} axisLine={false} width={70} />
+                                        <Tooltip contentStyle={{ borderRadius: '16px', background: 'rgba(10,10,20,0.9)', border: '1px solid rgba(255,255,255,0.1)' }} formatter={(v: any) => [v?.toLocaleString(), 'Views']} />
+                                        <Bar dataKey="views" name="Views" radius={[0, 8, 8, 0]} barSize={22} fill="#ec4899">
+                                            {extendedChartData.filter(d => d.views > 0).map((_, i) => (<Cell key={i} fill={["#ec4899", "#f97316", "#06b6d4", "#8b5cf6"][i % 4]} />))}
+                                        </Bar>
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </CardContent>
+                        </Card>
+                    )}
                 </div>
             )}
 
@@ -346,6 +404,8 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
                                             { label: t('reports.engagements'), value: data.engagement, color: 'text-emerald-500' },
                                             { label: t('reports.growth'), value: data.followers, color: 'text-purple-500' },
                                             { label: t('common.views'), value: data.views, color: 'text-pink-500' },
+                                            { label: 'Paid Reach', value: data.paidReach, color: 'text-teal-500' },
+                                            { label: 'Conversions', value: data.conversions, color: 'text-rose-500' },
                                         ].map((item, i) => (item.value || 0) > 0 ? (
                                             <div key={i} className={`p-4 rounded-2xl bg-muted/20 border border-border/50 print:bg-white print:border ${isRtl ? 'text-right' : 'text-left'}`}>
                                                 <div className="text-[10px] font-black uppercase text-muted-foreground mb-1">{item.label}</div>
