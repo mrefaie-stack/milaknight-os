@@ -22,19 +22,33 @@ import {
 } from "@/components/ui/select";
 import { addContentItem } from "@/app/actions/action-plan";
 import { toast } from "sonner";
-import { Loader2, Plus } from "lucide-react";
+import { Loader2, Plus, MessageSquare } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
+
+const PLATFORMS = [
+    "Facebook", "Instagram", "TikTok", "Snapchat", "LinkedIn", "YouTube", "Twitter"
+];
 
 export function AddItemDialog({ planId }: { planId: string }) {
     const [open, setOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [type, setType] = useState("POST");
+    const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
 
     async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
+
+        if (selectedPlatforms.length === 0) {
+            toast.error("Please select at least one target platform.");
+            return;
+        }
+
         setIsLoading(true);
         const formData = new FormData(event.currentTarget);
         const data = Object.fromEntries(formData.entries());
         data.type = type;
+        data.platform = selectedPlatforms.join(', ');
 
         try {
             await addContentItem(planId, data);
@@ -42,6 +56,7 @@ export function AddItemDialog({ planId }: { planId: string }) {
             setOpen(false);
             // reset form
             event.currentTarget.reset();
+            setSelectedPlatforms([]);
         } catch (error: any) {
             toast.error(error.message || "Failed to add item");
         } finally {
@@ -79,9 +94,31 @@ export function AddItemDialog({ planId }: { planId: string }) {
                         </Select>
                     </div>
 
-                    <div className="grid gap-2">
-                        <Label htmlFor="platform">Platform</Label>
-                        <Input id="platform" name="platform" placeholder="e.g. Facebook, LinkedIn, Website" required />
+                    <div className="grid gap-3">
+                        <Label>Platform</Label>
+                        <div className="flex flex-wrap gap-3">
+                            {PLATFORMS.map((plat) => {
+                                const isChecked = selectedPlatforms.includes(plat);
+                                return (
+                                    <div key={plat} className="flex items-center space-x-1.5 bg-background border px-2 py-1 rounded-md">
+                                        <Checkbox
+                                            id={`add-plat-${plat}`}
+                                            checked={isChecked}
+                                            onCheckedChange={(checked) => {
+                                                if (checked) {
+                                                    setSelectedPlatforms(prev => [...prev, plat]);
+                                                } else {
+                                                    setSelectedPlatforms(prev => prev.filter(p => p !== plat));
+                                                }
+                                            }}
+                                        />
+                                        <label htmlFor={`add-plat-${plat}`} className="text-xs font-semibold cursor-pointer">
+                                            {plat}
+                                        </label>
+                                    </div>
+                                );
+                            })}
+                        </div>
                     </div>
 
                     <div className="grid gap-2">
@@ -140,6 +177,19 @@ export function AddItemDialog({ planId }: { planId: string }) {
                             </div>
                         </>
                     )}
+
+                    {/* AM Comment section */}
+                    <div className="grid gap-2 mt-2 border-t pt-4 border-border/40">
+                        <Label className="flex items-center gap-2 text-primary font-bold">
+                            <MessageSquare className="h-4 w-4" />
+                            Account Manager Notes (Optional)
+                        </Label>
+                        <Textarea
+                            name="amComment"
+                            className="h-20 bg-primary/5 border-primary/20 placeholder:text-primary/40 focus-visible:ring-primary/30"
+                            placeholder="Add your comments or instructions here... The client can see this."
+                        />
+                    </div>
 
                     <DialogFooter className="mt-4">
                         <Button type="submit" disabled={isLoading}>
