@@ -4,6 +4,7 @@ import { PlanApprovalHeader } from "@/components/action-plan/plan-approval-heade
 import { ClientApprovalActions } from "@/components/action-plan/client-approval-actions";
 import { Badge } from "@/components/ui/badge";
 import { Image as ImageIcon, Video, AlignLeft, HelpCircle, MessageCircle, Printer } from "lucide-react";
+import { ExportPdfButton } from "@/components/action-plan/export-pdf-button";
 import { Button } from "@/components/ui/button";
 
 export default async function ClientActionPlanPage({ params }: { params: Promise<{ planId: string }> }) {
@@ -37,9 +38,7 @@ export default async function ClientActionPlanPage({ params }: { params: Promise
                     <p className="text-muted-foreground font-medium">Month: {plan.month}</p>
                 </div>
                 <div className="print:hidden">
-                    <Button onClick={() => window.print()} variant="secondary" className="font-bold rounded-full border border-primary/20">
-                        <Printer className="mr-2 h-4 w-4" /> Export PDF
-                    </Button>
+                    <ExportPdfButton className="font-bold rounded-full border border-primary/20" />
                 </div>
             </div>
 
