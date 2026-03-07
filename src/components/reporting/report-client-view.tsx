@@ -2,12 +2,12 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Printer, Facebook, Instagram, Video, Share2, Linkedin, Search, Youtube, TrendingUp, DollarSign, Target, Globe, BarChart3, Send, Mail, Trash2 } from "lucide-react";
+import { Printer, Facebook, Instagram, Video, Share2, Linkedin, Search, Youtube, TrendingUp, DollarSign, Target, Globe, BarChart3, Send, Mail, Trash2, Download, Loader2 } from "lucide-react";
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend } from "recharts";
 import { publishReport, requestReportDeletion } from "@/app/actions/report";
-import { ExportPdfButton } from "@/components/action-plan/export-pdf-button";
 import { useState } from "react";
 import { toast } from "sonner";
+import { generateReportPdf } from "@/lib/generate-report-pdf";
 
 import { useLanguage } from "@/contexts/language-context";
 
@@ -35,8 +35,21 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
     const { t, isRtl } = useLanguage();
     const [isPublishing, setIsPublishing] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [isDownloading, setIsDownloading] = useState(false);
     const [status, setStatus] = useState(report.status);
     const [isDeletionRequested, setIsDeletionRequested] = useState(false);
+
+    async function handleDownloadPdf() {
+        setIsDownloading(true);
+        try {
+            await generateReportPdf(report, metrics);
+        } catch (e) {
+            toast.error("Failed to generate PDF");
+            console.error(e);
+        } finally {
+            setIsDownloading(false);
+        }
+    }
 
     async function handlePublish() {
         setIsPublishing(true);
@@ -144,7 +157,15 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
                             {t("dashboard.pending_deletion")}
                         </div>
                     )}
-                    <ExportPdfButton fileName={`Report-${report.month}`} className="font-bold rounded-full h-12 px-6 border border-primary/20" />
+                    <Button
+                        onClick={handleDownloadPdf}
+                        disabled={isDownloading}
+                        variant="secondary"
+                        className="font-bold rounded-full h-12 px-6 border border-primary/20"
+                    >
+                        {isDownloading ? <Loader2 className={`h-4 w-4 animate-spin ${isRtl ? 'ml-2' : 'mr-2'}`} /> : <Download className={`h-4 w-4 ${isRtl ? 'ml-2' : 'mr-2'}`} />}
+                        {isDownloading ? "Generating..." : "Download PDF"}
+                    </Button>
                 </div>
             </div>
 
