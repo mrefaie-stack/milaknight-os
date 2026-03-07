@@ -90,7 +90,7 @@ export function MobileHeader({ role, user }: { role: string, user: any }) {
                                 <Link
                                     key={link.href}
                                     href={link.href}
-                                    className={`flex items-center justify-between px-4 py-4 rounded-xl text-base font-black transition-all ${isActive ? 'bg-primary/10 text-primary' : 'hover:bg-primary/5 text-foreground/80'} ${isRtl ? 'flex-row-reverse text-right' : 'flex-row text-left'}`}
+                                    className={`flex items-center justify-between px-4 py-4 rounded-xl text-base font-black transition-all ${isActive ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25' : 'hover:bg-white/5 text-foreground/70'} ${isRtl ? 'flex-row-reverse text-right' : 'flex-row text-left'}`}
                                 >
                                     <div className={`flex items-center gap-4 ${isRtl ? 'flex-row-reverse' : 'flex-row'}`}>
                                         <Icon className="h-5 w-5" />
