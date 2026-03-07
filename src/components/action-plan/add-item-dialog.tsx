@@ -39,7 +39,7 @@ export function AddItemDialog({ planId }: { planId: string }) {
     async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
 
-        if (selectedPlatforms.length === 0) {
+        if (selectedPlatforms.length === 0 && type !== "EMAIL") {
             toast.error("Please select at least one target platform.");
             return;
         }
@@ -48,7 +48,7 @@ export function AddItemDialog({ planId }: { planId: string }) {
         const formData = new FormData(event.currentTarget);
         const data = Object.fromEntries(formData.entries());
         data.type = type;
-        data.platform = selectedPlatforms.join(', ');
+        data.platform = type === "EMAIL" ? "Email" : selectedPlatforms.join(', ');
 
         try {
             await addContentItem(planId, data);
@@ -88,38 +88,43 @@ export function AddItemDialog({ planId }: { planId: string }) {
                             <SelectContent>
                                 <SelectItem value="POST">Social Media Post</SelectItem>
                                 <SelectItem value="VIDEO">Video / Reel</SelectItem>
+                                <SelectItem value="LINKEDIN">LinkedIn Post</SelectItem>
                                 <SelectItem value="POLL">Interactive Poll</SelectItem>
-                                <SelectItem value="ARTICLE">SEO Article</SelectItem>
+                                <SelectItem value="ARTICLE">Blog / SEO Article</SelectItem>
+                                <SelectItem value="EMAIL">Email Marketing</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
 
-                    <div className="grid gap-3">
-                        <Label>Platform</Label>
-                        <div className="flex flex-wrap gap-3">
-                            {PLATFORMS.map((plat) => {
-                                const isChecked = selectedPlatforms.includes(plat);
-                                return (
-                                    <div key={plat} className="flex items-center space-x-1.5 bg-background border px-2 py-1 rounded-md">
-                                        <Checkbox
-                                            id={`add-plat-${plat}`}
-                                            checked={isChecked}
-                                            onCheckedChange={(checked) => {
-                                                if (checked) {
-                                                    setSelectedPlatforms(prev => [...prev, plat]);
-                                                } else {
-                                                    setSelectedPlatforms(prev => prev.filter(p => p !== plat));
-                                                }
-                                            }}
-                                        />
-                                        <label htmlFor={`add-plat-${plat}`} className="text-xs font-semibold cursor-pointer">
-                                            {plat}
-                                        </label>
-                                    </div>
-                                );
-                            })}
+                    {/* Platform selector — hidden for EMAIL type */}
+                    {type !== "EMAIL" && (
+                        <div className="grid gap-3">
+                            <Label>Platform</Label>
+                            <div className="flex flex-wrap gap-3">
+                                {PLATFORMS.map((plat) => {
+                                    const isChecked = selectedPlatforms.includes(plat);
+                                    return (
+                                        <div key={plat} className="flex items-center space-x-1.5 bg-background border px-2 py-1 rounded-md">
+                                            <Checkbox
+                                                id={`add-plat-${plat}`}
+                                                checked={isChecked}
+                                                onCheckedChange={(checked) => {
+                                                    if (checked) {
+                                                        setSelectedPlatforms(prev => [...prev, plat]);
+                                                    } else {
+                                                        setSelectedPlatforms(prev => prev.filter(p => p !== plat));
+                                                    }
+                                                }}
+                                            />
+                                            <label htmlFor={`add-plat-${plat}`} className="text-xs font-semibold cursor-pointer">
+                                                {plat}
+                                            </label>
+                                        </div>
+                                    );
+                                })}
+                            </div>
                         </div>
-                    </div>
+                    )}
 
                     <div className="grid gap-2">
                         <Label htmlFor="scheduledDate">Scheduled Date (Optional)</Label>
@@ -167,13 +172,33 @@ export function AddItemDialog({ planId }: { planId: string }) {
                     {type === "ARTICLE" && (
                         <>
                             <div className="grid gap-2">
-                                <Label>Article Title</Label>
+                                <Label>Blog / Article Title</Label>
                                 <Input name="articleTitle" placeholder="SEO optimized title" required />
                             </div>
                             <div className="grid gap-2">
-                                {/* In a real app we'd use a Textarea component, but we'll use an Input for simplicity here or add a native textarea */}
-                                <Label>Article Content Summary / Link</Label>
-                                <textarea name="articleContent" className="flex min-h-[80px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50" placeholder="Summary or Google Doc link..." required />
+                                <Label>Article Content / Link</Label>
+                                <textarea name="articleContent" className="flex min-h-[80px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" placeholder="Summary or Google Doc link..." required />
+                            </div>
+                        </>
+                    )}
+
+                    {type === "EMAIL" && (
+                        <>
+                            <div className="grid gap-2">
+                                <Label>Email Subject Line</Label>
+                                <Input name="emailSubject" placeholder="e.g. Exclusive Offer Just for You 🎁" required />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label>Email Description</Label>
+                                <textarea name="captionEn" className="flex min-h-[60px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" placeholder="Brief description of the email campaign goal..." />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label>Email Body / Content</Label>
+                                <textarea name="emailBody" className="flex min-h-[100px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" placeholder="Main email content, key messages, call-to-action..." required />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label>Base Design / Template URL (Optional)</Label>
+                                <Input name="emailDesign" placeholder="https://... (Figma, design file, or reference URL)" />
                             </div>
                         </>
                     )}

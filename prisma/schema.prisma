@@ -115,6 +115,12 @@ model ContentItem {
   articleTitle   String?
   articleContent String?
   keywords       String?     // Array fallback
+  
+  // Email Marketing
+  emailSubject   String?
+  emailBody      String?
+  emailDesign    String?     // URL or base design reference
+  
   clientComment  String?
   amComment      String?
   feedbackResolved Boolean @default(false)

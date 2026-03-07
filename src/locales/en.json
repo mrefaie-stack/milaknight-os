@@ -187,10 +187,13 @@
         "leave_blank": "Leave blank to keep current",
         "updating": "Updating...",
         "types": {
-            "POST": "Post Image",
+            "POST": "Social Post",
             "VIDEO": "Video / Reels",
-            "ARTICLE": "Newsletter Article",
-            "POLL": "Poll / Story"
+            "LINKEDIN": "LinkedIn Post",
+            "ARTICLE": "Blog / Article",
+            "POLL": "Poll / Story",
+            "EMAIL": "Email Marketing",
+            "AD": "Paid Ad"
         },
         "delete_confirm": "Are you sure you want to delete this item?"
     }

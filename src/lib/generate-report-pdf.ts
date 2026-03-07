@@ -195,30 +195,47 @@ export async function generateReportPdf(report: any, metrics: any) {
         const p = metrics.platforms[key];
         const name = PLATFORM_NAMES[key] || key;
 
-        checkPage(40);
+        checkPage(50);
 
         // Platform sub-header
         doc.setFillColor(P[0], P[1], P[2]);
-        doc.roundedRect(margin, y, cW, 7, 1.5, 1.5, "F");
+        doc.roundedRect(margin, y, cW, 8, 1.5, 1.5, "F");
         doc.setTextColor(WHITE[0], WHITE[1], WHITE[2]);
-        doc.setFontSize(8);
+        doc.setFontSize(9);
         doc.setFont("helvetica", "bold");
-        doc.text(name.toUpperCase(), margin + 4, y + 5);
-        y += 9;
+        doc.text(name.toUpperCase(), margin + 4, y + 5.5);
+
+        // Brief status badge
+        doc.setFillColor(WHITE[0], WHITE[1], WHITE[2], 0.2);
+        doc.setTextColor(WHITE[0], WHITE[1], WHITE[2]);
+        doc.setFontSize(6);
+        doc.text("PERFORMANCE INSIGHTS", pageW - margin - 4, y + 5.5, { align: "right" });
+
+        y += 11;
 
         // All fields for this platform
         const platformRows: [string, string][] = [];
         if (p.impressions) platformRows.push(["Impressions", p.impressions.toLocaleString()]);
         if (p.engagement) platformRows.push(["Engagements", p.engagement.toLocaleString()]);
         if (p.followers) platformRows.push(["New Followers", p.followers.toLocaleString()]);
-        if (p.views) platformRows.push(["Video Views", p.views.toLocaleString()]);
+        if (p.views) platformRows.push(["Total Views", p.views.toLocaleString()]);
+        if (p.shares) platformRows.push(["Content Shares", p.shares.toLocaleString()]);
+        if (p.saves) platformRows.push(["Post Saves", p.saves.toLocaleString()]);
+        if (p.watchTime) platformRows.push(["Avg. Watch Time", `${p.watchTime}s`]);
         if (p.paidReach) platformRows.push(["Paid Reach", p.paidReach.toLocaleString()]);
         if (p.conversions) platformRows.push(["Conversions", p.conversions.toLocaleString()]);
-        if (p.spend) platformRows.push(["Ad Spend", `$${p.spend.toLocaleString()}`]);
-        if (p.reach) platformRows.push(["Organic Reach", p.reach.toLocaleString?.() || String(p.reach)]);
-        if (p.ctr) platformRows.push(["CTR", `${p.ctr}%`]);
-        if (p.cpm) platformRows.push(["CPM", `$${p.cpm}`]);
-        if (p.costPerResult) platformRows.push(["Cost / Result", `$${p.costPerResult}`]);
+        if (p.spend) platformRows.push(["Ad Investment", `$${p.spend.toLocaleString()}`]);
+        if (p.clicks) platformRows.push(["Link Clicks", p.clicks.toLocaleString()]);
+        if (p.cpc) platformRows.push(["CPC", `$${p.cpc}`]);
+
+        // Calculations
+        const engRate = p.impressions > 0 ? ((p.engagement / p.impressions) * 100).toFixed(2) : "0.00";
+        platformRows.push(["Engagement Rate", `${engRate}%`]);
+
+        if (p.conversions > 0 && p.spend > 0) {
+            const cpa = (p.spend / p.conversions).toFixed(2);
+            platformRows.push(["Cost / Result", `$${cpa}`]);
+        }
 
         if (platformRows.length > 0) {
             // Render as two-column grid (two pairs per row)
@@ -228,27 +245,28 @@ export async function generateReportPdf(report: any, metrics: any) {
             }
 
             for (const chunk of chunked) {
-                checkPage(8);
-                const colW = (cW - 4) / 4;
+                checkPage(10);
                 chunk.forEach(([label, value], ci) => {
-                    const bx = margin + ci * (cW / 2 + 2);
+                    const bx = margin + ci * (cW / 2 + 1.5);
                     doc.setFillColor(LGRAY[0], LGRAY[1], LGRAY[2]);
-                    doc.rect(bx, y, cW / 2 - 2, 9, "F");
+                    doc.roundedRect(bx, y, cW / 2 - 1.5, 10, 1, 1, "F");
+
                     doc.setTextColor(MGRAY[0], MGRAY[1], MGRAY[2]);
-                    doc.setFontSize(6);
+                    doc.setFontSize(5.5);
                     doc.setFont("helvetica", "bold");
                     doc.text(label.toUpperCase(), bx + 3, y + 3.5);
+
                     doc.setTextColor(DARK[0], DARK[1], DARK[2]);
-                    doc.setFontSize(9);
-                    doc.text(value, bx + 3, y + 7.5);
+                    doc.setFontSize(8.5);
+                    doc.text(value, bx + 3, y + 8);
                 });
-                y += 11;
+                y += 12;
             }
         } else {
             doc.setTextColor(MGRAY[0], MGRAY[1], MGRAY[2]);
             doc.setFontSize(8.5);
             doc.setFont("helvetica", "italic");
-            doc.text("No detailed metrics for this platform.", margin + 2, y + 5);
+            doc.text("No data recorded for this platform.", margin + 2, y + 5);
             y += 9;
         }
         y += 4;

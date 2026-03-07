@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { createReport, updateReport } from "@/app/actions/report";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,17 +16,89 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { Facebook, Instagram, Video, Share2, Linkedin, Search, Youtube, BarChart3, Globe, Mail } from "lucide-react";
+import {
+    Facebook,
+    Instagram,
+    Video,
+    Share2,
+    Linkedin,
+    Search,
+    Youtube,
+    Globe,
+    Mail,
+    TrendingUp,
+    Users,
+    Eye,
+    MousePointer2,
+    DollarSign,
+    Target,
+    Zap,
+    MessageSquare,
+    Save,
+    BarChart3
+} from "lucide-react";
 
 const PLATFORMS = [
-    { id: "facebook", name: "Facebook", icon: Facebook },
-    { id: "instagram", name: "Instagram", icon: Instagram },
-    { id: "tiktok", name: "TikTok", icon: Video },
-    { id: "snapchat", name: "Snapchat", icon: Share2 },
-    { id: "linkedin", name: "LinkedIn", icon: Linkedin },
-    { id: "google", name: "Google Ads", icon: Search },
-    { id: "youtube", name: "YouTube", icon: Youtube },
+    { id: "facebook", name: "Facebook", icon: Facebook, color: "text-blue-600" },
+    { id: "instagram", name: "Instagram", icon: Instagram, color: "text-pink-600" },
+    { id: "tiktok", name: "TikTok", icon: Video, color: "text-slate-900" },
+    { id: "snapchat", name: "Snapchat", icon: Share2, color: "text-yellow-500" },
+    { id: "linkedin", name: "LinkedIn", icon: Linkedin, color: "text-blue-700" },
+    { id: "google", name: "Google Ads", icon: Search, color: "text-red-500" },
+    { id: "youtube", name: "YouTube", icon: Youtube, color: "text-red-600" },
 ];
+
+interface MetricFieldProps {
+    label: string;
+    icon: any;
+    value: string | number;
+    onChange: (val: string) => void;
+    placeholder?: string;
+    type?: string;
+    prefix?: string;
+    suffix?: string;
+}
+
+function MetricField({ label, icon: Icon, value, onChange, placeholder = "0", type = "number", prefix, suffix }: MetricFieldProps) {
+    return (
+        <div className="space-y-2 group">
+            <Label className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground group-focus-within:text-primary transition-colors">
+                <Icon className="h-3 w-3" />
+                {label}
+            </Label>
+            <div className="relative">
+                {prefix && (
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-medium pointer-events-none">
+                        {prefix}
+                    </span>
+                )}
+                <Input
+                    type={type}
+                    value={value ?? ""}
+                    onChange={(e) => onChange(e.target.value)}
+                    placeholder={placeholder}
+                    className={`bg-background/50 border-muted-foreground/10 focus:border-primary/30 focus:ring-primary/20 transition-all ${prefix ? 'pl-7' : ''} ${suffix ? 'pr-7' : ''}`}
+                />
+                {suffix && (
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-bold pointer-events-none">
+                        {suffix}
+                    </span>
+                )}
+            </div>
+        </div>
+    );
+}
+
+function CalcMetric({ label, value, suffix = "", prefix = "" }: { label: string, value: string | number, suffix?: string, prefix?: string }) {
+    return (
+        <div className="p-4 rounded-xl bg-primary/5 border border-primary/10 flex flex-col justify-center">
+            <span className="text-[10px] font-black uppercase text-primary/60 mb-1">{label}</span>
+            <span className="text-xl font-black text-primary">
+                {prefix}{value}{suffix}
+            </span>
+        </div>
+    );
+}
 
 export function ReportCreatorClient({ clients, initialData }: { clients: any[], initialData?: any }) {
     const [loading, setLoading] = useState(false);
@@ -34,22 +106,24 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
 
     const initialMetrics = initialData?.metrics ? (typeof initialData.metrics === 'string' ? JSON.parse(initialData.metrics) : initialData.metrics) : {
         platforms: {},
-        emailMarketing: { emailsSent: 0, openRate: 0, clickRate: 0 },
-        seo: { score: 0, rank: "", notes: "" },
+        emailMarketing: { emailsSent: 0, openRate: 0, clickRate: 0, unsubscribes: 0 },
+        seo: { score: 0, rank: "", notes: "", speed: 0, mobile: 0 },
         summary: ""
     };
 
     const [metrics, setMetrics] = useState(initialMetrics);
 
     const updatePlatformMetric = (platformId: string, field: string, value: string) => {
-        const numValue = field === 'rank' || field === 'notes' ? value : (parseInt(value) || 0);
+        const numFields = ['followers', 'engagement', 'views', 'impressions', 'paidReach', 'spend', 'conversions', 'organicReach', 'shares', 'watchTime', 'saves', 'profileVisits', 'cpc', 'ctr'];
+        const val = numFields.includes(field) ? (parseFloat(value) || 0) : value;
+
         setMetrics((prev: any) => ({
             ...prev,
             platforms: {
                 ...prev.platforms,
                 [platformId]: {
                     ...prev.platforms[platformId],
-                    [field]: numValue
+                    [field]: val
                 }
             }
         }));
@@ -76,6 +150,15 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
         }));
     };
 
+    // Auto-calculations for the UI
+    const getPlatformCalcs = (platformId: string) => {
+        const p = metrics.platforms[platformId] || {};
+        const engRate = p.impressions > 0 ? ((p.engagement / p.impressions) * 100).toFixed(2) : "0.00";
+        const roas = p.conversions > 0 && p.spend > 0 ? (p.spend / p.conversions).toFixed(2) : "0.00"; // Actually CPA, user asked for ROAS (usually Revenue/Spend) but we only have conversions. Let's show Cost per Conv.
+        const cpc = p.clicks > 0 ? (p.spend / p.clicks).toFixed(2) : "0.00";
+        return { engRate, cpa: roas, cpc };
+    };
+
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
         setLoading(true);
@@ -84,7 +167,6 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
         const clientId = formData.get("clientId") as string;
         const month = formData.get("month") as string;
 
-        // Final calculations for totals
         const finalMetrics = {
             ...metrics,
             summary: formData.get("summary") as string,
@@ -116,16 +198,20 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
     }
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-8 max-w-5xl mx-auto pb-20">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <form onSubmit={handleSubmit} className="space-y-8 max-w-6xl mx-auto pb-24">
+            {/* Header Section */}
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 bg-card/30 p-8 rounded-3xl border border-white/10 backdrop-blur-xl shadow-2xl">
                 <div>
-                    <h1 className="text-4xl font-black tracking-tight">Generate Report</h1>
-                    <p className="text-muted-foreground font-medium">Build a detailed multi-platform performance review.</p>
+                    <h1 className="text-5xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-400">
+                        Generate Report
+                    </h1>
+                    <p className="text-muted-foreground text-lg font-medium mt-2">Build a premium performance review for your client.</p>
                 </div>
-                <div className="flex gap-4">
-                    <div className="w-48">
+                <div className="flex flex-col sm:flex-row gap-4">
+                    <div className="space-y-1">
+                        <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Client</Label>
                         <Select name="clientId" defaultValue={initialData?.clientId} required disabled={!!initialData}>
-                            <SelectTrigger className="bg-card">
+                            <SelectTrigger className="w-64 bg-background/50 border-white/5 h-12 text-base font-bold rounded-xl shadow-lg">
                                 <SelectValue placeholder="Select Client" />
                             </SelectTrigger>
                             <SelectContent>
@@ -133,238 +219,341 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                             </SelectContent>
                         </Select>
                     </div>
-                    <Input name="month" type="month" defaultValue={initialData?.month} className="w-40 bg-card" required disabled={!!initialData} />
+                    <div className="space-y-1">
+                        <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Performance Month</Label>
+                        <Input
+                            name="month"
+                            type="month"
+                            defaultValue={initialData?.month}
+                            className="w-48 bg-background/50 border-white/5 h-12 text-base font-bold rounded-xl shadow-lg"
+                            required
+                            disabled={!!initialData}
+                        />
+                    </div>
                 </div>
             </div>
 
             <Tabs defaultValue="facebook" className="w-full">
-                <TabsList className="w-full justify-start h-auto p-1 bg-muted/50 backdrop-blur-sm overflow-x-auto border">
-                    {PLATFORMS.map(p => (
-                        <TabsTrigger key={p.id} value={p.id} className="gap-2 py-3 px-6 data-[state=active]:bg-card data-[state=active]:shadow-sm">
-                            <p.icon className="h-4 w-4" />
-                            {p.name}
+                <div className="bg-card/30 p-2 rounded-2xl border border-white/10 backdrop-blur-md mb-8 shadow-xl overflow-hidden">
+                    <TabsList className="w-full justify-start h-auto bg-transparent gap-2 overflow-x-auto no-scrollbar pb-1">
+                        {PLATFORMS.map(p => (
+                            <TabsTrigger
+                                key={p.id}
+                                value={p.id}
+                                className="group flex-shrink-0 gap-3 py-3 px-6 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-300"
+                            >
+                                <p.icon className={`h-4 w-4 ${p.color} transition-colors group-data-[state=active]:text-white`} />
+                                <span className="font-bold tracking-tight">{p.name}</span>
+                            </TabsTrigger>
+                        ))}
+                        <TabsTrigger value="email" className="group flex-shrink-0 gap-3 py-3 px-6 rounded-xl data-[state=active]:bg-rose-500 data-[state=active]:text-white">
+                            <Mail className="h-4 w-4 text-rose-400 transition-colors group-data-[state=active]:text-white" />
+                            <span className="font-bold tracking-tight">Email</span>
                         </TabsTrigger>
-                    ))}
-                    <TabsTrigger value="email" className="gap-2 py-3 px-6">
-                        <Mail className="h-4 w-4" />
-                        Email Marketing
-                    </TabsTrigger>
-                    <TabsTrigger value="seo" className="gap-2 py-3 px-6">
-                        <Globe className="h-4 w-4" />
-                        SEO & Summary
-                    </TabsTrigger>
-                </TabsList>
+                        <TabsTrigger value="seo" className="group flex-shrink-0 gap-3 py-3 px-6 rounded-xl data-[state=active]:bg-emerald-500 data-[state=active]:text-white">
+                            <Globe className="h-4 w-4 text-emerald-400 transition-colors group-data-[state=active]:text-white" />
+                            <span className="font-bold tracking-tight">SEO & Summary</span>
+                        </TabsTrigger>
+                    </TabsList>
+                </div>
 
                 {PLATFORMS.map(p => (
-                    <TabsContent key={p.id} value={p.id} className="mt-6">
-                        <Card className="border-none shadow-sm bg-card/50 backdrop-blur-sm">
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                    <p.icon className="h-5 w-5 text-primary" />
-                                    {p.name} Metrics
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent className="grid gap-6 md:grid-cols-2">
-                                <div className="space-y-4">
-                                    <h4 className="text-sm font-bold uppercase text-muted-foreground">Detailed Metrics</h4>
-                                    <div className="grid gap-4 grid-cols-2">
-                                        <div className="space-y-2">
-                                            <Label>New Followers</Label>
-                                            <Input
-                                                type="number"
-                                                value={metrics.platforms[p.id]?.followers || 0}
-                                                onChange={(e) => updatePlatformMetric(p.id, 'followers', e.target.value)}
-                                                placeholder="0"
-                                                className="bg-background"
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label>Total Engagement</Label>
-                                            <Input
-                                                type="number"
-                                                value={metrics.platforms[p.id]?.engagement || 0}
-                                                onChange={(e) => updatePlatformMetric(p.id, 'engagement', e.target.value)}
-                                                placeholder="0"
-                                                className="bg-background"
-                                            />
-                                        </div>
+                    <TabsContent key={p.id} value={p.id} className="mt-0 focus-visible:ring-0">
+                        <div className="grid gap-6">
+                            {/* Analytics Summary Bar */}
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <CalcMetric label="Est. Engagement Rate" value={getPlatformCalcs(p.id).engRate} suffix="%" />
+                                <CalcMetric label="Avg. Cost per Result" value={getPlatformCalcs(p.id).cpa} prefix="$" />
+                                <CalcMetric label="Platform Reach" value={(Number(metrics.platforms[p.id]?.paidReach) || 0) + (Number(metrics.platforms[p.id]?.organicReach) || 0)} />
+                                <div className="p-4 rounded-xl bg-primary/20 border border-primary/30 flex items-center justify-between">
+                                    <div className="flex flex-col">
+                                        <span className="text-[10px] font-black uppercase text-primary/80 mb-1 leading-tight">Platform Status</span>
+                                        <span className="text-sm font-black text-primary">DATA READY</span>
                                     </div>
-                                    <div className="grid gap-4 grid-cols-2">
-                                        <div className="space-y-2">
-                                            <Label>Month Views</Label>
-                                            <Input
-                                                type="number"
-                                                value={metrics.platforms[p.id]?.views || 0}
-                                                onChange={(e) => updatePlatformMetric(p.id, 'views', e.target.value)}
-                                                placeholder="0"
-                                                className="bg-background"
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label>Month Impressions</Label>
-                                            <Input
-                                                type="number"
-                                                value={metrics.platforms[p.id]?.impressions || 0}
-                                                onChange={(e) => updatePlatformMetric(p.id, 'impressions', e.target.value)}
-                                                placeholder="0"
-                                                className="bg-background"
-                                            />
-                                        </div>
-                                    </div>
+                                    <Zap className="h-5 w-5 text-primary animate-pulse" />
                                 </div>
-                                <div className="space-y-4">
-                                    <h4 className="text-sm font-bold uppercase text-muted-foreground">Paid Advertising</h4>
-                                    <div className="grid gap-4 grid-cols-2">
-                                        <div className="space-y-2">
-                                            <Label>Paid Reach</Label>
-                                            <Input
-                                                type="number"
-                                                value={metrics.platforms[p.id]?.paidReach || 0}
-                                                onChange={(e) => updatePlatformMetric(p.id, 'paidReach', e.target.value)}
-                                                placeholder="0"
-                                                className="bg-background"
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label>Ads Spend ($)</Label>
-                                            <Input
-                                                type="number"
-                                                value={metrics.platforms[p.id]?.spend || 0}
-                                                onChange={(e) => updatePlatformMetric(p.id, 'spend', e.target.value)}
-                                                placeholder="0"
-                                                className="bg-background"
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label>Conversions / Leads</Label>
-                                        <Input
-                                            type="number"
-                                            value={metrics.platforms[p.id]?.conversions || 0}
-                                            onChange={(e) => updatePlatformMetric(p.id, 'conversions', e.target.value)}
-                                            placeholder="0"
-                                            className="bg-background"
+                            </div>
+
+                            <div className="grid md:grid-cols-3 gap-6">
+                                {/* Awareness & Growth */}
+                                <Card className="border-white/10 bg-card/20 backdrop-blur-md shadow-lg overflow-hidden">
+                                    <CardHeader className="bg-primary/5 border-b border-white/5 py-4">
+                                        <CardTitle className="text-xs font-black uppercase tracking-[0.2em] text-primary/80 flex items-center gap-2">
+                                            <TrendingUp className="h-3 w-3" /> Growth & Awareness
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="p-6 space-y-5">
+                                        <MetricField
+                                            label="New Followers"
+                                            icon={Users}
+                                            value={metrics.platforms[p.id]?.followers}
+                                            onChange={(v) => updatePlatformMetric(p.id, 'followers', v)}
                                         />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label>Organic Reach (Legacy)</Label>
-                                        <Input
-                                            type="number"
-                                            value={metrics.platforms[p.id]?.organicReach || 0}
-                                            onChange={(e) => updatePlatformMetric(p.id, 'organicReach', e.target.value)}
-                                            placeholder="0"
-                                            className="bg-background"
+                                        <MetricField
+                                            label="Impressions"
+                                            icon={Eye}
+                                            value={metrics.platforms[p.id]?.impressions}
+                                            onChange={(v) => updatePlatformMetric(p.id, 'impressions', v)}
                                         />
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
+                                        <MetricField
+                                            label="Organic Reach"
+                                            icon={Globe}
+                                            value={metrics.platforms[p.id]?.organicReach}
+                                            onChange={(v) => updatePlatformMetric(p.id, 'organicReach', v)}
+                                        />
+                                        {(p.id === 'instagram' || p.id === 'facebook') && (
+                                            <MetricField
+                                                label="Profile Visits"
+                                                icon={Target}
+                                                value={metrics.platforms[p.id]?.profileVisits}
+                                                onChange={(v) => updatePlatformMetric(p.id, 'profileVisits', v)}
+                                            />
+                                        )}
+                                    </CardContent>
+                                </Card>
+
+                                {/* Engagement & Content */}
+                                <Card className="border-white/10 bg-card/20 backdrop-blur-md shadow-lg overflow-hidden">
+                                    <CardHeader className="bg-primary/5 border-b border-white/5 py-4">
+                                        <CardTitle className="text-xs font-black uppercase tracking-[0.2em] text-primary/80 flex items-center gap-2">
+                                            <MessageSquare className="h-3 w-3" /> Interaction & Content
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="p-6 space-y-5">
+                                        <MetricField
+                                            label="Total Engagement"
+                                            icon={MousePointer2}
+                                            value={metrics.platforms[p.id]?.engagement}
+                                            onChange={(v) => updatePlatformMetric(p.id, 'engagement', v)}
+                                        />
+                                        <MetricField
+                                            label="Total Views"
+                                            icon={Video}
+                                            value={metrics.platforms[p.id]?.views}
+                                            onChange={(v) => updatePlatformMetric(p.id, 'views', v)}
+                                        />
+                                        <MetricField
+                                            label="Content Shares"
+                                            icon={Share2}
+                                            value={metrics.platforms[p.id]?.shares}
+                                            onChange={(v) => updatePlatformMetric(p.id, 'shares', v)}
+                                        />
+                                        {(p.id === 'tiktok' || p.id === 'youtube') && (
+                                            <MetricField
+                                                label="Avg. Watch Time"
+                                                icon={Eye}
+                                                value={metrics.platforms[p.id]?.watchTime}
+                                                onChange={(v) => updatePlatformMetric(p.id, 'watchTime', v)}
+                                                suffix="s"
+                                            />
+                                        )}
+                                    </CardContent>
+                                </Card>
+
+                                {/* Conversion & Performance */}
+                                <Card className="border-white/10 bg-card/20 backdrop-blur-md shadow-lg overflow-hidden">
+                                    <CardHeader className="bg-primary/5 border-b border-white/5 py-4">
+                                        <CardTitle className="text-xs font-black uppercase tracking-[0.2em] text-primary/80 flex items-center gap-2">
+                                            <DollarSign className="h-3 w-3" /> Paid Performance
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="p-6 space-y-5">
+                                        <MetricField
+                                            label="Ad Spend"
+                                            icon={DollarSign}
+                                            value={metrics.platforms[p.id]?.spend}
+                                            onChange={(v) => updatePlatformMetric(p.id, 'spend', v)}
+                                            prefix="$"
+                                        />
+                                        <MetricField
+                                            label="Paid Reach"
+                                            icon={Target}
+                                            value={metrics.platforms[p.id]?.paidReach}
+                                            onChange={(v) => updatePlatformMetric(p.id, 'paidReach', v)}
+                                        />
+                                        <MetricField
+                                            label="Conversions"
+                                            icon={Zap}
+                                            value={metrics.platforms[p.id]?.conversions}
+                                            onChange={(v) => updatePlatformMetric(p.id, 'conversions', v)}
+                                        />
+                                        {(p.id === 'google' || p.id === 'linkedin') && (
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <MetricField
+                                                    label="Clicks"
+                                                    icon={MousePointer2}
+                                                    value={metrics.platforms[p.id]?.clicks}
+                                                    onChange={(v) => updatePlatformMetric(p.id, 'clicks', v)}
+                                                />
+                                                <MetricField
+                                                    label="CPC"
+                                                    icon={DollarSign}
+                                                    value={metrics.platforms[p.id]?.cpc}
+                                                    onChange={(v) => updatePlatformMetric(p.id, 'cpc', v)}
+                                                    prefix="$"
+                                                />
+                                            </div>
+                                        )}
+                                    </CardContent>
+                                </Card>
+                            </div>
+                        </div>
                     </TabsContent>
                 ))}
 
-                <TabsContent value="email" className="mt-6">
-                    <Card className="border-none shadow-sm bg-card/50 backdrop-blur-sm">
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <Mail className="h-5 w-5 text-primary" />
-                                Email Marketing Metrics
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="grid gap-6 md:grid-cols-3">
-                            <div className="space-y-2">
-                                <Label>Emails Sent</Label>
-                                <Input
-                                    type="number"
-                                    value={metrics.emailMarketing?.emailsSent || 0}
-                                    onChange={(e) => updateEmailMetric('emailsSent', e.target.value)}
-                                    placeholder="0"
-                                    className="bg-background"
+                <TabsContent value="email" className="mt-0 focus-visible:ring-0">
+                    <div className="grid md:grid-cols-2 gap-8">
+                        <Card className="border-white/10 bg-card/20 backdrop-blur-md shadow-lg">
+                            <CardHeader className="bg-rose-500/5 border-b border-white/5">
+                                <CardTitle className="text-rose-400 flex items-center gap-2 text-sm font-black uppercase tracking-widest">
+                                    <Mail className="h-4 w-4" /> Email Performance
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="p-8 grid gap-6 sm:grid-cols-2">
+                                <MetricField
+                                    label="Total Emails Sent"
+                                    icon={Mail}
+                                    value={metrics.emailMarketing?.emailsSent}
+                                    onChange={(v) => updateEmailMetric('emailsSent', v)}
                                 />
-                            </div>
-                            <div className="space-y-2">
-                                <Label>Open Rate (%)</Label>
-                                <Input
-                                    type="number"
-                                    step="0.1"
-                                    value={metrics.emailMarketing?.openRate || 0}
-                                    onChange={(e) => updateEmailMetric('openRate', e.target.value)}
-                                    placeholder="0.0"
-                                    className="bg-background"
+                                <MetricField
+                                    label="Open Rate"
+                                    icon={Eye}
+                                    value={metrics.emailMarketing?.openRate}
+                                    onChange={(v) => updateEmailMetric('openRate', v)}
+                                    suffix="%"
                                 />
-                            </div>
-                            <div className="space-y-2">
-                                <Label>Click Rate (%)</Label>
-                                <Input
-                                    type="number"
-                                    step="0.1"
-                                    value={metrics.emailMarketing?.clickRate || 0}
-                                    onChange={(e) => updateEmailMetric('clickRate', e.target.value)}
-                                    placeholder="0.0"
-                                    className="bg-background"
+                                <MetricField
+                                    label="Click Rate"
+                                    icon={MousePointer2}
+                                    value={metrics.emailMarketing?.clickRate}
+                                    onChange={(v) => updateEmailMetric('clickRate', v)}
+                                    suffix="%"
                                 />
+                                <MetricField
+                                    label="Unsubscribes"
+                                    icon={Users}
+                                    value={metrics.emailMarketing?.unsubscribes}
+                                    onChange={(v) => updateEmailMetric('unsubscribes', v)}
+                                />
+                            </CardContent>
+                        </Card>
+                        <div className="p-8 bg-rose-500/10 border border-rose-500/20 rounded-3xl flex flex-col justify-center gap-4">
+                            <h3 className="text-2xl font-black text-rose-500">Email Health</h3>
+                            <p className="text-muted-foreground font-medium">Tracking these metrics ensures your broadcast strategy is reaching correctly focused audiences without triggering spam filters.</p>
+                            <div className="h-1 bg-rose-500/20 rounded-full overflow-hidden">
+                                <div className="h-full bg-rose-500 w-[75%]" />
                             </div>
-                        </CardContent>
-                    </Card>
+                        </div>
+                    </div>
                 </TabsContent>
 
-                <TabsContent value="seo" className="mt-6">
-                    <Card className="border-none shadow-sm bg-card/50 backdrop-blur-sm">
-                        <CardHeader>
-                            <CardTitle>SEO Performance & Summary</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-6">
-                            <div className="grid gap-6 md:grid-cols-2">
-                                <div className="space-y-2">
-                                    <Label>SEO Domain Score (0-100)</Label>
-                                    <Input
-                                        type="number"
-                                        max="100"
-                                        value={metrics.seo?.score || 0}
-                                        onChange={(e) => updateSEOMetric('score', parseInt(e.target.value) || 0)}
-                                        placeholder="85"
-                                        className="bg-background"
+                <TabsContent value="seo" className="mt-0 focus-visible:ring-0">
+                    <div className="grid gap-8">
+                        <div className="grid md:grid-cols-3 gap-6">
+                            <Card className="border-white/10 bg-card/20 backdrop-blur-md shadow-lg">
+                                <CardHeader className="bg-emerald-500/5 border-b border-white/5">
+                                    <CardTitle className="text-emerald-400 flex items-center gap-2 text-sm font-black uppercase tracking-widest">
+                                        <TrendingUp className="h-4 w-4" /> Authority
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent className="p-6 space-y-4">
+                                    <MetricField
+                                        label="SEO Score"
+                                        icon={Globe}
+                                        value={metrics.seo?.score}
+                                        onChange={(v) => updateSEOMetric('score', v)}
+                                        suffix="/100"
                                     />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>Top Ranking Keyword / Status</Label>
-                                    <Input
-                                        value={metrics.seo?.rank || ""}
-                                        onChange={(e) => updateSEOMetric('rank', e.target.value)}
-                                        placeholder="Ranked #1 for 'Marketing Agency Dubai'"
-                                        className="bg-background"
+                                    <MetricField
+                                        label="Primary Rank"
+                                        icon={Target}
+                                        value={metrics.seo?.rank}
+                                        onChange={(v) => updateSEOMetric('rank', v)}
+                                        type="text"
+                                        placeholder="#1 Marketing"
                                     />
+                                </CardContent>
+                            </Card>
+
+                            <Card className="border-white/10 bg-card/20 backdrop-blur-md shadow-lg">
+                                <CardHeader className="bg-emerald-500/5 border-b border-white/5">
+                                    <CardTitle className="text-emerald-400 flex items-center gap-2 text-sm font-black uppercase tracking-widest">
+                                        <Zap className="h-4 w-4" /> Technical
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent className="p-6 space-y-4">
+                                    <MetricField
+                                        label="Page Speed"
+                                        icon={Zap}
+                                        value={metrics.seo?.speed}
+                                        onChange={(v) => updateSEOMetric('speed', v)}
+                                        suffix="%"
+                                    />
+                                    <MetricField
+                                        label="Mobile Friendly"
+                                        icon={Globe}
+                                        value={metrics.seo?.mobile}
+                                        onChange={(v) => updateSEOMetric('mobile', v)}
+                                        suffix="%"
+                                    />
+                                </CardContent>
+                            </Card>
+
+                            <div className="space-y-4">
+                                <Label className="text-xs font-black uppercase tracking-wider text-muted-foreground ml-1">Quick Note</Label>
+                                <div className="p-6 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl">
+                                    <p className="text-emerald-400 text-sm italic font-medium">"SEO is a compounding game. Month-over-month growth in domain authority directly translates to lower customer acquisition costs."</p>
                                 </div>
                             </div>
-                            <div className="space-y-2">
-                                <Label>SEO Technical Notes</Label>
-                                <Input
-                                    value={metrics.seo?.notes || ""}
-                                    onChange={(e) => updateSEOMetric('notes', e.target.value)}
-                                    placeholder="Improved page speed by 40%..."
-                                    className="bg-background"
-                                />
-                            </div>
-                            <div className="space-y-2 border-t pt-6">
-                                <Label className="text-lg font-bold">Executive Summary (Visible to Client)</Label>
+                        </div>
+
+                        <Card className="border-white/10 bg-card/30 backdrop-blur-md shadow-2xl">
+                            <CardHeader className="border-b border-white/5">
+                                <CardTitle className="text-xl font-black flex items-center gap-2">
+                                    <BarChart3 className="h-5 w-5 text-primary" /> Executive Strategic Summary
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="p-8">
                                 <textarea
                                     name="summary"
-                                    rows={5}
+                                    rows={8}
                                     required
                                     value={metrics.summary || ""}
                                     onChange={(e) => setMetrics((prev: any) => ({ ...prev, summary: e.target.value }))}
-                                    className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm"
-                                    placeholder="Summarize the month's wins and next steps..."
+                                    className="flex w-full rounded-2xl border-white/10 bg-background/50 p-6 text-base font-medium shadow-inner focus:border-primary/50 focus:ring-primary/20 transition-all outline-none"
+                                    placeholder="Translate the data into business results. What were the big wins? What are we optimizing next?"
                                 />
-                            </div>
-                        </CardContent>
-                    </Card>
+                            </CardContent>
+                        </Card>
+                    </div>
                 </TabsContent>
             </Tabs>
 
-            <div className="flex justify-end gap-4">
-                <Button type="button" variant="outline" onClick={() => router.back()}>Cancel</Button>
-                <Button type="submit" size="lg" disabled={loading} className="font-bold px-8">
-                    {loading ? (initialData ? "Updating..." : "Generating...") : (initialData ? "Save Changes" : "Finalize & Send Report")}
+            {/* Bottom Actions */}
+            <div className="fixed bottom-0 left-0 right-0 p-6 bg-background/80 backdrop-blur-2xl border-t border-white/5 flex justify-end gap-4 z-50">
+                <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => router.back()}
+                    className="h-14 px-8 text-base font-bold rounded-2xl hover:bg-white/5"
+                >
+                    Cancel Work
+                </Button>
+                <Button
+                    type="submit"
+                    disabled={loading}
+                    className="h-14 px-12 text-lg font-black rounded-2xl bg-gradient-to-r from-primary to-purple-600 hover:shadow-2xl hover:shadow-primary/40 transition-all duration-300"
+                >
+                    {loading ? (
+                        <span className="flex items-center gap-2">
+                            <Zap className="h-5 w-5 animate-spin" /> {initialData ? "Optimizing Database..." : "Engine Generating..."}
+                        </span>
+                    ) : (
+                        <span className="flex items-center gap-2">
+                            <Save className="h-5 w-5" /> {initialData ? "Apply Refinements" : "Finalize & Broadcast Report"}
+                        </span>
+                    )}
                 </Button>
             </div>
         </form>

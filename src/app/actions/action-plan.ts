@@ -75,6 +75,9 @@ export async function addContentItem(planId: string, data: any) {
             pollOptionB: data.pollOptionB,
             articleTitle: data.articleTitle,
             articleContent: data.articleContent,
+            emailSubject: data.emailSubject,
+            emailBody: data.emailBody,
+            emailDesign: data.emailDesign,
             status: "DRAFT",
         }
     });

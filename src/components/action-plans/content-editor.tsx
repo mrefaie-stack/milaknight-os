@@ -38,8 +38,10 @@ export function ContentItemEditor({ item, onSave }: { item: any, onSave: (data: 
                         <SelectContent>
                             <SelectItem value="POST">Social Media Post</SelectItem>
                             <SelectItem value="VIDEO">Video / Reel</SelectItem>
+                            <SelectItem value="LINKEDIN">LinkedIn Post</SelectItem>
                             <SelectItem value="POLL">Interactive Poll</SelectItem>
-                            <SelectItem value="ARTICLE">SEO Article</SelectItem>
+                            <SelectItem value="ARTICLE">Blog / SEO Article</SelectItem>
+                            <SelectItem value="EMAIL">Email Marketing</SelectItem>
                         </SelectContent>
                     </Select>
                 </CardTitle>
@@ -47,32 +49,34 @@ export function ContentItemEditor({ item, onSave }: { item: any, onSave: (data: 
             <CardContent className="space-y-6 pt-2">
                 {/* Basic Info */}
                 <div className="grid gap-4 md:grid-cols-2">
-                    <div className="space-y-3">
-                        <Label>Platforms</Label>
-                        <div className="flex flex-wrap gap-3 pt-1">
-                            {PLATFORMS.map((plat) => {
-                                const selected = data.platform ? data.platform.split(',').map((s: string) => s.trim()) : [];
-                                const isChecked = selected.includes(plat);
-                                return (
-                                    <div key={plat} className="flex items-center space-x-1.5 bg-background border px-2 py-1 rounded-md">
-                                        <Checkbox
-                                            id={`plat-${plat}`}
-                                            checked={isChecked}
-                                            onCheckedChange={() => {
-                                                const newPlatforms = isChecked
-                                                    ? selected.filter((p: string) => p !== plat)
-                                                    : [...selected, plat];
-                                                setData({ ...data, platform: newPlatforms.join(', ') });
-                                            }}
-                                        />
-                                        <label htmlFor={`plat-${plat}`} className="text-xs font-semibold cursor-pointer">
-                                            {plat}
-                                        </label>
-                                    </div>
-                                );
-                            })}
+                    {data.type !== 'EMAIL' && (
+                        <div className="space-y-3">
+                            <Label>Platforms</Label>
+                            <div className="flex flex-wrap gap-3 pt-1">
+                                {PLATFORMS.map((plat) => {
+                                    const selected = data.platform ? data.platform.split(',').map((s: string) => s.trim()) : [];
+                                    const isChecked = selected.includes(plat);
+                                    return (
+                                        <div key={plat} className="flex items-center space-x-1.5 bg-background border px-2 py-1 rounded-md">
+                                            <Checkbox
+                                                id={`plat-${plat}`}
+                                                checked={isChecked}
+                                                onCheckedChange={() => {
+                                                    const newPlatforms = isChecked
+                                                        ? selected.filter((p: string) => p !== plat)
+                                                        : [...selected, plat];
+                                                    setData({ ...data, platform: newPlatforms.join(', ') });
+                                                }}
+                                            />
+                                            <label htmlFor={`plat-${plat}`} className="text-xs font-semibold cursor-pointer">
+                                                {plat}
+                                            </label>
+                                        </div>
+                                    );
+                                })}
+                            </div>
                         </div>
-                    </div>
+                    )}
                     <div className="space-y-2">
                         <Label>Scheduled Date</Label>
                         <Input
@@ -128,10 +132,10 @@ export function ContentItemEditor({ item, onSave }: { item: any, onSave: (data: 
                 )}
 
                 {/* Article Specifics */}
-                {item.type === 'ARTICLE' && (
+                {data.type === 'ARTICLE' && (
                     <div className="space-y-4 border-l-2 border-primary/20 pl-4 py-2">
                         <div className="space-y-2">
-                            <Label>Article Title</Label>
+                            <Label>Blog / Article Title</Label>
                             <Input
                                 value={data.articleTitle || ''}
                                 onChange={(e) => setData({ ...data, articleTitle: e.target.value })}
@@ -143,6 +147,37 @@ export function ContentItemEditor({ item, onSave }: { item: any, onSave: (data: 
                                 className="h-32"
                                 value={data.articleContent || ''}
                                 onChange={(e) => setData({ ...data, articleContent: e.target.value })}
+                            />
+                        </div>
+                    </div>
+                )}
+
+                {/* Email Specifics */}
+                {data.type === 'EMAIL' && (
+                    <div className="space-y-4 border-l-2 border-rose-200 pl-4 py-2">
+                        <div className="space-y-2">
+                            <Label>Email Subject Line</Label>
+                            <Input
+                                value={data.emailSubject || ''}
+                                onChange={(e) => setData({ ...data, emailSubject: e.target.value })}
+                                placeholder="e.g. Exclusive Offer Just for You 🎁"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Email Body / Content</Label>
+                            <Textarea
+                                className="h-48"
+                                value={data.emailBody || ''}
+                                onChange={(e) => setData({ ...data, emailBody: e.target.value })}
+                                placeholder="Main email content..."
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Base Design / Template URL</Label>
+                            <Input
+                                value={data.emailDesign || ''}
+                                onChange={(e) => setData({ ...data, emailDesign: e.target.value })}
+                                placeholder="https://..."
                             />
                         </div>
                     </div>
@@ -166,11 +201,11 @@ export function ContentItemEditor({ item, onSave }: { item: any, onSave: (data: 
                     <div className="space-y-2">
                         <Label className="flex items-center gap-2">
                             <Languages className="h-3 w-3 text-blue-500" />
-                            English Caption
+                            {data.type === 'EMAIL' ? 'Campaign Description / Goal' : 'English Caption'}
                         </Label>
                         <Textarea
                             className="h-32"
-                            placeholder="Write English caption here..."
+                            placeholder={data.type === 'EMAIL' ? "Campaign goal..." : "Write English caption here..."}
                             value={data.captionEn || ''}
                             onChange={(e) => setData({ ...data, captionEn: e.target.value })}
                         />
@@ -197,6 +232,6 @@ export function ContentItemEditor({ item, onSave }: { item: any, onSave: (data: 
                     </Button>
                 </div>
             </CardContent>
-        </Card>
+        </Card >
     );
 }

@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Printer, Facebook, Instagram, Video, Share2, Linkedin, Search, Youtube, TrendingUp, DollarSign, Target, Globe, BarChart3, Send, Mail, Trash2, Download, Loader2 } from "lucide-react";
+import { Printer, Facebook, Instagram, Video, Share2, Linkedin, Search, Youtube, TrendingUp, DollarSign, Target, Globe, BarChart3, Send, Mail, Trash2, Download, Loader2, MousePointer2, Zap, MessageSquare } from "lucide-react";
 import { Bar, BarChart, Pie, PieChart, Cell, RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, CartesianGrid } from "recharts";
 import { publishReport, requestReportDeletion } from "@/app/actions/report";
 import { useState } from "react";
@@ -85,13 +85,6 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
         return (p.impressions || 0) > 0 || (p.followers || 0) > 0 || (p.engagement || 0) > 0 || (p.views || 0) > 0 || (p.paidReach || 0) > 0;
     });
 
-    const chartData = activePlatforms.map(key => ({
-        name: PLATFORM_NAMES[key as keyof typeof PLATFORM_NAMES] || key,
-        impressions: metrics.platforms[key].impressions || 0,
-        engagement: metrics.platforms[key].engagement || 0,
-        followers: metrics.platforms[key].followers || 0,
-    }));
-
     // Calculate Global Totals
     const globalTotals = {
         impressions: activePlatforms.reduce((acc, key) => acc + (Number(metrics.platforms[key].impressions) || 0), 0),
@@ -103,8 +96,12 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
         views: activePlatforms.reduce((acc, key) => acc + (Number(metrics.platforms[key].views) || 0), 0),
     };
 
-    // Extended chart data
-    const extendedChartData = activePlatforms.map(key => ({
+    const hasViews = globalTotals.views > 0;
+    const hasPaidReach = globalTotals.paidReach > 0;
+    const hasConversions = globalTotals.conversions > 0;
+    const hasSpend = globalTotals.spend > 0;
+
+    const chartData = activePlatforms.map(key => ({
         name: PLATFORM_NAMES[key as keyof typeof PLATFORM_NAMES] || key,
         impressions: metrics.platforms[key].impressions || 0,
         engagement: metrics.platforms[key].engagement || 0,
@@ -115,11 +112,7 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
         conversions: metrics.platforms[key].conversions || 0,
     }));
 
-    const spendData = extendedChartData.filter(d => d.spend > 0);
-    const hasSpend = spendData.length > 0;
-    const hasViews = globalTotals.views > 0;
-    const hasPaidReach = globalTotals.paidReach > 0;
-    const hasConversions = globalTotals.conversions > 0;
+    const spendData = chartData.filter(d => d.spend > 0);
 
     return (
         <div className="space-y-12 max-w-6xl mx-auto pb-20 print:p-0 px-4 md:px-0" dir={isRtl ? "rtl" : "ltr"} id="pdf-content">
@@ -269,6 +262,7 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
                     <div dir="ltr">
                         <ResponsiveContainer width="100%" height={340}>
                             <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
                                 <XAxis dataKey="name" fontSize={12} fontWeight="700" tickLine={false} axisLine={false} />
                                 <YAxis fontSize={12} tickLine={false} axisLine={false} />
                                 <Tooltip
@@ -319,7 +313,7 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
                             <div dir="ltr">
                                 <ResponsiveContainer width="100%" height={280}>
                                     <BarChart data={chartData} layout="vertical" margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                                        <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="rgba(255,255,255,0.05)" />
                                         <XAxis type="number" fontSize={11} tickLine={false} axisLine={false} />
                                         <YAxis dataKey="name" type="category" fontSize={11} tickLine={false} axisLine={false} width={70} />
                                         <Tooltip contentStyle={{ borderRadius: '16px', background: 'rgba(15,15,25,0.95)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff' }} formatter={(v: any) => [v?.toLocaleString(), t("reports.growth")]} />
@@ -366,13 +360,13 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
                             <CardContent className="h-[280px] px-0">
                                 <div dir="ltr">
                                     <ResponsiveContainer width="100%" height={280}>
-                                        <BarChart data={extendedChartData.filter(d => d.views > 0)} layout="vertical" margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
-                                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                                        <BarChart data={chartData.filter(d => d.views > 0)} layout="vertical" margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
+                                            <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="rgba(255,255,255,0.05)" />
                                             <XAxis type="number" fontSize={11} tickLine={false} axisLine={false} />
                                             <YAxis dataKey="name" type="category" fontSize={11} tickLine={false} axisLine={false} width={70} />
                                             <Tooltip contentStyle={{ borderRadius: '16px', background: 'rgba(15,15,25,0.95)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff' }} formatter={(v: any) => [v?.toLocaleString(), t("common.views")]} />
                                             <Bar dataKey="views" name={t("common.views")} radius={[0, 8, 8, 0]} barSize={22} fill="#ec4899">
-                                                {extendedChartData.filter(d => d.views > 0).map((_, i) => (<Cell key={i} fill={["#ec4899", "#f97316", "#06b6d4", "#8b5cf6"][i % 4]} />))}
+                                                {chartData.filter(d => d.views > 0).map((_, i) => (<Cell key={i} fill={["#ec4899", "#f97316", "#06b6d4", "#8b5cf6"][i % 4]} />))}
                                             </Bar>
                                         </BarChart>
                                     </ResponsiveContainer>
@@ -390,6 +384,10 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
                     {activePlatforms.map(key => {
                         const data = metrics.platforms[key];
                         const Icon = PLATFORM_ICONS[key as keyof typeof PLATFORM_ICONS] || BarChart3;
+
+                        // Calculations
+                        const engRate = data.impressions > 0 ? ((data.engagement / data.impressions) * 100).toFixed(2) : "0.00";
+                        const cpa = data.conversions > 0 && data.spend > 0 ? (data.spend / data.conversions).toFixed(2) : null;
 
                         return (
                             <Card key={key} className="border-none bg-card/30 backdrop-blur-md shadow-xl overflow-hidden group print:bg-white print:border print:shadow-none">
@@ -414,16 +412,32 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
                                             { label: t('reports.engagements'), value: data.engagement, color: 'text-emerald-500' },
                                             { label: t('reports.growth'), value: data.followers, color: 'text-purple-500' },
                                             { label: t('common.views'), value: data.views, color: 'text-pink-500' },
+                                            { label: 'Saves / Shares', value: (data.saves || 0) + (data.shares || 0), color: 'text-orange-500' },
+                                            { label: 'Watch Time', value: data.watchTime, suffix: 's', color: 'text-indigo-500' },
                                             { label: t('reports.paid_reach'), value: data.paidReach, color: 'text-teal-500' },
                                             { label: t('reports.conversions'), value: data.conversions, color: 'text-rose-500' },
                                         ].map((item, i) => (item.value || 0) > 0 ? (
                                             <div key={i} className={`p-4 rounded-2xl bg-muted/20 border border-border/50 print:bg-white print:border ${isRtl ? 'text-right' : 'text-left'}`}>
                                                 <div className="text-[10px] font-black uppercase text-muted-foreground mb-1">{item.label}</div>
-                                                <div className={`text-2xl font-black ${item.color}`}>{(item.value || 0).toLocaleString()}</div>
+                                                <div className={`text-2xl font-black ${item.color}`}>{(item.value || 0).toLocaleString()}{item.suffix || ''}</div>
                                             </div>
                                         ) : null)}
                                     </div>
-                                    <div className="pt-4 border-t border-dashed">
+
+                                    <div className="grid grid-cols-2 gap-4 pt-4 border-t border-dashed">
+                                        <div className={`p-4 rounded-2xl bg-primary/5 border border-primary/10 ${isRtl ? 'text-right' : 'text-left'}`}>
+                                            <div className="text-[10px] font-black uppercase text-primary mb-1">Eng. Rate</div>
+                                            <div className="text-xl font-black text-primary">{engRate}%</div>
+                                        </div>
+                                        {cpa && (
+                                            <div className={`p-4 rounded-2xl bg-orange-500/5 border border-orange-500/10 ${isRtl ? 'text-right' : 'text-left'}`}>
+                                                <div className="text-[10px] font-black uppercase text-orange-500 mb-1">Cost / Conv</div>
+                                                <div className="text-xl font-black text-orange-500">${cpa}</div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {data.spend > 0 && (
                                         <div className={`flex justify-between items-center bg-orange-500/5 p-4 rounded-xl border border-orange-500/10 print:bg-white ${isRtl ? 'flex-row-reverse' : ''}`}>
                                             <div className={`flex items-center gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
                                                 <DollarSign className="h-4 w-4 text-orange-500" />
@@ -431,7 +445,7 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
                                             </div>
                                             <span className="text-xl font-black text-orange-500">${(data.spend || 0).toLocaleString()}</span>
                                         </div>
-                                    </div>
+                                    )}
                                 </CardContent>
                             </Card>
                         );
@@ -486,14 +500,22 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
                         </div>
                     </CardHeader>
                     <CardContent className="p-10 grid md:grid-cols-2 gap-12">
-                        <div className="space-y-6">
+                        <div className="grid gap-4 sm:grid-cols-2">
                             <div className={`p-6 bg-purple-500/5 rounded-2xl border border-purple-500/10 ${isRtl ? 'text-right' : ''}`}>
                                 <h4 className="text-xs font-black text-purple-600 uppercase mb-2 tracking-widest">{t("dashboard.primary_keyword")}</h4>
                                 <p className="text-2xl font-black italic">"{metrics.seo?.rank || t("dashboard.authority_growth")}"</p>
                             </div>
                             <div className={`p-6 bg-emerald-500/5 rounded-2xl border border-emerald-500/10 ${isRtl ? 'text-right' : ''}`}>
-                                <h4 className="text-xs font-black text-emerald-600 uppercase mb-2 tracking-widest">{t("reports.technical_performance")}</h4>
-                                <p className="text-sm font-bold leading-relaxed">{metrics.seo?.notes || t("dashboard.seo_notes")}</p>
+                                <h4 className="text-xs font-black text-emerald-600 uppercase mb-2 tracking-widest">Page Speed</h4>
+                                <p className="text-2xl font-black">{metrics.seo?.speed || 0}%</p>
+                            </div>
+                            <div className={`p-6 bg-blue-500/5 rounded-2xl border border-blue-500/10 ${isRtl ? 'text-right' : ''}`}>
+                                <h4 className="text-xs font-black text-blue-600 uppercase mb-2 tracking-widest">Mobile Ready</h4>
+                                <p className="text-2xl font-black">{metrics.seo?.mobile || 0}%</p>
+                            </div>
+                            <div className={`p-6 bg-muted/10 rounded-2xl border border-border ${isRtl ? 'text-right' : ''}`}>
+                                <h4 className="text-xs font-black text-muted-foreground uppercase mb-2 tracking-widest">{t("reports.technical_performance")}</h4>
+                                <p className="text-xs font-bold leading-tight">{metrics.seo?.notes || t("dashboard.seo_notes")}</p>
                             </div>
                         </div>
                         <div className="flex flex-col items-center justify-center p-10 bg-muted/20 rounded-3xl relative overflow-hidden ring-1 ring-white/5 shadow-inner">
