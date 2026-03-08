@@ -16,6 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { useLanguage } from "@/contexts/language-context";
 import {
     Facebook,
     Instagram,
@@ -101,6 +102,7 @@ function CalcMetric({ label, value, suffix = "", prefix = "" }: { label: string,
 }
 
 export function ReportCreatorClient({ clients, initialData }: { clients: any[], initialData?: any }) {
+    const { t, isRtl } = useLanguage();
     const [loading, setLoading] = useState(false);
     const router = useRouter();
 
@@ -201,18 +203,22 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
         <form onSubmit={handleSubmit} className="space-y-8 max-w-6xl mx-auto pb-24">
             {/* Header Section */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 bg-card/30 p-8 rounded-3xl border border-white/10 backdrop-blur-xl shadow-2xl">
-                <div>
+                <div className={isRtl ? 'text-right' : ''}>
                     <h1 className="text-5xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-400">
-                        Generate Report
+                        {isRtl ? 'إنشاء تقرير أداء' : 'Generate Report'}
                     </h1>
-                    <p className="text-muted-foreground text-lg font-medium mt-2">Build a premium performance review for your client.</p>
+                    <p className="text-muted-foreground text-lg font-medium mt-2">
+                        {isRtl ? 'قم ببناء مراجعة أداء احترافية لعميلك.' : 'Build a premium performance review for your client.'}
+                    </p>
                 </div>
-                <div className="flex flex-col sm:flex-row gap-4">
+                <div className={`flex flex-col sm:flex-row gap-4 ${isRtl ? 'flex-row-reverse' : ''}`}>
                     <div className="space-y-1">
-                        <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Client</Label>
+                        <Label className={`text-[10px] font-black uppercase text-muted-foreground ${isRtl ? 'mr-1 text-right' : 'ml-1'}`}>
+                            {isRtl ? 'العميل' : 'Client'}
+                        </Label>
                         <Select name="clientId" defaultValue={initialData?.clientId} required disabled={!!initialData}>
                             <SelectTrigger className="w-64 bg-background/50 border-white/5 h-12 text-base font-bold rounded-xl shadow-lg">
-                                <SelectValue placeholder="Select Client" />
+                                <SelectValue placeholder={isRtl ? 'اختر العميل' : 'Select Client'} />
                             </SelectTrigger>
                             <SelectContent>
                                 {clients.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
@@ -220,7 +226,9 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                         </Select>
                     </div>
                     <div className="space-y-1">
-                        <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Performance Month</Label>
+                        <Label className={`text-[10px] font-black uppercase text-muted-foreground ${isRtl ? 'mr-1 text-right' : 'ml-1'}`}>
+                            {isRtl ? 'شهر الأداء' : 'Performance Month'}
+                        </Label>
                         <Input
                             name="month"
                             type="month"
@@ -248,11 +256,11 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                         ))}
                         <TabsTrigger value="email" className="group flex-shrink-0 gap-3 py-3 px-6 rounded-xl data-[state=active]:bg-rose-500 data-[state=active]:text-white">
                             <Mail className="h-4 w-4 text-rose-400 transition-colors group-data-[state=active]:text-white" />
-                            <span className="font-bold tracking-tight">Email</span>
+                            <span className="font-bold tracking-tight">{isRtl ? 'البريد' : 'Email'}</span>
                         </TabsTrigger>
                         <TabsTrigger value="seo" className="group flex-shrink-0 gap-3 py-3 px-6 rounded-xl data-[state=active]:bg-emerald-500 data-[state=active]:text-white">
                             <Globe className="h-4 w-4 text-emerald-400 transition-colors group-data-[state=active]:text-white" />
-                            <span className="font-bold tracking-tight">SEO & Summary</span>
+                            <span className="font-bold tracking-tight">{isRtl ? 'SEO والملخص' : 'SEO & Summary'}</span>
                         </TabsTrigger>
                     </TabsList>
                 </div>
@@ -261,14 +269,18 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                     <TabsContent key={p.id} value={p.id} className="mt-0 focus-visible:ring-0">
                         <div className="grid gap-6">
                             {/* Analytics Summary Bar */}
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                <CalcMetric label="Est. Engagement Rate" value={getPlatformCalcs(p.id).engRate} suffix="%" />
-                                <CalcMetric label="Avg. Cost per Result" value={getPlatformCalcs(p.id).cpa} prefix="$" />
-                                <CalcMetric label="Platform Reach" value={(Number(metrics.platforms[p.id]?.paidReach) || 0) + (Number(metrics.platforms[p.id]?.organicReach) || 0)} />
-                                <div className="p-4 rounded-xl bg-primary/20 border border-primary/30 flex items-center justify-between">
-                                    <div className="flex flex-col">
-                                        <span className="text-[10px] font-black uppercase text-primary/80 mb-1 leading-tight">Platform Status</span>
-                                        <span className="text-sm font-black text-primary">DATA READY</span>
+                            <div className={`grid grid-cols-2 md:grid-cols-4 gap-4 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                                <CalcMetric label={isRtl ? 'معدل التفاعل التقديري' : "Est. Engagement Rate"} value={getPlatformCalcs(p.id).engRate} suffix="%" />
+                                <CalcMetric label={isRtl ? 'متوسط تكلفة النتيجة' : "Avg. Cost per Result"} value={getPlatformCalcs(p.id).cpa} prefix="$" />
+                                <CalcMetric label={isRtl ? 'الوصول في المنصة' : "Platform Reach"} value={(Number(metrics.platforms[p.id]?.paidReach) || 0) + (Number(metrics.platforms[p.id]?.organicReach) || 0)} />
+                                <div className={`p-4 rounded-xl bg-primary/20 border border-primary/30 flex items-center justify-between ${isRtl ? 'flex-row-reverse' : ''}`}>
+                                    <div className={`flex flex-col ${isRtl ? 'text-right' : ''}`}>
+                                        <span className="text-[10px] font-black uppercase text-primary/80 mb-1 leading-tight">
+                                            {isRtl ? 'حالة البيانات' : 'Platform Status'}
+                                        </span>
+                                        <span className="text-sm font-black text-primary">
+                                            {isRtl ? 'جاهزة' : 'DATA READY'}
+                                        </span>
                                     </div>
                                     <Zap className="h-5 w-5 text-primary animate-pulse" />
                                 </div>
@@ -278,8 +290,8 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                                 {/* Awareness & Growth */}
                                 <Card className="border-white/10 bg-card/20 backdrop-blur-md shadow-lg overflow-hidden">
                                     <CardHeader className="bg-primary/5 border-b border-white/5 py-4">
-                                        <CardTitle className="text-xs font-black uppercase tracking-[0.2em] text-primary/80 flex items-center gap-2">
-                                            <TrendingUp className="h-3 w-3" /> Growth & Awareness
+                                        <CardTitle className={`text-xs font-black uppercase tracking-[0.2em] text-primary/80 flex items-center gap-2 ${isRtl ? 'flex-row-reverse text-right' : ''}`}>
+                                            <TrendingUp className="h-3 w-3" /> {isRtl ? 'النمو والوعي' : 'Growth & Awareness'}
                                         </CardTitle>
                                     </CardHeader>
                                     <CardContent className="p-6 space-y-5">
@@ -315,8 +327,8 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                                 {/* Engagement & Content */}
                                 <Card className="border-white/10 bg-card/20 backdrop-blur-md shadow-lg overflow-hidden">
                                     <CardHeader className="bg-primary/5 border-b border-white/5 py-4">
-                                        <CardTitle className="text-xs font-black uppercase tracking-[0.2em] text-primary/80 flex items-center gap-2">
-                                            <MessageSquare className="h-3 w-3" /> Interaction & Content
+                                        <CardTitle className={`text-xs font-black uppercase tracking-[0.2em] text-primary/80 flex items-center gap-2 ${isRtl ? 'flex-row-reverse text-right' : ''}`}>
+                                            <MessageSquare className="h-3 w-3" /> {isRtl ? 'التفاعل والمحتوى' : 'Interaction & Content'}
                                         </CardTitle>
                                     </CardHeader>
                                     <CardContent className="p-6 space-y-5">
@@ -353,8 +365,8 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                                 {/* Conversion & Performance */}
                                 <Card className="border-white/10 bg-card/20 backdrop-blur-md shadow-lg overflow-hidden">
                                     <CardHeader className="bg-primary/5 border-b border-white/5 py-4">
-                                        <CardTitle className="text-xs font-black uppercase tracking-[0.2em] text-primary/80 flex items-center gap-2">
-                                            <DollarSign className="h-3 w-3" /> Paid Performance
+                                        <CardTitle className={`text-xs font-black uppercase tracking-[0.2em] text-primary/80 flex items-center gap-2 ${isRtl ? 'flex-row-reverse text-right' : ''}`}>
+                                            <DollarSign className="h-3 w-3" /> {isRtl ? 'الأداء الممول' : 'Paid Performance'}
                                         </CardTitle>
                                     </CardHeader>
                                     <CardContent className="p-6 space-y-5">
@@ -399,17 +411,20 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                             </div>
 
                             {/* Optional Platform Comment */}
-                            <div className="space-y-2">
-                                <Label className="text-xs font-black uppercase tracking-wider text-muted-foreground ml-1 flex items-center gap-2">
-                                    <MessageSquare className="h-3 w-3" /> Platform Note (Optional)
+                            <div className={`space-y-2 ${isRtl ? 'text-right' : ''}`}>
+                                <Label className={`text-xs font-black uppercase tracking-wider text-muted-foreground ${isRtl ? 'mr-1 flex-row-reverse' : 'ml-1'} flex items-center gap-2`}>
+                                    <MessageSquare className="h-3 w-3" /> {isRtl ? 'ملاحظة المنصة (اختياري)' : 'Platform Note (Optional)'}
                                 </Label>
                                 <textarea
-                                    className="flex w-full rounded-2xl border border-white/10 bg-background/50 p-4 text-sm font-medium shadow-inner focus:border-primary/50 focus:ring-primary/20 transition-all outline-none placeholder:text-muted-foreground/40 min-h-[80px]"
-                                    placeholder={`Add a specific insight or comment about ${p.name} performance this month...`}
+                                    className={`flex w-full rounded-2xl border border-white/10 bg-background/50 p-4 text-sm font-medium shadow-inner focus:border-primary/50 focus:ring-primary/20 transition-all outline-none placeholder:text-muted-foreground/40 min-h-[80px] ${isRtl ? 'text-right' : ''}`}
+                                    placeholder={isRtl ? `أضف رؤية أو تعليقاً على أداء ${p.name} هذا الشهر...` : `Add a specific insight or comment about ${p.name} performance this month...`}
                                     value={metrics.platforms[p.id]?.comment || ""}
                                     onChange={e => updatePlatformMetric(p.id, 'comment', e.target.value)}
+                                    dir={isRtl ? 'rtl' : 'ltr'}
                                 />
-                                <p className="text-[10px] text-muted-foreground ml-1">This comment will be visible to the client in their report.</p>
+                                <p className={`text-[10px] text-muted-foreground ${isRtl ? 'mr-1' : 'ml-1'}`}>
+                                    {isRtl ? 'سيظهر هذا التعليق للعميل في التقرير.' : 'This comment will be visible to the client in their report.'}
+                                </p>
                             </div>
                         </div>
                     </TabsContent>
@@ -523,9 +538,9 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                         </div>
 
                         <Card className="border-white/10 bg-card/30 backdrop-blur-md shadow-2xl">
-                            <CardHeader className="border-b border-white/5">
-                                <CardTitle className="text-xl font-black flex items-center gap-2">
-                                    <BarChart3 className="h-5 w-5 text-primary" /> Executive Strategic Summary
+                            <CardHeader className={`border-b border-white/5 ${isRtl ? 'text-right' : ''}`}>
+                                <CardTitle className={`text-xl font-black flex items-center gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                                    <BarChart3 className="h-5 w-5 text-primary" /> {isRtl ? 'الملخص الاستراتيجي' : 'Executive Strategic Summary'}
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="p-8">
@@ -535,8 +550,9 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                                     required
                                     value={metrics.summary || ""}
                                     onChange={(e) => setMetrics((prev: any) => ({ ...prev, summary: e.target.value }))}
-                                    className="flex w-full rounded-2xl border-white/10 bg-background/50 p-6 text-base font-medium shadow-inner focus:border-primary/50 focus:ring-primary/20 transition-all outline-none"
-                                    placeholder="Translate the data into business results. What were the big wins? What are we optimizing next?"
+                                    className={`flex w-full rounded-2xl border-white/10 bg-background/50 p-6 text-base font-medium shadow-inner focus:border-primary/50 focus:ring-primary/20 transition-all outline-none ${isRtl ? 'text-right' : ''}`}
+                                    placeholder={isRtl ? "ترجم البيانات إلى نتائج أعمال. ما هي الإنجازات الكبرى؟ وما الذي سنعمل عليه الشهر القادم؟" : "Translate the data into business results. What were the big wins? What are we optimizing next?"}
+                                    dir={isRtl ? 'rtl' : 'ltr'}
                                 />
                             </CardContent>
                         </Card>
@@ -545,14 +561,14 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
             </Tabs>
 
             {/* Bottom Actions */}
-            <div className="fixed bottom-0 left-0 right-0 p-6 bg-background/80 backdrop-blur-2xl border-t border-white/5 flex justify-end gap-4 z-50">
+            <div className={`fixed bottom-0 left-0 right-0 p-6 bg-background/80 backdrop-blur-2xl border-t border-white/5 flex justify-end gap-4 z-50 ${isRtl ? 'flex-row-reverse' : ''}`}>
                 <Button
                     type="button"
                     variant="ghost"
                     onClick={() => router.back()}
                     className="h-14 px-8 text-base font-bold rounded-2xl hover:bg-white/5"
                 >
-                    Cancel Work
+                    {isRtl ? 'إلغاء العمل' : 'Cancel Work'}
                 </Button>
                 <Button
                     type="submit"
@@ -560,12 +576,12 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                     className="h-14 px-12 text-lg font-black rounded-2xl bg-gradient-to-r from-primary to-purple-600 hover:shadow-2xl hover:shadow-primary/40 transition-all duration-300"
                 >
                     {loading ? (
-                        <span className="flex items-center gap-2">
-                            <Zap className="h-5 w-5 animate-spin" /> {initialData ? "Optimizing Database..." : "Engine Generating..."}
+                        <span className={`flex items-center gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                            <Zap className="h-5 w-5 animate-spin" /> {initialData ? (isRtl ? "جاري التحديث..." : "Optimizing Database...") : (isRtl ? "جاري التوليد..." : "Engine Generating...")}
                         </span>
                     ) : (
-                        <span className="flex items-center gap-2">
-                            <Save className="h-5 w-5" /> {initialData ? "Apply Refinements" : "Finalize & Broadcast Report"}
+                        <span className={`flex items-center gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                            <Save className="h-5 w-5" /> {initialData ? (isRtl ? "تطبيق التعديلات" : "Apply Refinements") : (isRtl ? "اعتماد وإرسال التقرير" : "Finalize & Broadcast Report")}
                         </span>
                     )}
                 </Button>

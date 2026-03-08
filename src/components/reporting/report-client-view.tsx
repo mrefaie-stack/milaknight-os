@@ -29,6 +29,7 @@ const PLATFORM_NAMES = {
     linkedin: "LinkedIn",
     google: "Google Ads",
     youtube: "YouTube",
+    google_ads: "Google Ads"
 };
 
 export function ReportClientView({ report, metrics, role }: { report: any, metrics: any, role: string }) {
@@ -114,8 +115,10 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
     }));
 
     // Platform analysis charts — exclude paid-ads-only platforms (no organic reach/followers/engagement)
+    // AND exclude Google/YouTube specifically because they are fully featured in the Paid Ads section
     const platformChartData = chartData.filter(d =>
-        d.impressions > 0 || d.followers > 0 || d.engagement > 0 || d.views > 0
+        (d.impressions > 0 || d.followers > 0 || d.engagement > 0 || d.views > 0) &&
+        !['google', 'youtube', 'google_ads'].includes(d.name.toLowerCase().replace(' ', '_'))
     );
 
     const spendData = chartData.filter(d => d.spend > 0);
@@ -148,7 +151,7 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
                             onClick={() => {
                                 const url = `${window.location.origin}/p/report/${report.id}`;
                                 navigator.clipboard.writeText(url);
-                                toast.success("Public link copied to clipboard!");
+                                toast.success(isRtl ? "تم نسخ الرابط العام بنجاح!" : "Public link copied to clipboard!");
                             }}
                             variant="outline"
                             className="font-bold rounded-full h-12 px-6"
@@ -323,7 +326,7 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
                                         <XAxis type="number" fontSize={11} tickLine={false} axisLine={false} />
                                         <YAxis dataKey="name" type="category" fontSize={11} tickLine={false} axisLine={false} width={70} />
                                         <Tooltip contentStyle={{ borderRadius: '16px', background: 'rgba(15,15,25,0.95)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff' }} formatter={(v: any) => [v?.toLocaleString(), t("reports.growth")]} />
-                                        <Bar dataKey="followers" name={t("reports.new_followers")} radius={[0, 8, 8, 0]} barSize={22}>
+                                        <Bar dataKey="followers" name={isRtl ? "متابعون جدد" : t("reports.new_followers")} radius={[0, 8, 8, 0]} barSize={22}>
                                             {platformChartData.map((_, i) => (<Cell key={i} fill={["#a855f7", "#3b82f6", "#10b981", "#f97316", "#ef4444", "#eab308", "#06b6d4"][i % 7]} />))}
                                         </Bar>
                                     </BarChart>
@@ -481,8 +484,8 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
                                             { label: t('reports.engagements'), value: data.engagement, color: 'text-emerald-500' },
                                             { label: t('reports.growth'), value: data.followers, color: 'text-purple-500' },
                                             { label: t('common.views'), value: data.views, color: 'text-pink-500' },
-                                            { label: 'Saves / Shares', value: (data.saves || 0) + (data.shares || 0), color: 'text-orange-500' },
-                                            { label: 'Watch Time', value: data.watchTime, suffix: 's', color: 'text-indigo-500' },
+                                            { label: isRtl ? 'الحفظ والمشاركة' : 'Saves / Shares', value: (data.saves || 0) + (data.shares || 0), color: 'text-orange-500' },
+                                            { label: isRtl ? 'وقت المشاهدة' : 'Watch Time', value: data.watchTime, suffix: 's', color: 'text-indigo-500' },
                                             { label: t('reports.paid_reach'), value: data.paidReach, color: 'text-teal-500' },
                                             { label: t('reports.conversions'), value: data.conversions, color: 'text-rose-500' },
                                         ].map((item, i) => (item.value || 0) > 0 ? (
