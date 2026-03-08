@@ -29,7 +29,7 @@ export async function createReport(clientId: string, month: string, metricsData:
     return report;
 }
 
-export async function updateReport(reportId: string, metricsData: any) {
+export async function updateReport(reportId: string, metricsData: any, month?: string, clientId?: string) {
     const session = await getServerSession(authOptions);
     if (session?.user?.role !== "AM" && session?.user?.role !== "ADMIN") {
         throw new Error("Unauthorized");
@@ -39,6 +39,8 @@ export async function updateReport(reportId: string, metricsData: any) {
         where: { id: reportId },
         data: {
             metrics: JSON.stringify(metricsData),
+            month: month || undefined,
+            clientId: clientId || undefined,
         }
     });
 

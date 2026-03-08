@@ -36,7 +36,8 @@ import {
     Zap,
     MessageSquare,
     Save,
-    BarChart3
+    BarChart3,
+    Trash2
 } from "lucide-react";
 
 const PLATFORMS = [
@@ -115,7 +116,7 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
 
     const [metrics, setMetrics] = useState(initialMetrics);
 
-    const updatePlatformMetric = (platformId: string, field: string, value: string) => {
+    const updatePlatformMetric = (platformId: string, field: string, value: any) => {
         const numFields = ['followers', 'engagement', 'views', 'impressions', 'paidReach', 'spend', 'conversions', 'organicReach', 'shares', 'watchTime', 'saves', 'profileVisits', 'cpc', 'ctr'];
         const val = numFields.includes(field) ? (parseFloat(value) || 0) : value;
 
@@ -129,6 +130,51 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                 }
             }
         }));
+    };
+
+    const addCampaign = (platformId: string) => {
+        setMetrics((prev: any) => {
+            const platform = prev.platforms[platformId] || {};
+            const campaigns = [...(platform.paidCampaigns || [])];
+            campaigns.push({ name: "", objective: "AWARENESS", reach: 0, results: 0, spend: 0 });
+            return {
+                ...prev,
+                platforms: {
+                    ...prev.platforms,
+                    [platformId]: { ...platform, paidCampaigns: campaigns }
+                }
+            };
+        });
+    };
+
+    const removeCampaign = (platformId: string, index: number) => {
+        setMetrics((prev: any) => {
+            const platform = prev.platforms[platformId] || {};
+            const campaigns = (platform.paidCampaigns || []).filter((_: any, i: number) => i !== index);
+            return {
+                ...prev,
+                platforms: {
+                    ...prev.platforms,
+                    [platformId]: { ...platform, paidCampaigns: campaigns }
+                }
+            };
+        });
+    };
+
+    const updateCampaign = (platformId: string, index: number, field: string, value: any) => {
+        setMetrics((prev: any) => {
+            const platform = prev.platforms[platformId] || {};
+            const campaigns = [...(platform.paidCampaigns || [])];
+            const val = ['reach', 'results', 'spend'].includes(field) ? (parseFloat(value) || 0) : value;
+            campaigns[index] = { ...campaigns[index], [field]: val };
+            return {
+                ...prev,
+                platforms: {
+                    ...prev.platforms,
+                    [platformId]: { ...platform, paidCampaigns: campaigns }
+                }
+            };
+        });
     };
 
     const updateEmailMetric = (field: string, value: string) => {
@@ -156,9 +202,21 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
     const getPlatformCalcs = (platformId: string) => {
         const p = metrics.platforms[platformId] || {};
         const engRate = p.impressions > 0 ? ((p.engagement / p.impressions) * 100).toFixed(2) : "0.00";
-        const roas = p.conversions > 0 && p.spend > 0 ? (p.spend / p.conversions).toFixed(2) : "0.00"; // Actually CPA, user asked for ROAS (usually Revenue/Spend) but we only have conversions. Let's show Cost per Conv.
-        const cpc = p.clicks > 0 ? (p.spend / p.clicks).toFixed(2) : "0.00";
-        return { engRate, cpa: roas, cpc };
+
+        // Use paidCampaigns if they exist to drive spend/results, otherwise use top-level metrics
+        const totalSpend = p.paidCampaigns?.length > 0
+            ? p.paidCampaigns.reduce((acc: number, c: any) => acc + (c.spend || 0), 0)
+            : (p.spend || 0);
+
+        const totalResults = p.paidCampaigns?.length > 0
+            ? p.paidCampaigns.reduce((acc: number, c: any) => acc + (c.results || 0), 0)
+            : (p.conversions || 0);
+
+        const cpa = totalResults > 0 && totalSpend > 0 ? (totalSpend / totalResults).toFixed(2) : "0.00";
+        const totalClicks = p.clicks || 0;
+        const cpc = totalClicks > 0 ? (totalSpend / totalClicks).toFixed(2) : "0.00";
+
+        return { engRate, cpa, cpc, totalSpend, totalResults };
     };
 
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -184,7 +242,7 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
 
         try {
             if (initialData) {
-                await updateReport(initialData.id, finalMetrics);
+                await updateReport(initialData.id, finalMetrics, month, clientId);
                 toast.success("Report updated successfully!");
                 router.push(`/am/reports/${initialData.id}`);
             } else {
@@ -216,7 +274,7 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                         <Label className={`text-[10px] font-black uppercase text-muted-foreground ${isRtl ? 'mr-1 text-right' : 'ml-1'}`}>
                             {isRtl ? 'العميل' : 'Client'}
                         </Label>
-                        <Select name="clientId" defaultValue={initialData?.clientId} required disabled={!!initialData}>
+                        <Select name="clientId" defaultValue={initialData?.clientId} required>
                             <SelectTrigger className="w-64 bg-background/50 border-white/5 h-12 text-base font-bold rounded-xl shadow-lg">
                                 <SelectValue placeholder={isRtl ? 'اختر العميل' : 'Select Client'} />
                             </SelectTrigger>
@@ -235,7 +293,6 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                             defaultValue={initialData?.month}
                             className="w-48 bg-background/50 border-white/5 h-12 text-base font-bold rounded-xl shadow-lg"
                             required
-                            disabled={!!initialData}
                         />
                     </div>
                 </div>
@@ -271,7 +328,7 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                             {/* Analytics Summary Bar */}
                             <div className={`grid grid-cols-2 md:grid-cols-4 gap-4 ${isRtl ? 'flex-row-reverse' : ''}`}>
                                 <CalcMetric label={isRtl ? 'معدل التفاعل التقديري' : "Est. Engagement Rate"} value={getPlatformCalcs(p.id).engRate} suffix="%" />
-                                <CalcMetric label={isRtl ? 'متوسط تكلفة النتيجة' : "Avg. Cost per Result"} value={getPlatformCalcs(p.id).cpa} prefix="$" />
+                                <CalcMetric label={isRtl ? 'متوسط تكلفة النتيجة' : "Avg. Cost per Result"} value={getPlatformCalcs(p.id).cpa} prefix="SAR " />
                                 <CalcMetric label={isRtl ? 'الوصول في المنصة' : "Platform Reach"} value={(Number(metrics.platforms[p.id]?.paidReach) || 0) + (Number(metrics.platforms[p.id]?.organicReach) || 0)} />
                                 <div className={`p-4 rounded-xl bg-primary/20 border border-primary/30 flex items-center justify-between ${isRtl ? 'flex-row-reverse' : ''}`}>
                                     <div className={`flex flex-col ${isRtl ? 'text-right' : ''}`}>
@@ -371,11 +428,11 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                                     </CardHeader>
                                     <CardContent className="p-6 space-y-5">
                                         <MetricField
-                                            label="Ad Spend"
+                                            label="Ad Spend (General)"
                                             icon={DollarSign}
                                             value={metrics.platforms[p.id]?.spend}
                                             onChange={(v) => updatePlatformMetric(p.id, 'spend', v)}
-                                            prefix="$"
+                                            prefix="SAR "
                                         />
                                         <MetricField
                                             label="Paid Reach"
@@ -389,6 +446,99 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                                             value={metrics.platforms[p.id]?.conversions}
                                             onChange={(v) => updatePlatformMetric(p.id, 'conversions', v)}
                                         />
+
+                                        {/* Campaign Manager */}
+                                        <div className="pt-4 border-t border-white/5 space-y-4">
+                                            <div className={`flex items-center justify-between ${isRtl ? 'flex-row-reverse' : ''}`}>
+                                                <Label className="text-[10px] font-black uppercase text-primary tracking-widest">
+                                                    {isRtl ? 'تفاصيل الحملات' : 'Campaign Details'}
+                                                </Label>
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="h-7 text-[10px] font-bold rounded-lg border-primary/20 text-primary hover:bg-primary/10"
+                                                    onClick={() => addCampaign(p.id)}
+                                                >
+                                                    {isRtl ? '+ إضافة حملة' : '+ Add Campaign'}
+                                                </Button>
+                                            </div>
+
+                                            <div className="space-y-4">
+                                                {(metrics.platforms[p.id]?.paidCampaigns || []).map((camp: any, idx: number) => (
+                                                    <div key={idx} className="p-4 rounded-xl bg-white/5 border border-white/5 space-y-3 relative group/camp">
+                                                        <Button
+                                                            type="button"
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-destructive text-white opacity-0 group-hover/camp:opacity-100 transition-opacity"
+                                                            onClick={() => removeCampaign(p.id, idx)}
+                                                        >
+                                                            <Trash2 className="h-3 w-3" />
+                                                        </Button>
+
+                                                        <Input
+                                                            placeholder={isRtl ? "اسم الحملة" : "Campaign Name"}
+                                                            value={camp.name}
+                                                            onChange={(e) => updateCampaign(p.id, idx, 'name', e.target.value)}
+                                                            className="h-8 text-xs font-bold bg-background/50 border-white/5"
+                                                        />
+
+                                                        <div className="grid grid-cols-2 gap-2">
+                                                            <div className="space-y-1">
+                                                                <Select
+                                                                    value={camp.objective}
+                                                                    onValueChange={(v) => updateCampaign(p.id, idx, 'objective', v)}
+                                                                >
+                                                                    <SelectTrigger className="h-8 text-[10px] font-bold bg-background/50 border-white/5">
+                                                                        <SelectValue placeholder="Objective" />
+                                                                    </SelectTrigger>
+                                                                    <SelectContent>
+                                                                        <SelectItem value="AWARENESS">{isRtl ? 'وعي' : 'Awareness'}</SelectItem>
+                                                                        <SelectItem value="REACH">{isRtl ? 'وصول' : 'Reach'}</SelectItem>
+                                                                        <SelectItem value="TRAFFIC">{isRtl ? 'زيارة موقع' : 'Traffic'}</SelectItem>
+                                                                        <SelectItem value="ENGAGEMENT">{isRtl ? 'تفاعل' : 'Engagement'}</SelectItem>
+                                                                        <SelectItem value="MESSAGES">{isRtl ? 'رسايل' : 'Messages'}</SelectItem>
+                                                                        <SelectItem value="LEADS">{isRtl ? 'ليدز' : 'Leads'}</SelectItem>
+                                                                        <SelectItem value="CONVERSIONS">{isRtl ? 'تحويلات' : 'Conversions'}</SelectItem>
+                                                                    </SelectContent>
+                                                                </Select>
+                                                            </div>
+                                                            <Input
+                                                                type="number"
+                                                                placeholder={isRtl ? "الصرف" : "Spend"}
+                                                                value={camp.spend}
+                                                                onChange={(e) => updateCampaign(p.id, idx, 'spend', e.target.value)}
+                                                                className="h-8 text-xs font-bold bg-background/50 border-white/5"
+                                                            />
+                                                        </div>
+
+                                                        <div className="grid grid-cols-2 gap-2">
+                                                            <Input
+                                                                type="number"
+                                                                placeholder={isRtl ? "الوصول" : "Reach"}
+                                                                value={camp.reach}
+                                                                onChange={(e) => updateCampaign(p.id, idx, 'reach', e.target.value)}
+                                                                className="h-8 text-xs font-bold bg-background/50 border-white/5"
+                                                            />
+                                                            <Input
+                                                                type="number"
+                                                                placeholder={
+                                                                    camp.objective === 'MESSAGES' ? (isRtl ? 'محادثات' : 'Messages') :
+                                                                        camp.objective === 'LEADS' ? (isRtl ? 'ليدز' : 'Leads') :
+                                                                            camp.objective === 'ENGAGEMENT' ? (isRtl ? 'تفاعل' : 'Engagements') :
+                                                                                (isRtl ? 'نتايج' : 'Results')
+                                                                }
+                                                                value={camp.results}
+                                                                onChange={(e) => updateCampaign(p.id, idx, 'results', e.target.value)}
+                                                                className="h-8 text-xs font-bold bg-background/50 border-white/5"
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+
                                         {(p.id === 'google' || p.id === 'linkedin') && (
                                             <div className="grid grid-cols-2 gap-4">
                                                 <MetricField
@@ -402,7 +552,7 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                                                     icon={DollarSign}
                                                     value={metrics.platforms[p.id]?.cpc}
                                                     onChange={(v) => updatePlatformMetric(p.id, 'cpc', v)}
-                                                    prefix="$"
+                                                    prefix="SAR "
                                                 />
                                             </div>
                                         )}

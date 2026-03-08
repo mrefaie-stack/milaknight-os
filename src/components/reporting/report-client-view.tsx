@@ -197,7 +197,7 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
                     { label: t("reports.impressions"), value: globalTotals.impressions, color: 'bg-primary/5', valueColor: '', sub: t("common.combined"), subColor: 'text-emerald-500', icon: <TrendingUp className="h-3 w-3" /> },
                     { label: t("reports.engagements"), value: globalTotals.engagement, color: 'bg-blue-500/5', valueColor: '', sub: t("reports.interactions"), subColor: 'text-blue-500', icon: null },
                     { label: t("reports.growth"), value: globalTotals.followers, color: 'bg-purple-500/5', valueColor: '', sub: t("reports.new_followers"), subColor: 'text-purple-500', icon: null },
-                    { label: t("reports.investment"), value: null, rawValue: `$${(globalTotals.spend).toLocaleString()}`, color: 'bg-orange-500/5', valueColor: '', sub: t("reports.paid_media"), subColor: 'text-orange-500', icon: <DollarSign className="h-3 w-3" /> },
+                    { label: t("reports.investment"), value: null, rawValue: `SAR ${(globalTotals.spend).toLocaleString()}`, color: 'bg-orange-500/5', valueColor: '', sub: t("reports.paid_media"), subColor: 'text-orange-500', icon: <DollarSign className="h-3 w-3" /> },
                 ].map((card) => (
                     <Card key={card.label} className={`${card.color} border-none shadow-none backdrop-blur-md`}>
                         <CardHeader className={`pb-2 ${isRtl ? 'text-right' : 'text-left'}`}>
@@ -415,32 +415,78 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
                                             <Icon className="h-5 w-5 text-orange-500" />
                                             <span className="font-black text-base">{PLATFORM_NAMES[key as keyof typeof PLATFORM_NAMES] || key}</span>
                                         </div>
-                                        <div className="grid grid-cols-2 gap-3">
-                                            <div className="p-3 bg-background/50 rounded-xl">
-                                                <div className="text-[10px] font-black uppercase text-orange-500 mb-1">{isRtl ? 'الإنفاق' : 'Spend'}</div>
-                                                <div className="text-xl font-black">${(d.spend || 0).toLocaleString()}</div>
+
+                                        {d.paidCampaigns?.length > 0 ? (
+                                            <div className="space-y-4 pt-2">
+                                                {d.paidCampaigns.map((camp: any, idx: number) => (
+                                                    <div key={idx} className="p-4 rounded-2xl bg-background/40 border border-white/5 space-y-2">
+                                                        <div className={`flex justify-between items-center ${isRtl ? 'flex-row-reverse' : ''}`}>
+                                                            <div className="font-bold text-xs">{camp.name}</div>
+                                                            <div className="text-[10px] font-black px-2 py-0.5 rounded-full bg-orange-500/10 text-orange-500 uppercase">
+                                                                {isRtl ? (
+                                                                    camp.objective === 'AWARENESS' ? 'وعي' :
+                                                                        camp.objective === 'REACH' ? 'وصول' :
+                                                                            camp.objective === 'TRAFFIC' ? 'زيارة' :
+                                                                                camp.objective === 'ENGAGEMENT' ? 'تفاعل' :
+                                                                                    camp.objective === 'MESSAGES' ? 'رسايل' :
+                                                                                        camp.objective === 'LEADS' ? 'ليدز' :
+                                                                                            camp.objective === 'CONVERSIONS' ? 'تحويل' : camp.objective
+                                                                ) : camp.objective.toLowerCase()}
+                                                            </div>
+                                                        </div>
+                                                        <div className="grid grid-cols-3 gap-2">
+                                                            <div className={isRtl ? 'text-right' : 'text-left'}>
+                                                                <div className="text-[9px] text-muted-foreground uppercase">{isRtl ? 'صرف' : 'Spend'}</div>
+                                                                <div className="text-xs font-black">SAR {camp.spend?.toLocaleString()}</div>
+                                                            </div>
+                                                            <div className={isRtl ? 'text-right' : 'text-left'}>
+                                                                <div className="text-[9px] text-muted-foreground uppercase">{isRtl ? 'وصول' : 'Reach'}</div>
+                                                                <div className="text-xs font-black">{camp.reach?.toLocaleString()}</div>
+                                                            </div>
+                                                            <div className={isRtl ? 'text-right' : 'text-left'}>
+                                                                <div className="text-[9px] text-muted-foreground uppercase">
+                                                                    {camp.objective === 'MESSAGES' ? (isRtl ? 'رسايل' : 'Msgs') :
+                                                                        camp.objective === 'LEADS' ? (isRtl ? 'ليدز' : 'Leads') :
+                                                                            (isRtl ? 'نتايج' : 'Results')}
+                                                                </div>
+                                                                <div className="text-xs font-black">{camp.results?.toLocaleString()}</div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                                <div className={`flex justify-between items-center px-2 py-1 bg-orange-500/10 rounded-lg ${isRtl ? 'flex-row-reverse' : ''}`}>
+                                                    <span className="text-[10px] font-black uppercase text-orange-500">{isRtl ? 'إجمالي المنصة' : 'Platform Total'}</span>
+                                                    <span className="text-xs font-black text-orange-500">SAR {(d.paidCampaigns.reduce((acc: number, c: any) => acc + (c.spend || 0), 0)).toLocaleString()}</span>
+                                                </div>
                                             </div>
-                                            {d.paidReach > 0 && <div className="p-3 bg-background/50 rounded-xl">
-                                                <div className="text-[10px] font-black uppercase text-muted-foreground mb-1">{isRtl ? 'الوصول المدفوع' : 'Paid Reach'}</div>
-                                                <div className="text-xl font-black">{(d.paidReach || 0).toLocaleString()}</div>
-                                            </div>}
-                                            {d.conversions > 0 && <div className="p-3 bg-background/50 rounded-xl">
-                                                <div className="text-[10px] font-black uppercase text-muted-foreground mb-1">{isRtl ? 'تحويلات' : 'Conversions'}</div>
-                                                <div className="text-xl font-black">{d.conversions}</div>
-                                            </div>}
-                                            {cpa && <div className="p-3 bg-background/50 rounded-xl">
-                                                <div className="text-[10px] font-black uppercase text-orange-500 mb-1">{isRtl ? 'تكلفة التحويل' : 'Cost/Conv.'}</div>
-                                                <div className="text-xl font-black text-orange-500">${cpa}</div>
-                                            </div>}
-                                            {d.clicks > 0 && <div className="p-3 bg-background/50 rounded-xl">
-                                                <div className="text-[10px] font-black uppercase text-muted-foreground mb-1">{isRtl ? 'النقرات' : 'Clicks'}</div>
-                                                <div className="text-xl font-black">{(d.clicks || 0).toLocaleString()}</div>
-                                            </div>}
-                                            {d.cpc > 0 && <div className="p-3 bg-background/50 rounded-xl">
-                                                <div className="text-[10px] font-black uppercase text-muted-foreground mb-1">CPC</div>
-                                                <div className="text-xl font-black">${d.cpc}</div>
-                                            </div>}
-                                        </div>
+                                        ) : (
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <div className="p-3 bg-background/50 rounded-xl">
+                                                    <div className="text-[10px] font-black uppercase text-orange-500 mb-1">{isRtl ? 'الإنفاق' : 'Spend'}</div>
+                                                    <div className="text-xl font-black">SAR {(d.spend || 0).toLocaleString()}</div>
+                                                </div>
+                                                {d.paidReach > 0 && <div className="p-3 bg-background/50 rounded-xl">
+                                                    <div className="text-[10px] font-black uppercase text-muted-foreground mb-1">{isRtl ? 'الوصول المدفوع' : 'Paid Reach'}</div>
+                                                    <div className="text-xl font-black">{(d.paidReach || 0).toLocaleString()}</div>
+                                                </div>}
+                                                {d.conversions > 0 && <div className="p-3 bg-background/50 rounded-xl">
+                                                    <div className="text-[10px] font-black uppercase text-muted-foreground mb-1">{isRtl ? 'تحويلات' : 'Conversions'}</div>
+                                                    <div className="text-xl font-black">{d.conversions}</div>
+                                                </div>}
+                                                {cpa && <div className="p-3 bg-background/50 rounded-xl">
+                                                    <div className="text-[10px] font-black uppercase text-orange-500 mb-1">{isRtl ? 'تكلفة التحويل' : 'Cost/Conv.'}</div>
+                                                    <div className="text-xl font-black text-orange-500">SAR {cpa}</div>
+                                                </div>}
+                                                {d.clicks > 0 && <div className="p-3 bg-background/50 rounded-xl">
+                                                    <div className="text-[10px] font-black uppercase text-muted-foreground mb-1">{isRtl ? 'النقرات' : 'Clicks'}</div>
+                                                    <div className="text-xl font-black">{(d.clicks || 0).toLocaleString()}</div>
+                                                </div>}
+                                                {d.cpc > 0 && <div className="p-3 bg-background/50 rounded-xl">
+                                                    <div className="text-[10px] font-black uppercase text-muted-foreground mb-1">CPC</div>
+                                                    <div className="text-xl font-black">SAR {d.cpc}</div>
+                                                </div>}
+                                            </div>
+                                        )}
                                     </div>
                                 );
                             })}
@@ -504,7 +550,7 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
                                         {cpa && (
                                             <div className={`p-4 rounded-2xl bg-orange-500/5 border border-orange-500/10 ${isRtl ? 'text-right' : 'text-left'}`}>
                                                 <div className="text-[10px] font-black uppercase text-orange-500 mb-1">{isRtl ? 'تكلفة التحويل' : 'Cost / Conv'}</div>
-                                                <div className="text-xl font-black text-orange-500">${cpa}</div>
+                                                <div className="text-xl font-black text-orange-500">SAR {cpa}</div>
                                             </div>
                                         )}
                                     </div>
@@ -515,7 +561,7 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
                                                 <DollarSign className="h-4 w-4 text-orange-500" />
                                                 <span className="text-xs font-bold uppercase tracking-wider">{t("reports.campaign_investment")}</span>
                                             </div>
-                                            <span className="text-xl font-black text-orange-500">${(data.spend || 0).toLocaleString()}</span>
+                                            <span className="text-xl font-black text-orange-500">SAR {(data.paidCampaigns?.length > 0 ? data.paidCampaigns.reduce((acc: any, c: any) => acc + (c.spend || 0), 0) : (data.spend || 0)).toLocaleString()}</span>
                                         </div>
                                     )}
 
