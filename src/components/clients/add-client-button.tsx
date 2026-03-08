@@ -22,10 +22,12 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Loader2 } from "lucide-react";
+import { Plus, Loader2, Wand2 } from "lucide-react";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
 import { useLanguage } from "@/contexts/language-context";
+import { translateText } from "@/app/actions/translate";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const PLATFORMS = [
     "Facebook", "Instagram", "TikTok", "Snapchat", "LinkedIn", "Google Ads", "YouTube", "SEO", "Email Marketing"
@@ -38,6 +40,42 @@ export function AddClientButton({ ams }: { ams: any[] }) {
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
+    const [translating, setTranslating] = useState<string | null>(null);
+
+    const [briefAr, setBriefAr] = useState("");
+    const [briefEn, setBriefEn] = useState("");
+    const [delivAr, setDelivAr] = useState("");
+    const [delivEn, setDelivEn] = useState("");
+
+    async function handleAutoTranslate(source: string, targetType: 'brief' | 'deliv', targetLang: 'ar' | 'en') {
+        if (!source.trim()) {
+            toast.error(isRtl ? "يرجى إدخال نص أولاً" : "Please enter text first");
+            return;
+        }
+
+        const id = `${targetType}-${targetLang}`;
+        setTranslating(id);
+
+        try {
+            // Simplified logic: If AR to EN or EN to AR, we call translate action
+            // In reality, this is where AI magic happens. 
+            const result = await translateText(source, targetLang);
+
+            if (targetType === 'brief') {
+                if (targetLang === 'ar') setBriefAr(result);
+                else setBriefEn(result);
+            } else {
+                if (targetLang === 'ar') setDelivAr(result);
+                else setDelivEn(result);
+            }
+
+            toast.success(isRtl ? "تمت الترجمة بنجاح!" : "Translated successfully!");
+        } catch (error) {
+            toast.error(isRtl ? "فشلت الترجمة" : "Translation failed");
+        } finally {
+            setTranslating(null);
+        }
+    }
 
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
@@ -154,27 +192,120 @@ export function AddClientButton({ ams }: { ams: any[] }) {
                             </div>
                         </div>
 
-                        {/* Brief and Deliverables */}
+                        {/* Brief and Deliverables (Bilingual Tabs) */}
                         <div className="space-y-4 border-t pt-4">
                             <h4 className={`text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
                                 {isRtl ? "موجز العميل والمخرجات" : "Client Brief & Deliverables"}
                             </h4>
-                            <div className="space-y-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="brief" className={isRtl ? "text-right block" : ""}>
-                                        {isRtl ? "موجز العميل (السياق، الأهداف، أسلوب الصوت)" : "Client Brief (General context, objectives, tone of voice)"}
-                                    </Label>
-                                    <Textarea id="brief" name="brief" className={`min-h-[100px] ${isRtl ? 'text-right' : ''}`}
-                                        placeholder={isRtl ? "اشرح أهداف العميل وهويته التجارية..." : "Explain the client's goals and brand identity..."} />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="deliverables" className={isRtl ? "text-right block" : ""}>
-                                        {isRtl ? "المخرجات الشهرية" : "Monthly Deliverables"}
-                                    </Label>
-                                    <Textarea id="deliverables" name="deliverables" className={`min-h-[120px] ${isRtl ? 'text-right' : ''}`}
-                                        placeholder={isRtl ? "٣٠ منشور سوشيال ميديا\n٨ مشاريع تحرير فيديو\nسيو\nتطوير موقع" : "30 Social Media Posts\n8 Video Editing Projects\nSEO\nWebsite Revamp"} />
-                                </div>
-                            </div>
+
+                            <Tabs defaultValue="ar" className="w-full">
+                                <TabsList className="grid w-full grid-cols-2 rounded-xl">
+                                    <TabsTrigger value="ar" className="font-bold">العربية</TabsTrigger>
+                                    <TabsTrigger value="en" className="font-bold">English</TabsTrigger>
+                                </TabsList>
+
+                                <TabsContent value="ar" className="space-y-4 pt-4">
+                                    <div className="space-y-2">
+                                        <div className={`flex items-center justify-between ${isRtl ? 'flex-row-reverse' : ''}`}>
+                                            <Label htmlFor="briefAr">{isRtl ? "موجز العميل" : "Client Brief (Arabic)"}</Label>
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="sm"
+                                                className="text-[10px] h-6 px-2 gap-1"
+                                                onClick={() => handleAutoTranslate(briefEn, 'brief', 'ar')}
+                                                disabled={!!translating}
+                                            >
+                                                {translating === 'brief-ar' ? <Loader2 className="h-3 w-3 animate-spin" /> : <Wand2 className="h-3 w-3" />}
+                                                {isRtl ? "ترجمة من الإنجليزي" : "Translate from English"}
+                                            </Button>
+                                        </div>
+                                        <Textarea
+                                            id="briefAr"
+                                            name="briefAr"
+                                            value={briefAr}
+                                            onChange={(e) => setBriefAr(e.target.value)}
+                                            className="min-h-[100px] text-right"
+                                            placeholder="اشرح أهداف العميل وهويته التجارية باللغة العربية..."
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <div className={`flex items-center justify-between ${isRtl ? 'flex-row-reverse' : ''}`}>
+                                            <Label htmlFor="deliverablesAr">{isRtl ? "المخرجات الشهرية" : "Monthly Deliverables (Arabic)"}</Label>
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="sm"
+                                                className="text-[10px] h-6 px-2 gap-1"
+                                                onClick={() => handleAutoTranslate(delivEn, 'deliv', 'ar')}
+                                                disabled={!!translating}
+                                            >
+                                                {translating === 'deliv-ar' ? <Loader2 className="h-3 w-3 animate-spin" /> : <Wand2 className="h-3 w-3" />}
+                                                {isRtl ? "ترجمة من الإنجليزي" : "Translate from English"}
+                                            </Button>
+                                        </div>
+                                        <Textarea
+                                            id="deliverablesAr"
+                                            name="deliverablesAr"
+                                            value={delivAr}
+                                            onChange={(e) => setDelivAr(e.target.value)}
+                                            className="min-h-[120px] text-right"
+                                            placeholder="٣٠ منشور سوشيال ميديا\nسيو..."
+                                        />
+                                    </div>
+                                </TabsContent>
+
+                                <TabsContent value="en" className="space-y-4 pt-4">
+                                    <div className="space-y-2">
+                                        <div className="flex items-center justify-between">
+                                            <Label htmlFor="briefEn">Client Brief (English)</Label>
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="sm"
+                                                className="text-[10px] h-6 px-2 gap-1"
+                                                onClick={() => handleAutoTranslate(briefAr, 'brief', 'en')}
+                                                disabled={!!translating}
+                                            >
+                                                {translating === 'brief-en' ? <Loader2 className="h-3 w-3 animate-spin" /> : <Wand2 className="h-3 w-3" />}
+                                                Translate from Arabic
+                                            </Button>
+                                        </div>
+                                        <Textarea
+                                            id="briefEn"
+                                            name="briefEn"
+                                            value={briefEn}
+                                            onChange={(e) => setBriefEn(e.target.value)}
+                                            className="min-h-[100px]"
+                                            placeholder="Explain the client's goals and brand identity in English..."
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <div className="flex items-center justify-between">
+                                            <Label htmlFor="deliverablesEn">Monthly Deliverables (English)</Label>
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="sm"
+                                                className="text-[10px] h-6 px-2 gap-1"
+                                                onClick={() => handleAutoTranslate(delivAr, 'deliv', 'en')}
+                                                disabled={!!translating}
+                                            >
+                                                {translating === 'deliv-en' ? <Loader2 className="h-3 w-3 animate-spin" /> : <Wand2 className="h-3 w-3" />}
+                                                Translate from Arabic
+                                            </Button>
+                                        </div>
+                                        <Textarea
+                                            id="deliverablesEn"
+                                            name="deliverablesEn"
+                                            value={delivEn}
+                                            onChange={(e) => setDelivEn(e.target.value)}
+                                            className="min-h-[120px]"
+                                            placeholder="30 Social Media Posts\nSEO..."
+                                        />
+                                    </div>
+                                </TabsContent>
+                            </Tabs>
                         </div>
 
                         {/* Social Links */}

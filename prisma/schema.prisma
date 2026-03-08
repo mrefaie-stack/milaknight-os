@@ -36,7 +36,13 @@ model Client {
   country        String?
   languages      String?   // Array fallback
   
-  // New Profile Metadata
+  // New Profile Metadata (Bilingual)
+  briefAr        String?
+  briefEn        String?
+  deliverablesAr String?
+  deliverablesEn String?
+  
+  // Legacy / Fallback
   brief          String?
   deliverables   String?
   

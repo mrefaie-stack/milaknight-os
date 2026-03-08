@@ -66,9 +66,15 @@ export async function createClient(data: FormData) {
     const clientPackage = data.get("package") as string || "BASIC";
     const activeServices = data.get("activeServices") as string || ""; // e.g. "Facebook,Instagram"
 
-    // New fields
-    const brief = data.get("brief") as string || "";
-    const deliverables = data.get("deliverables") as string || "";
+    // New fields (Bilingual)
+    const briefAr = data.get("briefAr") as string || "";
+    const briefEn = data.get("briefEn") as string || "";
+    const deliverablesAr = data.get("deliverablesAr") as string || "";
+    const deliverablesEn = data.get("deliverablesEn") as string || "";
+
+    // Legacy/Combined fallback (optional, for backward compatibility during transition)
+    const brief = data.get("brief") as string || (briefAr || briefEn);
+    const deliverables = data.get("deliverables") as string || (deliverablesAr || deliverablesEn);
 
     // Social Links
     const facebook = data.get("facebook") as string || "";
@@ -109,6 +115,10 @@ export async function createClient(data: FormData) {
             user: { connect: { id: user.id } }, // Link the user
             package: clientPackage,
             activeServices: activeServices,
+            briefAr,
+            briefEn,
+            deliverablesAr,
+            deliverablesEn,
             brief,
             deliverables,
             facebook,
@@ -147,6 +157,10 @@ export async function updateClient(clientId: string, data: any) {
             accountManager: data.amId && data.amId !== "none" ? { connect: { id: data.amId } } : { disconnect: true },
             package: data.package,
             activeServices: data.activeServices,
+            briefAr: data.briefAr,
+            briefEn: data.briefEn,
+            deliverablesAr: data.deliverablesAr,
+            deliverablesEn: data.deliverablesEn,
             brief: data.brief,
             deliverables: data.deliverables,
             facebook: data.facebook,

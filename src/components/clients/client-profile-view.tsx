@@ -54,8 +54,18 @@ export function ClientProfileView({ client, basePath, showNewButtons = false }: 
     const activeServices = client.activeServices
         ? client.activeServices.split(",").map((s: string) => s.trim()).filter(Boolean)
         : [];
-    const deliverables = client.deliverables
-        ? client.deliverables.split("\n").filter(Boolean)
+
+    // Choose bilingual data based on current language, fallback to legacy fields
+    const displayBrief = isRtl
+        ? (client.briefAr || client.brief)
+        : (client.briefEn || client.brief);
+
+    const rawDeliverables = isRtl
+        ? (client.deliverablesAr || client.deliverables)
+        : (client.deliverablesEn || client.deliverables);
+
+    const deliverables = rawDeliverables
+        ? rawDeliverables.split("\n").filter(Boolean)
         : [];
 
     const socialLinks = [
@@ -117,7 +127,7 @@ export function ClientProfileView({ client, basePath, showNewButtons = false }: 
 
                     {/* Action Buttons */}
                     <div className={`flex flex-wrap gap-2 shrink-0 ${isRtl ? 'flex-row-reverse' : ''}`}>
-                        <ClientBriefDialog brief={client.brief} />
+                        <ClientBriefDialog brief={displayBrief} />
                         {client.userId && (
                             <Link href={`/messages?userId=${client.userId}`}>
                                 <Button variant="outline" className={`font-bold rounded-full gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
