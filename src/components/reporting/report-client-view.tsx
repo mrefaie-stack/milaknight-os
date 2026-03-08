@@ -101,6 +101,7 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
     const hasConversions = globalTotals.conversions > 0;
     const hasSpend = globalTotals.spend > 0;
 
+    // Full chart data (includes paid-only platforms for spend chart)
     const chartData = activePlatforms.map(key => ({
         name: PLATFORM_NAMES[key as keyof typeof PLATFORM_NAMES] || key,
         impressions: metrics.platforms[key].impressions || 0,
@@ -111,6 +112,11 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
         paidReach: metrics.platforms[key].paidReach || 0,
         conversions: metrics.platforms[key].conversions || 0,
     }));
+
+    // Platform analysis charts — exclude paid-ads-only platforms (no organic reach/followers/engagement)
+    const platformChartData = chartData.filter(d =>
+        d.impressions > 0 || d.followers > 0 || d.engagement > 0 || d.views > 0
+    );
 
     const spendData = chartData.filter(d => d.spend > 0);
 
@@ -279,7 +285,7 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
             </Card>
 
             {/* Two-column charts: Pie + Followers Bar */}
-            {activePlatforms.length > 0 && (
+            {platformChartData.length > 0 && (
                 <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
                     {/* Impressions Distribution Pie */}
                     <Card className="border-none shadow-sm bg-card/40 backdrop-blur-sm p-4 md:p-6">
@@ -291,9 +297,9 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
                             <div dir="ltr">
                                 <ResponsiveContainer width="100%" height={280}>
                                     <PieChart>
-                                        <Pie data={chartData} dataKey="impressions" nameKey="name" cx="50%" cy="45%" outerRadius={85} innerRadius={45} paddingAngle={3}
+                                        <Pie data={platformChartData} dataKey="impressions" nameKey="name" cx="50%" cy="45%" outerRadius={85} innerRadius={45} paddingAngle={3}
                                             label={({ name, percent }: any) => `${name} ${((percent || 0) * 100).toFixed(0)}%`} labelLine={false}>
-                                            {chartData.map((_, index) => (<Cell key={index} fill={["#3b82f6", "#10b981", "#f97316", "#a855f7", "#ef4444", "#eab308", "#06b6d4"][index % 7]} />))}
+                                            {platformChartData.map((_, index) => (<Cell key={index} fill={["#3b82f6", "#10b981", "#f97316", "#a855f7", "#ef4444", "#eab308", "#06b6d4"][index % 7]} />))}
                                         </Pie>
                                         <Tooltip contentStyle={{ borderRadius: '16px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(15,15,25,0.95)', color: '#fff' }} formatter={(v: any) => [v?.toLocaleString(), t("reports.impressions")]} />
                                         <Legend />
@@ -312,13 +318,13 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
                         <CardContent className="h-[280px] px-0">
                             <div dir="ltr">
                                 <ResponsiveContainer width="100%" height={280}>
-                                    <BarChart data={chartData} layout="vertical" margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
+                                    <BarChart data={platformChartData} layout="vertical" margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
                                         <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="rgba(255,255,255,0.05)" />
                                         <XAxis type="number" fontSize={11} tickLine={false} axisLine={false} />
                                         <YAxis dataKey="name" type="category" fontSize={11} tickLine={false} axisLine={false} width={70} />
                                         <Tooltip contentStyle={{ borderRadius: '16px', background: 'rgba(15,15,25,0.95)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff' }} formatter={(v: any) => [v?.toLocaleString(), t("reports.growth")]} />
                                         <Bar dataKey="followers" name={t("reports.new_followers")} radius={[0, 8, 8, 0]} barSize={22}>
-                                            {chartData.map((_, i) => (<Cell key={i} fill={["#a855f7", "#3b82f6", "#10b981", "#f97316", "#ef4444", "#eab308", "#06b6d4"][i % 7]} />))}
+                                            {platformChartData.map((_, i) => (<Cell key={i} fill={["#a855f7", "#3b82f6", "#10b981", "#f97316", "#ef4444", "#eab308", "#06b6d4"][i % 7]} />))}
                                         </Bar>
                                     </BarChart>
                                 </ResponsiveContainer>
