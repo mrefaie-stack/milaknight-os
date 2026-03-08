@@ -78,6 +78,7 @@ export async function addContentItem(planId: string, data: any) {
             emailSubject: data.emailSubject,
             emailBody: data.emailBody,
             emailDesign: data.emailDesign,
+            platformCaptions: data.platformCaptions || null,
             status: "DRAFT",
         }
     });

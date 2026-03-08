@@ -35,6 +35,21 @@ export function AddItemDialog({ planId }: { planId: string }) {
     const [isLoading, setIsLoading] = useState(false);
     const [type, setType] = useState("POST");
     const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
+    // Per-platform captions: { Facebook: "...", Instagram: "..." }
+    const [platformCaptions, setPlatformCaptions] = useState<Record<string, string>>({});
+
+    function togglePlatform(plat: string, checked: boolean) {
+        setSelectedPlatforms(prev =>
+            checked ? [...prev, plat] : prev.filter(p => p !== plat)
+        );
+        if (!checked) {
+            setPlatformCaptions(prev => {
+                const next = { ...prev };
+                delete next[plat];
+                return next;
+            });
+        }
+    }
 
     async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
@@ -46,23 +61,29 @@ export function AddItemDialog({ planId }: { planId: string }) {
 
         setIsLoading(true);
         const formData = new FormData(event.currentTarget);
-        const data = Object.fromEntries(formData.entries());
+        const data = Object.fromEntries(formData.entries()) as Record<string, any>;
         data.type = type;
         data.platform = type === "EMAIL" ? "Email" : selectedPlatforms.join(', ');
+        // Attach per-platform captions as JSON
+        if (Object.keys(platformCaptions).length > 0) {
+            data.platformCaptions = JSON.stringify(platformCaptions);
+        }
 
         try {
             await addContentItem(planId, data);
             toast.success("Item added successfully");
             setOpen(false);
-            // reset form
             event.currentTarget.reset();
             setSelectedPlatforms([]);
+            setPlatformCaptions({});
         } catch (error: any) {
             toast.error(error.message || "Failed to add item");
         } finally {
             setIsLoading(false);
         }
     }
+
+    const showCaptions = (type === "POST" || type === "VIDEO" || type === "LINKEDIN") && selectedPlatforms.length > 0;
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
@@ -71,11 +92,11 @@ export function AddItemDialog({ planId }: { planId: string }) {
                     <Plus className="mr-2 h-4 w-4" /> Add Item
                 </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+            <DialogContent className="sm:max-w-[560px] max-h-[92vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>Add Content Item</DialogTitle>
                     <DialogDescription>
-                        Add a new post, video, poll, or article to this action plan.
+                        Add a new post, video, poll, article or email to this action plan.
                     </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={onSubmit} className="grid gap-4 py-4">
@@ -99,7 +120,7 @@ export function AddItemDialog({ planId }: { planId: string }) {
                     {/* Platform selector — hidden for EMAIL type */}
                     {type !== "EMAIL" && (
                         <div className="grid gap-3">
-                            <Label>Platform</Label>
+                            <Label>Platforms</Label>
                             <div className="flex flex-wrap gap-3">
                                 {PLATFORMS.map((plat) => {
                                     const isChecked = selectedPlatforms.includes(plat);
@@ -108,13 +129,7 @@ export function AddItemDialog({ planId }: { planId: string }) {
                                             <Checkbox
                                                 id={`add-plat-${plat}`}
                                                 checked={isChecked}
-                                                onCheckedChange={(checked) => {
-                                                    if (checked) {
-                                                        setSelectedPlatforms(prev => [...prev, plat]);
-                                                    } else {
-                                                        setSelectedPlatforms(prev => prev.filter(p => p !== plat));
-                                                    }
-                                                }}
+                                                onCheckedChange={(checked) => togglePlatform(plat, !!checked)}
                                             />
                                             <label htmlFor={`add-plat-${plat}`} className="text-xs font-semibold cursor-pointer">
                                                 {plat}
@@ -139,7 +154,37 @@ export function AddItemDialog({ planId }: { planId: string }) {
                         </div>
                     )}
 
-                    {(type === "POST" || type === "VIDEO") && (
+                    {/* Per-Platform Captions */}
+                    {showCaptions && (
+                        <div className="grid gap-3 p-4 rounded-2xl border border-primary/10 bg-primary/5">
+                            <Label className="text-primary font-black text-xs uppercase tracking-wider">
+                                Caption per Platform
+                            </Label>
+                            {selectedPlatforms.map(plat => (
+                                <div key={plat} className="grid gap-1">
+                                    <Label className="text-xs font-bold text-muted-foreground">{plat}</Label>
+                                    <Textarea
+                                        className="h-16 text-sm"
+                                        placeholder={`Caption for ${plat}...`}
+                                        value={platformCaptions[plat] || ""}
+                                        onChange={e => setPlatformCaptions(prev => ({ ...prev, [plat]: e.target.value }))}
+                                    />
+                                </div>
+                            ))}
+                            {/* Keep old fields as fallback general captions */}
+                            <div className="grid gap-1 opacity-60">
+                                <Label className="text-xs font-bold text-muted-foreground">General Caption (AR)</Label>
+                                <Input name="captionAr" placeholder="النص باللغة العربية (اختياري)" />
+                            </div>
+                            <div className="grid gap-1 opacity-60">
+                                <Label className="text-xs font-bold text-muted-foreground">General Caption (EN)</Label>
+                                <Input name="captionEn" placeholder="General English caption (optional)" />
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Non-post caption fields if no platform selected yet */}
+                    {(type === "POST" || type === "VIDEO") && selectedPlatforms.length === 0 && (
                         <>
                             <div className="grid gap-2">
                                 <Label>Caption (Arabic)</Label>

@@ -377,6 +377,69 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
                 </div>
             )}
 
+            {/* === Paid Ads Dedicated Section === */}
+            {hasSpend && (() => {
+                const paidPlatforms = activePlatforms.filter(k => (metrics.platforms[k].spend || 0) > 0);
+                return (
+                    <div className="space-y-6">
+                        <div className={`flex items-center gap-4 ${isRtl ? 'flex-row-reverse text-right' : 'text-left'}`}>
+                            <div className="p-3 bg-orange-500/10 rounded-2xl">
+                                <DollarSign className="h-6 w-6 text-orange-500" />
+                            </div>
+                            <div>
+                                <h2 className="text-3xl font-black tracking-tighter">
+                                    {isRtl ? 'الإعلانات المدفوعة' : 'Paid Advertising'}
+                                </h2>
+                                <p className="text-sm text-muted-foreground font-medium">
+                                    {isRtl ? 'أداء الحملات الإعلانية المدفوعة عبر المنصات' : 'Performance across all active paid campaigns'}
+                                </p>
+                            </div>
+                        </div>
+                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                            {paidPlatforms.map(key => {
+                                const d = metrics.platforms[key];
+                                const cpa = d.conversions > 0 && d.spend > 0 ? (d.spend / d.conversions).toFixed(2) : null;
+                                const Icon = PLATFORM_ICONS[key as keyof typeof PLATFORM_ICONS] || BarChart3;
+                                return (
+                                    <div key={key} className="p-6 rounded-3xl bg-orange-500/5 border border-orange-500/15 space-y-4">
+                                        <div className={`flex items-center gap-3 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                                            <Icon className="h-5 w-5 text-orange-500" />
+                                            <span className="font-black text-base">{PLATFORM_NAMES[key as keyof typeof PLATFORM_NAMES] || key}</span>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div className="p-3 bg-background/50 rounded-xl">
+                                                <div className="text-[10px] font-black uppercase text-orange-500 mb-1">{isRtl ? 'الإنفاق' : 'Spend'}</div>
+                                                <div className="text-xl font-black">${(d.spend || 0).toLocaleString()}</div>
+                                            </div>
+                                            {d.paidReach > 0 && <div className="p-3 bg-background/50 rounded-xl">
+                                                <div className="text-[10px] font-black uppercase text-muted-foreground mb-1">{isRtl ? 'الوصول المدفوع' : 'Paid Reach'}</div>
+                                                <div className="text-xl font-black">{(d.paidReach || 0).toLocaleString()}</div>
+                                            </div>}
+                                            {d.conversions > 0 && <div className="p-3 bg-background/50 rounded-xl">
+                                                <div className="text-[10px] font-black uppercase text-muted-foreground mb-1">{isRtl ? 'تحويلات' : 'Conversions'}</div>
+                                                <div className="text-xl font-black">{d.conversions}</div>
+                                            </div>}
+                                            {cpa && <div className="p-3 bg-background/50 rounded-xl">
+                                                <div className="text-[10px] font-black uppercase text-orange-500 mb-1">{isRtl ? 'تكلفة التحويل' : 'Cost/Conv.'}</div>
+                                                <div className="text-xl font-black text-orange-500">${cpa}</div>
+                                            </div>}
+                                            {d.clicks > 0 && <div className="p-3 bg-background/50 rounded-xl">
+                                                <div className="text-[10px] font-black uppercase text-muted-foreground mb-1">{isRtl ? 'النقرات' : 'Clicks'}</div>
+                                                <div className="text-xl font-black">{(d.clicks || 0).toLocaleString()}</div>
+                                            </div>}
+                                            {d.cpc > 0 && <div className="p-3 bg-background/50 rounded-xl">
+                                                <div className="text-[10px] font-black uppercase text-muted-foreground mb-1">CPC</div>
+                                                <div className="text-xl font-black">${d.cpc}</div>
+                                            </div>}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                );
+            })()}
+
             {/* Individual Platform Deep Dives */}
             <div className="space-y-16 print:space-y-8">
                 <h2 className={`text-3xl font-black border-primary py-2 uppercase tracking-tighter print:text-2xl ${isRtl ? 'border-r-8 pr-6 text-right' : 'border-l-8 pl-6 text-left'}`}>{t("reports.platform_analysis")}</h2>
@@ -444,6 +507,19 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
                                                 <span className="text-xs font-bold uppercase tracking-wider">{t("reports.campaign_investment")}</span>
                                             </div>
                                             <span className="text-xl font-black text-orange-500">${(data.spend || 0).toLocaleString()}</span>
+                                        </div>
+                                    )}
+
+                                    {/* Platform comment from AM */}
+                                    {data.comment && (
+                                        <div className={`p-4 rounded-xl bg-primary/5 border border-primary/15 ${isRtl ? 'text-right' : 'text-left'}`}>
+                                            <div className={`flex items-center gap-2 mb-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                                                <MessageSquare className="h-3.5 w-3.5 text-primary" />
+                                                <span className="text-[10px] font-black uppercase tracking-wider text-primary">
+                                                    {isRtl ? 'تعليق مدير الحساب' : 'Account Manager Note'}
+                                                </span>
+                                            </div>
+                                            <p className="text-sm text-foreground/80 leading-relaxed">{data.comment}</p>
                                         </div>
                                     )}
                                 </CardContent>

@@ -211,19 +211,41 @@ function ContentCard({ item }: { item: any }) {
                 {item.scheduledDate && (
                     <div className="flex items-center gap-1.5 text-[11px] font-bold text-muted-foreground">
                         <CalendarDays className="h-3.5 w-3.5" />
-                        {new Date(item.scheduledDate).toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" })}
+                        {new Date(item.scheduledDate).toLocaleDateString("ar-EG", { day: "numeric", month: "long", year: "numeric" })}
+                        <span className="text-muted-foreground/40 mx-1">|</span>
+                        {new Date(item.scheduledDate).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
                     </div>
                 )}
 
-                {/* Captions */}
+                {/* Per-Platform Captions */}
+                {item.platformCaptions && (() => {
+                    try {
+                        const caps: Record<string, string> = JSON.parse(item.platformCaptions);
+                        const entries = Object.entries(caps).filter(([, v]) => v?.trim());
+                        if (entries.length === 0) return null;
+                        return (
+                            <div className="space-y-2">
+                                <p className="text-[10px] font-black uppercase text-muted-foreground tracking-wider">كابشن لكل منصة</p>
+                                {entries.map(([platform, caption]) => (
+                                    <div key={platform} className="p-3 bg-muted/20 rounded-xl border border-muted/30">
+                                        <p className="text-[10px] font-black text-primary mb-1">{platform}</p>
+                                        <p className="text-foreground/80 text-sm whitespace-pre-wrap">{caption}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        );
+                    } catch { return null; }
+                })()}
+
+                {/* General Captions (fallback) */}
                 <div className="space-y-2 text-sm leading-relaxed">
-                    {item.captionAr && (
+                    {!item.platformCaptions && item.captionAr && (
                         <div className="p-3 bg-muted/30 rounded-xl border border-muted/40" dir="rtl">
                             <p className="text-[10px] font-black uppercase text-muted-foreground mb-1">الكابشن (عربي)</p>
                             <p className="text-foreground/80 text-sm">{item.captionAr}</p>
                         </div>
                     )}
-                    {item.captionEn && (
+                    {!item.platformCaptions && item.captionEn && (
                         <div className="p-3 bg-muted/30 rounded-xl border border-muted/40">
                             <p className="text-[10px] font-black uppercase text-muted-foreground mb-1">{isEmail ? "Campaign Description" : "Caption (English)"}</p>
                             <p className="text-foreground/80 text-sm">{item.captionEn}</p>
@@ -317,13 +339,13 @@ export function ClientActionPlanView({ plan, items }: { plan: any; items: any[] 
                     <div className="space-y-2">
                         <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary/60">
                             <Layers className="h-3.5 w-3.5" />
-                            Monthly Content Plan
+                            خطة المحتوى الشهرية · Monthly Content Plan
                         </div>
                         <h1 className="text-4xl md:text-6xl font-black tracking-tighter leading-none">{plan.month}</h1>
-                        <p className="text-muted-foreground font-medium">{total} content items planned for this period</p>
+                        <p className="text-muted-foreground font-medium">{total} بند محتوى مخطط لهذه الفترة · content items planned</p>
                         <div className="mt-4 space-y-1.5">
                             <div className="flex justify-between text-xs font-bold text-muted-foreground">
-                                <span>{approved} approved</span>
+                                <span>{approved} معتمد · approved</span>
                                 <span>{Math.round((approved / Math.max(total, 1)) * 100)}%</span>
                             </div>
                             <div className="h-2 bg-white/5 rounded-full overflow-hidden">
@@ -335,11 +357,11 @@ export function ClientActionPlanView({ plan, items }: { plan: any; items: any[] 
                     <div className="flex flex-wrap gap-3">
                         <div className="text-center px-5 py-3 bg-emerald-500/10 rounded-2xl border border-emerald-500/20">
                             <div className="text-2xl font-black text-emerald-600">{approved}</div>
-                            <div className="text-[9px] font-black uppercase text-emerald-600/60">Approved</div>
+                            <div className="text-[9px] font-black uppercase text-emerald-600/60">معتمد · Approved</div>
                         </div>
                         <div className="text-center px-5 py-3 bg-orange-500/10 rounded-2xl border border-orange-500/20">
                             <div className="text-2xl font-black text-orange-500">{pending}</div>
-                            <div className="text-[9px] font-black uppercase text-orange-500/60">Pending</div>
+                            <div className="text-[9px] font-black uppercase text-orange-500/60">قيد المراجعة · Pending</div>
                         </div>
                         <DownloadActionPlanButton plan={plan} items={items} />
                     </div>
@@ -364,12 +386,12 @@ export function ClientActionPlanView({ plan, items }: { plan: any; items: any[] 
                                         <SectionIcon className={`h-5 w-5 ${section.color}`} />
                                     </div>
                                     <div>
-                                        <h2 className={`text-lg font-black ${section.color}`}>{section.labelEn}</h2>
-                                        <p className="text-sm text-muted-foreground font-medium">{section.label} • {sectionItems.length} {sectionItems.length === 1 ? "item" : "items"}</p>
+                                        <h2 className={`text-xl font-black ${section.color}`}>{section.label}</h2>
+                                        <p className="text-xs text-muted-foreground font-semibold opacity-70">{section.labelEn} · {sectionItems.length} {sectionItems.length === 1 ? "بند" : "بنود"}</p>
                                     </div>
                                     <div className="ml-auto">
                                         <span className={`text-xs font-black px-3 py-1 rounded-full bg-white/5 border ${section.border} ${section.color}`}>
-                                            {sectionItems.filter(i => i.status === "APPROVED").length} / {sectionItems.length} approved
+                                            {sectionItems.filter(i => i.status === "APPROVED").length} / {sectionItems.length} معتمد
                                         </span>
                                     </div>
                                 </div>

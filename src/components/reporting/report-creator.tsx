@@ -397,6 +397,20 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                                     </CardContent>
                                 </Card>
                             </div>
+
+                            {/* Optional Platform Comment */}
+                            <div className="space-y-2">
+                                <Label className="text-xs font-black uppercase tracking-wider text-muted-foreground ml-1 flex items-center gap-2">
+                                    <MessageSquare className="h-3 w-3" /> Platform Note (Optional)
+                                </Label>
+                                <textarea
+                                    className="flex w-full rounded-2xl border border-white/10 bg-background/50 p-4 text-sm font-medium shadow-inner focus:border-primary/50 focus:ring-primary/20 transition-all outline-none placeholder:text-muted-foreground/40 min-h-[80px]"
+                                    placeholder={`Add a specific insight or comment about ${p.name} performance this month...`}
+                                    value={metrics.platforms[p.id]?.comment || ""}
+                                    onChange={e => updatePlatformMetric(p.id, 'comment', e.target.value)}
+                                />
+                                <p className="text-[10px] text-muted-foreground ml-1">This comment will be visible to the client in their report.</p>
+                            </div>
                         </div>
                     </TabsContent>
                 ))}

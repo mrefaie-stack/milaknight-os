@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { FileText, CheckCircle2, MessageSquare, BarChart, Calendar } from "lucide-react";
+import { FileText, CheckCircle2, MessageSquare, BarChart, Calendar, DollarSign } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/language-context";
@@ -31,9 +31,16 @@ const item: Variants = {
     }
 };
 
+function formatNumber(n: number): string {
+    if (n >= 1_000_000) return (n / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M';
+    if (n >= 1_000) return (n / 1_000).toFixed(1).replace(/\.0$/, '') + 'K';
+    return n.toLocaleString();
+}
+
 export function ClientDashboardView({ client, latestPlan, allReports }: { client: any, latestPlan: any, allReports: any[] }) {
     const { t, isRtl } = useLanguage();
-    const [viewMode, setViewMode] = useState<"month" | "total">("month");
+    // Default is "total" (Lifetime) — user can switch to current month
+    const [viewMode, setViewMode] = useState<"month" | "total">("total");
 
     const latestReport = allReports && allReports.length > 0 ? allReports[0] : null;
 
@@ -54,18 +61,58 @@ export function ClientDashboardView({ client, latestPlan, allReports }: { client
                 if (m && m.platforms) {
                     Object.keys(m.platforms).forEach(pKey => {
                         if (!aggregated.platforms[pKey]) {
-                            aggregated.platforms[pKey] = { impressions: 0, engagement: 0, followers: 0 };
+                            aggregated.platforms[pKey] = { impressions: 0, engagement: 0, followers: 0, spend: 0 };
                         }
                         const pData = m.platforms[pKey];
                         aggregated.platforms[pKey].impressions += (Number(pData.impressions) || 0);
                         aggregated.platforms[pKey].engagement += (Number(pData.engagement) || 0);
                         aggregated.platforms[pKey].followers += (Number(pData.followers) || 0);
+                        aggregated.platforms[pKey].spend += (Number(pData.spend) || 0);
                     });
                 }
             });
             return aggregated;
         }
     }, [allReports, viewMode]);
+
+    const totalSpend = metrics
+        ? Object.values(metrics.platforms || {}).reduce((acc: number, p: any) => acc + (Number(p.spend) || 0), 0)
+        : 0;
+
+    const statCards = [
+        {
+            label: t("dashboard.impressions"),
+            labelAr: "الوصول",
+            value: metrics ? Object.values(metrics.platforms || {}).reduce((acc: number, p: any) => acc + (Number(p.impressions) || 0), 0) : 0,
+            color: "text-primary",
+            accent: "bg-primary/5",
+            format: formatNumber
+        },
+        {
+            label: t("dashboard.engagements"),
+            labelAr: "التفاعلات",
+            value: metrics ? Object.values(metrics.platforms || {}).reduce((acc: number, p: any) => acc + (Number(p.engagement) || 0), 0) : 0,
+            color: "text-emerald-500",
+            accent: "bg-emerald-500/5",
+            format: formatNumber
+        },
+        {
+            label: t("dashboard.growth"),
+            labelAr: "متابعون جدد",
+            value: metrics ? Object.values(metrics.platforms || {}).reduce((acc: number, p: any) => acc + (Number(p.followers) || 0), 0) : 0,
+            color: "text-blue-500",
+            accent: "bg-blue-500/5",
+            format: formatNumber
+        },
+        {
+            label: isRtl ? "الإنفاق الإعلاني" : "Ad Spend",
+            labelAr: "الإنفاق الإعلاني",
+            value: totalSpend,
+            color: "text-orange-500",
+            accent: "bg-orange-500/5",
+            format: (n: number) => `$${formatNumber(n)}`
+        },
+    ];
 
     return (
         <motion.div
@@ -77,17 +124,17 @@ export function ClientDashboardView({ client, latestPlan, allReports }: { client
         >
             <motion.div variants={item} className={`flex flex-col md:flex-row md:items-center justify-between gap-6 ${isRtl ? 'text-right' : 'text-left'}`}>
                 <div className="space-y-1">
-                    <h1 className="text-5xl font-black tracking-tighter premium-gradient-text uppercase">
+                    <h1 className="text-5xl md:text-6xl font-black tracking-tighter premium-gradient-text uppercase">
                         {t("dashboard.welcome_client").replace("{name}", client.name)}
                     </h1>
-                    <div className="flex items-center gap-4 mt-2">
+                    <div className="flex items-center gap-4 mt-2 flex-wrap">
                         <p className="text-muted-foreground font-medium text-lg opacity-80">
-                            {t("dashboard.brand_performance")}
+                            {isRtl ? "نظرة على أداء علامتك التجارية" : "Your brand performance at a glance."}
                         </p>
                         <Tabs value={viewMode} onValueChange={(v: any) => setViewMode(v)} className="print:hidden">
                             <TabsList className="bg-white/5 border border-white/10 rounded-full p-1 h-10">
                                 <TabsTrigger value="month" className="rounded-full px-4 text-xs font-black uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-                                    {isRtl ? "هذا الشهر" : "This Month"}
+                                    {isRtl ? "آخر تقرير" : "Latest Month"}
                                 </TabsTrigger>
                                 <TabsTrigger value="total" className="rounded-full px-4 text-xs font-black uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                                     {isRtl ? "الإجمالي" : "Lifetime Total"}
@@ -99,48 +146,34 @@ export function ClientDashboardView({ client, latestPlan, allReports }: { client
                 {client.amId && (
                     <Link href={`/messages?userId=${client.amId}`}>
                         <Button variant="default" className="font-black uppercase tracking-widest shadow-2xl shadow-primary/20 h-14 px-10 rounded-full hover:scale-105 transition-all">
-                            <MessageSquare className={`mr-2 h-4 w-4 ${isRtl ? 'ml-2 mr-0' : ''}`} /> {t("dashboard.message_am")}
+                            <MessageSquare className={`h-4 w-4 ${isRtl ? 'ml-2' : 'mr-2'}`} /> {t("dashboard.message_am")}
                         </Button>
                     </Link>
                 )}
             </motion.div>
 
-            <div className={`grid gap-6 md:grid-cols-4 ${!metrics ? 'opacity-50' : ''}`}>
-                {[
-                    { label: t("dashboard.impressions"), value: metrics ? Object.values(metrics.platforms || {}).reduce((acc: number, p: any) => acc + (Number(p.impressions) || 0), 0) : 0, color: "bg-primary/10 text-primary border-primary/20" },
-                    { label: t("dashboard.engagements"), value: metrics ? Object.values(metrics.platforms || {}).reduce((acc: number, p: any) => acc + (Number(p.engagement) || 0), 0) : 0, color: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" },
-                    { label: t("dashboard.growth"), value: metrics ? Object.values(metrics.platforms || {}).reduce((acc: number, p: any) => acc + (Number(p.followers) || 0), 0) : 0, color: "bg-blue-500/10 text-blue-500 border-blue-500/20" },
-                ].map((m) => (
+            {/* KPI Cards */}
+            <div className={`grid gap-6 grid-cols-2 md:grid-cols-4 ${!metrics ? 'opacity-50' : ''}`}>
+                {statCards.map((m) => (
                     <motion.div key={m.label} variants={item}>
-                        <Card className={`glass-card hover-lift border-none overflow-hidden rounded-2xl`}>
-                            <CardHeader className={`pb-2 ${isRtl ? 'text-right' : 'text-left'}`}>
+                        <Card className={`glass-card hover-lift border-none overflow-hidden rounded-2xl ${m.accent}`}>
+                            <CardHeader className={`pb-1 ${isRtl ? 'text-right' : 'text-left'}`}>
                                 <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground opacity-60 flex items-center gap-2">
                                     {viewMode === 'total' ? <BarChart className="h-3 w-3" /> : <Calendar className="h-3 w-3" />}
-                                    {m.label}
+                                    {isRtl ? m.labelAr : m.label}
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className={isRtl ? 'text-right' : 'text-left'}>
-                                <div className={`text-4xl font-black tracking-tighter ${m.color.split(' ')[1]}`}>
-                                    {m.value.toLocaleString()}
+                                <div className={`text-4xl md:text-5xl font-black tracking-tighter ${m.color}`}>
+                                    {m.format(m.value)}
                                 </div>
+                                <p className="text-[10px] text-muted-foreground font-bold mt-1 opacity-50">
+                                    {viewMode === 'total' ? (isRtl ? 'الإجمالي' : 'Lifetime') : (isRtl ? 'هذا الشهر' : 'This Month')}
+                                </p>
                             </CardContent>
                         </Card>
                     </motion.div>
                 ))}
-                <motion.div variants={item}>
-                    <Card className="glass-card hover-lift border-none overflow-hidden rounded-2xl">
-                        <CardHeader className={`pb-2 ${isRtl ? 'text-right' : 'text-left'}`}>
-                            <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground opacity-60">
-                                {isRtl ? "الحالة" : "STATUS"}
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className={isRtl ? 'text-right' : 'text-left'}>
-                            <div className="text-xl font-black text-orange-500 uppercase tracking-tight">
-                                {latestPlan?.status ? t(`common.status.${latestPlan.status}`) : t("dashboard.pending")}
-                            </div>
-                        </CardContent>
-                    </Card>
-                </motion.div>
             </div>
 
             <div className="grid gap-8 md:grid-cols-2">

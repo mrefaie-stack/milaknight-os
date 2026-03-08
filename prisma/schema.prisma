@@ -121,6 +121,9 @@ model ContentItem {
   emailBody      String?
   emailDesign    String?     // URL or base design reference
   
+  // Per-platform captions (JSON string: { "Facebook": "caption text", ... })
+  platformCaptions String?
+  
   clientComment  String?
   amComment      String?
   feedbackResolved Boolean @default(false)

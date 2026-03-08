@@ -73,7 +73,7 @@ export function ClientAMDashboard({ clients, userName }: { clients: any[], userN
                                 <stat.icon className={`h-4 w-4 ${stat.color} transition-transform group-hover:scale-125`} />
                             </CardHeader>
                             <CardContent className={isRtl ? 'text-right' : 'text-left'}>
-                                <div className="text-4xl font-black tracking-tighter">{stat.value}</div>
+                                <div className="text-5xl font-black tracking-tighter">{stat.value}</div>
                             </CardContent>
                             <div className="absolute inset-0 classic-shimmer animate-shimmer -translate-x-full pointer-events-none" />
                         </Card>
