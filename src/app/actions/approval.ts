@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { logActivity } from "./activity";
 
 export async function approveItem(itemId: string) {
     const session = await getServerSession(authOptions);
@@ -60,6 +61,10 @@ export async function requestEdit(itemId: string, comment: string) {
         });
     }
 
+    if (plan) {
+        await logActivity(`requested revision on content plan for ${plan.client.name} (${plan.month})`, "ActionPlan", item.planId);
+    }
+
     revalidatePath(`/client/action-plans/${item.planId}`);
     revalidatePath(`/am/action-plans/${item.planId}`);
     return item;
@@ -95,6 +100,8 @@ export async function approveActionPlan(planId: string) {
             }
         });
     }
+
+    await logActivity(`fully approved the content plan for ${plan.client.name} (${plan.month})`, "ActionPlan", planId);
 
     revalidatePath(`/client/action-plans/${planId}`);
     revalidatePath(`/am/action-plans/${planId}`);

@@ -5,6 +5,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { sendEmail } from "@/lib/email";
+import { logActivity } from "./activity";
 
 export async function getActionPlans() {
     const session = await getServerSession(authOptions);
@@ -47,8 +48,11 @@ export async function createActionPlan(clientId: string, month: string) {
         data: {
             clientId,
             month,
-        }
+        },
+        include: { client: true }
     });
+
+    await logActivity(`created a new content plan draft for ${plan.client.name} (${month})`, "ActionPlan", plan.id);
 
     revalidatePath("/am/action-plans");
     return plan;
@@ -78,7 +82,6 @@ export async function addContentItem(planId: string, data: any) {
             emailSubject: data.emailSubject,
             emailBody: data.emailBody,
             emailDesign: data.emailDesign,
-            platformCaptions: data.platformCaptions || null,
             status: "DRAFT",
         }
     });
@@ -131,6 +134,8 @@ export async function submitForApproval(planId: string) {
             `
         });
     }
+
+    await logActivity(`submitted content plan for ${plan.client.name} (${plan.month}) for approval`, "ActionPlan", planId);
 
     revalidatePath(`/am/action-plans/${planId}`);
     revalidatePath("/client/action-plans");
@@ -219,6 +224,8 @@ export async function submitActionPlanFeedback(planId: string, itemFeedbacks: { 
             `
         });
     }
+
+    await logActivity(`submitted feedback on content plan for ${plan.client.name} (${plan.month})`, "ActionPlan", planId);
 
     revalidatePath(`/client/action-plans/${planId}`);
     revalidatePath(`/am/action-plans/${planId}`);

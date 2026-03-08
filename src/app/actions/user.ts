@@ -5,6 +5,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
+import { logActivity } from "./activity";
 
 export async function getTeamMembers() {
     const session = await getServerSession(authOptions);
@@ -46,6 +47,8 @@ export async function createTeamMember(data: FormData) {
         }
     });
 
+    await logActivity(`added new team member: ${firstName} ${lastName}`, "User", user.id);
+
     revalidatePath("/admin/team");
     return { success: true, user };
 }
@@ -74,7 +77,7 @@ export async function updateTeamMember(userId: string, data: any) {
     const session = await getServerSession(authOptions);
     if (session?.user?.role !== "ADMIN") throw new Error("Unauthorized");
 
-    await prisma.user.update({
+    const user = await prisma.user.update({
         where: { id: userId },
         data: {
             firstName: data.firstName,
@@ -82,6 +85,8 @@ export async function updateTeamMember(userId: string, data: any) {
             email: data.email,
         }
     });
+
+    await logActivity(`updated info for team member: ${user.firstName} ${user.lastName}`, "User", userId);
 
     revalidatePath("/admin/team");
     return { success: true };

@@ -5,6 +5,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
+import { logActivity } from "./activity";
 
 export async function getAccountManagers() {
     return prisma.user.findMany({
@@ -100,7 +101,7 @@ export async function createClient(data: FormData) {
     const servicesInput = data.get("services") as string; // comma separated "SEO, Social Media"
 
     // Create the Client Record
-    await prisma.client.create({
+    const client = await prisma.client.create({
         data: {
             name,
             industry,
@@ -127,6 +128,8 @@ export async function createClient(data: FormData) {
         }
     });
 
+    await logActivity(`added new client: ${client.name}`, "User", user.id);
+
     revalidatePath("/admin/clients");
     return { success: true };
 }
@@ -136,7 +139,7 @@ export async function updateClient(clientId: string, data: any) {
         throw new Error("Unauthorized");
     }
 
-    await prisma.client.update({
+    const updatedClient = await prisma.client.update({
         where: { id: clientId },
         data: {
             name: data.name,
@@ -156,6 +159,8 @@ export async function updateClient(clientId: string, data: any) {
             website: data.website,
         }
     });
+
+    await logActivity(`updated profile for client: ${updatedClient.name}`, "User", updatedClient.userId || clientId);
 
     revalidatePath("/admin/clients");
     revalidatePath(`/admin/clients/${clientId}`);

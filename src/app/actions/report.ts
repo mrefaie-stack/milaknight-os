@@ -5,6 +5,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { sendEmail } from "@/lib/email";
+import { logActivity } from "./activity";
 
 export async function createReport(clientId: string, month: string, metricsData: any) {
     const session = await getServerSession(authOptions);
@@ -18,8 +19,11 @@ export async function createReport(clientId: string, month: string, metricsData:
             month,
             metrics: JSON.stringify(metricsData),
             status: "DRAFT",
-        }
+        },
+        include: { client: true }
     });
+
+    await logActivity(`created a new report draft for ${report.client.name}`, "Report", report.id);
 
     revalidatePath("/am/reports");
     return report;
@@ -84,6 +88,8 @@ export async function publishReport(reportId: string) {
             `
         });
     }
+
+    await logActivity(`published performance report for ${report.client.name}`, "Report", reportId);
 
     revalidatePath("/am/reports");
     revalidatePath(`/am/reports/${reportId}`);
@@ -163,6 +169,8 @@ export async function approveDeletionRequest(requestId: string) {
         where: { id: requestId },
         data: { status: "APPROVED" }
     });
+
+    await logActivity(`approved deletion request for ${request.entityType}`, request.entityType, request.entityId);
 
     revalidatePath("/admin");
     revalidatePath("/am/reports");

@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
+import { logActivity } from "./activity";
 
 export async function updateContentItem(itemId: string, data: any) {
     const session = await getServerSession(authOptions);
@@ -29,6 +30,8 @@ export async function updateContentItem(itemId: string, data: any) {
             status: "DRAFT",
         }
     });
+
+    await logActivity(`updated content item (${item.type}) in a plan`, "ActionPlan", item.planId);
 
     revalidatePath(`/am/action-plans/${item.planId}`);
     return item;
