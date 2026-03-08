@@ -105,7 +105,7 @@ export function AdminDashboardView({ clients }: { clients: any[] }) {
                             <div>
                                 <CardTitle className="text-xl font-black tracking-tight">{t("dashboard.client_health")}</CardTitle>
                                 <p className="text-xs text-muted-foreground font-medium mt-1">
-                                    {isRtl ? "حالة جميع المحافظ النشطة" : "Real-time status of all active portfolios"}
+                                    {isRtl ? 'حالة جميع المحافظ النشطة' : 'Real-time status of all active portfolios'}
                                 </p>
                             </div>
                             <Link href="/admin/clients" className="text-xs font-black uppercase tracking-widest text-primary flex items-center gap-1 hover:opacity-70 transition-opacity">

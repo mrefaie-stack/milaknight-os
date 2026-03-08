@@ -147,7 +147,7 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
                             variant="outline"
                             className="font-bold rounded-full h-12 px-6"
                         >
-                            <Share2 className={`h-4 w-4 ${isRtl ? 'ml-2' : 'mr-2'}`} /> Copy Public Link
+                            <Share2 className={`h-4 w-4 ${isRtl ? 'ml-2' : 'mr-2'}`} /> {isRtl ? "نسخ رابط المشاركة" : "Copy Public Link"}
                         </Button>
                     )}
 
@@ -177,7 +177,7 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
                         className="font-bold rounded-full h-12 px-6 border border-primary/20"
                     >
                         {isDownloading ? <Loader2 className={`h-4 w-4 animate-spin ${isRtl ? 'ml-2' : 'mr-2'}`} /> : <Download className={`h-4 w-4 ${isRtl ? 'ml-2' : 'mr-2'}`} />}
-                        {isDownloading ? "Generating..." : "Download PDF"}
+                        {isDownloading ? (isRtl ? "جاري التوليد..." : "Generating...") : (isRtl ? "تحميل PDF" : "Download PDF")}
                     </Button>
                 </div>
             </div>
@@ -212,7 +212,7 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
                             <CardHeader className={`pb-2 ${isRtl ? 'text-right' : 'text-left'}`}><CardTitle className="text-[10px] uppercase font-black tracking-widest text-muted-foreground">{t("common.views")}</CardTitle></CardHeader>
                             <CardContent className={isRtl ? 'text-right' : 'text-left'}>
                                 <div className="text-2xl md:text-4xl font-black italic text-pink-500">{globalTotals.views.toLocaleString()}</div>
-                                <div className="text-[10px] text-pink-500 font-bold mt-2">Video Plays</div>
+                                <div className="text-[10px] text-pink-500 font-bold mt-2">{isRtl ? 'تشغيلات الفيديو' : 'Video Plays'}</div>
                             </CardContent>
                         </Card>
                     )}
@@ -284,8 +284,8 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
                     {/* Impressions Distribution Pie */}
                     <Card className="border-none shadow-sm bg-card/40 backdrop-blur-sm p-4 md:p-6">
                         <CardHeader className={`px-0 pt-0 ${isRtl ? 'text-right' : ''}`}>
-                            <CardTitle className="text-xl font-black">{t("reports.impressions")} Distribution</CardTitle>
-                            <p className="text-sm text-muted-foreground">Breakdown by platform</p>
+                            <CardTitle className="text-xl font-black">{isRtl ? `توزيع ${t('reports.impressions')}` : `${t('reports.impressions')} Distribution`}</CardTitle>
+                            <p className="text-sm text-muted-foreground">{isRtl ? 'حسب كل منصة' : 'Breakdown by platform'}</p>
                         </CardHeader>
                         <CardContent className="h-[280px] px-0">
                             <div dir="ltr">
@@ -306,8 +306,8 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
                     {/* Followers horizontal bar */}
                     <Card className="border-none shadow-sm bg-card/40 backdrop-blur-sm p-4 md:p-6">
                         <CardHeader className={`px-0 pt-0 ${isRtl ? 'text-right' : ''}`}>
-                            <CardTitle className="text-xl font-black">New Followers</CardTitle>
-                            <p className="text-sm text-muted-foreground">Growth per platform this period</p>
+                            <CardTitle className="text-xl font-black">{isRtl ? 'متابعون جدد' : 'New Followers'}</CardTitle>
+                            <p className="text-sm text-muted-foreground">{isRtl ? 'النمو لكل منصة هذه الفترة' : 'Growth per platform this period'}</p>
                         </CardHeader>
                         <CardContent className="h-[280px] px-0">
                             <div dir="ltr">
@@ -489,12 +489,12 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
 
                                     <div className="grid grid-cols-2 gap-4 pt-4 border-t border-dashed">
                                         <div className={`p-4 rounded-2xl bg-primary/5 border border-primary/10 ${isRtl ? 'text-right' : 'text-left'}`}>
-                                            <div className="text-[10px] font-black uppercase text-primary mb-1">Eng. Rate</div>
+                                            <div className="text-[10px] font-black uppercase text-primary mb-1">{isRtl ? 'نسبة التفاعل' : 'Eng. Rate'}</div>
                                             <div className="text-xl font-black text-primary">{engRate}%</div>
                                         </div>
                                         {cpa && (
                                             <div className={`p-4 rounded-2xl bg-orange-500/5 border border-orange-500/10 ${isRtl ? 'text-right' : 'text-left'}`}>
-                                                <div className="text-[10px] font-black uppercase text-orange-500 mb-1">Cost / Conv</div>
+                                                <div className="text-[10px] font-black uppercase text-orange-500 mb-1">{isRtl ? 'تكلفة التحويل' : 'Cost / Conv'}</div>
                                                 <div className="text-xl font-black text-orange-500">${cpa}</div>
                                             </div>
                                         )}
@@ -582,11 +582,11 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
                                 <p className="text-2xl font-black italic">"{metrics.seo?.rank || t("dashboard.authority_growth")}"</p>
                             </div>
                             <div className={`p-6 bg-emerald-500/5 rounded-2xl border border-emerald-500/10 ${isRtl ? 'text-right' : ''}`}>
-                                <h4 className="text-xs font-black text-emerald-600 uppercase mb-2 tracking-widest">Page Speed</h4>
+                                <h4 className="text-xs font-black text-emerald-600 uppercase mb-2 tracking-widest">{isRtl ? 'سرعة الصفحة' : 'Page Speed'}</h4>
                                 <p className="text-2xl font-black">{metrics.seo?.speed || 0}%</p>
                             </div>
                             <div className={`p-6 bg-blue-500/5 rounded-2xl border border-blue-500/10 ${isRtl ? 'text-right' : ''}`}>
-                                <h4 className="text-xs font-black text-blue-600 uppercase mb-2 tracking-widest">Mobile Ready</h4>
+                                <h4 className="text-xs font-black text-blue-600 uppercase mb-2 tracking-widest">{isRtl ? 'جاهزية الجوال' : 'Mobile Ready'}</h4>
                                 <p className="text-2xl font-black">{metrics.seo?.mobile || 0}%</p>
                             </div>
                             <div className={`p-6 bg-muted/10 rounded-2xl border border-border ${isRtl ? 'text-right' : ''}`}>
