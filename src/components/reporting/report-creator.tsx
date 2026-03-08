@@ -426,29 +426,9 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                                             <DollarSign className="h-3 w-3" /> {isRtl ? 'الأداء الممول' : 'Paid Performance'}
                                         </CardTitle>
                                     </CardHeader>
-                                    <CardContent className="p-6 space-y-5">
-                                        <MetricField
-                                            label="Ad Spend (General)"
-                                            icon={DollarSign}
-                                            value={metrics.platforms[p.id]?.spend}
-                                            onChange={(v) => updatePlatformMetric(p.id, 'spend', v)}
-                                            prefix="SAR "
-                                        />
-                                        <MetricField
-                                            label="Paid Reach"
-                                            icon={Target}
-                                            value={metrics.platforms[p.id]?.paidReach}
-                                            onChange={(v) => updatePlatformMetric(p.id, 'paidReach', v)}
-                                        />
-                                        <MetricField
-                                            label="Conversions"
-                                            icon={Zap}
-                                            value={metrics.platforms[p.id]?.conversions}
-                                            onChange={(v) => updatePlatformMetric(p.id, 'conversions', v)}
-                                        />
-
+                                    <CardContent className="p-6 space-y-6">
                                         {/* Campaign Manager */}
-                                        <div className="pt-4 border-t border-white/5 space-y-4">
+                                        <div className="space-y-4">
                                             <div className={`flex items-center justify-between ${isRtl ? 'flex-row-reverse' : ''}`}>
                                                 <Label className="text-[10px] font-black uppercase text-primary tracking-widest">
                                                     {isRtl ? 'تفاصيل الحملات' : 'Campaign Details'}
@@ -484,13 +464,16 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                                                             className="h-8 text-xs font-bold bg-background/50 border-white/5"
                                                         />
 
-                                                        <div className="grid grid-cols-2 gap-2">
+                                                        <div className="grid grid-cols-2 gap-3">
                                                             <div className="space-y-1">
+                                                                <Label className="text-[9px] font-black uppercase text-muted-foreground/60 ml-1">
+                                                                    {isRtl ? 'الهدف' : 'Objective'}
+                                                                </Label>
                                                                 <Select
                                                                     value={camp.objective}
                                                                     onValueChange={(v) => updateCampaign(p.id, idx, 'objective', v)}
                                                                 >
-                                                                    <SelectTrigger className="h-8 text-[10px] font-bold bg-background/50 border-white/5">
+                                                                    <SelectTrigger className="h-9 text-[10px] font-bold bg-background/50 border-white/5 rounded-lg">
                                                                         <SelectValue placeholder="Objective" />
                                                                     </SelectTrigger>
                                                                     <SelectContent>
@@ -504,35 +487,50 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                                                                     </SelectContent>
                                                                 </Select>
                                                             </div>
-                                                            <Input
-                                                                type="number"
-                                                                placeholder={isRtl ? "الصرف" : "Spend"}
-                                                                value={camp.spend}
-                                                                onChange={(e) => updateCampaign(p.id, idx, 'spend', e.target.value)}
-                                                                className="h-8 text-xs font-bold bg-background/50 border-white/5"
-                                                            />
+                                                            <div className="space-y-1">
+                                                                <Label className="text-[9px] font-black uppercase text-muted-foreground/60 ml-1">
+                                                                    {isRtl ? 'الصرف (ريال)' : 'Spend (SAR)'}
+                                                                </Label>
+                                                                <Input
+                                                                    type="number"
+                                                                    placeholder="0"
+                                                                    value={camp.spend}
+                                                                    onChange={(e) => updateCampaign(p.id, idx, 'spend', e.target.value)}
+                                                                    className="h-9 text-xs font-bold bg-background/50 border-white/5 rounded-lg"
+                                                                />
+                                                            </div>
                                                         </div>
 
-                                                        <div className="grid grid-cols-2 gap-2">
-                                                            <Input
-                                                                type="number"
-                                                                placeholder={isRtl ? "الوصول" : "Reach"}
-                                                                value={camp.reach}
-                                                                onChange={(e) => updateCampaign(p.id, idx, 'reach', e.target.value)}
-                                                                className="h-8 text-xs font-bold bg-background/50 border-white/5"
-                                                            />
-                                                            <Input
-                                                                type="number"
-                                                                placeholder={
-                                                                    camp.objective === 'MESSAGES' ? (isRtl ? 'محادثات' : 'Messages') :
-                                                                        camp.objective === 'LEADS' ? (isRtl ? 'ليدز' : 'Leads') :
-                                                                            camp.objective === 'ENGAGEMENT' ? (isRtl ? 'تفاعل' : 'Engagements') :
-                                                                                (isRtl ? 'نتايج' : 'Results')
-                                                                }
-                                                                value={camp.results}
-                                                                onChange={(e) => updateCampaign(p.id, idx, 'results', e.target.value)}
-                                                                className="h-8 text-xs font-bold bg-background/50 border-white/5"
-                                                            />
+                                                        <div className="grid grid-cols-2 gap-3">
+                                                            <div className="space-y-1">
+                                                                <Label className="text-[9px] font-black uppercase text-muted-foreground/60 ml-1">
+                                                                    {isRtl ? 'الوصول' : 'Reach'}
+                                                                </Label>
+                                                                <Input
+                                                                    type="number"
+                                                                    placeholder="0"
+                                                                    value={camp.reach}
+                                                                    onChange={(e) => updateCampaign(p.id, idx, 'reach', e.target.value)}
+                                                                    className="h-9 text-xs font-bold bg-background/50 border-white/5 rounded-lg"
+                                                                />
+                                                            </div>
+                                                            <div className="space-y-1">
+                                                                <Label className="text-[9px] font-black uppercase text-muted-foreground/60 ml-1">
+                                                                    {
+                                                                        camp.objective === 'MESSAGES' ? (isRtl ? 'المحادثات' : 'Messages') :
+                                                                            camp.objective === 'LEADS' ? (isRtl ? 'ليدز' : 'Leads') :
+                                                                                camp.objective === 'ENGAGEMENT' ? (isRtl ? 'التفاعلات' : 'Engagements') :
+                                                                                    (isRtl ? 'النتائج' : 'Results')
+                                                                    }
+                                                                </Label>
+                                                                <Input
+                                                                    type="number"
+                                                                    placeholder="0"
+                                                                    value={camp.results}
+                                                                    onChange={(e) => updateCampaign(p.id, idx, 'results', e.target.value)}
+                                                                    className="h-9 text-xs font-bold bg-background/50 border-white/5 rounded-lg"
+                                                                />
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 ))}
