@@ -328,7 +328,7 @@ function ContentCard({ item, isRtl }: { item: any; isRtl: boolean }) {
                                     <div className={`flex items-center justify-between ${isRtl ? 'flex-row-reverse' : ''}`}>
                                         <span className="text-[10px] font-black text-foreground/70">{c.user.firstName} {c.user.lastName}</span>
                                         <span className="text-[9px] font-bold text-muted-foreground">
-                                            {new Date(c.createdAt).toISOString().substring(0, 16).replace('T', ' ')}
+                                            {c.createdAt ? new Date(c.createdAt).toISOString().substring(0, 16).replace('T', ' ') : ""}
                                         </span>
                                     </div>
                                     <p className={`text-xs leading-relaxed ${isRtl ? 'text-right' : 'text-left'}`}>{c.text}</p>

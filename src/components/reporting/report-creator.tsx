@@ -967,7 +967,7 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                                     </div>
                                     <div className="absolute bottom-0 left-0 right-0 p-2 bg-black/60 backdrop-blur-sm">
                                         <p className="text-[8px] text-white font-bold truncate">
-                                            {new Date(post.scheduledDate).toISOString().split('T')[0]}
+                                            {post.scheduledDate ? new Date(post.scheduledDate).toISOString().split('T')[0] : ""}
                                         </p>
                                     </div>
                                 </div>
