@@ -13,8 +13,9 @@ import {
 import { signOut } from "next-auth/react";
 import { LogOut, User as UserIcon } from "lucide-react";
 import { useEffect, useState } from "react";
+import { cn } from "@/lib/utils";
 
-export function UserNav({ user }: { user: any }) {
+export function UserNav({ user, isRtl }: { user: any; isRtl?: boolean }) {
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
@@ -32,35 +33,44 @@ export function UserNav({ user }: { user: any }) {
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-10 w-full justify-start gap-4 px-2 hover:bg-accent">
-                    <Avatar className="h-8 w-8">
+                <Button
+                    variant="ghost"
+                    className={cn(
+                        "relative h-10 w-full justify-start gap-4 px-2 hover:bg-accent",
+                        isRtl ? "flex-row-reverse text-right" : ""
+                    )}
+                >
+                    <Avatar className="h-8 w-8 shrink-0">
                         <AvatarFallback>{initials}</AvatarFallback>
                     </Avatar>
-                    <div className="flex flex-col space-y-1 text-left flex-1 overflow-hidden">
-                        <p className="text-sm font-medium leading-none truncate">{user.name || "User"}</p>
+                    <div className={cn("flex flex-col space-y-1 flex-1 overflow-hidden", isRtl ? "text-right" : "text-left")}>
+                        <p className="text-sm font-medium leading-none truncate">{user.name || (isRtl ? "مستخدم" : "User")}</p>
                         <p className="text-xs text-muted-foreground leading-none truncate">
                             {user.email}
                         </p>
                     </div>
                 </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56" align="end" forceMount>
+            <DropdownMenuContent className="w-56" align={isRtl ? "start" : "end"} forceMount>
                 <DropdownMenuLabel className="font-normal">
-                    <div className="flex flex-col space-y-1">
+                    <div className={cn("flex flex-col space-y-1", isRtl ? "text-right" : "")}>
                         <p className="text-sm font-medium leading-none">{user.name}</p>
                         <p className="text-xs leading-none text-muted-foreground">
-                            {user.role}
+                            {user.email}
                         </p>
                     </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                    <UserIcon className="mr-2 h-4 w-4" />
-                    <span>Profile</span>
+                <DropdownMenuItem className={cn(isRtl ? "flex-row-reverse" : "")}>
+                    <UserIcon className={cn("h-4 w-4", isRtl ? "ml-2" : "mr-2")} />
+                    <span>{isRtl ? "الملف الشخصي" : "Profile"}</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/login" })}>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Log out</span>
+                <DropdownMenuItem
+                    onClick={() => signOut({ callbackUrl: "/login" })}
+                    className={cn(isRtl ? "flex-row-reverse" : "")}
+                >
+                    <LogOut className={cn("h-4 w-4", isRtl ? "ml-2" : "mr-2")} />
+                    <span>{isRtl ? "تسجيل الخروج" : "Log out"}</span>
                 </DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>

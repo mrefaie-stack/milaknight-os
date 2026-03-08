@@ -6,7 +6,7 @@ import { UserNav } from "@/components/dashboard/user-nav";
 import {
     LayoutDashboard, Users, FolderKanban, BarChart3,
     MessageSquare, ShieldCheck, Trash2, Bell, Search,
-    ChevronRight
+    ChevronLeft, ChevronRight
 } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
 import { LanguageToggle } from "@/components/ui/language-toggle";
@@ -14,6 +14,12 @@ import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { useEffect, useState } from "react";
 import { getUnreadNotificationCount } from "@/app/actions/notification";
 import { cn } from "@/lib/utils";
+
+const ROLE_LABELS: Record<string, { ar: string; en: string }> = {
+    ADMIN: { ar: "مسؤول النظام", en: "Administrator" },
+    AM: { ar: "مدير حساب", en: "Account Manager" },
+    CLIENT: { ar: "عميل", en: "Client" },
+};
 
 export function DashboardSidebar({ role, user }: { role: string; user: any }) {
     const { t, isRtl } = useLanguage();
@@ -59,8 +65,12 @@ export function DashboardSidebar({ role, user }: { role: string; user: any }) {
         return pathname.startsWith(href);
     };
 
-    const roleLabel = role === "ADMIN" ? "Administrator" : role === "AM" ? "Account Manager" : "Client";
+    const roleMeta = ROLE_LABELS[role] || ROLE_LABELS.CLIENT;
+    const roleLabel = isRtl ? roleMeta.ar : roleMeta.en;
     const roleColor = role === "ADMIN" ? "text-orange-400" : role === "AM" ? "text-blue-400" : "text-emerald-400";
+
+    // In RTL: sidebar is on the right, icon appears first (rightmost), then text
+    const ChevronIcon = isRtl ? ChevronLeft : ChevronRight;
 
     return (
         <aside className={cn(
@@ -69,7 +79,7 @@ export function DashboardSidebar({ role, user }: { role: string; user: any }) {
         )}>
             {/* Logo & Controls */}
             <div className="p-6 pb-4 space-y-4">
-                <div className="flex items-center justify-between">
+                <div className={cn("flex items-center justify-between", isRtl ? "flex-row-reverse" : "")}>
                     <div className="font-black text-xl tracking-tighter premium-gradient-text">MILAKNIGHT</div>
                     <div className="flex items-center gap-1">
                         <LanguageToggle />
@@ -78,7 +88,11 @@ export function DashboardSidebar({ role, user }: { role: string; user: any }) {
                 </div>
 
                 {/* Role badge */}
-                <div className={cn("text-[9px] font-black uppercase tracking-[0.2em] px-3 py-1.5 rounded-full bg-white/5 border border-white/10 w-fit", roleColor)}>
+                <div className={cn(
+                    "text-[9px] font-black uppercase tracking-[0.2em] px-3 py-1.5 rounded-full bg-white/5 border border-white/10 w-fit",
+                    roleColor,
+                    isRtl ? "self-end ml-auto" : ""
+                )}>
                     {roleLabel}
                 </div>
 
@@ -88,9 +102,12 @@ export function DashboardSidebar({ role, user }: { role: string; user: any }) {
                         const event = new KeyboardEvent("keydown", { key: "k", metaKey: true, ctrlKey: true });
                         document.dispatchEvent(event);
                     }}
-                    className="w-full flex items-center justify-between px-4 py-2.5 rounded-xl bg-white/5 border border-white/5 text-muted-foreground hover:bg-white/10 hover:border-white/10 transition-all group"
+                    className={cn(
+                        "w-full flex items-center justify-between px-4 py-2.5 rounded-xl bg-white/5 border border-white/5 text-muted-foreground hover:bg-white/10 hover:border-white/10 transition-all group",
+                        isRtl ? "flex-row-reverse" : ""
+                    )}
                 >
-                    <div className="flex items-center gap-2">
+                    <div className={cn("flex items-center gap-2", isRtl ? "flex-row-reverse" : "")}>
                         <Search className="h-3.5 w-3.5" />
                         <span className="text-[10px] font-black uppercase tracking-widest">{t("common.search")}</span>
                     </div>
@@ -118,13 +135,14 @@ export function DashboardSidebar({ role, user }: { role: string; user: any }) {
                             href={link.href}
                             className={cn(
                                 "flex items-center justify-between px-4 py-3 rounded-2xl text-[11px] font-black transition-all duration-200 group relative overflow-hidden uppercase tracking-tight",
-                                isRtl ? "flex-row-reverse text-right" : "flex-row text-left",
+                                // RTL: flip entire row so icon is on the right side
+                                isRtl ? "flex-row-reverse" : "flex-row",
                                 active
                                     ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
                                     : "text-foreground/50 hover:bg-white/8 hover:text-foreground/90"
                             )}
                         >
-                            {/* Active left bar */}
+                            {/* Active indicator bar — right side in RTL, left side in LTR */}
                             {!active && (
                                 <div className={cn(
                                     "absolute top-0 bottom-0 w-0.5 bg-primary opacity-0 group-hover:opacity-100 transition-opacity",
@@ -132,16 +150,17 @@ export function DashboardSidebar({ role, user }: { role: string; user: any }) {
                                 )} />
                             )}
 
+                            {/* Icon + Label — icon always adjacent to the edge in RTL */}
                             <div className={cn("flex items-center gap-3 relative z-10", isRtl ? "flex-row-reverse" : "flex-row")}>
                                 <Icon className={cn(
-                                    "h-4 w-4 transition-all duration-200",
+                                    "h-4 w-4 transition-all duration-200 shrink-0",
                                     active ? "scale-110" : "group-hover:scale-110"
                                 )} />
-                                {link.label}
+                                <span>{link.label}</span>
                             </div>
 
-                            {/* Notification/chevron badge */}
-                            <div className="flex items-center gap-1.5 relative z-10">
+                            {/* Notification badge / chevron */}
+                            <div className={cn("flex items-center gap-1.5 relative z-10", isRtl ? "flex-row-reverse" : "")}>
                                 {isNotifications && unreadCount > 0 && (
                                     <span className={cn(
                                         "flex h-5 min-w-5 px-1 items-center justify-center rounded-full text-[9px] font-black",
@@ -151,7 +170,10 @@ export function DashboardSidebar({ role, user }: { role: string; user: any }) {
                                     </span>
                                 )}
                                 {!isNotifications && !active && (
-                                    <ChevronRight className="h-3 w-3 opacity-0 group-hover:opacity-40 transition-all -translate-x-1 group-hover:translate-x-0" />
+                                    <ChevronIcon className={cn(
+                                        "h-3 w-3 opacity-0 group-hover:opacity-40 transition-all",
+                                        isRtl ? "translate-x-1 group-hover:translate-x-0" : "-translate-x-1 group-hover:translate-x-0"
+                                    )} />
                                 )}
                             </div>
                         </Link>
@@ -161,7 +183,7 @@ export function DashboardSidebar({ role, user }: { role: string; user: any }) {
 
             {/* User */}
             <div className="p-4 border-t border-white/5">
-                <UserNav user={user} />
+                <UserNav user={user} isRtl={isRtl} />
             </div>
         </aside>
     );
