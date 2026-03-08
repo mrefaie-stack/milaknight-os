@@ -76,19 +76,19 @@ export function AdminRequestsUI({ initialRequests }: { initialRequests: any[] })
                                         </div>
                                         <div className={`space-y-1 ${isRtl ? 'text-right' : ''}`}>
                                             <div className="flex items-center gap-2 flex-wrap">
-                                                <h3 className="text-xl font-black">{request.client.name}</h3>
+                                                <h3 className="text-xl font-black">{request.client?.name || "Unknown Client"}</h3>
                                                 <Badge variant="outline" className="rounded-full px-3 py-0.5 text-[10px] font-black uppercase tracking-widest bg-primary/5 text-primary">
-                                                    {isRtl ? request.globalService.nameAr : request.globalService.nameEn}
+                                                    {isRtl ? request.globalService?.nameAr : request.globalService?.nameEn}
                                                 </Badge>
                                             </div>
                                             <div className={`flex items-center gap-3 text-xs font-bold text-muted-foreground ${isRtl ? 'flex-row-reverse' : ''}`}>
                                                 <div className="flex items-center gap-1">
                                                     <User className="h-3 w-3" />
-                                                    {request.client.accountManager ? `${request.client.accountManager.firstName} ${request.client.accountManager.lastName}` : "No AM"}
+                                                    {request.client?.accountManager ? `${request.client.accountManager.firstName} ${request.client.accountManager.lastName}` : "No AM"}
                                                 </div>
-                                                <div className="flex items-center gap-1">
+                                                <div className="flex items-center gap-1" suppressHydrationWarning>
                                                     <Clock className="h-3 w-3" />
-                                                    {new Date(request.createdAt).toLocaleDateString()}
+                                                    {request.createdAt ? new Date(request.createdAt).toLocaleDateString() : ""}
                                                 </div>
                                             </div>
                                             {request.notes && (
