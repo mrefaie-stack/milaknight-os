@@ -77,7 +77,7 @@ export function ChatInterface({ currentUser, recentChats: initialRecentChats, in
             await sendMessage(selectedUser.id, originalText);
             loadMessages();
         } catch (error) {
-            toast.error("Failed to send message");
+            toast.error(isRtl ? "فشل إرسال الرسالة" : "Failed to send message");
             setInputText(originalText);
         } finally {
             setLoading(false);
@@ -89,7 +89,7 @@ export function ChatInterface({ currentUser, recentChats: initialRecentChats, in
             {/* User List */}
             <div className="w-80 border-r flex flex-col bg-muted/10 shrink-0">
                 <div className="p-4 border-b bg-muted/20">
-                    <h3 className="font-semibold">Recent Chats</h3>
+                    <h3 className="font-semibold">{isRtl ? 'المحادثات' : 'Recent Chats'}</h3>
                 </div>
                 <div className="flex-1 overflow-y-auto custom-scrollbar">
                     {/* Unique recent chats */}
@@ -155,7 +155,7 @@ export function ChatInterface({ currentUser, recentChats: initialRecentChats, in
                         <div className="absolute bottom-0 left-0 right-0 p-4 border-t bg-card/80 backdrop-blur-md">
                             <form onSubmit={handleSend} className="flex gap-2 max-w-4xl mx-auto">
                                 <Input
-                                    placeholder="Type a message..."
+                                    placeholder={isRtl ? "اكتب رسالة..." : "Type a message..."}
                                     value={inputText}
                                     onChange={(e) => setInputText(e.target.value)}
                                     className="flex-1 h-11"
@@ -172,8 +172,8 @@ export function ChatInterface({ currentUser, recentChats: initialRecentChats, in
                         <div className="p-6 bg-muted/20 rounded-full mb-6">
                             <MessageSquare className="h-12 w-12 opacity-20" />
                         </div>
-                        <h3 className="text-xl font-bold opacity-50 tracking-tight">Select a conversation</h3>
-                        <p className="max-w-xs opacity-40 text-sm mt-2">Choose a team member from the list to start messaging.</p>
+                        <h3 className="text-xl font-bold opacity-50 tracking-tight">{isRtl ? 'اختر محادثة' : 'Select a conversation'}</h3>
+                        <p className="max-w-xs opacity-40 text-sm mt-2">{isRtl ? 'اختر شخصاً من القائمة لبدء المحادثة.' : 'Choose a team member from the list to start messaging.'}</p>
                     </div>
                 )}
             </div>

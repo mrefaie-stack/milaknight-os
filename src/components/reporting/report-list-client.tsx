@@ -17,7 +17,7 @@ export function ReportListClient({
     initialReports: any[],
     role: "AM" | "CLIENT" | "ADMIN"
 }) {
-    const { t } = useLanguage();
+    const { t, isRtl } = useLanguage();
     const router = useRouter();
     const [reports, setReports] = useState(initialReports);
     const [filteredReports, setFilteredReports] = useState(initialReports);
@@ -123,7 +123,7 @@ export function ReportListClient({
                                 <div className="flex items-center gap-2 mb-2">
                                     <Calendar className="h-4 w-4 text-primary" />
                                     <span className="text-sm font-bold text-muted-foreground uppercase tracking-widest">
-                                        {new Date(report.month + "-01").toLocaleDateString('default', { month: 'long', year: 'numeric' })}
+                                        {new Date(report.month + "-01").toLocaleDateString(isRtl ? 'ar-EG' : 'en-US', { month: 'long', year: 'numeric' })}
                                     </span>
                                 </div>
 
@@ -139,7 +139,7 @@ export function ReportListClient({
                                         <>
                                             <Link href={`/${role === 'CLIENT' ? 'client' : 'am'}/reports/${report.id}`} className="flex-1">
                                                 <Button className="w-full font-bold rounded-2xl h-12 shadow-lg shadow-primary/10">
-                                                    View Dashboard
+                                                    {isRtl ? 'عرض التقرير' : 'View Dashboard'}
                                                 </Button>
                                             </Link>
                                             {role === 'AM' && (
@@ -152,7 +152,7 @@ export function ReportListClient({
                                         </>
                                     ) : (
                                         <div className="h-12 flex items-center justify-center w-full rounded-2xl border border-dashed text-xs font-bold text-muted-foreground">
-                                            {isSelected ? 'Selected' : 'Click to select'}
+                                            {isSelected ? (isRtl ? 'تم الاختيار ✓' : 'Selected ✓') : (isRtl ? 'اضغط للاختيار' : 'Click to select')}
                                         </div>
                                     )}
                                 </div>
@@ -167,8 +167,8 @@ export function ReportListClient({
                             <div className="p-4 bg-muted rounded-full w-fit mx-auto">
                                 <BarChart3 className="h-8 w-8 text-muted-foreground opacity-20" />
                             </div>
-                            <h3 className="text-xl font-bold opacity-50">No Reports Found</h3>
-                            <p className="text-muted-foreground">Adjust your filters or generate a new report to get started.</p>
+                            <h3 className="text-xl font-bold opacity-50">{isRtl ? 'لا توجد تقارير' : 'No Reports Found'}</h3>
+                            <p className="text-muted-foreground">{isRtl ? 'عدّل الفلاتر أو أنشئ تقريراً جديداً.' : 'Adjust your filters or generate a new report to get started.'}</p>
                         </div>
                     </div>
                 )}

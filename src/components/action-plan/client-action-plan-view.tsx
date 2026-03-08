@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useLanguage } from "@/contexts/language-context";
 import { PlanApprovalHeader } from "@/components/action-plan/plan-approval-header";
 import { ClientApprovalActions } from "@/components/action-plan/client-approval-actions";
 import { DownloadActionPlanButton } from "@/components/action-plan/download-action-plan-button";
@@ -89,23 +90,27 @@ const SECTIONS = [
     },
 ];
 
-const TYPE_META: Record<string, { label: string; icon: any; color: string; bg: string }> = {
-    POST: { label: "Social Post", icon: ImageIcon, color: "text-blue-600", bg: "bg-blue-500/10" },
-    VIDEO: { label: "Video / Reel", icon: Video, color: "text-purple-600", bg: "bg-purple-500/10" },
-    LINKEDIN: { label: "LinkedIn", icon: Linkedin, color: "text-sky-600", bg: "bg-sky-500/10" },
-    ARTICLE: { label: "Blog / Article", icon: AlignLeft, color: "text-teal-600", bg: "bg-teal-500/10" },
-    POLL: { label: "Poll / Story", icon: HelpCircle, color: "text-orange-600", bg: "bg-orange-500/10" },
-    EMAIL: { label: "Email Campaign", icon: Mail, color: "text-rose-600", bg: "bg-rose-500/10" },
-    AD: { label: "Paid Ad", icon: Megaphone, color: "text-red-600", bg: "bg-red-500/10" },
+const TYPE_META_BI: Record<string, { ar: string; en: string; icon: any; color: string; bg: string }> = {
+    POST: { ar: "منشور سوشيال", en: "Social Post", icon: ImageIcon, color: "text-blue-600", bg: "bg-blue-500/10" },
+    VIDEO: { ar: "فيديو / ريلز", en: "Video / Reel", icon: Video, color: "text-purple-600", bg: "bg-purple-500/10" },
+    LINKEDIN: { ar: "لينكد إن", en: "LinkedIn", icon: Linkedin, color: "text-sky-600", bg: "bg-sky-500/10" },
+    ARTICLE: { ar: "مقال", en: "Blog / Article", icon: AlignLeft, color: "text-teal-600", bg: "bg-teal-500/10" },
+    POLL: { ar: "تصويت / ستوري", en: "Poll / Story", icon: HelpCircle, color: "text-orange-600", bg: "bg-orange-500/10" },
+    EMAIL: { ar: "حملة بريدية", en: "Email Campaign", icon: Mail, color: "text-rose-600", bg: "bg-rose-500/10" },
+    AD: { ar: "إعلان مدفوع", en: "Paid Ad", icon: Megaphone, color: "text-red-600", bg: "bg-red-500/10" },
 };
 
-const STATUS_META: Record<string, { label: string; icon: any; color: string; bg: string; border: string }> = {
-    APPROVED: { label: "Approved", icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-500/10", border: "border-emerald-500/20" },
-    DRAFT: { label: "Draft", icon: Clock, color: "text-gray-500", bg: "bg-gray-500/10", border: "border-gray-500/20" },
-    PENDING: { label: "Pending", icon: Clock, color: "text-orange-500", bg: "bg-orange-500/10", border: "border-orange-500/20" },
-    NEEDS_EDIT: { label: "Needs Edit", icon: AlertCircle, color: "text-red-600", bg: "bg-red-500/10", border: "border-red-500/20" },
-    PUBLISHED: { label: "Published", icon: CheckCircle2, color: "text-blue-600", bg: "bg-blue-500/10", border: "border-blue-500/20" },
+const STATUS_META_BI: Record<string, { ar: string; en: string; icon: any; color: string; bg: string; border: string }> = {
+    APPROVED: { ar: "معتمد", en: "Approved", icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-500/10", border: "border-emerald-500/20" },
+    DRAFT: { ar: "مسودة", en: "Draft", icon: Clock, color: "text-gray-500", bg: "bg-gray-500/10", border: "border-gray-500/20" },
+    PENDING: { ar: "قيد المراجعة", en: "Pending", icon: Clock, color: "text-orange-500", bg: "bg-orange-500/10", border: "border-orange-500/20" },
+    NEEDS_EDIT: { ar: "يحتاج تعديل", en: "Needs Edit", icon: AlertCircle, color: "text-red-600", bg: "bg-red-500/10", border: "border-red-500/20" },
+    PUBLISHED: { ar: "منشور", en: "Published", icon: CheckCircle2, color: "text-blue-600", bg: "bg-blue-500/10", border: "border-blue-500/20" },
 };
+
+// keep old exports for compat
+const TYPE_META = TYPE_META_BI;
+const STATUS_META = STATUS_META_BI;
 
 const PLATFORM_COLORS = [
     "bg-blue-500", "bg-pink-500", "bg-black",
@@ -121,9 +126,11 @@ function PlatformPill({ name, idx }: { name: string; idx: number }) {
     );
 }
 
-function ContentCard({ item }: { item: any }) {
-    const type = TYPE_META[item.type] || TYPE_META.POST;
-    const status = STATUS_META[item.status] || STATUS_META.PENDING;
+function ContentCard({ item, isRtl }: { item: any; isRtl: boolean }) {
+    const typeMeta = TYPE_META_BI[item.type] || TYPE_META_BI.POST;
+    const statusMeta = STATUS_META_BI[item.status] || STATUS_META_BI.PENDING;
+    const type = { ...typeMeta, label: isRtl ? typeMeta.ar : typeMeta.en };
+    const status = { ...statusMeta, label: isRtl ? statusMeta.ar : statusMeta.en };
     const TypeIcon = type.icon;
     const StatusIcon = status.icon;
 
@@ -138,7 +145,7 @@ function ContentCard({ item }: { item: any }) {
                 <div className="p-4 bg-rose-500/10 border-b border-rose-500/10">
                     <div className="flex items-center gap-2 mb-1">
                         <Mail className="h-4 w-4 text-rose-500" />
-                        <span className="text-[10px] font-black text-rose-500 uppercase tracking-widest">Email Campaign</span>
+                        <span className="text-[10px] font-black text-rose-500 uppercase tracking-widest">{isRtl ? 'حملة بريدية' : 'Email Campaign'}</span>
                     </div>
                     <p className="font-black text-base leading-tight">{item.emailSubject || "—"}</p>
                 </div>
@@ -161,7 +168,7 @@ function ContentCard({ item }: { item: any }) {
                                     <div className="p-4 bg-white/10 rounded-full border border-white/20 backdrop-blur-sm">
                                         <Video className="h-8 w-8" />
                                     </div>
-                                    <span className="text-xs font-bold">View Video</span>
+                                    <span className="text-xs font-bold">{isRtl ? 'مشاهدة الفيديو' : 'View Video'}</span>
                                 </a>
                             </div>
                         )
@@ -247,7 +254,7 @@ function ContentCard({ item }: { item: any }) {
                     )}
                     {!item.platformCaptions && item.captionEn && (
                         <div className="p-3 bg-muted/30 rounded-xl border border-muted/40">
-                            <p className="text-[10px] font-black uppercase text-muted-foreground mb-1">{isEmail ? "Campaign Description" : "Caption (English)"}</p>
+                            <p className="text-[10px] font-black uppercase text-muted-foreground mb-1">{isEmail ? (isRtl ? 'وصف الحملة' : 'Campaign Description') : (isRtl ? 'الكابشن بالإنجليزي' : 'Caption (English)')}</p>
                             <p className="text-foreground/80 text-sm">{item.captionEn}</p>
                         </div>
                     )}
@@ -255,7 +262,7 @@ function ContentCard({ item }: { item: any }) {
                     {/* Blog/Article */}
                     {item.articleTitle && (
                         <div className="p-3 bg-teal-500/5 rounded-xl border border-teal-500/10">
-                            <p className="text-[10px] font-black uppercase text-teal-600 mb-1">Article Title</p>
+                            <p className="text-[10px] font-black uppercase text-teal-600 mb-1">{isRtl ? 'عنوان المقال' : 'Article Title'}</p>
                             <p className="font-bold">{item.articleTitle}</p>
                             {item.articleContent && <p className="text-muted-foreground text-xs mt-1">{item.articleContent}</p>}
                         </div>
@@ -264,7 +271,7 @@ function ContentCard({ item }: { item: any }) {
                     {/* Poll */}
                     {item.pollQuestion && (
                         <div className="p-4 bg-orange-500/5 rounded-xl border border-orange-500/10 space-y-2">
-                            <p className="text-[10px] font-black uppercase text-orange-600 mb-2">Poll Question</p>
+                            <p className="text-[10px] font-black uppercase text-orange-600 mb-2">{isRtl ? 'سؤال التصويت' : 'Poll Question'}</p>
                             <p className="font-bold">{item.pollQuestion}</p>
                             <div className="grid grid-cols-2 gap-2 mt-2">
                                 {[item.pollOptionA, item.pollOptionB].filter(Boolean).map((opt: string, i: number) => (
@@ -279,7 +286,7 @@ function ContentCard({ item }: { item: any }) {
                     {/* Email body */}
                     {isEmail && item.emailBody && (
                         <div className="p-3 bg-rose-500/5 rounded-xl border border-rose-500/10">
-                            <p className="text-[10px] font-black uppercase text-rose-600 mb-1">Email Body</p>
+                            <p className="text-[10px] font-black uppercase text-rose-600 mb-1">{isRtl ? 'محتوى البريد' : 'Email Body'}</p>
                             <p className="text-foreground/80 text-sm whitespace-pre-wrap">{item.emailBody}</p>
                         </div>
                     )}
@@ -287,7 +294,7 @@ function ContentCard({ item }: { item: any }) {
                         <a href={item.emailDesign} target="_blank" rel="noopener noreferrer"
                             className="flex items-center gap-2 p-3 bg-muted/20 rounded-xl border border-muted/30 hover:border-rose-500/30 transition-colors group/link">
                             <ExternalLink className="h-4 w-4 text-rose-500 shrink-0" />
-                            <span className="text-sm font-bold text-rose-500 truncate">View Base Design / Template</span>
+                            <span className="text-sm font-bold text-rose-500 truncate">{isRtl ? 'عرض التصميم الأساسي' : 'View Base Design / Template'}</span>
                         </a>
                     )}
                 </div>
@@ -297,7 +304,7 @@ function ContentCard({ item }: { item: any }) {
                     <div className="p-4 rounded-xl bg-primary/5 border border-primary/20 mt-auto">
                         <div className="flex items-center gap-2 mb-2">
                             <MessageSquare className="h-3.5 w-3.5 text-primary" />
-                            <span className="text-[10px] font-black uppercase tracking-wider text-primary">Account Manager Notes</span>
+                            <span className="text-[10px] font-black uppercase tracking-wider text-primary">{isRtl ? 'ملاحظات مدير الحساب' : 'Account Manager Notes'}</span>
                         </div>
                         <p className="text-sm text-foreground/80 leading-relaxed">{item.amComment}</p>
                     </div>
@@ -308,7 +315,7 @@ function ContentCard({ item }: { item: any }) {
                     <div className={`p-4 rounded-xl border ${item.feedbackResolved ? 'bg-muted/20 border-muted text-muted-foreground' : 'bg-orange-50 border-orange-200 text-orange-900'}`}>
                         <div className="flex items-center gap-1.5 mb-1.5">
                             <MessageSquare className="h-3.5 w-3.5" />
-                            <span className="text-[10px] font-black uppercase">Your Feedback {item.feedbackResolved ? "(Resolved ✓)" : ""}</span>
+                            <span className="text-[10px] font-black uppercase">{isRtl ? `ملاحظاتك ${item.feedbackResolved ? '(تم الحل ✓)' : ''}` : `Your Feedback ${item.feedbackResolved ? '(Resolved ✓)' : ''}`}</span>
                         </div>
                         <p className="text-sm">{item.clientComment}</p>
                     </div>
@@ -324,6 +331,7 @@ function ContentCard({ item }: { item: any }) {
 }
 
 export function ClientActionPlanView({ plan, items }: { plan: any; items: any[] }) {
+    const { isRtl } = useLanguage();
     const total = items.length;
     const approved = items.filter(i => i.status === "APPROVED").length;
     const pending = items.filter(i => i.status !== "APPROVED").length;
@@ -398,7 +406,7 @@ export function ClientActionPlanView({ plan, items }: { plan: any; items: any[] 
                                 {/* Section Grid */}
                                 <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
                                     {sectionItems.map((item: any) => (
-                                        <ContentCard key={item.id} item={item} />
+                                        <ContentCard key={item.id} item={item} isRtl={isRtl} />
                                     ))}
                                 </div>
                             </div>
@@ -408,8 +416,8 @@ export function ClientActionPlanView({ plan, items }: { plan: any; items: any[] 
             ) : (
                 <div className="py-24 rounded-3xl border-2 border-dashed border-white/10 text-center">
                     <Layers className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-20" />
-                    <p className="text-muted-foreground font-semibold">No items available for review yet.</p>
-                    <p className="text-sm text-muted-foreground opacity-60 mt-1">Your Account Manager will add content items soon.</p>
+                    <p className="text-muted-foreground font-semibold">{isRtl ? 'لا توجد عناصر للمراجعة بعد.' : 'No items available for review yet.'}</p>
+                    <p className="text-sm text-muted-foreground opacity-60 mt-1">{isRtl ? 'سيقوم مدير حسابك بإضافة عناصر المحتوى قريباً.' : 'Your Account Manager will add content items soon.'}</p>
                 </div>
             )}
         </div>
