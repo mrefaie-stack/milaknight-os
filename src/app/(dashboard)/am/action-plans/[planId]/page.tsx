@@ -16,7 +16,15 @@ export default async function ActionPlanBuilderPage({ params }: { params: Promis
         where: { id: planId },
         include: {
             client: true,
-            items: { orderBy: { createdAt: "desc" } },
+            items: {
+                include: {
+                    comments: {
+                        include: { user: true },
+                        orderBy: { createdAt: "asc" }
+                    }
+                },
+                orderBy: { createdAt: "desc" }
+            },
         }
     });
 

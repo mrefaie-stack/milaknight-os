@@ -134,6 +134,30 @@ export function PlanItemsList({ items, planId }: { items: any[], planId: string 
                                                         <VideoPlayer url={item.videoUrl} isRtl={isRtl} />
                                                     </div>
                                                 )}
+
+                                                {/* Discussion Log (Consistency with Client View) */}
+                                                {(item as any).comments && (item as any).comments.length > 0 && (
+                                                    <div className="mt-6 pt-6 border-t border-primary/5 space-y-4">
+                                                        <div className={`flex items-center gap-2 text-primary ${isRtl ? 'flex-row-reverse' : ''}`}>
+                                                            <MessageSquare className="h-3.5 w-3.5" />
+                                                            <span className="text-[10px] font-black uppercase tracking-widest">{isRtl ? 'سجل النقاش' : 'Discussion Log'}</span>
+                                                        </div>
+                                                        <div className="space-y-3">
+                                                            {(item as any).comments.map((c: any) => (
+                                                                <div key={c.id} className={`flex flex-col gap-1 p-3 rounded-2xl border transition-all duration-300 ${c.user.role === 'CLIENT' ? 'bg-orange-50/50 border-orange-100/50' : 'bg-primary/5 border-primary/10'
+                                                                    }`}>
+                                                                    <div className={`flex items-center justify-between ${isRtl ? 'flex-row-reverse' : ''}`}>
+                                                                        <span className="text-[10px] font-black text-foreground/70">{c.user.firstName} {c.user.lastName}</span>
+                                                                        <span className="text-[9px] font-bold text-muted-foreground">
+                                                                            {new Date(c.createdAt).toLocaleDateString(isRtl ? 'ar-EG' : 'en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                                                                        </span>
+                                                                    </div>
+                                                                    <p className={`text-xs leading-relaxed ${isRtl ? 'text-right' : 'text-left'}`}>{c.text}</p>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                         <div className={`flex gap-2 w-full md:w-auto mt-4 md:mt-0 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-1 group-hover:translate-y-0 ${isRtl ? 'flex-row-reverse' : ''}`}>
