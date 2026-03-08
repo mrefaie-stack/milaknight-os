@@ -27,10 +27,16 @@ import { Edit, UserCog, Globe } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
 import { Textarea } from "@/components/ui/textarea";
 
-export function EditClientDialog({ client, accountManagers }: { client: any, accountManagers: any[] }) {
+import { Checkbox } from "@/components/ui/checkbox";
+
+export function EditClientDialog({ client, accountManagers, services = [] }: { client: any, accountManagers: any[], services?: any[] }) {
     const { t, isRtl } = useLanguage();
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
+
+    const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>(
+        client.services?.map((s: any) => s.globalServiceId) || []
+    );
 
     const [formData, setFormData] = useState({
         name: client.name,
@@ -74,6 +80,7 @@ export function EditClientDialog({ client, accountManagers }: { client: any, acc
                 snapchat: formData.snapchat,
                 youtube: formData.youtube,
                 website: formData.website,
+                serviceIds: selectedServiceIds,
             });
 
             // Update User Credentials if needed
@@ -179,6 +186,29 @@ export function EditClientDialog({ client, accountManagers }: { client: any, acc
                                             <SelectItem value="ENTERPRISE">Enterprise</SelectItem>
                                         </SelectContent>
                                     </Select>
+                                </div>
+                                <div className="space-y-3">
+                                    <Label className={isRtl ? 'text-right block' : ''}>{t("dashboard.management_services")}</Label>
+                                    <div className="grid grid-cols-2 gap-2 mt-2">
+                                        {services.map((service) => (
+                                            <div key={service.id} className={`flex items-center gap-2 ${isRtl ? 'flex-row-reverse text-right' : ''}`}>
+                                                <Checkbox
+                                                    id={`edit-service-${service.id}`}
+                                                    checked={selectedServiceIds.includes(service.id)}
+                                                    onCheckedChange={(checked) => {
+                                                        setSelectedServiceIds(prev =>
+                                                            checked
+                                                                ? [...prev, service.id]
+                                                                : prev.filter(id => id !== service.id)
+                                                        );
+                                                    }}
+                                                />
+                                                <label htmlFor={`edit-service-${service.id}`} className="text-xs font-medium cursor-pointer">
+                                                    {isRtl ? service.nameAr : service.nameEn}
+                                                </label>
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
                                 <div className="grid gap-2">
                                     <Label htmlFor="activeServices" className={isRtl ? 'text-right' : ''}>{t("dashboard.active_platforms")}</Label>

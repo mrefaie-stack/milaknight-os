@@ -67,6 +67,7 @@ model Client {
   activeServices String?   // Comma separated list of active platforms for this client
   
   services       Service[]
+  serviceRequests ServiceRequest[]
   actionPlans    ActionPlan[]
   reports        Report[]
   
@@ -74,12 +75,44 @@ model Client {
   updatedAt      DateTime  @updatedAt
 }
 
-model Service {
+model GlobalService {
   id             String    @id @default(cuid())
-  clientId       String
-  client         Client    @relation(fields: [clientId], references: [id])
-  name           String    // e.g., "Social Media", "SEO"
-  details        String    // Json fallback
+  nameAr         String
+  nameEn         String
+  descriptionAr  String?
+  descriptionEn  String?
+  icon           String?   // Lucide icon name
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  
+  clients        Service[]
+  requests       ServiceRequest[]
+}
+
+model Service {
+  id              String         @id @default(cuid())
+  clientId        String
+  client          Client         @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  globalServiceId String
+  globalService   GlobalService  @relation(fields: [globalServiceId], references: [id], onDelete: Cascade)
+  
+  assignedAt      DateTime       @default(now())
+  
+  @@unique([clientId, globalServiceId])
+}
+
+model ServiceRequest {
+  id              String         @id @default(cuid())
+  clientId        String
+  client          Client         @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  globalServiceId String
+  globalService   GlobalService  @relation(fields: [globalServiceId], references: [id], onDelete: Cascade)
+  status          String         @default("PENDING") // PENDING, APPROVED, REJECTED
+  notes           String?
+  adminNotes      String?
+  
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
 }
 
 model ActionPlan {

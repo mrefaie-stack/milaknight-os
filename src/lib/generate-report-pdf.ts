@@ -63,19 +63,49 @@ export async function generateReportPdf(report: any, metrics: any) {
     y = 58;
 
     // ─── GLOBAL TOTALS ────────────────────────────────────────────────────────
-    const activePlatforms = Object.keys(metrics.platforms || {}).filter((key) => {
-        const p = metrics.platforms[key];
+    // NEW: Handle Multi-Campaign structure
+    const campaigns = metrics.campaigns || [
+        { id: "default", name: "Main", platforms: metrics.platforms || {}, linkedItems: [] }
+    ];
+
+    // Aggregated platforms mapping (for charts and global totals)
+    const aggregatedPlatforms: Record<string, any> = {};
+
+    campaigns.forEach((camp: any) => {
+        Object.entries(camp.platforms || {}).forEach(([platId, p]: [string, any]) => {
+            if (!aggregatedPlatforms[platId]) {
+                aggregatedPlatforms[platId] = { ...p };
+            } else {
+                const existing = aggregatedPlatforms[platId];
+                aggregatedPlatforms[platId] = {
+                    ...existing,
+                    followers: (existing.followers || 0) + (Number(p.followers) || 0),
+                    engagement: (existing.engagement || 0) + (Number(p.engagement) || 0),
+                    impressions: (existing.impressions || 0) + (Number(p.impressions) || 0),
+                    views: (existing.views || 0) + (Number(p.views) || 0),
+                    spend: (existing.spend || 0) + (Number(p.spend) || 0),
+                    conversions: (existing.conversions || 0) + (Number(p.conversions) || 0),
+                    paidReach: (existing.paidReach || 0) + (Number(p.paidReach) || 0),
+                    organicReach: (existing.organicReach || 0) + (Number(p.organicReach) || 0),
+                    clicks: (existing.clicks || 0) + (Number(p.clicks) || 0),
+                };
+            }
+        });
+    });
+
+    const activePlatforms = Object.keys(aggregatedPlatforms).filter((key) => {
+        const p = aggregatedPlatforms[key];
         return Object.values(p).some((v: any) => Number(v) > 0);
     });
 
     const totals = {
-        impressions: activePlatforms.reduce((a, k) => a + (Number(metrics.platforms[k].impressions) || 0), 0),
-        engagement: activePlatforms.reduce((a, k) => a + (Number(metrics.platforms[k].engagement) || 0), 0),
-        followers: activePlatforms.reduce((a, k) => a + (Number(metrics.platforms[k].followers) || 0), 0),
-        views: activePlatforms.reduce((a, k) => a + (Number(metrics.platforms[k].views) || 0), 0),
-        spend: activePlatforms.reduce((a, k) => a + (Number(metrics.platforms[k].spend) || 0), 0),
-        paidReach: activePlatforms.reduce((a, k) => a + (Number(metrics.platforms[k].paidReach) || 0), 0),
-        conversions: activePlatforms.reduce((a, k) => a + (Number(metrics.platforms[k].conversions) || 0), 0),
+        impressions: activePlatforms.reduce((a, k) => a + (Number(aggregatedPlatforms[k].impressions) || 0), 2),
+        engagement: activePlatforms.reduce((a, k) => a + (Number(aggregatedPlatforms[k].engagement) || 0), 2),
+        followers: activePlatforms.reduce((a, k) => a + (Number(aggregatedPlatforms[k].followers) || 0), 0),
+        views: activePlatforms.reduce((a, k) => a + (Number(aggregatedPlatforms[k].views) || 0), 0),
+        spend: activePlatforms.reduce((a, k) => a + (Number(aggregatedPlatforms[k].spend) || 0), 0),
+        paidReach: activePlatforms.reduce((a, k) => a + (Number(aggregatedPlatforms[k].paidReach) || 0), 0),
+        conversions: activePlatforms.reduce((a, k) => a + (Number(aggregatedPlatforms[k].conversions) || 0), 0),
     };
 
     const cards = [
@@ -157,7 +187,7 @@ export async function generateReportPdf(report: any, metrics: any) {
     y += 7;
 
     const fullTable = activePlatforms.map((key) => {
-        const p = metrics.platforms[key];
+        const p = aggregatedPlatforms[key];
         return [
             PLATFORM_NAMES[key] || key,
             (p.impressions || 0).toLocaleString(),
@@ -191,85 +221,116 @@ export async function generateReportPdf(report: any, metrics: any) {
     doc.text("PER-PLATFORM DETAILED METRICS", margin, y);
     y += 7;
 
-    for (const key of activePlatforms) {
-        const p = metrics.platforms[key];
-        const name = PLATFORM_NAMES[key] || key;
+    for (const camp of campaigns) {
+        const campActivePlats = Object.keys(camp.platforms || {}).filter(k =>
+            Object.values(camp.platforms[k]).some((v: any) => Number(v) > 0) || (camp.linkedItems || []).some((li: any) => li.platform === k)
+        );
 
-        checkPage(50);
+        if (campActivePlats.length === 0) continue;
 
-        // Platform sub-header
-        doc.setFillColor(P[0], P[1], P[2]);
-        doc.roundedRect(margin, y, cW, 8, 1.5, 1.5, "F");
-        doc.setTextColor(WHITE[0], WHITE[1], WHITE[2]);
-        doc.setFontSize(9);
+        checkPage(20);
+        doc.setTextColor(P[0], P[1], P[2]);
+        doc.setFontSize(14);
         doc.setFont("helvetica", "bold");
-        doc.text(name.toUpperCase(), margin + 4, y + 5.5);
+        doc.text(camp.name.toUpperCase(), margin, y);
+        y += 8;
 
-        // Brief status badge
-        doc.setFillColor(WHITE[0], WHITE[1], WHITE[2], 0.2);
-        doc.setTextColor(WHITE[0], WHITE[1], WHITE[2]);
-        doc.setFontSize(6);
-        doc.text("PERFORMANCE INSIGHTS", pageW - margin - 4, y + 5.5, { align: "right" });
+        for (const key of campActivePlats) {
+            const p = camp.platforms[key];
+            const name = PLATFORM_NAMES[key] || key;
 
-        y += 11;
+            checkPage(50);
 
-        // All fields for this platform
-        const platformRows: [string, string][] = [];
-        if (p.impressions) platformRows.push(["Impressions", p.impressions.toLocaleString()]);
-        if (p.engagement) platformRows.push(["Engagements", p.engagement.toLocaleString()]);
-        if (p.followers) platformRows.push(["New Followers", p.followers.toLocaleString()]);
-        if (p.views) platformRows.push(["Total Views", p.views.toLocaleString()]);
-        if (p.shares) platformRows.push(["Content Shares", p.shares.toLocaleString()]);
-        if (p.saves) platformRows.push(["Post Saves", p.saves.toLocaleString()]);
-        if (p.watchTime) platformRows.push(["Avg. Watch Time", `${p.watchTime}s`]);
-        if (p.paidReach) platformRows.push(["Paid Reach", p.paidReach.toLocaleString()]);
-        if (p.conversions) platformRows.push(["Conversions", p.conversions.toLocaleString()]);
-        if (p.spend) platformRows.push(["Ad Investment", `$${p.spend.toLocaleString()}`]);
-        if (p.clicks) platformRows.push(["Link Clicks", p.clicks.toLocaleString()]);
-        if (p.cpc) platformRows.push(["CPC", `$${p.cpc}`]);
+            // Platform sub-header
+            doc.setFillColor(P[0], P[1], P[2]);
+            doc.roundedRect(margin, y, cW, 8, 1.5, 1.5, "F");
+            doc.setTextColor(WHITE[0], WHITE[1], WHITE[2]);
+            doc.setFontSize(9);
+            doc.setFont("helvetica", "bold");
+            doc.text(`${camp.name} — ${name.toUpperCase()}`, margin + 4, y + 5.5);
 
-        // Calculations
-        const engRate = p.impressions > 0 ? ((p.engagement / p.impressions) * 100).toFixed(2) : "0.00";
-        platformRows.push(["Engagement Rate", `${engRate}%`]);
+            // Brief status badge
+            doc.setFillColor(WHITE[0], WHITE[1], WHITE[2], 0.2);
+            doc.setTextColor(WHITE[0], WHITE[1], WHITE[2]);
+            doc.setFontSize(6);
+            doc.text("PERFORMANCE INSIGHTS", pageW - margin - 4, y + 5.5, { align: "right" });
 
-        if (p.conversions > 0 && p.spend > 0) {
-            const cpa = (p.spend / p.conversions).toFixed(2);
-            platformRows.push(["Cost / Result", `$${cpa}`]);
-        }
+            y += 11;
 
-        if (platformRows.length > 0) {
-            // Render as two-column grid (two pairs per row)
-            const chunked: [string, string][][] = [];
-            for (let i = 0; i < platformRows.length; i += 2) {
-                chunked.push(platformRows.slice(i, i + 2));
+            // All fields for this platform
+            const platformRows: [string, string][] = [];
+            if (p.impressions) platformRows.push(["Impressions", p.impressions.toLocaleString()]);
+            if (p.engagement) platformRows.push(["Engagements", p.engagement.toLocaleString()]);
+            if (p.followers) platformRows.push(["New Followers", p.followers.toLocaleString()]);
+            if (p.views) platformRows.push(["Total Views", p.views.toLocaleString()]);
+            if (p.shares) platformRows.push(["Content Shares", p.shares.toLocaleString()]);
+            if (p.saves) platformRows.push(["Post Saves", p.saves.toLocaleString()]);
+            if (p.watchTime) platformRows.push(["Avg. Watch Time", `${p.watchTime}s`]);
+            if (p.paidReach) platformRows.push(["Paid Reach", p.paidReach.toLocaleString()]);
+            if (p.conversions) platformRows.push(["Conversions", p.conversions.toLocaleString()]);
+            if (p.spend) platformRows.push(["Ad Investment", `$${p.spend.toLocaleString()}`]);
+            if (p.clicks) platformRows.push(["Link Clicks", p.clicks.toLocaleString()]);
+            if (p.cpc) platformRows.push(["CPC", `$${p.cpc}`]);
+
+            // Calculations
+            const engRate = p.impressions > 0 ? ((p.engagement / p.impressions) * 100).toFixed(2) : "0.00";
+            platformRows.push(["Engagement Rate", `${engRate}%`]);
+
+            if (p.conversions > 0 && p.spend > 0) {
+                const cpa = (p.spend / p.conversions).toFixed(2);
+                platformRows.push(["Cost / Result", `$${cpa}`]);
             }
 
-            for (const chunk of chunked) {
-                checkPage(10);
-                chunk.forEach(([label, value], ci) => {
-                    const bx = margin + ci * (cW / 2 + 1.5);
-                    doc.setFillColor(LGRAY[0], LGRAY[1], LGRAY[2]);
-                    doc.roundedRect(bx, y, cW / 2 - 1.5, 10, 1, 1, "F");
+            if (platformRows.length > 0) {
+                // Render as two-column grid (two pairs per row)
+                const chunked: [string, string][][] = [];
+                for (let i = 0; i < platformRows.length; i += 2) {
+                    chunked.push(platformRows.slice(i, i + 2));
+                }
 
-                    doc.setTextColor(MGRAY[0], MGRAY[1], MGRAY[2]);
-                    doc.setFontSize(5.5);
-                    doc.setFont("helvetica", "bold");
-                    doc.text(label.toUpperCase(), bx + 3, y + 3.5);
+                for (const chunk of chunked) {
+                    checkPage(10);
+                    chunk.forEach(([label, value], ci) => {
+                        const bx = margin + ci * (cW / 2 + 1.5);
+                        doc.setFillColor(LGRAY[0], LGRAY[1], LGRAY[2]);
+                        doc.roundedRect(bx, y, cW / 2 - 1.5, 10, 1, 1, "F");
 
-                    doc.setTextColor(DARK[0], DARK[1], DARK[2]);
-                    doc.setFontSize(8.5);
-                    doc.text(value, bx + 3, y + 8);
-                });
-                y += 12;
+                        doc.setTextColor(MGRAY[0], MGRAY[1], MGRAY[2]);
+                        doc.setFontSize(5.5);
+                        doc.setFont("helvetica", "bold");
+                        doc.text(label.toUpperCase(), bx + 3, y + 3.5);
+
+                        doc.setTextColor(DARK[0], DARK[1], DARK[2]);
+                        doc.setFontSize(8.5);
+                        doc.text(value, bx + 3, y + 8);
+                    });
+                    y += 12;
+                }
             }
-        } else {
-            doc.setTextColor(MGRAY[0], MGRAY[1], MGRAY[2]);
-            doc.setFontSize(8.5);
-            doc.setFont("helvetica", "italic");
-            doc.text("No data recorded for this platform.", margin + 2, y + 5);
-            y += 9;
+
+            // Note: Currently not embedding linked post images in PDF due to complexity of async image loading in jsPDF loop, 
+            // but we can add placeholders or captions if needed. 
+            // For now, focusing on data accuracy.
+
+            if (p.comment) {
+                checkPage(15);
+                doc.setFillColor(P[0], P[1], P[2], 0.05);
+                doc.roundedRect(margin, y, cW, 12, 1, 1, "F");
+                doc.setTextColor(P[0], P[1], P[2]);
+                doc.setFontSize(6);
+                doc.setFont("helvetica", "bold");
+                doc.text("ACCOUNT MANAGER NOTE", margin + 3, y + 4);
+
+                doc.setTextColor(DARK[0], DARK[1], DARK[2]);
+                doc.setFontSize(7.5);
+                doc.setFont("helvetica", "normal");
+                const commentLines = doc.splitTextToSize(p.comment, cW - 6);
+                doc.text(commentLines, margin + 3, y + 8);
+                y += 15;
+            }
+
+            y += 4;
         }
-        y += 4;
     }
 
     // ─── WEBSITE / SEO ────────────────────────────────────────────────────────

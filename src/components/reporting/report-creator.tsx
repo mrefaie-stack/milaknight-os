@@ -37,8 +37,13 @@ import {
     MessageSquare,
     Save,
     BarChart3,
-    Trash2
+    Trash2,
+    Link,
+    X,
+    Image as ImageIcon
 } from "lucide-react";
+import { getApprovedPosts } from "@/app/actions/action-plan";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 const PLATFORMS = [
     { id: "facebook", name: "Facebook", icon: Facebook, color: "text-blue-600" },
@@ -108,13 +113,67 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
     const router = useRouter();
 
     const initialMetrics = initialData?.metrics ? (typeof initialData.metrics === 'string' ? JSON.parse(initialData.metrics) : initialData.metrics) : {
-        platforms: {},
+        campaigns: [
+            { id: "main", name: isRtl ? "الحملة الرئيسية" : "Main Campaign", platforms: {}, linkedItems: [] }
+        ],
         emailMarketing: { emailsSent: 0, openRate: 0, clickRate: 0, unsubscribes: 0 },
         seo: { score: 0, rank: "", notes: "", speed: 0, mobile: 0 },
         summary: ""
     };
 
     const [metrics, setMetrics] = useState(initialMetrics);
+    const [selectedCampaignId, setSelectedCampaignId] = useState(initialMetrics.campaigns[0].id);
+    const [approvedPosts, setApprovedPosts] = useState<any[]>([]);
+    const [isPostSelectorOpen, setIsPostSelectorOpen] = useState(false);
+    const [selectedPlatformForLinking, setSelectedPlatformForLinking] = useState<string | null>(null);
+
+    const activeCampaign = useMemo(() =>
+        metrics.campaigns.find((c: any) => c.id === selectedCampaignId) || metrics.campaigns[0]
+        , [metrics.campaigns, selectedCampaignId]);
+
+    // Fetch approved posts when client changes
+    const [currentClientId, setCurrentClientId] = useState(initialData?.clientId || "");
+
+    useMemo(async () => {
+        if (currentClientId) {
+            try {
+                const posts = await getApprovedPosts(currentClientId);
+                setApprovedPosts(posts);
+            } catch (err) {
+                console.error("Failed to fetch posts", err);
+            }
+        }
+    }, [currentClientId]);
+
+    const addCampaign = () => {
+        const id = Math.random().toString(36).substr(2, 9);
+        setMetrics((prev: any) => ({
+            ...prev,
+            campaigns: [
+                ...prev.campaigns,
+                { id, name: isRtl ? "حملة جديدة" : "New Campaign", platforms: {}, linkedItems: [] }
+            ]
+        }));
+        setSelectedCampaignId(id);
+    };
+
+    const deleteCampaign = (id: string) => {
+        if (metrics.campaigns.length <= 1) return;
+        setMetrics((prev: any) => ({
+            ...prev,
+            campaigns: prev.campaigns.filter((c: any) => c.id !== id)
+        }));
+        if (selectedCampaignId === id) {
+            setSelectedCampaignId(metrics.campaigns[0].id);
+        }
+    };
+
+    const updateCampaignName = (id: string, name: string) => {
+        setMetrics((prev: any) => ({
+            ...prev,
+            campaigns: prev.campaigns.map((c: any) => c.id === id ? { ...c, name } : c)
+        }));
+    };
 
     const updatePlatformMetric = (platformId: string, field: string, value: any) => {
         const numFields = ['followers', 'engagement', 'views', 'impressions', 'paidReach', 'spend', 'conversions', 'organicReach', 'shares', 'watchTime', 'saves', 'profileVisits', 'cpc', 'ctr'];
@@ -122,60 +181,40 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
 
         setMetrics((prev: any) => ({
             ...prev,
-            platforms: {
-                ...prev.platforms,
-                [platformId]: {
-                    ...prev.platforms[platformId],
-                    [field]: val
+            campaigns: prev.campaigns.map((c: any) => c.id === selectedCampaignId ? {
+                ...c,
+                platforms: {
+                    ...c.platforms,
+                    [platformId]: {
+                        ...(c.platforms[platformId] || {}),
+                        [field]: val
+                    }
                 }
-            }
+            } : c)
         }));
     };
 
-    const addCampaign = (platformId: string) => {
-        setMetrics((prev: any) => {
-            const platform = prev.platforms[platformId] || {};
-            const campaigns = [...(platform.paidCampaigns || [])];
-            campaigns.push({ name: "", objective: "AWARENESS", reach: 0, results: 0, spend: 0 });
-            return {
-                ...prev,
-                platforms: {
-                    ...prev.platforms,
-                    [platformId]: { ...platform, paidCampaigns: campaigns }
-                }
-            };
-        });
+    const linkPost = (post: any) => {
+        setMetrics((prev: any) => ({
+            ...prev,
+            campaigns: prev.campaigns.map((c: any) => c.id === selectedCampaignId ? {
+                ...c,
+                linkedItems: [...(c.linkedItems || []), { ...post, platform: selectedPlatformForLinking }]
+            } : c)
+        }));
+        setIsPostSelectorOpen(false);
     };
 
-    const removeCampaign = (platformId: string, index: number) => {
-        setMetrics((prev: any) => {
-            const platform = prev.platforms[platformId] || {};
-            const campaigns = (platform.paidCampaigns || []).filter((_: any, i: number) => i !== index);
-            return {
-                ...prev,
-                platforms: {
-                    ...prev.platforms,
-                    [platformId]: { ...platform, paidCampaigns: campaigns }
-                }
-            };
-        });
+    const unlinkPost = (postId: string) => {
+        setMetrics((prev: any) => ({
+            ...prev,
+            campaigns: prev.campaigns.map((c: any) => c.id === selectedCampaignId ? {
+                ...c,
+                linkedItems: c.linkedItems.filter((p: any) => p.id !== postId)
+            } : c)
+        }));
     };
 
-    const updateCampaign = (platformId: string, index: number, field: string, value: any) => {
-        setMetrics((prev: any) => {
-            const platform = prev.platforms[platformId] || {};
-            const campaigns = [...(platform.paidCampaigns || [])];
-            const val = ['reach', 'results', 'spend'].includes(field) ? (parseFloat(value) || 0) : value;
-            campaigns[index] = { ...campaigns[index], [field]: val };
-            return {
-                ...prev,
-                platforms: {
-                    ...prev.platforms,
-                    [platformId]: { ...platform, paidCampaigns: campaigns }
-                }
-            };
-        });
-    };
 
     const updateEmailMetric = (field: string, value: string) => {
         const numValue = parseFloat(value) || 0;
@@ -200,7 +239,7 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
 
     // Auto-calculations for the UI
     const getPlatformCalcs = (platformId: string) => {
-        const p = metrics.platforms[platformId] || {};
+        const p = activeCampaign.platforms[platformId] || {};
         const engRate = p.impressions > 0 ? ((p.engagement / p.impressions) * 100).toFixed(2) : "0.00";
 
         // Use paidCampaigns if they exist to drive spend/results, otherwise use top-level metrics
@@ -219,26 +258,89 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
         return { engRate, cpa, cpc, totalSpend, totalResults };
     };
 
+    const addPaidCampaign = (platformId: string) => {
+        setMetrics((prev: any) => ({
+            ...prev,
+            campaigns: prev.campaigns.map((c: any) => c.id === selectedCampaignId ? {
+                ...c,
+                platforms: {
+                    ...c.platforms,
+                    [platformId]: {
+                        ...(c.platforms[platformId] || {}),
+                        paidCampaigns: [...((c.platforms[platformId] || {}).paidCampaigns || []), { name: "", objective: "AWARENESS", reach: 0, results: 0, spend: 0 }]
+                    }
+                }
+            } : c)
+        }));
+    };
+
+    const removePaidCampaign = (platformId: string, index: number) => {
+        setMetrics((prev: any) => ({
+            ...prev,
+            campaigns: prev.campaigns.map((c: any) => c.id === selectedCampaignId ? {
+                ...c,
+                platforms: {
+                    ...c.platforms,
+                    [platformId]: {
+                        ...c.platforms[platformId],
+                        paidCampaigns: (c.platforms[platformId].paidCampaigns || []).filter((_: any, i: number) => i !== index)
+                    }
+                }
+            } : c)
+        }));
+    };
+
+    const updatePaidCampaign = (platformId: string, index: number, field: string, value: any) => {
+        setMetrics((prev: any) => ({
+            ...prev,
+            campaigns: prev.campaigns.map((c: any) => c.id === selectedCampaignId ? {
+                ...c,
+                platforms: {
+                    ...c.platforms,
+                    [platformId]: {
+                        ...c.platforms[platformId],
+                        paidCampaigns: (c.platforms[platformId].paidCampaigns || []).map((camp: any, i: number) => {
+                            if (i !== index) return camp;
+                            const val = ['reach', 'results', 'spend'].includes(field) ? (parseFloat(value) || 0) : value;
+                            return { ...camp, [field]: val };
+                        })
+                    }
+                }
+            } : c)
+        }));
+    };
+
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
         setLoading(true);
         const formData = new FormData(e.currentTarget);
-
         const clientId = formData.get("clientId") as string;
         const month = formData.get("month") as string;
+
+        // Calculate Global Totals across all campaigns
+        const totals = { reach: 0, spend: 0, conversions: 0 };
+        metrics.campaigns.forEach((camp: any) => {
+            Object.values(camp.platforms || {}).forEach((p: any) => {
+                totals.reach += (Number(p.organicReach) || 0) + (Number(p.paidReach) || 0);
+                totals.spend += (Number(p.spend) || 0);
+                totals.conversions += (Number(p.conversions) || 0);
+
+                // Also add spend from individual paid campaigns if they override the top level
+                if (p.paidCampaigns?.length > 0) {
+                    const campaignSpend = p.paidCampaigns.reduce((acc: number, c: any) => acc + (Number(c.spend) || 0), 0);
+                    // If campaign spend is higher than top-level spend, use campaign total
+                    if (campaignSpend > (Number(p.spend) || 0)) {
+                        totals.spend += (campaignSpend - (Number(p.spend) || 0));
+                    }
+                }
+            });
+        });
 
         const finalMetrics = {
             ...metrics,
             summary: formData.get("summary") as string,
-            totals: { reach: 0, spend: 0, conversions: 0 }
+            totals
         };
-
-        PLATFORMS.forEach(p => {
-            const platformData = finalMetrics.platforms[p.id] || {};
-            finalMetrics.totals.reach += (Number(platformData.organicReach) || 0) + (Number(platformData.paidReach) || 0);
-            finalMetrics.totals.spend += (Number(platformData.spend) || 0);
-            finalMetrics.totals.conversions += (Number(platformData.conversions) || 0);
-        });
 
         try {
             if (initialData) {
@@ -274,7 +376,7 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                         <Label className={`text-[10px] font-black uppercase text-muted-foreground ${isRtl ? 'mr-1 text-right' : 'ml-1'}`}>
                             {isRtl ? 'العميل' : 'Client'}
                         </Label>
-                        <Select name="clientId" defaultValue={initialData?.clientId} required>
+                        <Select name="clientId" defaultValue={initialData?.clientId} onValueChange={setCurrentClientId} required>
                             <SelectTrigger className="w-64 bg-background/50 border-white/5 h-12 text-base font-bold rounded-xl shadow-lg">
                                 <SelectValue placeholder={isRtl ? 'اختر العميل' : 'Select Client'} />
                             </SelectTrigger>
@@ -296,6 +398,54 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                         />
                     </div>
                 </div>
+            </div>
+
+            {/* Campaign Management Bar */}
+            <div className="bg-card/30 p-4 rounded-2xl border border-white/10 backdrop-blur-md shadow-xl flex flex-wrap items-center gap-4">
+                <div className="flex-1 flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+                    {metrics.campaigns.map((camp: any) => (
+                        <div key={camp.id} className="flex items-center gap-1 group/btn">
+                            <Button
+                                type="button"
+                                variant={selectedCampaignId === camp.id ? "default" : "outline"}
+                                className={`rounded-xl h-10 px-4 font-bold transition-all ${selectedCampaignId === camp.id ? 'scale-105 shadow-lg' : 'bg-background/40 border-white/5 opacity-70 hover:opacity-100'}`}
+                                onClick={() => setSelectedCampaignId(camp.id)}
+                            >
+                                {camp.name}
+                            </Button>
+                            {metrics.campaigns.length > 1 && (
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 rounded-lg text-muted-foreground hover:text-destructive opacity-0 group-hover/btn:opacity-100 transition-opacity"
+                                    onClick={() => deleteCampaign(camp.id)}
+                                >
+                                    <Trash2 className="h-4 w-4" />
+                                </Button>
+                            )}
+                        </div>
+                    ))}
+                    <Button
+                        type="button"
+                        variant="outline"
+                        className="rounded-xl h-10 px-4 font-bold border-dashed border-primary/40 text-primary hover:bg-primary/5"
+                        onClick={addCampaign}
+                    >
+                        {isRtl ? '+ إضافة حملة' : '+ Add Campaign'}
+                    </Button>
+                </div>
+
+                {selectedCampaignId && (
+                    <div className="flex items-center gap-2">
+                        <Input
+                            className="w-48 h-10 bg-background/50 border-white/5 rounded-xl text-sm font-bold"
+                            value={activeCampaign.name}
+                            onChange={(e) => updateCampaignName(selectedCampaignId, e.target.value)}
+                            placeholder={isRtl ? "تعديل اسم الحملة" : "Rename Campaign"}
+                        />
+                    </div>
+                )}
             </div>
 
             <Tabs defaultValue="facebook" className="w-full">
@@ -438,21 +588,21 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                                                     variant="outline"
                                                     size="sm"
                                                     className="h-7 text-[10px] font-bold rounded-lg border-primary/20 text-primary hover:bg-primary/10"
-                                                    onClick={() => addCampaign(p.id)}
+                                                    onClick={() => addPaidCampaign(p.id)}
                                                 >
                                                     {isRtl ? '+ إضافة حملة' : '+ Add Campaign'}
                                                 </Button>
                                             </div>
 
                                             <div className="space-y-4">
-                                                {(metrics.platforms[p.id]?.paidCampaigns || []).map((camp: any, idx: number) => (
+                                                {(activeCampaign.platforms[p.id]?.paidCampaigns || []).map((camp: any, idx: number) => (
                                                     <div key={idx} className="p-4 rounded-xl bg-white/5 border border-white/5 space-y-3 relative group/camp">
                                                         <Button
                                                             type="button"
                                                             variant="ghost"
                                                             size="icon"
                                                             className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-destructive text-white opacity-0 group-hover/camp:opacity-100 transition-opacity"
-                                                            onClick={() => removeCampaign(p.id, idx)}
+                                                            onClick={() => removePaidCampaign(p.id, idx)}
                                                         >
                                                             <Trash2 className="h-3 w-3" />
                                                         </Button>
@@ -460,7 +610,7 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                                                         <Input
                                                             placeholder={isRtl ? "اسم الحملة" : "Campaign Name"}
                                                             value={camp.name}
-                                                            onChange={(e) => updateCampaign(p.id, idx, 'name', e.target.value)}
+                                                            onChange={(e) => updatePaidCampaign(p.id, idx, 'name', e.target.value)}
                                                             className="h-8 text-xs font-bold bg-background/50 border-white/5"
                                                         />
 
@@ -471,7 +621,7 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                                                                 </Label>
                                                                 <Select
                                                                     value={camp.objective}
-                                                                    onValueChange={(v) => updateCampaign(p.id, idx, 'objective', v)}
+                                                                    onValueChange={(v) => updatePaidCampaign(p.id, idx, 'objective', v)}
                                                                 >
                                                                     <SelectTrigger className="h-9 text-[10px] font-bold bg-background/50 border-white/5 rounded-lg">
                                                                         <SelectValue placeholder="Objective" />
@@ -495,7 +645,7 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                                                                     type="number"
                                                                     placeholder="0"
                                                                     value={camp.spend}
-                                                                    onChange={(e) => updateCampaign(p.id, idx, 'spend', e.target.value)}
+                                                                    onChange={(e) => updatePaidCampaign(p.id, idx, 'spend', e.target.value)}
                                                                     className="h-9 text-xs font-bold bg-background/50 border-white/5 rounded-lg"
                                                                 />
                                                             </div>
@@ -510,7 +660,7 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                                                                     type="number"
                                                                     placeholder="0"
                                                                     value={camp.reach}
-                                                                    onChange={(e) => updateCampaign(p.id, idx, 'reach', e.target.value)}
+                                                                    onChange={(e) => updatePaidCampaign(p.id, idx, 'reach', e.target.value)}
                                                                     className="h-9 text-xs font-bold bg-background/50 border-white/5 rounded-lg"
                                                                 />
                                                             </div>
@@ -527,7 +677,7 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                                                                     type="number"
                                                                     placeholder="0"
                                                                     value={camp.results}
-                                                                    onChange={(e) => updateCampaign(p.id, idx, 'results', e.target.value)}
+                                                                    onChange={(e) => updatePaidCampaign(p.id, idx, 'results', e.target.value)}
                                                                     className="h-9 text-xs font-bold bg-background/50 border-white/5 rounded-lg"
                                                                 />
                                                             </div>
@@ -542,18 +692,67 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                                                 <MetricField
                                                     label="Clicks"
                                                     icon={MousePointer2}
-                                                    value={metrics.platforms[p.id]?.clicks}
+                                                    value={activeCampaign.platforms[p.id]?.clicks}
                                                     onChange={(v) => updatePlatformMetric(p.id, 'clicks', v)}
                                                 />
                                                 <MetricField
                                                     label="CPC"
                                                     icon={DollarSign}
-                                                    value={metrics.platforms[p.id]?.cpc}
+                                                    value={activeCampaign.platforms[p.id]?.cpc}
                                                     onChange={(v) => updatePlatformMetric(p.id, 'cpc', v)}
                                                     prefix="SAR "
                                                 />
                                             </div>
                                         )}
+
+                                        {/* Linked Posts Section */}
+                                        <div className="space-y-3 pt-2">
+                                            <div className="flex items-center justify-between">
+                                                <Label className="text-[10px] font-black uppercase text-primary/80 tracking-widest">
+                                                    {isRtl ? 'المنشورات المرتبطة' : 'Linked Posts'}
+                                                </Label>
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="h-7 text-[10px] font-bold text-primary"
+                                                    onClick={() => {
+                                                        setSelectedPlatformForLinking(p.id);
+                                                        setIsPostSelectorOpen(true);
+                                                    }}
+                                                >
+                                                    <Link className="h-3 w-3 mr-1" />
+                                                    {isRtl ? 'ربط منشور' : 'Link Post'}
+                                                </Button>
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-3">
+                                                {(activeCampaign.linkedItems || []).filter((item: any) => item.platform === p.id).map((item: any) => (
+                                                    <div key={item.id} className="relative group/post aspect-square rounded-xl overflow-hidden border border-white/10 bg-white/5">
+                                                        {item.imageUrl ? (
+                                                            <img src={item.imageUrl} alt="" className="w-full h-full object-cover" />
+                                                        ) : item.videoUrl ? (
+                                                            <div className="w-full h-full bg-slate-900 flex items-center justify-center">
+                                                                <Video className="h-6 w-6 text-white/40" />
+                                                            </div>
+                                                        ) : (
+                                                            <div className="w-full h-full p-2 text-[8px] overflow-hidden text-muted-foreground">
+                                                                {item.captionEn || item.captionAr}
+                                                            </div>
+                                                        )}
+                                                        <Button
+                                                            type="button"
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="absolute top-1 right-1 h-6 w-6 rounded-full bg-destructive text-white opacity-0 group-hover/post:opacity-100 transition-opacity"
+                                                            onClick={() => unlinkPost(item.id)}
+                                                        >
+                                                            <X className="h-3 w-3" />
+                                                        </Button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
                                     </CardContent>
                                 </Card>
                             </div>
@@ -566,7 +765,7 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                                 <textarea
                                     className={`flex w-full rounded-2xl border border-white/10 bg-background/50 p-4 text-sm font-medium shadow-inner focus:border-primary/50 focus:ring-primary/20 transition-all outline-none placeholder:text-muted-foreground/40 min-h-[80px] ${isRtl ? 'text-right' : ''}`}
                                     placeholder={isRtl ? `أضف رؤية أو تعليقاً على أداء ${p.name} هذا الشهر...` : `Add a specific insight or comment about ${p.name} performance this month...`}
-                                    value={metrics.platforms[p.id]?.comment || ""}
+                                    value={activeCampaign.platforms[p.id]?.comment || ""}
                                     onChange={e => updatePlatformMetric(p.id, 'comment', e.target.value)}
                                     dir={isRtl ? 'rtl' : 'ltr'}
                                 />
@@ -734,6 +933,49 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                     )}
                 </Button>
             </div>
-        </form>
+            {/* Post Selector Dialog */}
+            <Dialog open={isPostSelectorOpen} onOpenChange={setIsPostSelectorOpen}>
+                <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto bg-card border-white/10">
+                    <DialogHeader>
+                        <DialogTitle>{isRtl ? 'اختر منشوراً للربط' : 'Select Post to Link'}</DialogTitle>
+                    </DialogHeader>
+                    {approvedPosts.length === 0 ? (
+                        <div className="py-12 text-center text-muted-foreground">
+                            {isRtl ? 'لا توجد منشورات معتمدة لهذا العميل.' : 'No approved posts found for this client.'}
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 p-4">
+                            {approvedPosts.filter(p => p.platform === selectedPlatformForLinking).map((post) => (
+                                <div
+                                    key={post.id}
+                                    className="cursor-pointer group relative aspect-square rounded-xl overflow-hidden border border-white/5 hover:border-primary/50 transition-all"
+                                    onClick={() => linkPost(post)}
+                                >
+                                    {post.imageUrl ? (
+                                        <img src={post.imageUrl} alt="" className="w-full h-full object-cover" />
+                                    ) : post.videoUrl ? (
+                                        <div className="w-full h-full bg-slate-900 flex items-center justify-center">
+                                            <Video className="h-8 w-8 text-white/40" />
+                                        </div>
+                                    ) : (
+                                        <div className="w-full h-full p-4 bg-white/5 text-[10px] text-muted-foreground line-clamp-6">
+                                            {post.captionEn || post.captionAr}
+                                        </div>
+                                    )}
+                                    <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                        <Link className="h-6 w-6 text-white" />
+                                    </div>
+                                    <div className="absolute bottom-0 left-0 right-0 p-2 bg-black/60 backdrop-blur-sm">
+                                        <p className="text-[8px] text-white font-bold truncate">
+                                            {new Date(post.scheduledDate).toLocaleDateString()}
+                                        </p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </DialogContent>
+            </Dialog>
+        </form >
     );
 }

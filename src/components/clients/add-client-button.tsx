@@ -35,7 +35,7 @@ const PLATFORMS = [
 
 const PACKAGES = ["BASIC", "PREMIUM", "ENTERPRISE", "CUSTOM"];
 
-export function AddClientButton({ ams }: { ams: any[] }) {
+export function AddClientButton({ ams, services }: { ams: any[]; services: any[] }) {
     const { isRtl } = useLanguage();
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -81,7 +81,10 @@ export function AddClientButton({ ams }: { ams: any[] }) {
         e.preventDefault();
         setLoading(true);
         const formData = new FormData(e.currentTarget);
-        formData.append("activeServices", selectedPlatforms.join(","));
+        formData.append("services", selectedPlatforms.join(","));
+        // Keep activeServices for report logic (e.g. "Facebook", "Instagram")
+        // We might want to migrate reports to use Global Services too later.
+        formData.append("activeServices", PLATFORMS.filter(p => selectedPlatforms.some(spId => services.find(s => s.id === spId)?.nameEn.includes(p))).join(","));
 
         // Explicitly append state-managed fields to ensure they are sent
         formData.set("briefAr", briefAr);
@@ -180,18 +183,18 @@ export function AddClientButton({ ams }: { ams: any[] }) {
 
                         <div className="space-y-3">
                             <Label className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
-                                {isRtl ? "المنصات النشطة (تحدد هيكل التقرير)" : "Active Platforms (Determines Report Structure)"}
+                                {isRtl ? "الخدمات المتعاقد عليها" : "Contracted Services"}
                             </Label>
                             <div className={`pt-1 grid grid-cols-2 gap-2 ${isRtl ? 'text-right' : ''}`}>
-                                {PLATFORMS.map((platform) => (
-                                    <div key={platform} className={`flex items-center gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                                {services.map((service) => (
+                                    <div key={service.id} className={`flex items-center gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
                                         <Checkbox
-                                            id={platform}
-                                            checked={selectedPlatforms.includes(platform)}
-                                            onCheckedChange={() => togglePlatform(platform)}
+                                            id={service.id}
+                                            checked={selectedPlatforms.includes(service.id)}
+                                            onCheckedChange={() => togglePlatform(service.id)}
                                         />
-                                        <label htmlFor={platform} className="text-sm font-medium leading-none cursor-pointer">
-                                            {platform}
+                                        <label htmlFor={service.id} className="text-sm font-medium leading-none cursor-pointer">
+                                            {isRtl ? service.nameAr : service.nameEn}
                                         </label>
                                     </div>
                                 ))}

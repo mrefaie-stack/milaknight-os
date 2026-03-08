@@ -307,3 +307,20 @@ export async function deleteContentItem(itemId: string, planId: string) {
     revalidatePath(`/am/action-plans/${planId}`);
     return { success: true };
 }
+
+export async function getApprovedPosts(clientId: string) {
+    const session = await getServerSession(authOptions);
+    if (!session) throw new Error("Unauthorized");
+
+    // Fetch approved content items for this client from across all action plans
+    return prisma.contentItem.findMany({
+        where: {
+            plan: {
+                clientId,
+                status: "APPROVED"
+            },
+            status: "APPROVED"
+        },
+        orderBy: { scheduledDate: "desc" }
+    });
+}

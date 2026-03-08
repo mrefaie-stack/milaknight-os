@@ -223,7 +223,7 @@ export function ClientProfileView({ client, basePath, showNewButtons = false }: 
                 )}
 
                 {/* Active Services */}
-                {activeServices.length > 0 && (
+                {(client.services?.length > 0 || activeServices.length > 0) && (
                     <div className="p-5 rounded-2xl bg-card/40 border border-white/8 space-y-3">
                         <div className={`flex items-center gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
                             <Globe className="h-4 w-4 text-emerald-500" />
@@ -232,7 +232,20 @@ export function ClientProfileView({ client, basePath, showNewButtons = false }: 
                             </span>
                         </div>
                         <div className={`flex flex-wrap gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
-                            {activeServices.map((svc: string) => (
+                            {/* Priority for logical services */}
+                            {client.services && client.services.map((svc: any) => {
+                                const gs = svc.globalService;
+                                if (!gs) return null;
+                                return (
+                                    <Badge key={svc.id} variant="secondary" className="px-3 py-2 rounded-xl border border-white/10 bg-white/5 text-xs font-black flex items-center gap-2">
+                                        {/* Dynamic Icon placeholder or lucide mapping */}
+                                        {isRtl ? gs.nameAr : gs.nameEn}
+                                    </Badge>
+                                );
+                            })}
+
+                            {/* Fallback for legacy services not yet migrated */}
+                            {!client.services?.length && activeServices.map((svc: string) => (
                                 <span key={svc} className="px-3 py-1.5 rounded-full border border-white/10 bg-white/5 text-xs font-black">{svc}</span>
                             ))}
                         </div>

@@ -24,7 +24,7 @@ const REPORT_STATUS_AR: Record<string, string> = {
     SENT: "مُرسل", DRAFT: "مسودة",
 };
 
-export function ClientList({ clients, accountManagers }: { clients: any[], accountManagers?: any[] }) {
+export function ClientList({ clients, accountManagers, services }: { clients: any[], accountManagers?: any[], services?: any[] }) {
     const { isRtl } = useLanguage();
     const [search, setSearch] = useState("");
 
@@ -156,7 +156,7 @@ export function ClientList({ clients, accountManagers }: { clients: any[], accou
                                     </Button>
                                 </Link>
                                 {accountManagers && (
-                                    <EditClientDialog client={client} accountManagers={accountManagers} />
+                                    <EditClientDialog client={client} accountManagers={accountManagers} services={services} />
                                 )}
                             </div>
                         </div>

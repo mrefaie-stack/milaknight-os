@@ -42,7 +42,9 @@
         "action_plans": "خطط المحتوى",
         "reports": "تقارير الأداء",
         "performance": "تقارير الأداء",
-        "deletions": "طلبات الحذف"
+        "services": "إدارة الخدمات",
+        "deletions": "طلبات الحذف",
+        "service_requests": "طلبات الخدمات"
     },
     "reports": {
         "title": "تقارير الأداء",

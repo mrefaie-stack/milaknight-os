@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Printer, Facebook, Instagram, Video, Share2, Linkedin, Search, Youtube, TrendingUp, DollarSign, Target, Globe, BarChart3, Send, Mail, Trash2, Download, Loader2, MousePointer2, Zap, MessageSquare } from "lucide-react";
+import { Printer, Facebook, Instagram, Video, Share2, Linkedin, Search, Youtube, TrendingUp, DollarSign, Target, Globe, BarChart3, Send, Mail, Trash2, Download, Loader2, MousePointer2, Zap, MessageSquare, Image as ImageIcon } from "lucide-react";
 import { Bar, BarChart, Pie, PieChart, Cell, RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, CartesianGrid } from "recharts";
 import { publishReport, requestReportDeletion } from "@/app/actions/report";
 import { useState } from "react";
@@ -80,21 +80,53 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
         }
     }
 
-    // Prepare chart data only for platforms with data
-    const activePlatforms = Object.keys(metrics.platforms || {}).filter(key => {
-        const p = metrics.platforms[key];
+    // NEW: Handle Multi-Campaign structure
+    const campaigns = metrics.campaigns || [
+        { id: "default", name: "Main", platforms: metrics.platforms || {}, linkedItems: [] }
+    ];
+
+    // Aggregated platforms mapping (for charts and global totals)
+    const aggregatedPlatforms: Record<string, any> = {};
+
+    campaigns.forEach((camp: any) => {
+        Object.entries(camp.platforms || {}).forEach(([platId, p]: [string, any]) => {
+            if (!aggregatedPlatforms[platId]) {
+                aggregatedPlatforms[platId] = { ...p, paidCampaigns: [...(p.paidCampaigns || [])] };
+            } else {
+                const existing = aggregatedPlatforms[platId];
+                aggregatedPlatforms[platId] = {
+                    ...existing,
+                    followers: (existing.followers || 0) + (p.followers || 0),
+                    engagement: (existing.engagement || 0) + (p.engagement || 0),
+                    impressions: (existing.impressions || 0) + (p.impressions || 0),
+                    views: (existing.views || 0) + (p.views || 0),
+                    spend: (existing.spend || 0) + (p.spend || 0),
+                    conversions: (existing.conversions || 0) + (p.conversions || 0),
+                    paidReach: (existing.paidReach || 0) + (p.paidReach || 0),
+                    organicReach: (existing.organicReach || 0) + (p.organicReach || 0),
+                    clicks: (existing.clicks || 0) + (p.clicks || 0),
+                    shares: (existing.shares || 0) + (p.shares || 0),
+                    saves: (existing.saves || 0) + (p.saves || 0),
+                    paidCampaigns: [...(existing.paidCampaigns || []), ...(p.paidCampaigns || [])]
+                };
+            }
+        });
+    });
+
+    const activePlatforms = Object.keys(aggregatedPlatforms).filter(key => {
+        const p = aggregatedPlatforms[key];
         return (p.impressions || 0) > 0 || (p.followers || 0) > 0 || (p.engagement || 0) > 0 || (p.views || 0) > 0 || (p.paidReach || 0) > 0;
     });
 
-    // Calculate Global Totals
+    // Calculate Global Totals from aggregated data
     const globalTotals = {
-        impressions: activePlatforms.reduce((acc, key) => acc + (Number(metrics.platforms[key].impressions) || 0), 0),
-        engagement: activePlatforms.reduce((acc, key) => acc + (Number(metrics.platforms[key].engagement) || 0), 0),
-        followers: activePlatforms.reduce((acc, key) => acc + (Number(metrics.platforms[key].followers) || 0), 0),
-        conversions: activePlatforms.reduce((acc, key) => acc + (Number(metrics.platforms[key].conversions) || 0), 0),
-        spend: activePlatforms.reduce((acc, key) => acc + (Number(metrics.platforms[key].spend) || 0), 0),
-        paidReach: activePlatforms.reduce((acc, key) => acc + (Number(metrics.platforms[key].paidReach) || 0), 0),
-        views: activePlatforms.reduce((acc, key) => acc + (Number(metrics.platforms[key].views) || 0), 0),
+        impressions: activePlatforms.reduce((acc, key) => acc + (Number(aggregatedPlatforms[key].impressions) || 0), 0),
+        engagement: activePlatforms.reduce((acc, key) => acc + (Number(aggregatedPlatforms[key].engagement) || 0), 0),
+        followers: activePlatforms.reduce((acc, key) => acc + (Number(aggregatedPlatforms[key].followers) || 0), 0),
+        conversions: activePlatforms.reduce((acc, key) => acc + (Number(aggregatedPlatforms[key].conversions) || 0), 0),
+        spend: activePlatforms.reduce((acc, key) => acc + (Number(aggregatedPlatforms[key].spend) || 0), 0),
+        paidReach: activePlatforms.reduce((acc, key) => acc + (Number(aggregatedPlatforms[key].paidReach) || 0), 0),
+        views: activePlatforms.reduce((acc, key) => acc + (Number(aggregatedPlatforms[key].views) || 0), 0),
     };
 
     const hasViews = globalTotals.views > 0;
@@ -102,20 +134,17 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
     const hasConversions = globalTotals.conversions > 0;
     const hasSpend = globalTotals.spend > 0;
 
-    // Full chart data (includes paid-only platforms for spend chart)
     const chartData = activePlatforms.map(key => ({
         name: PLATFORM_NAMES[key as keyof typeof PLATFORM_NAMES] || key,
-        impressions: metrics.platforms[key].impressions || 0,
-        engagement: metrics.platforms[key].engagement || 0,
-        followers: metrics.platforms[key].followers || 0,
-        views: metrics.platforms[key].views || 0,
-        spend: metrics.platforms[key].spend || 0,
-        paidReach: metrics.platforms[key].paidReach || 0,
-        conversions: metrics.platforms[key].conversions || 0,
+        impressions: aggregatedPlatforms[key].impressions || 0,
+        engagement: aggregatedPlatforms[key].engagement || 0,
+        followers: aggregatedPlatforms[key].followers || 0,
+        views: aggregatedPlatforms[key].views || 0,
+        spend: aggregatedPlatforms[key].spend || 0,
+        paidReach: aggregatedPlatforms[key].paidReach || 0,
+        conversions: aggregatedPlatforms[key].conversions || 0,
     }));
 
-    // Platform analysis charts — exclude paid-ads-only platforms (no organic reach/followers/engagement)
-    // AND exclude Google/YouTube specifically because they are fully featured in the Paid Ads section
     const platformChartData = chartData.filter(d =>
         (d.impressions > 0 || d.followers > 0 || d.engagement > 0 || d.views > 0) &&
         !['google', 'youtube', 'google_ads'].includes(d.name.toLowerCase().replace(' ', '_'))
@@ -388,7 +417,7 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
 
             {/* === Paid Ads Dedicated Section === */}
             {hasSpend && (() => {
-                const paidPlatforms = activePlatforms.filter(k => (metrics.platforms[k].spend || 0) > 0);
+                const paidPlatforms = activePlatforms.filter(k => (aggregatedPlatforms[k].spend || 0) > 0);
                 return (
                     <div className="space-y-6">
                         <div className={`flex items-center gap-4 ${isRtl ? 'flex-row-reverse text-right' : 'text-left'}`}>
@@ -406,7 +435,7 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
                         </div>
                         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                             {paidPlatforms.map(key => {
-                                const d = metrics.platforms[key];
+                                const d = aggregatedPlatforms[key];
                                 const cpa = d.conversions > 0 && d.spend > 0 ? (d.spend / d.conversions).toFixed(2) : null;
                                 const Icon = PLATFORM_ICONS[key as keyof typeof PLATFORM_ICONS] || BarChart3;
                                 return (
@@ -456,7 +485,7 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
                                                 ))}
                                                 <div className={`flex justify-between items-center px-2 py-1 bg-orange-500/10 rounded-lg ${isRtl ? 'flex-row-reverse' : ''}`}>
                                                     <span className="text-[10px] font-black uppercase text-orange-500">{isRtl ? 'إجمالي المنصة' : 'Platform Total'}</span>
-                                                    <span className="text-xs font-black text-orange-500">SAR {(d.paidCampaigns.reduce((acc: number, c: any) => acc + (c.spend || 0), 0)).toLocaleString()}</span>
+                                                    <span className="text-xs font-black text-orange-500">SAR {(d.paidCampaigns.reduce((acc: number, c: any) => acc + (Number(c.spend) || 0), 0)).toLocaleString()}</span>
                                                 </div>
                                             </div>
                                         ) : (
@@ -498,89 +527,117 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
             {/* Individual Platform Deep Dives */}
             <div className="space-y-16 print:space-y-8">
                 <h2 className={`text-3xl font-black border-primary py-2 uppercase tracking-tighter print:text-2xl ${isRtl ? 'border-r-8 pr-6 text-right' : 'border-l-8 pl-6 text-left'}`}>{t("reports.platform_analysis")}</h2>
-                <div className="grid gap-8 grid-cols-1 lg:grid-cols-2 print:grid-cols-1">
-                    {activePlatforms.map(key => {
-                        const data = metrics.platforms[key];
-                        const Icon = PLATFORM_ICONS[key as keyof typeof PLATFORM_ICONS] || BarChart3;
+                <div className="space-y-16">
+                    {campaigns.map((camp: any) => (
+                        <div key={camp.id} className="space-y-8">
+                            <div className={`flex items-center gap-4 border-b-2 border-primary/20 pb-4 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                                <div className="h-10 w-2 bg-primary rounded-full" />
+                                <h3 className="text-2xl font-black tracking-tight">{camp.name}</h3>
+                            </div>
 
-                        // Calculations
-                        const engRate = data.impressions > 0 ? ((data.engagement / data.impressions) * 100).toFixed(2) : "0.00";
-                        const cpa = data.conversions > 0 && data.spend > 0 ? (data.spend / data.conversions).toFixed(2) : null;
+                            <div className="grid gap-8 grid-cols-1 lg:grid-cols-2 print:grid-cols-1">
+                                {Object.keys(camp.platforms || {}).map(platId => {
+                                    const data = camp.platforms[platId];
+                                    const Icon = PLATFORM_ICONS[platId as keyof typeof PLATFORM_ICONS] || BarChart3;
+                                    const engRate = data.impressions > 0 ? ((data.engagement / data.impressions) * 100).toFixed(2) : "0.00";
+                                    const cpa = data.conversions > 0 && data.spend > 0 ? (data.spend / data.conversions).toFixed(2) : null;
+                                    const linkedPosts = (camp.linkedItems || []).filter((item: any) => item.platform === platId);
 
-                        return (
-                            <Card key={key} className="border-none bg-card/30 backdrop-blur-md shadow-xl overflow-hidden group print:bg-white print:border print:shadow-none">
-                                <CardHeader className={`bg-muted/30 py-6 px-8 transition-colors group-hover:bg-primary/5 print:bg-muted/10 ${isRtl ? 'text-right' : 'text-left'}`}>
-                                    <div className={`flex items-center justify-between ${isRtl ? 'flex-row-reverse' : ''}`}>
-                                        <div className={`flex items-center gap-4 ${isRtl ? 'flex-row-reverse' : ''}`}>
-                                            <div className="p-3 bg-primary/10 rounded-2xl group-hover:scale-110 transition-transform print:scale-100">
-                                                <Icon className="h-6 w-6 text-primary" />
-                                            </div>
-                                            <div className={isRtl ? 'text-right' : 'text-left'}>
-                                                <CardTitle className="text-xl font-black">{PLATFORM_NAMES[key as keyof typeof PLATFORM_NAMES] || key}</CardTitle>
-                                                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{t("reports.platform_deep_dive")}</p>
-                                            </div>
-                                        </div>
-                                        {data.spend > 0 && <div className="text-[10px] bg-orange-500/20 text-orange-500 border border-orange-500/20 px-3 py-1 rounded-full font-black">{t("reports.ad_active")}</div>}
-                                    </div>
-                                </CardHeader>
-                                <CardContent className="p-8 space-y-8 print:p-6 print:space-y-4">
-                                    <div className="grid grid-cols-2 gap-4">
-                                        {[
-                                            { label: t('reports.impressions'), value: data.impressions, color: 'text-blue-500' },
-                                            { label: t('reports.engagements'), value: data.engagement, color: 'text-emerald-500' },
-                                            { label: t('reports.growth'), value: data.followers, color: 'text-purple-500' },
-                                            { label: t('common.views'), value: data.views, color: 'text-pink-500' },
-                                            { label: isRtl ? 'الحفظ والمشاركة' : 'Saves / Shares', value: (data.saves || 0) + (data.shares || 0), color: 'text-orange-500' },
-                                            { label: isRtl ? 'وقت المشاهدة' : 'Watch Time', value: data.watchTime, suffix: 's', color: 'text-indigo-500' },
-                                            { label: t('reports.paid_reach'), value: data.paidReach, color: 'text-teal-500' },
-                                            { label: t('reports.conversions'), value: data.conversions, color: 'text-rose-500' },
-                                        ].map((item, i) => (item.value || 0) > 0 ? (
-                                            <div key={i} className={`p-4 rounded-2xl bg-muted/20 border border-border/50 print:bg-white print:border ${isRtl ? 'text-right' : 'text-left'}`}>
-                                                <div className="text-[10px] font-black uppercase text-muted-foreground mb-1">{item.label}</div>
-                                                <div className={`text-2xl font-black ${item.color}`}>{(item.value || 0).toLocaleString()}{item.suffix || ''}</div>
-                                            </div>
-                                        ) : null)}
-                                    </div>
+                                    return (
+                                        <Card key={platId} className="border-none bg-card/30 backdrop-blur-md shadow-xl overflow-hidden group print:bg-white print:border print:shadow-none">
+                                            <CardHeader className={`bg-muted/30 py-6 px-8 transition-colors group-hover:bg-primary/5 print:bg-muted/10 ${isRtl ? 'text-right' : 'text-left'}`}>
+                                                <div className={`flex items-center justify-between ${isRtl ? 'flex-row-reverse' : ''}`}>
+                                                    <div className={`flex items-center gap-4 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                                                        <div className="p-3 bg-primary/10 rounded-2xl group-hover:scale-110 transition-transform print:scale-100">
+                                                            <Icon className="h-6 w-6 text-primary" />
+                                                        </div>
+                                                        <div className={isRtl ? 'text-right' : 'text-left'}>
+                                                            <CardTitle className="text-xl font-black">{PLATFORM_NAMES[platId as keyof typeof PLATFORM_NAMES] || platId}</CardTitle>
+                                                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{t("reports.platform_deep_dive")}</p>
+                                                        </div>
+                                                    </div>
+                                                    {data.spend > 0 && <div className="text-[10px] bg-orange-500/20 text-orange-500 border border-orange-500/20 px-3 py-1 rounded-full font-black">{t("reports.ad_active")}</div>}
+                                                </div>
+                                            </CardHeader>
+                                            <CardContent className="p-8 space-y-8 print:p-6 print:space-y-4">
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    {[
+                                                        { label: t('reports.impressions'), value: data.impressions, color: 'text-blue-500' },
+                                                        { label: t('reports.engagements'), value: data.engagement, color: 'text-emerald-500' },
+                                                        { label: t('reports.growth'), value: data.followers, color: 'text-purple-500' },
+                                                        { label: t('common.views'), value: data.views, color: 'text-pink-500' },
+                                                        { label: isRtl ? 'الحفظ والمشاركة' : 'Saves / Shares', value: (data.saves || 0) + (data.shares || 0), color: 'text-orange-500' },
+                                                        { label: isRtl ? 'وقت المشاهدة' : 'Watch Time', value: data.watchTime, suffix: 's', color: 'text-indigo-500' },
+                                                        { label: t('reports.paid_reach'), value: data.paidReach, color: 'text-teal-500' },
+                                                        { label: t('reports.conversions'), value: data.conversions, color: 'text-rose-500' },
+                                                    ].map((item, i) => (item.value || 0) > 0 ? (
+                                                        <div key={i} className={`p-4 rounded-2xl bg-muted/20 border border-border/50 print:bg-white print:border ${isRtl ? 'text-right' : 'text-left'}`}>
+                                                            <div className="text-[10px] font-black uppercase text-muted-foreground mb-1">{item.label}</div>
+                                                            <div className={`text-2xl font-black ${item.color}`}>{(item.value || 0).toLocaleString()}{item.suffix || ''}</div>
+                                                        </div>
+                                                    ) : null)}
+                                                </div>
 
-                                    <div className="grid grid-cols-2 gap-4 pt-4 border-t border-dashed">
-                                        <div className={`p-4 rounded-2xl bg-primary/5 border border-primary/10 ${isRtl ? 'text-right' : 'text-left'}`}>
-                                            <div className="text-[10px] font-black uppercase text-primary mb-1">{isRtl ? 'نسبة التفاعل' : 'Eng. Rate'}</div>
-                                            <div className="text-xl font-black text-primary">{engRate}%</div>
-                                        </div>
-                                        {cpa && (
-                                            <div className={`p-4 rounded-2xl bg-orange-500/5 border border-orange-500/10 ${isRtl ? 'text-right' : 'text-left'}`}>
-                                                <div className="text-[10px] font-black uppercase text-orange-500 mb-1">{isRtl ? 'تكلفة التحويل' : 'Cost / Conv'}</div>
-                                                <div className="text-xl font-black text-orange-500">SAR {cpa}</div>
-                                            </div>
-                                        )}
-                                    </div>
+                                                {linkedPosts.length > 0 && (
+                                                    <div className="space-y-4">
+                                                        <div className={`flex items-center gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                                                            <ImageIcon className="h-4 w-4 text-primary/60" />
+                                                            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Featured Content</span>
+                                                        </div>
+                                                        <div className="grid grid-cols-2 gap-4">
+                                                            {linkedPosts.map((post: any) => (
+                                                                <div key={post.id} className="group/post relative aspect-square rounded-2xl overflow-hidden border border-white/10 bg-white/5">
+                                                                    {post.imageUrl ? (
+                                                                        <img src={post.imageUrl} alt="" className="w-full h-full object-cover transition-transform group-hover/post:scale-110" />
+                                                                    ) : post.videoUrl ? (
+                                                                        <video
+                                                                            src={post.videoUrl}
+                                                                            className="w-full h-full object-cover"
+                                                                            controls
+                                                                            preload="metadata"
+                                                                        />
+                                                                    ) : (
+                                                                        <div className="w-full h-full p-4 text-[10px] italic text-muted-foreground overflow-hidden">
+                                                                            {post.captionEn || post.captionAr}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
 
-                                    {data.spend > 0 && (
-                                        <div className={`flex justify-between items-center bg-orange-500/5 p-4 rounded-xl border border-orange-500/10 print:bg-white ${isRtl ? 'flex-row-reverse' : ''}`}>
-                                            <div className={`flex items-center gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
-                                                <DollarSign className="h-4 w-4 text-orange-500" />
-                                                <span className="text-xs font-bold uppercase tracking-wider">{t("reports.campaign_investment")}</span>
-                                            </div>
-                                            <span className="text-xl font-black text-orange-500">SAR {(data.paidCampaigns?.length > 0 ? data.paidCampaigns.reduce((acc: any, c: any) => acc + (c.spend || 0), 0) : (data.spend || 0)).toLocaleString()}</span>
-                                        </div>
-                                    )}
+                                                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-dashed">
+                                                    <div className={`p-4 rounded-2xl bg-primary/5 border border-primary/10 ${isRtl ? 'text-right' : 'text-left'}`}>
+                                                        <div className="text-[10px] font-black uppercase text-primary mb-1">{isRtl ? 'نسبة التفاعل' : 'Eng. Rate'}</div>
+                                                        <div className="text-xl font-black text-primary">{engRate}%</div>
+                                                    </div>
+                                                    {cpa && (
+                                                        <div className={`p-4 rounded-2xl bg-orange-500/5 border border-orange-500/10 ${isRtl ? 'text-right' : 'text-left'}`}>
+                                                            <div className="text-[10px] font-black uppercase text-orange-500 mb-1">{isRtl ? 'تكلفة التحويل' : 'Cost / Conv'}</div>
+                                                            <div className="text-xl font-black text-orange-500">SAR {cpa}</div>
+                                                        </div>
+                                                    )}
+                                                </div>
 
-                                    {/* Platform comment from AM */}
-                                    {data.comment && (
-                                        <div className={`p-4 rounded-xl bg-primary/5 border border-primary/15 ${isRtl ? 'text-right' : 'text-left'}`}>
-                                            <div className={`flex items-center gap-2 mb-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
-                                                <MessageSquare className="h-3.5 w-3.5 text-primary" />
-                                                <span className="text-[10px] font-black uppercase tracking-wider text-primary">
-                                                    {isRtl ? 'تعليق مدير الحساب' : 'Account Manager Note'}
-                                                </span>
-                                            </div>
-                                            <p className="text-sm text-foreground/80 leading-relaxed">{data.comment}</p>
-                                        </div>
-                                    )}
-                                </CardContent>
-                            </Card>
-                        );
-                    })}
+                                                {data.comment && (
+                                                    <div className={`p-4 rounded-xl bg-primary/5 border border-primary/15 ${isRtl ? 'text-right' : 'text-left'}`}>
+                                                        <div className={`flex items-center gap-2 mb-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                                                            <MessageSquare className="h-3.5 w-3.5 text-primary" />
+                                                            <span className="text-[10px] font-black uppercase tracking-wider text-primary">
+                                                                {isRtl ? 'تعليق مدير الحساب' : 'Account Manager Note'}
+                                                            </span>
+                                                        </div>
+                                                        <p className="text-sm text-foreground/80 leading-relaxed">{data.comment}</p>
+                                                    </div>
+                                                )}
+                                            </CardContent>
+                                        </Card>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    ))}
                 </div>
             </div>
 

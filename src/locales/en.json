@@ -42,7 +42,9 @@
         "action_plans": "Action Plans",
         "reports": "Performance Reports",
         "performance": "Performance Analysis",
-        "deletions": "Deletion Requests"
+        "services": "Agency Services",
+        "deletions": "Deletion Requests",
+        "service_requests": "Service Requests"
     },
     "reports": {
         "title": "Performance Reports",

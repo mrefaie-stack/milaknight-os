@@ -19,7 +19,12 @@ export default async function ClientDashboardPage() {
                 where: { status: "SENT" },
                 orderBy: { month: "desc" },
             },
+            services: { include: { globalService: true } },
         }
+    });
+
+    const globalServices = await prisma.globalService.findMany({
+        orderBy: { nameEn: "asc" }
     });
 
     if (!client) {
@@ -39,6 +44,7 @@ export default async function ClientDashboardPage() {
             client={client}
             latestPlan={latestPlan}
             allReports={allReports}
+            globalServices={globalServices}
         />
     );
 }

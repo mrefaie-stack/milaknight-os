@@ -14,7 +14,7 @@ export default async function ClientDetailsPage({ params }: { params: Promise<{ 
                 take: 5,
                 include: { items: { select: { status: true } } }
             },
-            services: true,
+            services: { include: { globalService: true } },
             user: { select: { id: true } },
         }
     });

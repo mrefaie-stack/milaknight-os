@@ -104,7 +104,7 @@ export async function createClient(data: FormData) {
     });
 
     const amId = data.get("amId") as string;
-    const servicesInput = data.get("services") as string; // comma separated "SEO, Social Media"
+    const servicesInput = data.get("services") as string; // comma separated globalServiceIds
 
     // Create the Client Record
     const client = await prisma.client.create({
@@ -130,9 +130,8 @@ export async function createClient(data: FormData) {
             youtube,
             website,
             services: {
-                create: servicesInput ? servicesInput.split(",").map(s => ({
-                    name: s.trim(),
-                    details: "{}" // generic details fallback
+                create: servicesInput ? servicesInput.split(",").filter(id => id.trim()).map(id => ({
+                    globalService: { connect: { id: id.trim() } }
                 })) : []
             }
         }
@@ -171,6 +170,12 @@ export async function updateClient(clientId: string, data: any) {
             snapchat: data.snapchat,
             youtube: data.youtube,
             website: data.website,
+            services: data.serviceIds ? {
+                deleteMany: {},
+                create: data.serviceIds.map((id: string) => ({
+                    globalService: { connect: { id } }
+                }))
+            } : undefined
         }
     });
 

@@ -37,7 +37,10 @@ function formatNumber(n: number): string {
     return n.toLocaleString();
 }
 
-export function ClientDashboardView({ client, latestPlan, allReports }: { client: any, latestPlan: any, allReports: any[] }) {
+import { Badge } from "@/components/ui/badge";
+import { Sparkles, ArrowRight } from "lucide-react";
+
+export function ClientDashboardView({ client, latestPlan, allReports, globalServices = [] }: { client: any, latestPlan: any, allReports: any[], globalServices?: any[] }) {
     const { t, isRtl } = useLanguage();
     // Default is "total" (Lifetime) — user can switch to current month
     const [viewMode, setViewMode] = useState<"month" | "total">("total");
@@ -249,6 +252,54 @@ export function ClientDashboardView({ client, latestPlan, allReports }: { client
                     </Card>
                 </motion.div>
             </div>
+            {/* Service Discovery Section */}
+            <motion.div variants={item} className="space-y-6">
+                <div className={`flex items-center justify-between ${isRtl ? 'flex-row-reverse' : ''}`}>
+                    <div className={isRtl ? 'text-right' : ''}>
+                        <h2 className="text-3xl font-black flex items-center gap-3">
+                            <Sparkles className="h-6 w-6 text-primary" />
+                            {isRtl ? "اكتشف خدماتنا الإضافية" : "Discover Our Premium Services"}
+                        </h2>
+                        <p className="text-muted-foreground font-medium opacity-60">
+                            {isRtl ? "ارتقِ بعلامتك التجارية إلى المستوى التالي مع حلولنا المختصة." : "Take your brand to the next level with our specialized solutions."}
+                        </p>
+                    </div>
+                    <Link href="/client/services">
+                        <Button variant="outline" className="rounded-full font-bold group">
+                            {isRtl ? "عرض الكل" : "View All"}
+                            <ArrowRight className={`h-4 w-4 ${isRtl ? 'mr-2 rotate-180' : 'ml-2'} group-hover:translate-x-1 transition-transform`} />
+                        </Button>
+                    </Link>
+                </div>
+
+                <div className="grid gap-6 grid-cols-1 md:grid-cols-3">
+                    {globalServices
+                        .filter(gs => !client.services?.some((s: any) => s.globalServiceId === gs.id))
+                        .slice(0, 3)
+                        .map((service) => (
+                            <Card key={service.id} className="glass-card border-none overflow-hidden rounded-3xl group hover:bg-white/5 transition-all">
+                                <CardContent className="p-8 space-y-4">
+                                    <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary mb-4 p-3">
+                                        <Sparkles className="h-full w-full" />
+                                    </div>
+                                    <h3 className={`text-xl font-black ${isRtl ? 'text-right' : ''}`}>
+                                        {isRtl ? service.nameAr : service.nameEn}
+                                    </h3>
+                                    <p className={`text-sm text-muted-foreground font-medium line-clamp-2 ${isRtl ? 'text-right' : ''}`}>
+                                        {isRtl ? service.descriptionAr : service.descriptionEn}
+                                    </p>
+                                    <div className={`pt-4 ${isRtl ? 'text-right' : ''}`}>
+                                        <Link href={`/client/services?request=${service.id}`}>
+                                            <Button className="w-full rounded-full font-black uppercase tracking-widest text-xs h-10">
+                                                {isRtl ? "طلب الخدمة" : "Request Service"}
+                                            </Button>
+                                        </Link>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        ))}
+                </div>
+            </motion.div>
         </motion.div>
     );
 }
