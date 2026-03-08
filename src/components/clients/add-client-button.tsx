@@ -83,6 +83,12 @@ export function AddClientButton({ ams }: { ams: any[] }) {
         const formData = new FormData(e.currentTarget);
         formData.append("activeServices", selectedPlatforms.join(","));
 
+        // Explicitly append state-managed fields to ensure they are sent
+        formData.set("briefAr", briefAr);
+        formData.set("briefEn", briefEn);
+        formData.set("deliverablesAr", delivAr);
+        formData.set("deliverablesEn", delivEn);
+
         try {
             await createClient(formData);
             toast.success(isRtl ? "تمت إضافة العميل بنجاح!" : "Client added successfully!");
