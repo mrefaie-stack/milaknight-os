@@ -69,17 +69,15 @@ export function DashboardSidebar({ role, user }: { role: string; user: any }) {
     const roleLabel = isRtl ? roleMeta.ar : roleMeta.en;
     const roleColor = role === "ADMIN" ? "text-orange-400" : role === "AM" ? "text-blue-400" : "text-emerald-400";
 
-    // In RTL: sidebar is on the right, icon appears first (rightmost), then text
-    const ChevronIcon = isRtl ? ChevronLeft : ChevronRight;
-
     return (
         <aside className={cn(
-            "w-64 bg-card/50 backdrop-blur-xl border-white/5 hidden md:flex flex-col h-full relative z-20",
+            "w-72 bg-card/50 backdrop-blur-xl border-white/5 hidden md:flex flex-col h-full relative z-20",
             isRtl ? "border-l" : "border-r"
         )}>
             {/* Logo & Controls */}
             <div className="p-6 pb-4 space-y-4">
-                <div className={cn("flex items-center justify-between", isRtl ? "flex-row-reverse" : "")}>
+                {/* Logo row — always: logo on the branding side, toggles on the other */}
+                <div className={cn("flex items-center", isRtl ? "flex-row-reverse justify-between" : "justify-between")}>
                     <div className="font-black text-xl tracking-tighter premium-gradient-text">MILAKNIGHT</div>
                     <div className="flex items-center gap-1">
                         <LanguageToggle />
@@ -89,9 +87,9 @@ export function DashboardSidebar({ role, user }: { role: string; user: any }) {
 
                 {/* Role badge */}
                 <div className={cn(
-                    "text-[9px] font-black uppercase tracking-[0.2em] px-3 py-1.5 rounded-full bg-white/5 border border-white/10 w-fit",
+                    "text-[10px] font-black uppercase tracking-[0.2em] px-3 py-1.5 rounded-full bg-white/5 border border-white/10 w-fit",
                     roleColor,
-                    isRtl ? "self-end ml-auto" : ""
+                    isRtl ? "mr-auto" : "ml-0"
                 )}>
                     {roleLabel}
                 </div>
@@ -108,17 +106,17 @@ export function DashboardSidebar({ role, user }: { role: string; user: any }) {
                     )}
                 >
                     <div className={cn("flex items-center gap-2", isRtl ? "flex-row-reverse" : "")}>
-                        <Search className="h-3.5 w-3.5" />
-                        <span className="text-[10px] font-black uppercase tracking-widest">{t("common.search")}</span>
+                        <Search className="h-3.5 w-3.5 shrink-0" />
+                        <span className="text-[11px] font-black uppercase tracking-widest">{t("common.search")}</span>
                     </div>
                     <span className="text-[10px] font-black opacity-30 group-hover:opacity-60 transition-opacity bg-white/10 px-1.5 py-0.5 rounded">⌘K</span>
                 </button>
             </div>
 
             {/* Navigation */}
-            <nav className="flex-1 px-4 space-y-1 overflow-y-auto custom-scrollbar py-2">
+            <nav className="flex-1 px-3 space-y-0.5 overflow-y-auto custom-scrollbar py-2">
                 <div className={cn(
-                    "text-[9px] font-black text-primary/40 uppercase tracking-[0.25em] mb-3 px-3",
+                    "text-[9px] font-black text-primary/40 uppercase tracking-[0.25em] mb-3 px-3 py-1",
                     isRtl ? "text-right" : "text-left"
                 )}>
                     {t("sidebar.menu")}
@@ -134,48 +132,47 @@ export function DashboardSidebar({ role, user }: { role: string; user: any }) {
                             key={link.href}
                             href={link.href}
                             className={cn(
-                                "flex items-center justify-between px-4 py-3 rounded-2xl text-[11px] font-black transition-all duration-200 group relative overflow-hidden uppercase tracking-tight",
-                                // RTL: flip entire row so icon is on the right side
+                                "relative flex items-center px-4 py-3 rounded-2xl text-[13px] font-bold transition-all duration-200 group overflow-hidden",
+                                // RTL: entire row reversed so icon is on the right edge, text on the left side
                                 isRtl ? "flex-row-reverse" : "flex-row",
                                 active
                                     ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
-                                    : "text-foreground/50 hover:bg-white/8 hover:text-foreground/90"
+                                    : "text-foreground/60 hover:bg-white/8 hover:text-foreground"
                             )}
                         >
-                            {/* Active indicator bar — right side in RTL, left side in LTR */}
+                            {/* Active/hover indicator bar — right side in RTL, left in LTR */}
                             {!active && (
                                 <div className={cn(
-                                    "absolute top-0 bottom-0 w-0.5 bg-primary opacity-0 group-hover:opacity-100 transition-opacity",
-                                    isRtl ? "right-0" : "left-0"
+                                    "absolute top-2 bottom-2 w-0.5 rounded-full bg-primary opacity-0 group-hover:opacity-60 transition-opacity",
+                                    isRtl ? "right-1" : "left-1"
                                 )} />
                             )}
 
-                            {/* Icon + Label — icon always adjacent to the edge in RTL */}
-                            <div className={cn("flex items-center gap-3 relative z-10", isRtl ? "flex-row-reverse" : "flex-row")}>
-                                <Icon className={cn(
-                                    "h-4 w-4 transition-all duration-200 shrink-0",
-                                    active ? "scale-110" : "group-hover:scale-110"
-                                )} />
-                                <span>{link.label}</span>
-                            </div>
+                            {/* Icon — always the element closest to the edge */}
+                            <Icon className={cn(
+                                "h-[18px] w-[18px] shrink-0 transition-all duration-200",
+                                active ? "scale-110" : "group-hover:scale-110",
+                                isRtl ? "ml-3" : "mr-3"
+                            )} />
 
-                            {/* Notification badge / chevron */}
-                            <div className={cn("flex items-center gap-1.5 relative z-10", isRtl ? "flex-row-reverse" : "")}>
-                                {isNotifications && unreadCount > 0 && (
-                                    <span className={cn(
-                                        "flex h-5 min-w-5 px-1 items-center justify-center rounded-full text-[9px] font-black",
-                                        active ? "bg-white text-primary" : "bg-primary text-primary-foreground"
-                                    )}>
-                                        {unreadCount > 9 ? "9+" : unreadCount}
-                                    </span>
-                                )}
-                                {!isNotifications && !active && (
-                                    <ChevronIcon className={cn(
-                                        "h-3 w-3 opacity-0 group-hover:opacity-40 transition-all",
-                                        isRtl ? "translate-x-1 group-hover:translate-x-0" : "-translate-x-1 group-hover:translate-x-0"
-                                    )} />
-                                )}
-                            </div>
+                            {/* Label — grows to fill */}
+                            <span className="flex-1 tracking-tight">{link.label}</span>
+
+                            {/* Badge / chevron on the far opposite side */}
+                            {isNotifications && unreadCount > 0 && (
+                                <span className={cn(
+                                    "flex h-5 min-w-5 px-1 items-center justify-center rounded-full text-[9px] font-black",
+                                    active ? "bg-white text-primary" : "bg-primary text-primary-foreground",
+                                    isRtl ? "mr-1" : "ml-1"
+                                )}>
+                                    {unreadCount > 9 ? "9+" : unreadCount}
+                                </span>
+                            )}
+                            {!isNotifications && !active && (
+                                isRtl
+                                    ? <ChevronLeft className="h-3.5 w-3.5 opacity-0 group-hover:opacity-40 transition-all ml-1" />
+                                    : <ChevronRight className="h-3.5 w-3.5 opacity-0 group-hover:opacity-40 transition-all mr-1" />
+                            )}
                         </Link>
                     );
                 })}

@@ -1,5 +1,6 @@
 import { getRecentChats } from "@/app/actions/chat";
 import { ChatInterface } from "@/components/messages/chat-interface";
+import { MessagesHeader } from "@/components/messages/messages-header";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
@@ -10,11 +11,7 @@ export default async function MessagesPage({ searchParams }: { searchParams: Pro
 
     return (
         <div className="h-[calc(100vh-12rem)] flex flex-col space-y-4">
-            <div>
-                <h1 className="text-3xl font-bold tracking-tight">Messages</h1>
-                <p className="text-muted-foreground">Internal communication between Admin and Team.</p>
-            </div>
-
+            <MessagesHeader />
             <div className="flex-1 bg-card border rounded-xl overflow-hidden flex">
                 <ChatInterface
                     currentUser={session?.user}

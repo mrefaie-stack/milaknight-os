@@ -189,10 +189,12 @@
   }
 
   body {
+    font-size: 17px;
     background-color: var(--background);
     color: var(--foreground);
     @apply antialiased selection:bg-primary/20 selection:text-primary;
   }
+
 }
 
 @layer components {
