@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { ContentItemEditor } from "./content-editor";
 import { updateContentItem } from "@/app/actions/content-item";
 import { deleteContentItem, resolveActionPlanItem } from "@/app/actions/action-plan";
+import { VideoPlayer } from "@/components/ui/video-player";
 import {
     Image as ImageIcon,
     Video,
@@ -129,18 +130,9 @@ export function PlanItemsList({ items, planId }: { items: any[], planId: string 
                                                     </div>
                                                 )}
                                                 {item.videoUrl && (
-                                                    item.videoUrl.match(/\.(mp4|webm|ogg|mov)$/i) && !item.videoUrl.includes('drive.google.com') ? (
-                                                        <div className="mt-3 rounded-lg overflow-hidden border border-primary/10 max-w-[250px] shadow-sm bg-black">
-                                                            <video src={item.videoUrl} controls className="w-full h-auto max-h-48 object-contain" />
-                                                        </div>
-                                                    ) : (
-                                                        <div className="mt-3">
-                                                            <a href={item.videoUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary hover:bg-primary/20 transition-colors rounded-lg font-medium text-sm border border-primary/20">
-                                                                <Video className="w-4 h-4" />
-                                                                {isRtl ? 'مشاهدة الفيديو' : 'View Video Externally'}
-                                                            </a>
-                                                        </div>
-                                                    )
+                                                    <div className="mt-3 max-w-sm">
+                                                        <VideoPlayer url={item.videoUrl} isRtl={isRtl} />
+                                                    </div>
                                                 )}
                                             </div>
                                         </div>

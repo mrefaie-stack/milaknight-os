@@ -6,6 +6,7 @@ import { PlanApprovalHeader } from "@/components/action-plan/plan-approval-heade
 import { ClientApprovalActions } from "@/components/action-plan/client-approval-actions";
 import { DownloadActionPlanButton } from "@/components/action-plan/download-action-plan-button";
 import { Label } from "@/components/ui/label";
+import { VideoPlayer } from "@/components/ui/video-player";
 import {
     Image as ImageIcon,
     Video,
@@ -154,31 +155,21 @@ function ContentCard({ item, isRtl }: { item: any; isRtl: boolean }) {
 
             {/* Media Section (non-email) */}
             {!isEmail && (item.imageUrl || item.videoUrl) && (
-                <div className="relative w-full aspect-video bg-black/30 overflow-hidden">
+                <div className="relative w-full overflow-hidden group/media">
                     {item.imageUrl && (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={item.imageUrl} alt="Content visual" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                        <div className="aspect-video">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={item.imageUrl} alt="Content visual" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                        </div>
                     )}
                     {item.videoUrl && !item.imageUrl && (
-                        item.videoUrl.match(/\.(mp4|webm|ogg|mov)$/i) && !item.videoUrl.includes("drive.google.com") ? (
-                            <video src={item.videoUrl} controls className="w-full h-full object-contain" />
-                        ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                                <a href={item.videoUrl} target="_blank" rel="noopener noreferrer"
-                                    className="flex flex-col items-center gap-2 text-white/70 hover:text-white transition-colors">
-                                    <div className="p-4 bg-white/10 rounded-full border border-white/20 backdrop-blur-sm">
-                                        <Video className="h-8 w-8" />
-                                    </div>
-                                    <span className="text-xs font-bold">{isRtl ? 'مشاهدة الفيديو' : 'View Video'}</span>
-                                </a>
-                            </div>
-                        )
+                        <VideoPlayer url={item.videoUrl} isRtl={isRtl} />
                     )}
-                    <div className={`absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black ${type.bg} ${type.color} backdrop-blur-md border border-white/20`}>
+                    <div className={`absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black ${type.bg} ${type.color} backdrop-blur-md border border-white/20 z-10`}>
                         <TypeIcon className="h-3 w-3" />
                         {type.label.toUpperCase()}
                     </div>
-                    <div className={`absolute top-3 right-3 flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black ${status.bg} ${status.color} border ${status.border} backdrop-blur-md`}>
+                    <div className={`absolute top-3 right-3 flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black ${status.bg} ${status.color} border ${status.border} backdrop-blur-md z-10`}>
                         <StatusIcon className="h-3 w-3" />
                         {status.label.toUpperCase()}
                     </div>
