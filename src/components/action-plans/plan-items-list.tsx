@@ -53,10 +53,10 @@ export function PlanItemsList({ items, planId }: { items: any[], planId: string 
     async function handleSave(data: any) {
         try {
             await updateContentItem(editingItem.id, data);
-            toast.success("Content updated successfully!");
+            toast.success(isRtl ? "تم تحديث المحتوى بنجاح!" : "Content updated successfully!");
             setEditingItem(null);
         } catch (error: any) {
-            toast.error(error.message || "Failed to update content");
+            toast.error(error.message || (isRtl ? "فشل تحديث المحتوى" : "Failed to update content"));
         }
     }
 
@@ -66,9 +66,9 @@ export function PlanItemsList({ items, planId }: { items: any[], planId: string 
         setIsDeleting(itemId);
         try {
             await deleteContentItem(itemId, planId);
-            toast.success("Item deleted");
+            toast.success(isRtl ? "تم حذف العنصر" : "Item deleted");
         } catch (error: any) {
-            toast.error(error.message || "Failed to delete item");
+            toast.error(error.message || (isRtl ? "فشل حذف العنصر" : "Failed to delete item"));
         } finally {
             setIsDeleting(null);
         }
@@ -135,7 +135,7 @@ export function PlanItemsList({ items, planId }: { items: any[], planId: string 
                                                         <div className="mt-3">
                                                             <a href={item.videoUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary hover:bg-primary/20 transition-colors rounded-lg font-medium text-sm border border-primary/20">
                                                                 <Video className="w-4 h-4" />
-                                                                View Video Externally
+                                                                {isRtl ? 'مشاهدة الفيديو' : 'View Video Externally'}
                                                             </a>
                                                         </div>
                                                     )
@@ -175,7 +175,7 @@ export function PlanItemsList({ items, planId }: { items: any[], planId: string 
                                         <div className={`p-4 rounded-xl text-sm border bg-primary/5 border-primary/20 text-foreground shadow-inner`}>
                                             <div className={`flex items-center gap-2 mb-1 font-black text-[10px] uppercase tracking-tighter text-primary ${isRtl ? 'flex-row-reverse text-right' : ''}`}>
                                                 <MessageSquare className="h-3 w-3" />
-                                                Account Manager Notes
+                                                {isRtl ? 'ملاحظات مدير الحساب' : 'Account Manager Notes'}
                                             </div>
                                             <div className={isRtl ? 'text-right' : 'text-left'}>
                                                 {item.amComment}

@@ -31,7 +31,7 @@ export function ActivityFeed() {
         return (
             <div className="flex flex-col items-center justify-center py-12 gap-3 opacity-20">
                 <Loader2 className="h-6 w-6 animate-spin" />
-                <p className="text-xs font-black uppercase tracking-widest">Synchronizing...</p>
+                <p className="text-xs font-black uppercase tracking-widest">{isRtl ? 'جاري التزامن...' : 'Synchronizing...'}</p>
             </div>
         );
     }

@@ -88,7 +88,7 @@ export function EditClientDialog({ client, accountManagers }: { client: any, acc
             toast.success(t("dashboard.update_success"));
             setOpen(false);
         } catch (error: any) {
-            toast.error(error.message || "Failed to update client");
+            toast.error(isRtl ? (error.message || 'فشل تحديث بيانات العميل') : (error.message || 'Failed to update client'));
         } finally {
             setLoading(false);
         }
@@ -152,7 +152,7 @@ export function EditClientDialog({ client, accountManagers }: { client: any, acc
                                         onValueChange={(val) => setFormData({ ...formData, amId: val })}
                                     >
                                         <SelectTrigger dir={isRtl ? 'rtl' : 'ltr'}>
-                                            <SelectValue placeholder="Select AM" />
+                                            <SelectValue placeholder={isRtl ? 'اختر مدير حساب' : 'Select AM'} />
                                         </SelectTrigger>
                                         <SelectContent dir={isRtl ? 'rtl' : 'ltr'}>
                                             <SelectItem value="none">{t("dashboard.none")}</SelectItem>
@@ -196,11 +196,11 @@ export function EditClientDialog({ client, accountManagers }: { client: any, acc
                         {/* Brief and Deliverables */}
                         <div className="space-y-4">
                             <h4 className={`text-sm font-black uppercase tracking-widest text-primary flex items-center gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
-                                <Edit className="h-4 w-4" /> Client Brief & Deliverables
+                                <Edit className="h-4 w-4" /> {isRtl ? 'موجز العميل والمخرجات' : 'Client Brief & Deliverables'}
                             </h4>
                             <div className="grid gap-4 pl-4 border-l-2 border-primary/10">
                                 <div className="space-y-2">
-                                    <Label htmlFor="brief" className={isRtl ? 'text-right block' : ''}>Client Brief</Label>
+                                    <Label htmlFor="brief" className={isRtl ? 'text-right block' : ''}>{isRtl ? 'موجز العميل' : 'Client Brief'}</Label>
                                     <Textarea
                                         id="brief"
                                         className={`min-h-[100px] ${isRtl ? 'text-right' : ''}`}
@@ -209,7 +209,7 @@ export function EditClientDialog({ client, accountManagers }: { client: any, acc
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="deliverables" className={isRtl ? 'text-right block' : ''}>Monthly Deliverables</Label>
+                                    <Label htmlFor="deliverables" className={isRtl ? 'text-right block' : ''}>{isRtl ? 'المخرجات الشهرية' : 'Monthly Deliverables'}</Label>
                                     <Textarea
                                         id="deliverables"
                                         className={`min-h-[120px] ${isRtl ? 'text-right' : ''}`}
@@ -223,7 +223,7 @@ export function EditClientDialog({ client, accountManagers }: { client: any, acc
                         {/* Social Links */}
                         <div className="space-y-4">
                             <h4 className={`text-sm font-black uppercase tracking-widest text-primary flex items-center gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
-                                <Globe className="h-4 w-4" /> Social Media Links
+                                <Globe className="h-4 w-4" /> {isRtl ? 'روابط وسائل التواصل' : 'Social Media Links'}
                             </h4>
                             <div className="grid grid-cols-2 gap-4 pl-4 border-l-2 border-primary/10">
                                 <div className="space-y-2">
