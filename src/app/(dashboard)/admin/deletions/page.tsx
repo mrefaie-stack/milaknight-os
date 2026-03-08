@@ -39,7 +39,7 @@ export default async function DeletionsPage() {
                                         <Badge variant="outline" className="text-[10px] font-black uppercase tracking-widest bg-orange-500/5 text-orange-600 border-orange-200">Pending Approval</Badge>
                                     </div>
                                     <p className="text-sm text-muted-foreground font-medium">
-                                        Requested by <span className="text-foreground font-bold">{request.requestedBy.firstName} {request.requestedBy.lastName}</span> • {new Date(request.createdAt).toLocaleDateString()}
+                                        Requested by <span className="text-foreground font-bold">{request.requestedBy.firstName} {request.requestedBy.lastName}</span> • {new Date(request.createdAt).toISOString().split('T')[0]}
                                     </p>
                                 </div>
                             </div>

@@ -123,7 +123,7 @@ export function ReportListClient({
                                 <div className="flex items-center gap-2 mb-2">
                                     <Calendar className="h-4 w-4 text-primary" />
                                     <span className="text-sm font-bold text-muted-foreground uppercase tracking-widest">
-                                        {new Date(report.month + "-01").toLocaleDateString(isRtl ? 'ar-EG' : 'en-US', { month: 'long', year: 'numeric' })}
+                                        {report.month}
                                     </span>
                                 </div>
 

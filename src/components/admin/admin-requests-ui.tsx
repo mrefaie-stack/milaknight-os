@@ -86,9 +86,9 @@ export function AdminRequestsUI({ initialRequests }: { initialRequests: any[] })
                                                     <User className="h-3 w-3" />
                                                     {request.client?.accountManager ? `${request.client.accountManager.firstName} ${request.client.accountManager.lastName}` : "No AM"}
                                                 </div>
-                                                <div className="flex items-center gap-1" suppressHydrationWarning>
+                                                <div className="flex items-center gap-1">
                                                     <Clock className="h-3 w-3" />
-                                                    {request.createdAt ? new Date(request.createdAt).toLocaleDateString() : ""}
+                                                    <span suppressHydrationWarning>{request.createdAt ? new Date(request.createdAt).toLocaleDateString() : ""}</span>
                                                 </div>
                                             </div>
                                             {request.notes && (

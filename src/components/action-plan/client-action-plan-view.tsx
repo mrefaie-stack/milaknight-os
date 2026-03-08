@@ -210,9 +210,7 @@ function ContentCard({ item, isRtl }: { item: any; isRtl: boolean }) {
                 {item.scheduledDate && (
                     <div className="flex items-center gap-1.5 text-[11px] font-bold text-muted-foreground">
                         <CalendarDays className="h-3.5 w-3.5" />
-                        {new Date(item.scheduledDate).toLocaleDateString("ar-EG", { day: "numeric", month: "long", year: "numeric" })}
-                        <span className="text-muted-foreground/40 mx-1">|</span>
-                        {new Date(item.scheduledDate).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
+                        {new Date(item.scheduledDate).toISOString().split('T')[0]}
                     </div>
                 )}
 
@@ -330,7 +328,7 @@ function ContentCard({ item, isRtl }: { item: any; isRtl: boolean }) {
                                     <div className={`flex items-center justify-between ${isRtl ? 'flex-row-reverse' : ''}`}>
                                         <span className="text-[10px] font-black text-foreground/70">{c.user.firstName} {c.user.lastName}</span>
                                         <span className="text-[9px] font-bold text-muted-foreground">
-                                            {new Date(c.createdAt).toLocaleDateString(isRtl ? 'ar-EG' : 'en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                                            {new Date(c.createdAt).toISOString().substring(0, 16).replace('T', ' ')}
                                         </span>
                                     </div>
                                     <p className={`text-xs leading-relaxed ${isRtl ? 'text-right' : 'text-left'}`}>{c.text}</p>

@@ -120,9 +120,9 @@ export function ClientServiceCatalog({ client, globalServices, requests }: { cli
                                         <Clock className="h-5 w-5" />
                                     </div>
                                     <div className={isRtl ? 'text-right' : ''}>
-                                        <p className="font-black text-lg">{isRtl ? request.globalService.nameAr : request.globalService.nameEn}</p>
+                                        <p className="font-black text-lg">{isRtl ? request.globalService?.nameAr : request.globalService?.nameEn}</p>
                                         <p className="text-xs text-muted-foreground font-bold opacity-60">
-                                            {new Date(request.createdAt).toLocaleDateString(isRtl ? 'ar-EG' : 'en-US', { dateStyle: 'long' })}
+                                            {request.createdAt ? new Date(request.createdAt).toISOString().split('T')[0] : ""}
                                         </p>
                                     </div>
                                 </div>
