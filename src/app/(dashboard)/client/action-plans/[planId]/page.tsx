@@ -10,6 +10,12 @@ export default async function ClientActionPlanPage({ params }: { params: Promise
         include: {
             items: {
                 where: { status: { not: "DRAFT" } },
+                include: {
+                    comments: {
+                        include: { user: true },
+                        orderBy: { createdAt: "asc" }
+                    }
+                },
                 orderBy: { createdAt: "asc" },
             },
         }

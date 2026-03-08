@@ -117,7 +117,9 @@ export function PlanItemsList({ items, planId }: { items: any[], planId: string 
                                                 <div className="text-sm font-medium text-foreground/80 whitespace-pre-wrap mt-2">
                                                     {item.type === 'EMAIL'
                                                         ? (item.emailSubject || item.emailBody || t("dashboard.no_content"))
-                                                        : (item.captionAr || item.captionEn || item.articleTitle || item.pollQuestion || t("dashboard.no_content"))
+                                                        : (item.platformCaptions
+                                                            ? (Object.values(JSON.parse(item.platformCaptions)).filter(v => !!v).join('\n\n') || t("dashboard.no_content"))
+                                                            : (item.captionAr || item.captionEn || item.articleTitle || item.pollQuestion || t("dashboard.no_content")))
                                                     }
                                                 </div>
                                                 {item.imageUrl && (

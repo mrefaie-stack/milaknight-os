@@ -5,6 +5,7 @@ import { useLanguage } from "@/contexts/language-context";
 import { PlanApprovalHeader } from "@/components/action-plan/plan-approval-header";
 import { ClientApprovalActions } from "@/components/action-plan/client-approval-actions";
 import { DownloadActionPlanButton } from "@/components/action-plan/download-action-plan-button";
+import { Label } from "@/components/ui/label";
 import {
     Image as ImageIcon,
     Video,
@@ -224,21 +225,47 @@ function ContentCard({ item, isRtl }: { item: any; isRtl: boolean }) {
                     </div>
                 )}
 
-                {/* Per-Platform Captions */}
+                {/* Per-Platform Captions (Redesigned) */}
                 {item.platformCaptions && (() => {
                     try {
                         const caps: Record<string, string> = JSON.parse(item.platformCaptions);
                         const entries = Object.entries(caps).filter(([, v]) => v?.trim());
                         if (entries.length === 0) return null;
+
+                        const PLATFORM_THEMES: Record<string, { bg: string, text: string, border: string, icon: any }> = {
+                            Facebook: { bg: 'bg-blue-500/10', text: 'text-blue-600', border: 'border-blue-500/20', icon: ImageIcon },
+                            Instagram: { bg: 'bg-pink-500/10', text: 'text-pink-600', border: 'border-pink-500/20', icon: ImageIcon },
+                            TikTok: { bg: 'bg-slate-900/10', text: 'text-slate-900', border: 'border-slate-900/20', icon: Video },
+                            LinkedIn: { bg: 'bg-sky-600/10', text: 'text-sky-700', border: 'border-sky-600/20', icon: Linkedin },
+                            Snapchat: { bg: 'bg-yellow-400/10', text: 'text-yellow-600', border: 'border-yellow-400/20', icon: ImageIcon },
+                            YouTube: { bg: 'bg-red-600/10', text: 'text-red-700', border: 'border-red-600/20', icon: Video },
+                            Twitter: { bg: 'bg-sky-400/10', text: 'text-sky-500', border: 'border-sky-400/20', icon: ImageIcon },
+                        };
+
                         return (
-                            <div className="space-y-2">
-                                <p className="text-[10px] font-black uppercase text-muted-foreground tracking-wider">كابشن لكل منصة</p>
-                                {entries.map(([platform, caption]) => (
-                                    <div key={platform} className="p-3 bg-muted/20 rounded-xl border border-muted/30">
-                                        <p className="text-[10px] font-black text-primary mb-1">{platform}</p>
-                                        <p className="text-foreground/80 text-sm whitespace-pre-wrap">{caption}</p>
-                                    </div>
-                                ))}
+                            <div className="space-y-3">
+                                <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest flex items-center gap-2">
+                                    <Layers className="h-3 w-3" /> {isRtl ? 'كابشن لكل منصة' : 'Platform Specific Captions'}
+                                </Label>
+                                <div className="grid gap-3">
+                                    {entries.map(([plat, caption]) => {
+                                        const theme = PLATFORM_THEMES[plat] || { bg: 'bg-primary/5', text: 'text-primary', border: 'border-primary/10', icon: ImageIcon };
+                                        const Icon = theme.icon;
+                                        return (
+                                            <div key={plat} className={`p-4 rounded-2xl border ${theme.bg} ${theme.border} transition-all duration-300 hover:shadow-sm`}>
+                                                <div className={`flex items-center gap-2 mb-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                                                    <div className={`p-1.5 rounded-lg bg-white/50 border ${theme.border}`}>
+                                                        <Icon className={`h-3 w-3 ${theme.text}`} />
+                                                    </div>
+                                                    <span className={`text-[11px] font-black uppercase tracking-wider ${theme.text}`}>{plat}</span>
+                                                </div>
+                                                <p className={`text-sm leading-relaxed ${isRtl ? 'text-right' : 'text-left'} whitespace-pre-wrap font-medium text-foreground/90`}>
+                                                    {caption}
+                                                </p>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
                             </div>
                         );
                     } catch { return null; }
@@ -299,8 +326,31 @@ function ContentCard({ item, isRtl }: { item: any; isRtl: boolean }) {
                     )}
                 </div>
 
-                {/* AM Notes */}
-                {item.amComment && (
+                {/* Content Item Comments Timeline */}
+                {item.comments && item.comments.length > 0 && (
+                    <div className="space-y-4 pt-4 border-t border-white/5 mt-auto">
+                        <Label className={`text-[10px] font-black uppercase text-primary tracking-widest flex items-center gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                            <MessageSquare className="h-3 w-3" /> {isRtl ? 'سجل التعليقات' : 'Discussion Log'}
+                        </Label>
+                        <div className="space-y-3">
+                            {item.comments.map((c: any) => (
+                                <div key={c.id} className={`flex flex-col gap-1 p-3 rounded-2xl border transition-all duration-300 ${c.user.role === 'CLIENT' ? 'bg-orange-50/50 border-orange-100/50 ml-4' : 'bg-primary/5 border-primary/10 mr-4'
+                                    }`}>
+                                    <div className={`flex items-center justify-between ${isRtl ? 'flex-row-reverse' : ''}`}>
+                                        <span className="text-[10px] font-black text-foreground/70">{c.user.firstName} {c.user.lastName}</span>
+                                        <span className="text-[9px] font-bold text-muted-foreground">
+                                            {new Date(c.createdAt).toLocaleDateString(isRtl ? 'ar-EG' : 'en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                                        </span>
+                                    </div>
+                                    <p className={`text-xs leading-relaxed ${isRtl ? 'text-right' : 'text-left'}`}>{c.text}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* Legacy Notes Display (Fallback) */}
+                {!item.comments?.length && item.amComment && (
                     <div className="p-4 rounded-xl bg-primary/5 border border-primary/20 mt-auto">
                         <div className="flex items-center gap-2 mb-2">
                             <MessageSquare className="h-3.5 w-3.5 text-primary" />
@@ -310,8 +360,7 @@ function ContentCard({ item, isRtl }: { item: any; isRtl: boolean }) {
                     </div>
                 )}
 
-                {/* Client Feedback */}
-                {item.clientComment && (
+                {!item.comments?.length && item.clientComment && (
                     <div className={`p-4 rounded-xl border ${item.feedbackResolved ? 'bg-muted/20 border-muted text-muted-foreground' : 'bg-orange-50 border-orange-200 text-orange-900'}`}>
                         <div className="flex items-center gap-1.5 mb-1.5">
                             <MessageSquare className="h-3.5 w-3.5" />

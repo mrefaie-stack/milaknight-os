@@ -24,8 +24,22 @@ import {
 export function ContentItemEditor({ item, onSave }: { item: any, onSave: (data: any) => void }) {
     const [data, setData] = useState({
         ...item,
-        scheduledDate: item.scheduledDate ? new Date(item.scheduledDate).toISOString().split('T')[0] : ''
+        scheduledDate: item.scheduledDate ? new Date(item.scheduledDate).toISOString().split('T')[0] : '',
+        platformCaptions: item.platformCaptions || '{}'
     });
+
+    const platformCaptionsObj = (() => {
+        try {
+            return JSON.parse(data.platformCaptions);
+        } catch {
+            return {};
+        }
+    })();
+
+    function updatePlatformCaption(plat: string, text: string) {
+        const next = { ...platformCaptionsObj, [plat]: text };
+        setData({ ...data, platformCaptions: JSON.stringify(next) });
+    }
 
     return (
         <Card className="border-none bg-card/50 backdrop-blur-sm">
@@ -54,18 +68,28 @@ export function ContentItemEditor({ item, onSave }: { item: any, onSave: (data: 
                             <Label>Platforms</Label>
                             <div className="flex flex-wrap gap-3 pt-1">
                                 {PLATFORMS.map((plat) => {
-                                    const selected = data.platform ? data.platform.split(',').map((s: string) => s.trim()) : [];
+                                    const selected = data.platform ? data.platform.split(/[,/]/).map((s: string) => s.trim()) : [];
                                     const isChecked = selected.includes(plat);
                                     return (
                                         <div key={plat} className="flex items-center space-x-1.5 bg-background border px-2 py-1 rounded-md">
                                             <Checkbox
                                                 id={`plat-${plat}`}
                                                 checked={isChecked}
-                                                onCheckedChange={() => {
-                                                    const newPlatforms = isChecked
-                                                        ? selected.filter((p: string) => p !== plat)
-                                                        : [...selected, plat];
-                                                    setData({ ...data, platform: newPlatforms.join(', ') });
+                                                onCheckedChange={(checked) => {
+                                                    const newPlatforms = checked
+                                                        ? [...selected, plat]
+                                                        : selected.filter((p: string) => p !== plat);
+
+                                                    const newData: any = { ...data, platform: newPlatforms.join(', ') };
+
+                                                    // If unchecked, optionally remove the specific caption
+                                                    if (!checked) {
+                                                        const nextCaps = { ...platformCaptionsObj };
+                                                        delete nextCaps[plat];
+                                                        newData.platformCaptions = JSON.stringify(nextCaps);
+                                                    }
+
+                                                    setData(newData);
                                                 }}
                                             />
                                             <label htmlFor={`plat-${plat}`} className="text-xs font-semibold cursor-pointer">
@@ -183,28 +207,54 @@ export function ContentItemEditor({ item, onSave }: { item: any, onSave: (data: 
                     </div>
                 )}
 
-                {/* Dual Language Captions */}
-                <div className="grid gap-4 md:grid-cols-2">
+                {/* Per-Platform Captions */}
+                {data.type !== 'EMAIL' && data.type !== 'ARTICLE' && data.type !== 'POLL' && (
+                    <div className="grid gap-4 p-4 rounded-2xl border border-primary/10 bg-primary/5">
+                        <Label className="text-primary font-black text-xs uppercase tracking-wider flex items-center gap-2">
+                            <Languages className="h-3.5 w-3.5" />
+                            Per-Platform Captions
+                        </Label>
+                        <div className="grid gap-4 md:grid-cols-2">
+                            {data.platform?.split(/[,/]/).map((p: string) => p.trim()).filter(Boolean).map((plat: string) => (
+                                <div key={plat} className="space-y-2">
+                                    <Label className="text-[10px] font-black uppercase text-muted-foreground">{plat}</Label>
+                                    <Textarea
+                                        className="h-24 text-sm bg-background/50"
+                                        placeholder={`Write caption for ${plat}...`}
+                                        value={platformCaptionsObj[plat] || ""}
+                                        onChange={(e) => updatePlatformCaption(plat, e.target.value)}
+                                    />
+                                </div>
+                            ))}
+                        </div>
+                        {(!data.platform || data.platform.length === 0) && (
+                            <p className="text-[10px] text-muted-foreground italic">Select platforms to add specific captions.</p>
+                        )}
+                    </div>
+                )}
+
+                {/* Dual Language Captions (Fallback/General) */}
+                <div className="grid gap-4 md:grid-cols-2 opacity-60">
                     <div className="space-y-2">
-                        <Label className="flex items-center gap-2">
+                        <Label className="flex items-center gap-2 text-[10px] font-black uppercase">
                             <Languages className="h-3 w-3 text-orange-500" />
-                            Arabic Caption
+                            General Arabic Caption (Fallback)
                         </Label>
                         <Textarea
                             dir="rtl"
-                            className="h-32 text-right"
+                            className="h-24 text-right text-xs bg-background/50"
                             placeholder="اكتب المحتوى العربي هنا..."
                             value={data.captionAr || ''}
                             onChange={(e) => setData({ ...data, captionAr: e.target.value })}
                         />
                     </div>
                     <div className="space-y-2">
-                        <Label className="flex items-center gap-2">
+                        <Label className="flex items-center gap-2 text-[10px] font-black uppercase">
                             <Languages className="h-3 w-3 text-blue-500" />
-                            {data.type === 'EMAIL' ? 'Campaign Description / Goal' : 'English Caption'}
+                            {data.type === 'EMAIL' ? 'Campaign Description / Goal' : 'General English Caption (Fallback)'}
                         </Label>
                         <Textarea
-                            className="h-32"
+                            className="h-24 text-xs bg-background/50"
                             placeholder={data.type === 'EMAIL' ? "Campaign goal..." : "Write English caption here..."}
                             value={data.captionEn || ''}
                             onChange={(e) => setData({ ...data, captionEn: e.target.value })}
