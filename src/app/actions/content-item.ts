@@ -27,6 +27,8 @@ export async function updateContentItem(itemId: string, data: any) {
             pollOptionB: data.pollOptionB,
             imageUrl: data.imageUrl,
             videoUrl: data.videoUrl,
+            platformCaptions: data.platformCaptions,
+            amComment: data.amComment,
             status: "DRAFT",
         }
     });

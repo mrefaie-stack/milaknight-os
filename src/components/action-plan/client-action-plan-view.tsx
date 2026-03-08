@@ -349,14 +349,14 @@ function ContentCard({ item, isRtl }: { item: any; isRtl: boolean }) {
                     </div>
                 )}
 
-                {/* Legacy Notes Display (Fallback) */}
-                {!item.comments?.length && item.amComment && (
-                    <div className="p-4 rounded-xl bg-primary/5 border border-primary/20 mt-auto">
-                        <div className="flex items-center gap-2 mb-2">
+                {/* AM Notes */}
+                {item.amComment && (
+                    <div className="p-4 rounded-xl bg-primary/5 border border-primary/20 mt-4">
+                        <div className={`flex items-center gap-2 mb-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
                             <MessageSquare className="h-3.5 w-3.5 text-primary" />
                             <span className="text-[10px] font-black uppercase tracking-wider text-primary">{isRtl ? 'ملاحظات مدير الحساب' : 'Account Manager Notes'}</span>
                         </div>
-                        <p className="text-sm text-foreground/80 leading-relaxed">{item.amComment}</p>
+                        <p className={`text-sm text-foreground/80 leading-relaxed ${isRtl ? 'text-right' : 'text-left'}`}>{item.amComment}</p>
                     </div>
                 )}
 
