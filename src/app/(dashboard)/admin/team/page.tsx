@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button";
 const ROLE_COLORS: Record<string, { color: string; bg: string }> = {
     ADMIN: { color: "text-purple-500", bg: "bg-purple-500/10 border-purple-500/20" },
     ACCOUNT_MANAGER: { color: "text-primary", bg: "bg-primary/10 border-primary/20" },
+    AM: { color: "text-primary", bg: "bg-primary/10 border-primary/20" },
+    MODERATOR: { color: "text-orange-500", bg: "bg-orange-500/10 border-orange-500/20" },
     CLIENT: { color: "text-emerald-500", bg: "bg-emerald-500/10 border-emerald-500/20" },
 };
 
@@ -29,7 +31,8 @@ export default async function AdminTeamPage() {
             {/* Stats Row */}
             <TeamStats
                 totalMembers={(team as any[]).length}
-                amsCount={(team as any[]).filter((m: any) => m.role === "ACCOUNT_MANAGER").length}
+                amsCount={(team as any[]).filter((m: any) => m.role === "AM" || m.role === "ACCOUNT_MANAGER").length}
+                moderatorsCount={(team as any[]).filter((m: any) => m.role === "MODERATOR").length}
                 adminsCount={(team as any[]).filter((m: any) => m.role === "ADMIN").length}
                 totalClients={totalClients}
             />

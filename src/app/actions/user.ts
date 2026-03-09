@@ -12,7 +12,7 @@ export async function getTeamMembers() {
     if (session?.user?.role !== "ADMIN") throw new Error("Unauthorized");
 
     return prisma.user.findMany({
-        where: { role: "AM" },
+        where: { role: { in: ["AM", "MODERATOR"] } },
         include: {
             _count: {
                 select: { clients: true }
@@ -43,7 +43,7 @@ export async function createTeamMember(data: FormData) {
             password: hashedPassword,
             firstName,
             lastName,
-            role: "AM"
+            role: data.get("role") as string || "AM"
         }
     });
 
@@ -92,7 +92,7 @@ export async function updateTeamMember(userId: string, data: any) {
     return { success: true };
 }
 
-export async function updateUserCredentials(userId: string, data: { email?: string, password?: string, firstName?: string, lastName?: string }) {
+export async function updateUserCredentials(userId: string, data: { email?: string, password?: string, firstName?: string, lastName?: string, role?: string }) {
     const session = await getServerSession(authOptions);
     if (session?.user?.role !== "ADMIN") throw new Error("Unauthorized");
 
@@ -100,6 +100,7 @@ export async function updateUserCredentials(userId: string, data: { email?: stri
     if (data.email) updateData.email = data.email;
     if (data.firstName) updateData.firstName = data.firstName;
     if (data.lastName) updateData.lastName = data.lastName;
+    if (data.role) updateData.role = data.role;
 
     if (data.password && data.password.trim() !== "") {
         updateData.password = await bcrypt.hash(data.password, 10);

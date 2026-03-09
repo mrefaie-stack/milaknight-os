@@ -26,6 +26,7 @@ export function EditTeamMemberDialog({ member }: { member: any }) {
         firstName: member.firstName,
         lastName: member.lastName,
         email: member.email,
+        role: member.role,
         password: "",
     });
 
@@ -92,6 +93,18 @@ export function EditTeamMemberDialog({ member }: { member: any }) {
                                 required
                                 className={isRtl ? "text-right" : ""}
                             />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="role" className={isRtl ? "text-right" : ""}>{isRtl ? "الرتبة" : "Role"}</Label>
+                            <select
+                                id="role"
+                                value={formData.role}
+                                onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                                <option value="AM">{isRtl ? "مدير حساب" : "Account Manager"}</option>
+                                <option value="MODERATOR">{isRtl ? "موديريتور (ناشر)" : "Moderator"}</option>
+                            </select>
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="password" className={isRtl ? "text-right" : ""}>{t("dashboard.new_password")}</Label>

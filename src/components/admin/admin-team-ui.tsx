@@ -27,11 +27,15 @@ export function TeamMemberRoleBadge({ role }: { role: string }) {
     const ROLE_META_AR: Record<string, string> = {
         ADMIN: "مسؤول النظام",
         ACCOUNT_MANAGER: "مدير حساب",
+        AM: "مدير حساب",
+        MODERATOR: "موديريتور (ناشر)",
         CLIENT: "عميل",
     };
     const ROLE_META_EN: Record<string, string> = {
         ADMIN: "Admin",
         ACCOUNT_MANAGER: "Account Manager",
+        AM: "Account Manager",
+        MODERATOR: "Moderator",
         CLIENT: "Client",
     };
     return <>{isRtl ? (ROLE_META_AR[role] || role) : (ROLE_META_EN[role] || role)}</>;
@@ -51,13 +55,14 @@ export function ClientLoadLabel({ load, isHeavy }: { load: number; isHeavy: bool
     );
 }
 
-export function TeamStats({ totalMembers, amsCount, adminsCount, totalClients }: {
-    totalMembers: number; amsCount: number; adminsCount: number; totalClients: number;
+export function TeamStats({ totalMembers, amsCount, adminsCount, moderatorsCount, totalClients }: {
+    totalMembers: number; amsCount: number; adminsCount: number; moderatorsCount: number; totalClients: number;
 }) {
     const { isRtl } = useLanguage();
     const stats = [
         { ar: "إجمالي الأعضاء", en: "Total Members", value: totalMembers, color: "text-primary", bg: "bg-primary/5 border-primary/20" },
         { ar: "مديرو الحسابات", en: "Account Managers", value: amsCount, color: "text-blue-500", bg: "bg-blue-500/5 border-blue-500/20" },
+        { ar: "المشرفون", en: "Moderators", value: moderatorsCount, color: "text-orange-500", bg: "bg-orange-500/5 border-orange-500/20" },
         { ar: "المسؤولون", en: "Admins", value: adminsCount, color: "text-purple-500", bg: "bg-purple-500/5 border-purple-500/20" },
         { ar: "العملاء المُسنّدون", en: "Clients Covered", value: totalClients, color: "text-emerald-500", bg: "bg-emerald-500/5 border-emerald-500/20" },
     ];
