@@ -17,7 +17,7 @@ export async function requestMeeting(data: { reason: string, teams: string[] }) 
 
     if (!client) throw new Error("Client profile not found");
 
-    const meeting = await prisma.MeetingRequest.create({
+    const meeting = await prisma.meetingRequest.create({
         data: {
             clientId: client.id,
             reason: data.reason,
@@ -91,7 +91,7 @@ export async function getMeetingRequests() {
         where = { clientId: client?.id };
     }
 
-    return prisma.MeetingRequest.findMany({
+    return prisma.meetingRequest.findMany({
         where,
         include: { client: true },
         orderBy: { createdAt: "desc" }
@@ -102,7 +102,7 @@ export async function updateMeetingStatus(id: string, status: string) {
     const session = await getServerSession(authOptions);
     if (!session || (session.user.role !== "AM" && session.user.role !== "ADMIN")) throw new Error("Unauthorized");
 
-    const meeting = await prisma.MeetingRequest.update({
+    const meeting = await prisma.meetingRequest.update({
         where: { id },
         data: { status },
         include: { client: true }
