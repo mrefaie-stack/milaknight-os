@@ -399,7 +399,8 @@ function CalendarView({ items, onImageClick, isRtl, isModerator }: { items: any[
                             onClick={() => {
                                 if (dayItems.length > 0) {
                                     const d = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-                                    setSelectedDate(d.toISOString().split('T')[0]);
+                                    const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                                    setSelectedDate(iso);
                                 }
                             }}
                             className={`aspect-square relative p-2 md:p-3 rounded-2xl border transition-all duration-300 group overflow-hidden
@@ -407,28 +408,28 @@ function CalendarView({ items, onImageClick, isRtl, isModerator }: { items: any[
                                 ${isToday ? 'ring-2 ring-primary ring-offset-2 ring-offset-background' : ''}
                             `}
                         >
-                            <span className={`text-sm md:text-base font-black ${isToday ? 'text-primary' : 'text-muted-foreground/80'} group-hover:text-primary transition-colors flex items-center justify-between`}>
+                            <span className={`text-sm md:text-base font-black ${isToday ? 'text-primary' : 'text-muted-foreground/80'} group-hover:text-primary transition-colors flex items-center justify-between pointer-events-none`}>
                                 {day}
-                                {dayItems.length > 0 && <span className="text-[9px] opacity-40">({dayItems.length})</span>}
+                                {dayItems.length > 0 && <span className="text-[10px] text-primary/60 font-black">({dayItems.length})</span>}
                             </span>
 
                             {/* Improved Cell Previews */}
-                            <div className="mt-1 space-y-1 hidden md:block">
+                            <div className="mt-2 space-y-1.5 hidden md:block pointer-events-none">
                                 {dayItems.slice(0, 2).map((item, i) => {
                                     const meta = TYPE_META_BI[item.type] || TYPE_META_BI.POST;
                                     const TypeIcon = meta.icon;
                                     const title = item.articleTitle || item.emailSubject || (isRtl ? item.captionAr : item.captionEn) || "...";
                                     return (
-                                        <div key={i} className="flex items-center gap-1.5 px-1.5 py-0.5 rounded-lg bg-white/5 border border-white/5 group-hover:border-primary/20 transition-all">
-                                            <TypeIcon className={`h-2.5 w-2.5 shrink-0 ${meta.color}`} />
-                                            <span className="text-[8px] font-bold text-muted-foreground truncate opacity-80 group-hover:opacity-100">
-                                                {title.slice(0, 12)}...
+                                        <div key={i} className="flex items-center gap-2 px-2 py-1 rounded-xl bg-white/5 border border-white/10 group-hover:bg-primary/5 group-hover:border-primary/20 transition-all">
+                                            <TypeIcon className={`h-3 w-3 shrink-0 ${meta.color}`} />
+                                            <span className="text-[9px] font-black text-foreground/80 truncate">
+                                                {title}
                                             </span>
                                         </div>
                                     );
                                 })}
                                 {dayItems.length > 2 && (
-                                    <div className="text-[8px] font-black text-primary/60 px-1.5">
+                                    <div className="text-[9px] font-black text-primary/80 px-2 mt-1">
                                         +{dayItems.length - 2} {isRtl ? 'أكثر' : 'more'}
                                     </div>
                                 )}
@@ -476,8 +477,10 @@ function CalendarView({ items, onImageClick, isRtl, isModerator }: { items: any[
                             <div className="p-6 overflow-y-auto space-y-4">
                                 {items.filter(item => {
                                     if (!item.scheduledDate) return false;
+                                    // Use same consistent logic as getItemsForDate
                                     const d = new Date(item.scheduledDate);
-                                    return d.toISOString().split('T')[0] === selectedDate;
+                                    const itemIso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                                    return itemIso === selectedDate;
                                 }).map(item => (
                                     <div key={item.id} className="p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-primary/20 transition-all">
                                         <ContentCard item={item} isRtl={isRtl} onImageClick={onImageClick} isModerator={isModerator} />
