@@ -4,12 +4,13 @@ import { authOptions } from "@/lib/auth";
 import { notFound, redirect } from "next/navigation";
 import { ModeratorActionPlanDetailView } from "@/components/action-plan/moderator-action-plan-detail-view";
 
-export default async function ModeratorActionPlanDetailPage({ params }: { params: { id: string } }) {
+export default async function ModeratorActionPlanDetailPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
     if (!session || session.user.role !== "MODERATOR") redirect("/login");
 
     const plan = await prisma.actionPlan.findUnique({
-        where: { id: params.id },
+        where: { id: id },
         include: {
             client: true,
             items: {
@@ -19,7 +20,7 @@ export default async function ModeratorActionPlanDetailPage({ params }: { params
         }
     });
 
-    if (!plan || plan.status !== "APPROVED") notFound();
+    if (!plan || (plan.status !== "APPROVED" && plan.status !== "SCHEDULED")) notFound();
 
     return <ModeratorActionPlanDetailView plan={plan} items={(plan as any).items} />;
 }
