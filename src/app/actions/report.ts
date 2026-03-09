@@ -72,6 +72,19 @@ export async function publishReport(reportId: string) {
         include: { client: { include: { user: true } } }
     });
 
+    // Update client's global SEO score from this report
+    try {
+        const m = typeof report.metrics === 'string' ? JSON.parse(report.metrics) : report.metrics;
+        if (m?.seo?.score !== undefined) {
+            await prisma.client.update({
+                where: { id: report.clientId },
+                data: { seoScore: Number(m.seo.score) || 0 } as any
+            });
+        }
+    } catch (e) {
+        console.error("Failed to sync SEO score to client", e);
+    }
+
     // Notify the client
     if (report.client?.user) {
         await prisma.notification.create({

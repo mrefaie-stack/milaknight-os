@@ -7,7 +7,7 @@ import { revalidatePath } from "next/cache";
 import { sendEmail } from "@/lib/email";
 import { logActivity } from "./activity";
 
-export async function getActionPlans() {
+export async function getActionPlans(clientId?: string) {
     const session = await getServerSession(authOptions);
 
     if (!session) throw new Error("Unauthorized");
@@ -27,7 +27,11 @@ export async function getActionPlans() {
             return []; // No client linked
         }
     } else if (session.user.role === "MODERATOR") {
-        where = { status: "APPROVED" };
+        where = { status: { in: ["APPROVED", "SCHEDULED"] } };
+    }
+
+    if (clientId) {
+        where = { ...where, clientId };
     }
 
     return prisma.actionPlan.findMany({
@@ -446,6 +450,76 @@ export async function approveActionPlan(planId: string) {
     revalidatePath(`/am/action-plans/${planId}`);
     revalidatePath("/am/action-plans");
     revalidatePath("/client/action-plans");
+
+    return { success: true };
+}
+export async function scheduleActionPlan(planId: string) {
+    const session = await getServerSession(authOptions);
+    if (!session || session.user.role !== "MODERATOR") throw new Error("Unauthorized");
+
+    const plan = await prisma.actionPlan.update({
+        where: { id: planId },
+        data: { status: "SCHEDULED" },
+        include: {
+            client: {
+                include: {
+                    accountManager: true
+                }
+            }
+        }
+    });
+
+    // Notify the AM
+    if (plan.client?.accountManager) {
+        await prisma.notification.create({
+            data: {
+                userId: plan.client.accountManager.id,
+                title: "Action Plan Scheduled",
+                message: `The moderator has scheduled the action plan for ${plan.client.name} for ${plan.month}.`,
+                type: "SYSTEM",
+                link: `/am/action-plans/${planId}`
+            }
+        });
+
+        // Send Email to AM
+        if (plan.client.accountManager.email) {
+            await sendEmail({
+                to: plan.client.accountManager.email,
+                subject: `Action Plan Scheduled - ${plan.client.name}`,
+                html: `
+                    <div style="font-family: sans-serif; padding: 20px; background: #f0fdf4; border-radius: 8px; border-left: 4px solid #10b981; max-width: 600px; margin: auto;">
+                        <h2 style="color: #10b981; margin-bottom: 20px;">Action Plan Scheduled</h2>
+                        <p style="font-size: 16px;">Hello ${plan.client.accountManager.firstName},</p>
+                        <p style="font-size: 16px;">The moderator has marked the action plan for <strong>${plan.client.name}</strong> (${plan.month}) as <strong>SCHEDULED</strong>.</p>
+                        <br/>
+                        <a href="${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/am/action-plans/${plan.id}" style="display: inline-block; padding: 12px 24px; background-color: #10b981; color: white; text-decoration: none; border-radius: 6px; font-weight: bold;">View Details</a>
+                    </div>
+                `
+            });
+        }
+    }
+
+    // Notify Admins
+    const admins = await prisma.user.findMany({ where: { role: "ADMIN" } });
+    for (const admin of admins) {
+        await prisma.notification.create({
+            data: {
+                userId: admin.id,
+                title: "Action Plan Scheduled",
+                message: `Moderator scheduled plan for ${plan.client.name} (${plan.month}).`,
+                type: "SYSTEM",
+                link: `/admin/clients/${plan.clientId}/action-plans`
+            }
+        });
+    }
+
+    await logActivity(`scheduled action plan for ${plan.client.name} (${plan.month})`, "ActionPlan", planId);
+
+    revalidatePath(`/moderator/action-plans/${planId}`);
+    revalidatePath("/moderator/action-plans");
+    revalidatePath(`/am/action-plans/${planId}`);
+    revalidatePath("/am/action-plans");
+    revalidatePath(`/admin/clients/${plan.clientId}/action-plans`);
 
     return { success: true };
 }

@@ -24,8 +24,21 @@ export function ModeratorActionPlansList({ plans }: { plans: any[] }) {
         <div className="space-y-8 max-w-7xl mx-auto">
             <div className={`flex flex-col md:flex-row md:items-center justify-between gap-4 ${isRtl ? 'md:flex-row-reverse' : ''}`}>
                 <div>
-                    <h1 className="text-3xl font-black uppercase tracking-tighter">{isRtl ? "خطط النشر المعتمدة" : "Approved Action Plans"}</h1>
-                    <p className="text-muted-foreground font-medium">{isRtl ? "المحتوى الجاهز للجدولة والتوزيع" : "Content ready for scheduling and distribution"}</p>
+                    <h1 className="text-3xl font-black uppercase tracking-tighter">
+                        {isRtl ? "خطط المحتوى" : "Content Plans"}
+                    </h1>
+                    <p className="text-muted-foreground font-medium">
+                        {isRtl ? "المحتوى المعتمد والجاهز للتنفيذ" : "Approved content ready for execution"}
+                    </p>
+                    {filteredPlans.length > 0 && plans.length > filteredPlans.length && (
+                        <div className={`mt-2 flex items-center gap-2 text-xs font-bold text-primary ${isRtl ? 'flex-row-reverse' : ''}`}>
+                            <Filter className="h-3 w-3" />
+                            {isRtl ? `عرض خطط: ${filteredPlans[0].client?.name}` : `Viewing plans for: ${filteredPlans[0].client?.name}`}
+                            <Link href="/moderator/action-plans" className="underline opacity-60 hover:opacity-100 transition-opacity">
+                                {isRtl ? "(إلغاء الفلتر)" : "(clear filter)"}
+                            </Link>
+                        </div>
+                    )}
                 </div>
 
                 <div className={`flex items-center gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
@@ -51,7 +64,7 @@ export function ModeratorActionPlansList({ plans }: { plans: any[] }) {
                             className={`group flex items-center justify-between p-6 rounded-3xl bg-card border border-white/10 hover:border-emerald-500/30 hover:bg-emerald-500/5 transition-all ${isRtl ? 'flex-row-reverse' : ''}`}
                         >
                             <div className={`flex items-center gap-6 ${isRtl ? 'flex-row-reverse' : ''}`}>
-                                <div className="h-16 w-16 rounded-2xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center border border-emerald-500/20 shadow-inner">
+                                <div className={`h-16 w-16 rounded-2xl ${plan.status === 'SCHEDULED' ? 'bg-emerald-500/20 text-emerald-600' : 'bg-emerald-500/10 text-emerald-600'} flex items-center justify-center border border-emerald-500/20 shadow-inner`}>
                                     <Layers className="h-8 w-8" />
                                 </div>
                                 <div className={isRtl ? 'text-right' : 'text-left'}>
@@ -59,9 +72,9 @@ export function ModeratorActionPlansList({ plans }: { plans: any[] }) {
                                     <div className={`flex items-center gap-2 text-sm text-muted-foreground font-bold ${isRtl ? 'flex-row-reverse' : ''}`}>
                                         <span>{plan.client?.name}</span>
                                         <span className="opacity-30">•</span>
-                                        <span className="flex items-center gap-1 text-emerald-600">
+                                        <span className={`flex items-center gap-1 ${plan.status === 'SCHEDULED' ? 'text-emerald-700' : 'text-emerald-600'}`}>
                                             <CheckCircle2 className="h-3 w-3" />
-                                            {isRtl ? "معتمد" : "Approved"}
+                                            {plan.status === 'SCHEDULED' ? (isRtl ? "تمت الجدولة" : "Scheduled") : (isRtl ? "معتمد" : "Approved")}
                                         </span>
                                     </div>
                                 </div>

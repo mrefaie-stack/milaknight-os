@@ -17,11 +17,11 @@ export async function getAccountManagers() {
 
 export async function getClients() {
     const session = await getServerSession(authOptions);
-    if (!session || (session.user.role !== "ADMIN" && session.user.role !== "AM")) {
+    if (!session || (session.user.role !== "ADMIN" && session.user.role !== "AM" && session.user.role !== "MODERATOR")) {
         throw new Error("Unauthorized");
     }
 
-    const where = session.user.role === "AM" ? { amId: session.user.id } : {};
+    const where = (session.user.role === "AM") ? { amId: session.user.id } : {};
 
     return prisma.client.findMany({
         where,
@@ -129,7 +129,7 @@ export async function createClient(data: FormData) {
             snapchat,
             youtube,
             website,
-            seoScore: Number(data.get("seoScore")) || 0,
+            ...({ seoScore: Number(data.get("seoScore")) || 0 } as any),
             services: {
                 create: servicesInput ? servicesInput.split(",").filter(id => id.trim()).map(id => ({
                     globalService: { connect: { id: id.trim() } }
@@ -171,7 +171,7 @@ export async function updateClient(clientId: string, data: any) {
             snapchat: data.snapchat,
             youtube: data.youtube,
             website: data.website,
-            seoScore: Number(data.seoScore) || 0,
+            ...({ seoScore: Number(data.seoScore) || 0 } as any),
             services: data.serviceIds ? {
                 deleteMany: {},
                 create: data.serviceIds.map((id: string) => ({

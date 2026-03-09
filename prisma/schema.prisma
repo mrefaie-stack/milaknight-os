@@ -134,7 +134,7 @@ model ActionPlan {
   clientId       String
   client         Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
   month          String    // e.g., "2026-03"
-  status         String    @default("DRAFT") // DRAFT, PENDING, APPROVED, REVISION_REQUESTED
+  status         String    @default("DRAFT") // DRAFT, PENDING, APPROVED, REVISION_REQUESTED, SCHEDULED
   
   items          ContentItem[]
   

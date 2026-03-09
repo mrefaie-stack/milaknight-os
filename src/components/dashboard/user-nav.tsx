@@ -15,7 +15,7 @@ import { LogOut, User as UserIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
-export function UserNav({ user, isRtl }: { user: any; isRtl?: boolean }) {
+export function UserNav({ user, isRtl, compact = false }: { user: any; isRtl?: boolean; compact?: boolean }) {
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
@@ -43,12 +43,14 @@ export function UserNav({ user, isRtl }: { user: any; isRtl?: boolean }) {
                     <Avatar className="h-8 w-8 shrink-0">
                         <AvatarFallback>{initials}</AvatarFallback>
                     </Avatar>
-                    <div className={cn("flex flex-col space-y-1 flex-1 overflow-hidden", isRtl ? "text-right" : "text-left")}>
-                        <p className="text-sm font-medium leading-none truncate">{user.name || (isRtl ? "مستخدم" : "User")}</p>
-                        <p className="text-xs text-muted-foreground leading-none truncate">
-                            {user.email}
-                        </p>
-                    </div>
+                    {!compact && (
+                        <div className={cn("flex flex-col space-y-1 flex-1 overflow-hidden", isRtl ? "text-right" : "text-left")}>
+                            <p className="text-sm font-medium leading-none truncate">{user.name || (isRtl ? "مستخدم" : "User")}</p>
+                            <p className="text-xs text-muted-foreground leading-none truncate">
+                                {user.email}
+                            </p>
+                        </div>
+                    )}
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56" align={isRtl ? "start" : "end"} forceMount>

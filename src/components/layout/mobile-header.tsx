@@ -67,6 +67,7 @@ export function MobileHeader({ role, user }: { role: string, user: any }) {
 
     const moderatorPrimary = [
         { href: "/moderator", label: t("common.overview"), icon: LayoutDashboard },
+        { href: "/moderator/clients", label: t("common.clients"), icon: Users },
         { href: "/moderator/action-plans", label: isRtl ? "خطط النشر" : "Publishing", icon: FolderKanban },
         { href: "/messages", label: t("common.messages"), icon: MessageSquare },
     ];
@@ -85,9 +86,8 @@ export function MobileHeader({ role, user }: { role: string, user: any }) {
             <header className={cn(
                 "h-14 border-b border-border bg-background/60 backdrop-blur-xl flex items-center justify-between px-4 md:hidden relative z-50 shrink-0",
             )}>
-                {/* Left: User */}
-                <div className="scale-95 origin-left">
-                    <UserNav user={user} />
+                <div className="flex-1 flex items-center justify-start">
+                    <UserNav user={user} isRtl={isRtl} compact={true} />
                 </div>
 
                 {/* Center: Logo */}
@@ -95,8 +95,8 @@ export function MobileHeader({ role, user }: { role: string, user: any }) {
                     MILAKNIGHT
                 </div>
 
-                {/* Right: Toggles & Bell */}
-                <div className="flex items-center gap-1">
+                {/* Right: Bell */}
+                <div className="flex-1 flex items-center justify-end">
                     <Link href="/notifications" className="relative p-2 text-muted-foreground hover:text-primary transition-colors">
                         <Bell className="h-5 w-5" />
                         {unreadCount > 0 && (
@@ -105,8 +105,6 @@ export function MobileHeader({ role, user }: { role: string, user: any }) {
                             </span>
                         )}
                     </Link>
-                    <ThemeToggle />
-                    <LanguageToggle />
                 </div>
             </header>
 
@@ -126,23 +124,44 @@ export function MobileHeader({ role, user }: { role: string, user: any }) {
             {role === "CLIENT" && <MeetingRequestModal open={meetingModalOpen} onOpenChange={setMeetingModalOpen} />}
 
             {/* "More" drawer overlay */}
-            {isMoreOpen && moreLinks.length > 0 && (
+            {isMoreOpen && (
                 <div
                     className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm md:hidden"
                     onClick={() => setIsMoreOpen(false)}
                 >
                     <div
-                        className="absolute bottom-16 left-2 right-2 bg-card border border-white/10 rounded-2xl p-2 shadow-2xl"
+                        className="absolute bottom-16 left-2 right-2 bg-card border border-white/10 rounded-2xl p-2 shadow-2xl overflow-hidden"
                         onClick={e => e.stopPropagation()}
                     >
-                        <div className="flex items-center justify-between px-3 py-2 mb-1">
-                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/50">
-                                {isRtl ? "المزيد" : "More"}
-                            </span>
-                            <button onClick={() => setIsMoreOpen(false)} className="text-muted-foreground hover:text-foreground">
-                                <X className="h-4 w-4" />
-                            </button>
+                        {/* Settings & Config */}
+                        <div className="p-3 border-b border-white/5 bg-white/5 mb-2">
+                            <div className="flex items-center justify-between mb-3">
+                                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/50">
+                                    {isRtl ? "الإعدادات" : "Settings"}
+                                </span>
+                                <button onClick={() => setIsMoreOpen(false)} className="text-muted-foreground hover:text-foreground">
+                                    <X className="h-4 w-4" />
+                                </button>
+                            </div>
+                            <div className={`flex items-center gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                                <div className="flex-1 p-2 rounded-xl bg-background/50 border border-white/5 flex items-center justify-between">
+                                    <span className="text-xs font-bold text-muted-foreground">{isRtl ? "المظهر" : "Theme"}</span>
+                                    <ThemeToggle />
+                                </div>
+                                <div className="flex-1 p-2 rounded-xl bg-background/50 border border-white/5 flex items-center justify-between">
+                                    <span className="text-xs font-bold text-muted-foreground">{isRtl ? "اللغة" : "Language"}</span>
+                                    <LanguageToggle />
+                                </div>
+                            </div>
                         </div>
+
+                        {moreLinks.length > 0 && (
+                            <div className="px-3 py-2">
+                                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/50 block mb-2">
+                                    {isRtl ? "المزيد" : "More"}
+                                </span>
+                            </div>
+                        )}
                         {moreLinks.map((link) => {
                             const Icon = link.icon;
                             const active = isActive(link.href);
@@ -212,24 +231,22 @@ export function MobileHeader({ role, user }: { role: string, user: any }) {
                     );
                 })}
 
-                {/* More button — only if extra links exist */}
-                {moreLinks.length > 0 && (
-                    <button
-                        onClick={() => setIsMoreOpen(!isMoreOpen)}
-                        className={cn(
-                            "flex-1 flex flex-col items-center justify-center gap-0.5 text-[9px] font-black uppercase tracking-widest transition-all duration-200",
-                            isMoreOpen ? "text-primary" : "text-muted-foreground hover:text-foreground"
-                        )}
-                    >
-                        <div className={cn(
-                            "flex items-center justify-center w-9 h-9 rounded-2xl transition-all",
-                            isMoreOpen ? "bg-primary/10" : ""
-                        )}>
-                            <MoreHorizontal className="h-5 w-5" />
-                        </div>
-                        <span className="leading-none">{isRtl ? "المزيد" : "More"}</span>
-                    </button>
-                )}
+                {/* More button — always shown for settings */}
+                <button
+                    onClick={() => setIsMoreOpen(!isMoreOpen)}
+                    className={cn(
+                        "flex-1 flex flex-col items-center justify-center gap-0.5 text-[9px] font-black uppercase tracking-widest transition-all duration-200",
+                        isMoreOpen ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                    )}
+                >
+                    <div className={cn(
+                        "flex items-center justify-center w-9 h-9 rounded-2xl transition-all",
+                        isMoreOpen ? "bg-primary/10" : ""
+                    )}>
+                        <MoreHorizontal className="h-5 w-5" />
+                    </div>
+                    <span className="leading-none">{isRtl ? "المزيد" : "More"}</span>
+                </button>
             </nav>
         </>
     );

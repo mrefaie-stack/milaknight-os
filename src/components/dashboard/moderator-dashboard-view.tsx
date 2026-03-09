@@ -10,11 +10,13 @@ import {
     Layers
 } from "lucide-react";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 export function ModeratorDashboardView({ plans }: { plans: any[] }) {
     const { isRtl, t } = useLanguage();
 
-    const approvedCount = plans.length;
+    const approvedCount = plans.filter(p => p.status === "APPROVED").length;
+    const scheduledCount = plans.filter(p => p.status === "SCHEDULED").length;
 
     return (
         <div className="space-y-8 max-w-7xl mx-auto">
@@ -47,16 +49,25 @@ export function ModeratorDashboardView({ plans }: { plans: any[] }) {
                         <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-600">
                             <Layers className="h-5 w-5" />
                         </div>
-                        <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{isRtl ? "الخطط المعتمدة" : "APPROVED PLANS"}</span>
+                        <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{isRtl ? "بانتظار النشر" : "AWAITING PUBLISH"}</span>
                     </div>
                     <div className="text-3xl font-black">{approvedCount}</div>
+                </div>
+                <div className="p-6 rounded-3xl bg-card border border-white/10 shadow-sm">
+                    <div className="flex items-center gap-3 mb-4">
+                        <div className="p-2 rounded-xl bg-blue-500/10 text-blue-600">
+                            <Calendar className="h-5 w-5" />
+                        </div>
+                        <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{isRtl ? "تمت جدولته" : "SCHEDULED"}</span>
+                    </div>
+                    <div className="text-3xl font-black">{scheduledCount}</div>
                 </div>
             </div>
 
             {/* Recent Approved Plans */}
             <div className="space-y-4">
                 <div className={`flex items-center justify-between ${isRtl ? 'flex-row-reverse' : ''}`}>
-                    <h2 className="text-xl font-black uppercase tracking-tight">{isRtl ? "خطط بانتظار النشر" : "Plans Awaiting Publishing"}</h2>
+                    <h2 className="text-xl font-black uppercase tracking-tight">{isRtl ? "الخطط الأخيرة" : "Recent Plans"}</h2>
                     <Link href="/moderator/action-plans" className="text-xs font-black text-primary hover:underline uppercase tracking-widest">
                         {isRtl ? "عرض الكل" : "VIEW ALL"}
                     </Link>
@@ -85,7 +96,12 @@ export function ModeratorDashboardView({ plans }: { plans: any[] }) {
                                 </div>
                                 <div className={`flex items-center gap-4 ${isRtl ? 'flex-row-reverse' : ''}`}>
                                     <div className="text-right px-4 hidden sm:block">
-                                        <div className="text-xs font-black text-emerald-600 uppercase mb-0.5">{isRtl ? "معتمد" : "APPROVED"}</div>
+                                        <div className={cn(
+                                            "text-xs font-black uppercase mb-0.5",
+                                            plan.status === 'SCHEDULED' ? "text-emerald-700" : "text-emerald-600"
+                                        )}>
+                                            {plan.status === 'SCHEDULED' ? (isRtl ? "تمت الجدولة" : "SCHEDULED") : (isRtl ? "بانتظار النشر" : "READY")}
+                                        </div>
                                         <div className="text-[10px] text-muted-foreground font-bold">{plan.items?.length || 0} {isRtl ? "بند محتوى" : "items"}</div>
                                     </div>
                                     <div className="p-2 rounded-full bg-primary/5 group-hover:bg-primary group-hover:text-white transition-all">

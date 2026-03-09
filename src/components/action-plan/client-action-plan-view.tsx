@@ -115,6 +115,7 @@ const STATUS_META_BI: Record<string, { ar: string; en: string; icon: any; color:
     PENDING: { ar: "قيد المراجعة", en: "Pending", icon: Clock, color: "text-orange-500", bg: "bg-orange-500/10", border: "border-orange-500/20" },
     NEEDS_EDIT: { ar: "يحتاج تعديل", en: "Needs Edit", icon: AlertCircle, color: "text-red-600", bg: "bg-red-500/10", border: "border-red-500/20" },
     PUBLISHED: { ar: "منشور", en: "Published", icon: CheckCircle2, color: "text-blue-600", bg: "bg-blue-500/10", border: "border-blue-500/20" },
+    SCHEDULED: { ar: "تمت الجدولة", en: "Scheduled", icon: CalendarDays, color: "text-emerald-700", bg: "bg-emerald-500/20", border: "border-emerald-500/30" },
 };
 
 const PLATFORM_COLORS = [

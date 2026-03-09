@@ -66,6 +66,7 @@ export function DashboardSidebar({ role, user }: { role: string; user: any }) {
 
     const moderatorLinks = [
         { href: "/moderator", label: t("common.overview"), icon: LayoutDashboard },
+        { href: "/moderator/clients", label: t("common.clients"), icon: Users },
         { href: "/moderator/action-plans", label: isRtl ? "خطط النشر" : "Publishing Plans", icon: FolderKanban },
         { href: "/messages", label: t("common.messages"), icon: MessageSquare },
     ];
