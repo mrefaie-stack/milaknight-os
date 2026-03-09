@@ -6,7 +6,7 @@ import { UserNav } from "@/components/dashboard/user-nav";
 import {
     LayoutDashboard, Users, FolderKanban, BarChart3,
     MessageSquare, ShieldCheck, Trash2, Bell, Search,
-    ChevronLeft, ChevronRight, Sparkles, Plus
+    ChevronLeft, ChevronRight, Sparkles, Plus, CalendarDays
 } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
 import { LanguageToggle } from "@/components/ui/language-toggle";
@@ -37,6 +37,7 @@ export function DashboardSidebar({ role, user }: { role: string; user: any }) {
     const adminLinks = [
         { href: "/admin", label: t("common.overview"), icon: LayoutDashboard },
         { href: "/admin/clients", label: t("common.clients"), icon: Users },
+        { href: "/admin/meetings", label: isRtl ? "الاجتماعات" : "Meetings", icon: CalendarDays },
         { href: "/admin/services", label: t("sidebar.services"), icon: FolderKanban },
         { href: "/admin/requests", label: t("sidebar.service_requests"), icon: Sparkles },
         { href: "/admin/team", label: t("common.team"), icon: ShieldCheck },
@@ -47,6 +48,7 @@ export function DashboardSidebar({ role, user }: { role: string; user: any }) {
     const amLinks = [
         { href: "/am", label: t("common.overview"), icon: LayoutDashboard },
         { href: "/am/clients", label: t("sidebar.my_clients"), icon: Users },
+        { href: "/am/meetings", label: isRtl ? "الاجتماعات" : "Meetings", icon: CalendarDays },
         { href: "/admin/requests", label: t("sidebar.service_requests"), icon: Sparkles },
         { href: "/am/action-plans", label: t("sidebar.action_plans"), icon: FolderKanban },
         { href: "/am/reports", label: t("sidebar.reports"), icon: BarChart3 },
@@ -56,6 +58,7 @@ export function DashboardSidebar({ role, user }: { role: string; user: any }) {
     const clientLinks = [
         { href: "/client", label: t("common.overview"), icon: LayoutDashboard },
         { href: "/client/services", label: t("sidebar.services"), icon: Sparkles },
+        { href: "/client/meetings", label: isRtl ? "الاجتماعات" : "Meetings", icon: CalendarDays },
         { href: "/client/action-plans", label: t("sidebar.action_plans"), icon: FolderKanban },
         { href: "/client/reports", label: t("sidebar.performance"), icon: BarChart3 },
         { href: "/messages", label: t("common.messages"), icon: MessageSquare },

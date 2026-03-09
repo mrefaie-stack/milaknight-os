@@ -40,6 +40,7 @@ export function MobileHeader({ role, user }: { role: string, user: any }) {
     const adminMore = [
         { href: "/admin/team", label: t("common.team"), icon: ShieldCheck },
         { href: "/admin/requests", label: t("sidebar.service_requests"), icon: Sparkles },
+        { href: "/admin/meetings", label: isRtl ? "الاجتماعات" : "Meetings", icon: Calendar },
         { href: "/admin/deletions", label: t("sidebar.deletions"), icon: Trash2 },
     ];
 
@@ -50,6 +51,7 @@ export function MobileHeader({ role, user }: { role: string, user: any }) {
         { href: "/am/reports", label: t("sidebar.reports"), icon: BarChart3 },
     ];
     const amMore = [
+        { href: "/am/meetings", label: isRtl ? "الاجتماعات" : "Meetings", icon: Calendar },
         { href: "/messages", label: t("common.messages"), icon: MessageSquare },
     ];
 
@@ -59,6 +61,7 @@ export function MobileHeader({ role, user }: { role: string, user: any }) {
         { href: "/client/reports", label: t("sidebar.performance"), icon: BarChart3 },
     ];
     const clientMore = [
+        { href: "/client/meetings", label: isRtl ? "الاجتماعات" : "Meetings", icon: Calendar },
         { href: "/messages", label: t("common.messages"), icon: MessageSquare },
     ];
 
