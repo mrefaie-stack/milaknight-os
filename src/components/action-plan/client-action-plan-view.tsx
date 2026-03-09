@@ -419,18 +419,42 @@ function CalendarView({ items, onImageClick, isRtl, isModerator }: { items: any[
                                     const meta = TYPE_META_BI[item.type] || TYPE_META_BI.POST;
                                     const TypeIcon = meta.icon;
                                     const title = item.articleTitle || item.emailSubject || (isRtl ? item.captionAr : item.captionEn) || "...";
+                                    const platforms = (item.platform || "").split(/[,/]/).filter((p: string) => Boolean(p) && p.trim() !== "Email");
+
                                     return (
-                                        <div key={i} className="flex items-center gap-2 px-2 py-1 rounded-xl bg-white/5 border border-white/10 group-hover:bg-primary/5 group-hover:border-primary/20 transition-all">
-                                            <TypeIcon className={`h-3 w-3 shrink-0 ${meta.color}`} />
-                                            <span className="text-[9px] font-black text-foreground/80 truncate">
-                                                {title}
-                                            </span>
+                                        <div key={i} className="flex flex-col gap-1 p-1.5 rounded-xl bg-white/5 border border-white/10 group-hover:bg-primary/5 group-hover:border-primary/20 transition-all">
+                                            <div className="flex items-center gap-1.5">
+                                                <div className={`p-1 rounded-md bg-white/10 ${meta.color}`}>
+                                                    <TypeIcon className="h-2.5 w-2.5 shrink-0" />
+                                                </div>
+                                                <span className="text-[9px] font-black text-foreground/90 truncate flex-1">
+                                                    {title}
+                                                </span>
+                                            </div>
+
+                                            <div className="flex items-center justify-between gap-2 overflow-hidden">
+                                                {platforms.length > 0 && (
+                                                    <div className="flex -space-x-1 overflow-hidden">
+                                                        {platforms.slice(0, 3).map((p: string, pi: number) => (
+                                                            <div key={pi} className="h-3.5 w-3.5 rounded-full border border-background bg-muted flex items-center justify-center text-[6px] font-black uppercase ring-1 ring-white/5">
+                                                                {p.trim()[0]}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                                {item.imageUrl && (
+                                                    <div className="h-5 w-8 rounded-md overflow-hidden border border-white/20 shrink-0">
+                                                        <img src={item.imageUrl} alt="" className="w-full h-full object-cover" />
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
                                     );
                                 })}
                                 {dayItems.length > 2 && (
-                                    <div className="text-[9px] font-black text-primary/80 px-2 mt-1">
-                                        +{dayItems.length - 2} {isRtl ? 'أكثر' : 'more'}
+                                    <div className="text-[9px] font-black text-primary/80 px-2 mt-1 flex items-center gap-1">
+                                        <Plus className="h-2.5 w-2.5" />
+                                        {dayItems.length - 2} {isRtl ? 'أكثر' : 'more'}
                                     </div>
                                 )}
                             </div>
