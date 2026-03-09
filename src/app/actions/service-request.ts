@@ -84,7 +84,10 @@ export async function getAllServiceRequests() {
         throw new Error("Unauthorized");
     }
 
+    const where = session.user.role === "AM" ? { client: { amId: session.user.id } } : {};
+
     return prisma.serviceRequest.findMany({
+        where,
         include: {
             globalService: true,
             client: true
@@ -105,6 +108,9 @@ export async function updateRequestStatus(requestId: string, status: "APPROVED" 
     });
 
     if (!request) throw new Error("Request not found");
+    if (session.user.role === "AM" && request.client.amId !== session.user.id) {
+        throw new Error("Unauthorized Access");
+    }
 
     const updated = await prisma.serviceRequest.update({
         where: { id: requestId },

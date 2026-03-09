@@ -118,7 +118,7 @@ model ServiceRequest {
 model ActionPlan {
   id             String    @id @default(cuid())
   clientId       String
-  client         Client    @relation(fields: [clientId], references: [id])
+  client         Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
   month          String    // e.g., "2026-03"
   status         String    @default("DRAFT") // DRAFT, PENDING, APPROVED, REVISION_REQUESTED
   
@@ -178,7 +178,7 @@ model Comment {
   itemId         String
   item           ContentItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
   userId         String
-  user           User        @relation(fields: [userId], references: [id])
+  user           User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   text           String
   
   createdAt      DateTime  @default(now())
@@ -187,7 +187,7 @@ model Comment {
 model Report {
   id             String    @id @default(cuid())
   clientId       String
-  client         Client    @relation(fields: [clientId], references: [id])
+  client         Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
   month          String
   
   // Stored as String for SQLite

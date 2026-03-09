@@ -9,8 +9,12 @@ import { logActivity } from "./activity";
 
 export async function createReport(clientId: string, month: string, metricsData: any) {
     const session = await getServerSession(authOptions);
-    if (session?.user?.role !== "AM" && session?.user?.role !== "ADMIN") {
+    if (!session || (session.user.role !== "AM" && session.user.role !== "ADMIN")) {
         throw new Error("Unauthorized");
+    }
+    if (session.user.role === "AM") {
+        const client = await prisma.client.findUnique({ where: { id: clientId } });
+        if (!client || client.amId !== session.user.id) throw new Error("Unauthorized Access");
     }
 
     const report = await prisma.report.create({
@@ -31,8 +35,12 @@ export async function createReport(clientId: string, month: string, metricsData:
 
 export async function updateReport(reportId: string, metricsData: any, month?: string, clientId?: string) {
     const session = await getServerSession(authOptions);
-    if (session?.user?.role !== "AM" && session?.user?.role !== "ADMIN") {
+    if (!session || (session.user.role !== "AM" && session.user.role !== "ADMIN")) {
         throw new Error("Unauthorized");
+    }
+    if (session.user.role === "AM") {
+        const checkReport = await prisma.report.findUnique({ where: { id: reportId }, include: { client: true } });
+        if (!checkReport || checkReport.client.amId !== session.user.id) throw new Error("Unauthorized Access");
     }
 
     const report = await prisma.report.update({
@@ -50,8 +58,12 @@ export async function updateReport(reportId: string, metricsData: any, month?: s
 
 export async function publishReport(reportId: string) {
     const session = await getServerSession(authOptions);
-    if (session?.user?.role !== "AM" && session?.user?.role !== "ADMIN") {
+    if (!session || (session.user.role !== "AM" && session.user.role !== "ADMIN")) {
         throw new Error("Unauthorized");
+    }
+    if (session.user.role === "AM") {
+        const checkReport = await prisma.report.findUnique({ where: { id: reportId }, include: { client: true } });
+        if (!checkReport || checkReport.client.amId !== session.user.id) throw new Error("Unauthorized Access");
     }
 
     const report = await prisma.report.update({
@@ -132,6 +144,9 @@ export async function getReportById(id: string) {
 export async function requestReportDeletion(reportId: string) {
     const session = await getServerSession(authOptions);
     if (!session || session.user.role !== "AM") throw new Error("Only AMs can request deletions");
+
+    const report = await prisma.report.findUnique({ where: { id: reportId }, include: { client: true } });
+    if (!report || report.client.amId !== session.user.id) throw new Error("Unauthorized Access");
 
     return prisma.deletionRequest.create({
         data: {

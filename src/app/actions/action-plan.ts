@@ -40,8 +40,16 @@ export async function getActionPlans() {
 
 export async function createActionPlan(clientId: string, month: string) {
     const session = await getServerSession(authOptions);
-    if (session?.user?.role !== "AM" && session?.user?.role !== "ADMIN") {
+    if (!session || (session.user.role !== "AM" && session.user.role !== "ADMIN")) {
         throw new Error("Unauthorized");
+    }
+    if (session.user.role === "AM") {
+        const client = await prisma.client.findUnique({ where: { id: clientId } });
+        if (!client || client.amId !== session.user.id) throw new Error("Unauthorized Access");
+    }
+    if (session.user.role === "AM") {
+        const client = await prisma.client.findUnique({ where: { id: clientId } });
+        if (!client || client.amId !== session.user.id) throw new Error("Unauthorized Access");
     }
 
     const plan = await prisma.actionPlan.create({
@@ -60,8 +68,12 @@ export async function createActionPlan(clientId: string, month: string) {
 
 export async function addContentItem(planId: string, data: any) {
     const session = await getServerSession(authOptions);
-    if (session?.user?.role !== "AM" && session?.user?.role !== "ADMIN") {
+    if (!session || (session.user.role !== "AM" && session.user.role !== "ADMIN")) {
         throw new Error("Unauthorized");
+    }
+    if (session.user.role === "AM") {
+        const plan = await prisma.actionPlan.findUnique({ where: { id: planId }, include: { client: true } });
+        if (!plan || plan.client.amId !== session.user.id) throw new Error("Unauthorized Access");
     }
 
     const item = await prisma.contentItem.create({
@@ -93,6 +105,14 @@ export async function addContentItem(planId: string, data: any) {
 }
 
 export async function submitForApproval(planId: string) {
+    const session = await getServerSession(authOptions);
+    if (!session || (session.user.role !== "AM" && session.user.role !== "ADMIN")) throw new Error("Unauthorized");
+
+    if (session.user.role === "AM") {
+        const checkPlan = await prisma.actionPlan.findUnique({ where: { id: planId }, include: { client: true } });
+        if (!checkPlan || checkPlan.client.amId !== session.user.id) throw new Error("Unauthorized Access");
+    }
+
     // Update the plan status
     const plan = await prisma.actionPlan.update({
         where: { id: planId },
@@ -147,6 +167,9 @@ export async function requestActionPlanDeletion(planId: string) {
     const session = await getServerSession(authOptions);
     if (!session || session.user.role !== "AM") throw new Error("Only AMs can request deletions");
 
+    const plan = await prisma.actionPlan.findUnique({ where: { id: planId }, include: { client: true } });
+    if (!plan || plan.client.amId !== session.user.id) throw new Error("Unauthorized Access");
+
     return prisma.deletionRequest.create({
         data: {
             entityType: "ActionPlan",
@@ -159,6 +182,9 @@ export async function requestActionPlanDeletion(planId: string) {
 export async function submitActionPlanFeedback(planId: string, itemFeedbacks: { itemId: string, comment: string }[] | string) {
     const session = await getServerSession(authOptions);
     if (!session || session.user.role !== "CLIENT") throw new Error("Unauthorized");
+
+    const checkPlan = await prisma.actionPlan.findUnique({ where: { id: planId }, include: { client: true } });
+    if (!checkPlan || checkPlan.client.userId !== session.user.id) throw new Error("Unauthorized Access");
 
     // Update the plan status
     const plan = await prisma.actionPlan.update({
