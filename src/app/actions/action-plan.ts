@@ -381,3 +381,71 @@ export async function getApprovedPosts(clientId: string) {
         orderBy: { scheduledDate: "desc" }
     });
 }
+
+export async function approveContentItem(itemId: string, planId: string) {
+    const session = await getServerSession(authOptions);
+    if (!session || session.user.role !== "CLIENT") throw new Error("Unauthorized");
+
+    const plan = await prisma.actionPlan.findUnique({
+        where: { id: planId },
+        include: { client: true, items: true }
+    });
+
+    if (!plan || plan.client.userId !== session.user.id) throw new Error("Unauthorized Access");
+
+    await prisma.contentItem.update({
+        where: { id: itemId },
+        data: { status: "APPROVED" }
+    });
+
+    // Check if ALL items in this plan are now approved
+    const allItems = await prisma.contentItem.findMany({ where: { planId } });
+    const allApproved = allItems.every(i => i.status === "APPROVED");
+
+    if (allApproved) {
+        await prisma.actionPlan.update({
+            where: { id: planId },
+            data: { status: "APPROVED" }
+        });
+    }
+
+    revalidatePath(`/client/action-plans/${planId}`);
+    revalidatePath(`/am/action-plans/${planId}`);
+    return { success: true };
+}
+
+export async function approveActionPlan(planId: string) {
+    const session = await getServerSession(authOptions);
+    if (!session || session.user.role !== "CLIENT") throw new Error("Unauthorized");
+
+    const plan = await prisma.actionPlan.findUnique({
+        where: { id: planId },
+        include: { client: true }
+    });
+
+    if (!plan || plan.client.userId !== session.user.id) throw new Error("Unauthorized Access");
+
+    // Approve the plan
+    await prisma.actionPlan.update({
+        where: { id: planId },
+        data: { status: "APPROVED" }
+    });
+
+    // Also approve all items in the plan that are not already approved
+    await prisma.contentItem.updateMany({
+        where: {
+            planId,
+            status: { in: ["PENDING", "REVISION_REQUESTED", "DRAFT"] }
+        },
+        data: { status: "APPROVED" }
+    });
+
+    await logActivity(`approved the action plan for ${plan.month}`, "ActionPlan", planId);
+
+    revalidatePath(`/client/action-plans/${planId}`);
+    revalidatePath(`/am/action-plans/${planId}`);
+    revalidatePath("/am/action-plans");
+    revalidatePath("/client/action-plans");
+
+    return { success: true };
+}

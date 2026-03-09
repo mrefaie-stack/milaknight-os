@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { approveActionPlan, unapproveContentItem } from "@/app/actions/action-plan";
+import { approveActionPlan, approveContentItem, unapproveContentItem } from "@/app/actions/action-plan";
 import { submitActionPlanFeedback } from "@/app/actions/action-plan";
 import { toast } from "sonner";
 import {
@@ -23,8 +23,8 @@ export function ClientApprovalActions({ item }: { item: any }) {
     async function handleApprove() {
         setIsLoading(true);
         try {
-            await approveActionPlan(item.planId);
-            toast.success(isRtl ? "تم اعتماد الخطة" : "Plan approved");
+            await approveContentItem(item.id, item.planId);
+            toast.success(isRtl ? "تم اعتماد المنشور" : "Post approved");
         } catch (error: any) {
             toast.error(error.message);
         } finally {
