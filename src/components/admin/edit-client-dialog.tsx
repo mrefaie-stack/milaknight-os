@@ -56,6 +56,7 @@ export function EditClientDialog({ client, accountManagers, services = [] }: { c
         snapchat: client.snapchat || "",
         youtube: client.youtube || "",
         website: client.website || "",
+        seoScore: client.seoScore || 0,
     });
 
     async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -80,6 +81,7 @@ export function EditClientDialog({ client, accountManagers, services = [] }: { c
                 snapchat: formData.snapchat,
                 youtube: formData.youtube,
                 website: formData.website,
+                seoScore: Number(formData.seoScore) || 0,
                 serviceIds: selectedServiceIds,
             });
 
@@ -186,6 +188,18 @@ export function EditClientDialog({ client, accountManagers, services = [] }: { c
                                             <SelectItem value="ENTERPRISE">Enterprise</SelectItem>
                                         </SelectContent>
                                     </Select>
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="seoScore" className={isRtl ? 'text-right' : ''}>{isRtl ? 'سكور SEO (%)' : 'SEO Score (%)'}</Label>
+                                    <Input
+                                        id="seoScore"
+                                        type="number"
+                                        min="0"
+                                        max="100"
+                                        value={formData.seoScore}
+                                        onChange={(e) => setFormData({ ...formData, seoScore: parseInt(e.target.value) || 0 })}
+                                        className={isRtl ? 'text-right' : ''}
+                                    />
                                 </div>
                                 <div className="space-y-3">
                                     <Label className={isRtl ? 'text-right block' : ''}>{t("dashboard.management_services")}</Label>
