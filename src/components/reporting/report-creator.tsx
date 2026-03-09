@@ -112,14 +112,33 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
     const [loading, setLoading] = useState(false);
     const router = useRouter();
 
-    const initialMetrics = initialData?.metrics ? (typeof initialData.metrics === 'string' ? JSON.parse(initialData.metrics) : initialData.metrics) : {
-        campaigns: [
-            { id: "main", name: isRtl ? "الحملة الرئيسية" : "Main Campaign", platforms: {}, linkedItems: [] }
-        ],
-        emailMarketing: { emailsSent: 0, openRate: 0, clickRate: 0, unsubscribes: 0 },
-        seo: { score: 0, rank: "", notes: "", speed: 0, mobile: 0 },
-        summary: ""
-    };
+    const initialMetrics = (() => {
+        const raw = initialData?.metrics
+            ? (typeof initialData.metrics === 'string' ? JSON.parse(initialData.metrics) : initialData.metrics)
+            : null;
+
+        // If no raw data, return default
+        if (!raw) {
+            return {
+                campaigns: [{ id: "main", name: isRtl ? "الحملة الرئيسية" : "Main Campaign", platforms: {}, linkedItems: [] }],
+                emailMarketing: { emailsSent: 0, openRate: 0, clickRate: 0, unsubscribes: 0 },
+                seo: { score: 0, rank: "", notes: "", speed: 0, mobile: 0 },
+                summary: ""
+            };
+        }
+
+        // Migrate old flat structure (raw.platforms existed instead of raw.campaigns)
+        if (!raw.campaigns || !Array.isArray(raw.campaigns)) {
+            return {
+                campaigns: [{ id: "main", name: isRtl ? "الحملة الرئيسية" : "Main Campaign", platforms: raw.platforms || {}, linkedItems: [] }],
+                emailMarketing: raw.emailMarketing || { emailsSent: 0, openRate: 0, clickRate: 0, unsubscribes: 0 },
+                seo: raw.seo || { score: 0, rank: "", notes: "", speed: 0, mobile: 0 },
+                summary: raw.summary || ""
+            };
+        }
+
+        return raw;
+    })();
 
     const [metrics, setMetrics] = useState(initialMetrics);
     const [selectedCampaignId, setSelectedCampaignId] = useState(initialMetrics.campaigns[0].id);
@@ -482,7 +501,7 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                             <div className={`grid grid-cols-2 md:grid-cols-4 gap-4 ${isRtl ? 'flex-row-reverse' : ''}`}>
                                 <CalcMetric label={isRtl ? 'معدل التفاعل التقديري' : "Est. Engagement Rate"} value={getPlatformCalcs(p.id).engRate} suffix="%" />
                                 <CalcMetric label={isRtl ? 'متوسط تكلفة النتيجة' : "Avg. Cost per Result"} value={getPlatformCalcs(p.id).cpa} prefix="SAR " />
-                                <CalcMetric label={isRtl ? 'الوصول في المنصة' : "Platform Reach"} value={(Number(metrics.platforms[p.id]?.paidReach) || 0) + (Number(metrics.platforms[p.id]?.organicReach) || 0)} />
+                                <CalcMetric label={isRtl ? 'الوصول في المنصة' : "Platform Reach"} value={(Number(activeCampaign.platforms[p.id]?.paidReach) || 0) + (Number(activeCampaign.platforms[p.id]?.organicReach) || 0)} />
                                 <div className={`p-4 rounded-xl bg-primary/20 border border-primary/30 flex items-center justify-between ${isRtl ? 'flex-row-reverse' : ''}`}>
                                     <div className={`flex flex-col ${isRtl ? 'text-right' : ''}`}>
                                         <span className="text-[10px] font-black uppercase text-primary/80 mb-1 leading-tight">
@@ -508,26 +527,26 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                                         <MetricField
                                             label="New Followers"
                                             icon={Users}
-                                            value={metrics.platforms[p.id]?.followers}
+                                            value={activeCampaign.platforms[p.id]?.followers}
                                             onChange={(v) => updatePlatformMetric(p.id, 'followers', v)}
                                         />
                                         <MetricField
                                             label="Impressions"
                                             icon={Eye}
-                                            value={metrics.platforms[p.id]?.impressions}
+                                            value={activeCampaign.platforms[p.id]?.impressions}
                                             onChange={(v) => updatePlatformMetric(p.id, 'impressions', v)}
                                         />
                                         <MetricField
                                             label="Organic Reach"
                                             icon={Globe}
-                                            value={metrics.platforms[p.id]?.organicReach}
+                                            value={activeCampaign.platforms[p.id]?.organicReach}
                                             onChange={(v) => updatePlatformMetric(p.id, 'organicReach', v)}
                                         />
                                         {(p.id === 'instagram' || p.id === 'facebook') && (
                                             <MetricField
                                                 label="Profile Visits"
                                                 icon={Target}
-                                                value={metrics.platforms[p.id]?.profileVisits}
+                                                value={activeCampaign.platforms[p.id]?.profileVisits}
                                                 onChange={(v) => updatePlatformMetric(p.id, 'profileVisits', v)}
                                             />
                                         )}
@@ -545,26 +564,26 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                                         <MetricField
                                             label="Total Engagement"
                                             icon={MousePointer2}
-                                            value={metrics.platforms[p.id]?.engagement}
+                                            value={activeCampaign.platforms[p.id]?.engagement}
                                             onChange={(v) => updatePlatformMetric(p.id, 'engagement', v)}
                                         />
                                         <MetricField
                                             label="Total Views"
                                             icon={Video}
-                                            value={metrics.platforms[p.id]?.views}
+                                            value={activeCampaign.platforms[p.id]?.views}
                                             onChange={(v) => updatePlatformMetric(p.id, 'views', v)}
                                         />
                                         <MetricField
                                             label="Content Shares"
                                             icon={Share2}
-                                            value={metrics.platforms[p.id]?.shares}
+                                            value={activeCampaign.platforms[p.id]?.shares}
                                             onChange={(v) => updatePlatformMetric(p.id, 'shares', v)}
                                         />
                                         {(p.id === 'tiktok' || p.id === 'youtube') && (
                                             <MetricField
                                                 label="Avg. Watch Time"
                                                 icon={Eye}
-                                                value={metrics.platforms[p.id]?.watchTime}
+                                                value={activeCampaign.platforms[p.id]?.watchTime}
                                                 onChange={(v) => updatePlatformMetric(p.id, 'watchTime', v)}
                                                 suffix="s"
                                             />
@@ -982,3 +1001,4 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
         </form >
     );
 }
+
