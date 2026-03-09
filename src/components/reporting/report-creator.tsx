@@ -131,9 +131,21 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
         if (!raw.campaigns || !Array.isArray(raw.campaigns)) {
             return {
                 campaigns: [{ id: "main", name: isRtl ? "الحملة الرئيسية" : "Main Campaign", platforms: raw.platforms || {}, linkedItems: [] }],
-                emailMarketing: raw.emailMarketing || { emailsSent: 0, openRate: 0, clickRate: 0, unsubscribes: 0 },
+                emailMarketing: {
+                    campaigns: [{ name: "", emailsSent: 0, openRate: 0, clickRate: 0, unsubscribes: 0 }],
+                    ...((raw.emailMarketing && typeof raw.emailMarketing === 'object' && !Array.isArray(raw.emailMarketing?.campaigns))
+                        ? { campaigns: [{ name: "", emailsSent: raw.emailMarketing.emailsSent || 0, openRate: raw.emailMarketing.openRate || 0, clickRate: raw.emailMarketing.clickRate || 0, unsubscribes: raw.emailMarketing.unsubscribes || 0 }] }
+                        : {})
+                },
                 seo: raw.seo || { score: 0, rank: "", notes: "", speed: 0, mobile: 0 },
                 summary: raw.summary || ""
+            };
+        }
+
+        // Migrate old flat emailMarketing structure within valid campaigns data
+        if (raw.emailMarketing && !Array.isArray(raw.emailMarketing.campaigns)) {
+            raw.emailMarketing = {
+                campaigns: [{ name: "", emailsSent: raw.emailMarketing.emailsSent || 0, openRate: raw.emailMarketing.openRate || 0, clickRate: raw.emailMarketing.clickRate || 0, unsubscribes: raw.emailMarketing.unsubscribes || 0 }]
             };
         }
 
@@ -238,13 +250,31 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
     };
 
 
-    const updateEmailMetric = (field: string, value: string) => {
-        const numValue = parseFloat(value) || 0;
+    const addEmailCampaign = () => {
         setMetrics((prev: any) => ({
             ...prev,
             emailMarketing: {
-                ...prev.emailMarketing,
-                [field]: numValue
+                campaigns: [...(prev.emailMarketing?.campaigns || []), { name: "", emailsSent: 0, openRate: 0, clickRate: 0, unsubscribes: 0 }]
+            }
+        }));
+    };
+
+    const removeEmailCampaign = (index: number) => {
+        setMetrics((prev: any) => ({
+            ...prev,
+            emailMarketing: {
+                campaigns: (prev.emailMarketing?.campaigns || []).filter((_: any, i: number) => i !== index)
+            }
+        }));
+    };
+
+    const updateEmailCampaign = (index: number, field: string, value: string) => {
+        const numFields = ['emailsSent', 'openRate', 'clickRate', 'unsubscribes'];
+        const val = numFields.includes(field) ? (parseFloat(value) || 0) : value;
+        setMetrics((prev: any) => ({
+            ...prev,
+            emailMarketing: {
+                campaigns: (prev.emailMarketing?.campaigns || []).map((c: any, i: number) => i === index ? { ...c, [field]: val } : c)
             }
         }));
     };
@@ -422,53 +452,6 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                 </div>
             </div>
 
-            {/* Campaign Management Bar */}
-            <div className="bg-card/30 p-4 rounded-2xl border border-white/10 backdrop-blur-md shadow-xl flex flex-wrap items-center gap-4">
-                <div className="flex-1 flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
-                    {metrics.campaigns.map((camp: any) => (
-                        <div key={camp.id} className="flex items-center gap-1 group/btn">
-                            <Button
-                                type="button"
-                                variant={selectedCampaignId === camp.id ? "default" : "outline"}
-                                className={`rounded-xl h-10 px-4 font-bold transition-all ${selectedCampaignId === camp.id ? 'scale-105 shadow-lg' : 'bg-background/40 border-white/5 opacity-70 hover:opacity-100'}`}
-                                onClick={() => setSelectedCampaignId(camp.id)}
-                            >
-                                {camp.name}
-                            </Button>
-                            {metrics.campaigns.length > 1 && (
-                                <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8 rounded-lg text-muted-foreground hover:text-destructive opacity-0 group-hover/btn:opacity-100 transition-opacity"
-                                    onClick={() => deleteCampaign(camp.id)}
-                                >
-                                    <Trash2 className="h-4 w-4" />
-                                </Button>
-                            )}
-                        </div>
-                    ))}
-                    <Button
-                        type="button"
-                        variant="outline"
-                        className="rounded-xl h-10 px-4 font-bold border-dashed border-primary/40 text-primary hover:bg-primary/5"
-                        onClick={addCampaign}
-                    >
-                        {isRtl ? '+ إضافة حملة' : '+ Add Campaign'}
-                    </Button>
-                </div>
-
-                {selectedCampaignId && (
-                    <div className="flex items-center gap-2">
-                        <Input
-                            className="w-48 h-10 bg-background/50 border-white/5 rounded-xl text-sm font-bold"
-                            value={activeCampaign.name}
-                            onChange={(e) => updateCampaignName(selectedCampaignId, e.target.value)}
-                            placeholder={isRtl ? "تعديل اسم الحملة" : "Rename Campaign"}
-                        />
-                    </div>
-                )}
-            </div>
 
             <Tabs defaultValue="facebook" className="w-full">
                 <div className="bg-card/30 p-2 rounded-2xl border border-white/10 backdrop-blur-md mb-8 shadow-xl overflow-hidden">
@@ -800,49 +783,73 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                 ))}
 
                 <TabsContent value="email" className="mt-0 focus-visible:ring-0">
-                    <div className="grid md:grid-cols-2 gap-8">
-                        <Card className="border-white/10 bg-card/20 backdrop-blur-md shadow-lg">
-                            <CardHeader className="bg-rose-500/5 border-b border-white/5">
-                                <CardTitle className="text-rose-400 flex items-center gap-2 text-sm font-black uppercase tracking-widest">
-                                    <Mail className="h-4 w-4" /> Email Performance
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent className="p-8 grid gap-6 sm:grid-cols-2">
-                                <MetricField
-                                    label="Total Emails Sent"
-                                    icon={Mail}
-                                    value={metrics.emailMarketing?.emailsSent}
-                                    onChange={(v) => updateEmailMetric('emailsSent', v)}
-                                />
-                                <MetricField
-                                    label="Open Rate"
-                                    icon={Eye}
-                                    value={metrics.emailMarketing?.openRate}
-                                    onChange={(v) => updateEmailMetric('openRate', v)}
-                                    suffix="%"
-                                />
-                                <MetricField
-                                    label="Click Rate"
-                                    icon={MousePointer2}
-                                    value={metrics.emailMarketing?.clickRate}
-                                    onChange={(v) => updateEmailMetric('clickRate', v)}
-                                    suffix="%"
-                                />
-                                <MetricField
-                                    label="Unsubscribes"
-                                    icon={Users}
-                                    value={metrics.emailMarketing?.unsubscribes}
-                                    onChange={(v) => updateEmailMetric('unsubscribes', v)}
-                                />
-                            </CardContent>
-                        </Card>
-                        <div className="p-8 bg-rose-500/10 border border-rose-500/20 rounded-3xl flex flex-col justify-center gap-4">
-                            <h3 className="text-2xl font-black text-rose-500">Email Health</h3>
-                            <p className="text-muted-foreground font-medium">Tracking these metrics ensures your broadcast strategy is reaching correctly focused audiences without triggering spam filters.</p>
-                            <div className="h-1 bg-rose-500/20 rounded-full overflow-hidden">
-                                <div className="h-full bg-rose-500 w-[75%]" />
+                    <div className="space-y-6">
+                        {/* Email Campaigns List */}
+                        {(metrics.emailMarketing?.campaigns || []).map((camp: any, idx: number) => (
+                            <div key={idx} className="relative group/ec bg-card/20 border border-white/10 rounded-2xl overflow-hidden shadow-lg">
+                                <div className="bg-rose-500/5 border-b border-white/5 p-4 flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <Mail className="h-4 w-4 text-rose-400" />
+                                        <Input
+                                            placeholder={isRtl ? `اسم الحملة ${idx + 1}` : `Campaign ${idx + 1} Name`}
+                                            value={camp.name}
+                                            onChange={(e) => updateEmailCampaign(idx, 'name', e.target.value)}
+                                            className="h-8 w-56 text-sm font-bold bg-transparent border-white/10 focus:border-rose-400/50"
+                                        />
+                                    </div>
+                                    {(metrics.emailMarketing?.campaigns || []).length > 1 && (
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-8 w-8 rounded-lg text-muted-foreground hover:text-destructive"
+                                            onClick={() => removeEmailCampaign(idx)}
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    )}
+                                </div>
+                                <div className="p-6 grid grid-cols-2 sm:grid-cols-4 gap-5">
+                                    <MetricField
+                                        label={isRtl ? 'عدد الإيميلات' : 'Emails Sent'}
+                                        icon={Mail}
+                                        value={camp.emailsSent}
+                                        onChange={(v) => updateEmailCampaign(idx, 'emailsSent', v)}
+                                    />
+                                    <MetricField
+                                        label={isRtl ? 'معدل الفتح' : 'Open Rate'}
+                                        icon={Eye}
+                                        value={camp.openRate}
+                                        onChange={(v) => updateEmailCampaign(idx, 'openRate', v)}
+                                        suffix="%"
+                                    />
+                                    <MetricField
+                                        label={isRtl ? 'معدل النقر' : 'Click Rate'}
+                                        icon={MousePointer2}
+                                        value={camp.clickRate}
+                                        onChange={(v) => updateEmailCampaign(idx, 'clickRate', v)}
+                                        suffix="%"
+                                    />
+                                    <MetricField
+                                        label={isRtl ? 'إلغاء الاشتراك' : 'Unsubscribes'}
+                                        icon={Users}
+                                        value={camp.unsubscribes}
+                                        onChange={(v) => updateEmailCampaign(idx, 'unsubscribes', v)}
+                                    />
+                                </div>
                             </div>
-                        </div>
+                        ))}
+
+                        {/* Add Campaign Button */}
+                        <Button
+                            type="button"
+                            variant="outline"
+                            className="w-full h-14 rounded-2xl border-dashed border-rose-400/40 text-rose-400 hover:bg-rose-500/5 font-bold text-base"
+                            onClick={addEmailCampaign}
+                        >
+                            <Mail className="h-4 w-4 mr-2" />
+                            {isRtl ? '+ إضافة حملة إيميل جديدة' : '+ Add Email Campaign'}
+                        </Button>
                     </div>
                 </TabsContent>
 
