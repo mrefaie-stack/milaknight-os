@@ -1,112 +1,233 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { UserNav } from "@/components/dashboard/user-nav";
 import { LanguageToggle } from "@/components/ui/language-toggle";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
-import { Menu, X, LayoutDashboard, Users, FolderKanban, BarChart3, MessageSquare, ShieldCheck, Trash2, Bell } from "lucide-react";
+import {
+    LayoutDashboard, Users, FolderKanban, BarChart3,
+    MessageSquare, ShieldCheck, Trash2, Bell, Sparkles, MoreHorizontal, X, Plus, Calendar
+} from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { getUnreadNotificationCount } from "@/app/actions/notification";
+import { cn } from "@/lib/utils";
+import { MeetingRequestModal } from "@/components/dashboard/meeting-request-modal";
+import { Button } from "@/components/ui/button";
 
 export function MobileHeader({ role, user }: { role: string, user: any }) {
     const { t, isRtl } = useLanguage();
-    const [isOpen, setIsOpen] = useState(false);
+    const [isMoreOpen, setIsMoreOpen] = useState(false);
     const pathname = usePathname();
     const [unreadCount, setUnreadCount] = useState(0);
+    const [meetingModalOpen, setMeetingModalOpen] = useState(false);
 
     useEffect(() => {
         getUnreadNotificationCount().then(setUnreadCount);
     }, []);
 
     useEffect(() => {
-        setIsOpen(false);
+        setIsMoreOpen(false);
     }, [pathname]);
 
-    const adminLinks = [
+    // Primary nav (max 4 tabs shown in bottom bar)
+    const adminPrimary = [
         { href: "/admin", label: t("common.overview"), icon: LayoutDashboard },
         { href: "/admin/clients", label: t("common.clients"), icon: Users },
-        { href: "/admin/team", label: t("common.team"), icon: ShieldCheck },
-        { href: "/admin/deletions", label: t("sidebar.deletions"), icon: Trash2 },
         { href: "/messages", label: t("common.messages"), icon: MessageSquare },
-        { href: "/notifications", label: t("common.notifications"), icon: Bell },
+    ];
+    const adminMore = [
+        { href: "/admin/team", label: t("common.team"), icon: ShieldCheck },
+        { href: "/admin/requests", label: t("sidebar.service_requests"), icon: Sparkles },
+        { href: "/admin/deletions", label: t("sidebar.deletions"), icon: Trash2 },
     ];
 
-    const amLinks = [
+    const amPrimary = [
         { href: "/am", label: t("common.overview"), icon: LayoutDashboard },
         { href: "/am/clients", label: t("sidebar.my_clients"), icon: Users },
         { href: "/am/action-plans", label: t("sidebar.action_plans"), icon: FolderKanban },
         { href: "/am/reports", label: t("sidebar.reports"), icon: BarChart3 },
+    ];
+    const amMore = [
         { href: "/messages", label: t("common.messages"), icon: MessageSquare },
-        { href: "/notifications", label: t("common.notifications"), icon: Bell },
     ];
 
-    const clientLinks = [
+    const clientPrimary = [
         { href: "/client", label: t("common.overview"), icon: LayoutDashboard },
         { href: "/client/action-plans", label: t("sidebar.action_plans"), icon: FolderKanban },
         { href: "/client/reports", label: t("sidebar.performance"), icon: BarChart3 },
+    ];
+    const clientMore = [
         { href: "/messages", label: t("common.messages"), icon: MessageSquare },
-        { href: "/notifications", label: t("common.notifications"), icon: Bell },
     ];
 
-    const links = role === "ADMIN" ? adminLinks : role === "AM" ? amLinks : clientLinks;
+    const moderatorPrimary = [
+        { href: "/moderator", label: t("common.overview"), icon: LayoutDashboard },
+        { href: "/moderator/action-plans", label: isRtl ? "خطط النشر" : "Publishing", icon: FolderKanban },
+        { href: "/messages", label: t("common.messages"), icon: MessageSquare },
+    ];
+
+    const primaryLinks = role === "ADMIN" ? adminPrimary : role === "AM" ? amPrimary : role === "MODERATOR" ? moderatorPrimary : clientPrimary;
+    const moreLinks = role === "ADMIN" ? adminMore : role === "AM" ? amMore : role === "MODERATOR" ? [] : clientMore;
+
+    const isActive = (href: string) => {
+        if (href === "/admin" || href === "/am" || href === "/client") return pathname === href;
+        return pathname.startsWith(href);
+    };
 
     return (
         <>
-            <header className="h-16 border-b border-border bg-background/50 backdrop-blur-sm flex items-center justify-between px-6 md:hidden relative z-50">
-                <button
-                    onClick={() => setIsOpen(!isOpen)}
-                    className="p-2 -ml-2 text-foreground/80 hover:text-primary transition-colors"
-                >
-                    {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-                </button>
+            {/* Top bar — visible on mobile only */}
+            <header className={cn(
+                "h-14 border-b border-border bg-background/60 backdrop-blur-xl flex items-center justify-between px-4 md:hidden relative z-50 shrink-0",
+            )}>
+                {/* Left: User */}
+                <div className="scale-95 origin-left">
+                    <UserNav user={user} />
+                </div>
 
-                <div className="font-black text-xl tracking-tighter premium-gradient-text absolute left-1/2 -translate-x-1/2">
+                {/* Center: Logo */}
+                <div className="font-black text-lg tracking-tighter premium-gradient-text absolute left-1/2 -translate-x-1/2 pointer-events-none">
                     MILAKNIGHT
                 </div>
 
-                <div className="flex items-center gap-2">
+                {/* Right: Toggles & Bell */}
+                <div className="flex items-center gap-1">
+                    <Link href="/notifications" className="relative p-2 text-muted-foreground hover:text-primary transition-colors">
+                        <Bell className="h-5 w-5" />
+                        {unreadCount > 0 && (
+                            <span className="absolute top-1.5 right-1.5 flex h-3.5 min-w-[14px] px-0.5 items-center justify-center rounded-full bg-primary text-[7px] font-black text-primary-foreground border-2 border-background">
+                                {unreadCount > 9 ? "9+" : unreadCount}
+                            </span>
+                        )}
+                    </Link>
                     <ThemeToggle />
                     <LanguageToggle />
-                    {/* UserNav is handled below or we can render a minimal one */}
-                    <div className="scale-90 origin-right">
-                        <UserNav user={user} />
-                    </div>
                 </div>
             </header>
 
-            {/* Mobile Navigation Drawer */}
-            {isOpen && (
-                <div className="fixed inset-0 top-16 z-40 bg-background/95 backdrop-blur-xl md:hidden overflow-y-auto">
-                    <nav className="p-4 space-y-2 mt-4">
-                        <div className={`text-xs font-black text-primary/40 uppercase tracking-[0.2em] mb-4 mt-2 px-4 ${isRtl ? 'text-right' : 'text-left'}`}>
-                            {t("sidebar.menu")}
+            {/* Client FAB for Request Meeting */}
+            {role === "CLIENT" && (
+                <button
+                    onClick={() => setMeetingModalOpen(true)}
+                    className={cn(
+                        "fixed bottom-20 z-[60] flex items-center justify-center h-14 w-14 rounded-full bg-emerald-600 text-white shadow-2xl shadow-emerald-500/40 border border-emerald-500/20 active:scale-90 transition-transform",
+                        isRtl ? "left-4" : "right-4"
+                    )}
+                >
+                    <Calendar className="h-6 w-6" />
+                </button>
+            )}
+
+            {role === "CLIENT" && <MeetingRequestModal open={meetingModalOpen} onOpenChange={setMeetingModalOpen} />}
+
+            {/* "More" drawer overlay */}
+            {isMoreOpen && moreLinks.length > 0 && (
+                <div
+                    className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm md:hidden"
+                    onClick={() => setIsMoreOpen(false)}
+                >
+                    <div
+                        className="absolute bottom-16 left-2 right-2 bg-card border border-white/10 rounded-2xl p-2 shadow-2xl"
+                        onClick={e => e.stopPropagation()}
+                    >
+                        <div className="flex items-center justify-between px-3 py-2 mb-1">
+                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/50">
+                                {isRtl ? "المزيد" : "More"}
+                            </span>
+                            <button onClick={() => setIsMoreOpen(false)} className="text-muted-foreground hover:text-foreground">
+                                <X className="h-4 w-4" />
+                            </button>
                         </div>
-                        {links.map((link) => {
+                        {moreLinks.map((link) => {
                             const Icon = link.icon;
-                            const isActive = pathname === link.href || pathname.startsWith(link.href + '/');
+                            const active = isActive(link.href);
                             return (
                                 <Link
                                     key={link.href}
                                     href={link.href}
-                                    className={`flex items-center justify-between px-4 py-4 rounded-xl text-base font-black transition-all ${isActive ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25' : 'hover:bg-white/5 text-foreground/70'} ${isRtl ? 'flex-row-reverse text-right' : 'flex-row text-left'}`}
+                                    className={cn(
+                                        "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all",
+                                        isRtl ? "flex-row-reverse" : "",
+                                        active ? "bg-primary text-primary-foreground" : "hover:bg-white/5 text-foreground/70"
+                                    )}
                                 >
-                                    <div className={`flex items-center gap-4 ${isRtl ? 'flex-row-reverse' : 'flex-row'}`}>
-                                        <Icon className="h-5 w-5" />
-                                        {link.label}
-                                    </div>
-                                    {link.label === t("common.notifications") && unreadCount > 0 && (
-                                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs font-black text-primary-foreground">
+                                    <Icon className="h-5 w-5 shrink-0" />
+                                    <span>{link.label}</span>
+                                    {link.href === "/notifications" && unreadCount > 0 && (
+                                        <span className="ml-auto flex h-5 min-w-5 px-1 items-center justify-center rounded-full bg-primary text-[9px] font-black text-primary-foreground">
                                             {unreadCount > 9 ? "9+" : unreadCount}
                                         </span>
                                     )}
                                 </Link>
-                            )
+                            );
                         })}
-                    </nav>
+                    </div>
                 </div>
             )}
+
+            {/* Bottom Tab Bar — visible on mobile only */}
+            <nav className={cn(
+                "fixed bottom-0 left-0 right-0 h-16 z-50 md:hidden",
+                "bg-background/80 backdrop-blur-2xl border-t border-white/8",
+                "flex items-stretch",
+                isRtl ? "flex-row-reverse" : ""
+            )}>
+                {primaryLinks.map((link) => {
+                    const Icon = link.icon;
+                    const active = isActive(link.href);
+                    const isNotifications = link.href === "/notifications";
+
+                    return (
+                        <Link
+                            key={link.href}
+                            href={link.href}
+                            className={cn(
+                                "flex-1 flex flex-col items-center justify-center gap-0.5 text-[9px] font-black uppercase tracking-widest transition-all duration-200 relative",
+                                active
+                                    ? "text-primary"
+                                    : "text-muted-foreground hover:text-foreground"
+                            )}
+                        >
+                            {active && (
+                                <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-primary rounded-b-full" />
+                            )}
+                            <div className={cn(
+                                "relative flex items-center justify-center w-9 h-9 rounded-2xl transition-all",
+                                active ? "bg-primary/10" : ""
+                            )}>
+                                <Icon className={cn("h-5 w-5 transition-transform", active ? "scale-110" : "")} />
+                                {isNotifications && unreadCount > 0 && (
+                                    <span className="absolute -top-1 -right-1 flex h-4 min-w-4 px-0.5 items-center justify-center rounded-full bg-primary text-[8px] font-black text-primary-foreground">
+                                        {unreadCount > 9 ? "9+" : unreadCount}
+                                    </span>
+                                )}
+                            </div>
+                            <span className="leading-none">{link.label}</span>
+                        </Link>
+                    );
+                })}
+
+                {/* More button — only if extra links exist */}
+                {moreLinks.length > 0 && (
+                    <button
+                        onClick={() => setIsMoreOpen(!isMoreOpen)}
+                        className={cn(
+                            "flex-1 flex flex-col items-center justify-center gap-0.5 text-[9px] font-black uppercase tracking-widest transition-all duration-200",
+                            isMoreOpen ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                        )}
+                    >
+                        <div className={cn(
+                            "flex items-center justify-center w-9 h-9 rounded-2xl transition-all",
+                            isMoreOpen ? "bg-primary/10" : ""
+                        )}>
+                            <MoreHorizontal className="h-5 w-5" />
+                        </div>
+                        <span className="leading-none">{isRtl ? "المزيد" : "More"}</span>
+                    </button>
+                )}
+            </nav>
         </>
     );
 }

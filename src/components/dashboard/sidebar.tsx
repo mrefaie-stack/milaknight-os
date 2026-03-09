@@ -6,7 +6,7 @@ import { UserNav } from "@/components/dashboard/user-nav";
 import {
     LayoutDashboard, Users, FolderKanban, BarChart3,
     MessageSquare, ShieldCheck, Trash2, Bell, Search,
-    ChevronLeft, ChevronRight, Sparkles
+    ChevronLeft, ChevronRight, Sparkles, Plus
 } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
 import { LanguageToggle } from "@/components/ui/language-toggle";
@@ -14,17 +14,21 @@ import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { useEffect, useState } from "react";
 import { getUnreadNotificationCount } from "@/app/actions/notification";
 import { cn } from "@/lib/utils";
+import { MeetingRequestModal } from "./meeting-request-modal";
+import { Button } from "../ui/button";
 
 const ROLE_LABELS: Record<string, { ar: string; en: string }> = {
     ADMIN: { ar: "مسؤول النظام", en: "Administrator" },
     AM: { ar: "مدير حساب", en: "Account Manager" },
     CLIENT: { ar: "عميل", en: "Client" },
+    MODERATOR: { ar: "ناشر محتوى", en: "Moderator" },
 };
 
 export function DashboardSidebar({ role, user }: { role: string; user: any }) {
     const { t, isRtl } = useLanguage();
     const pathname = usePathname();
     const [unreadCount, setUnreadCount] = useState(0);
+    const [meetingModalOpen, setMeetingModalOpen] = useState(false);
 
     useEffect(() => {
         getUnreadNotificationCount().then(setUnreadCount);
@@ -38,7 +42,6 @@ export function DashboardSidebar({ role, user }: { role: string; user: any }) {
         { href: "/admin/team", label: t("common.team"), icon: ShieldCheck },
         { href: "/admin/deletions", label: t("sidebar.deletions"), icon: Trash2 },
         { href: "/messages", label: t("common.messages"), icon: MessageSquare },
-        { href: "/notifications", label: t("common.notifications"), icon: Bell },
     ];
 
     const amLinks = [
@@ -48,7 +51,6 @@ export function DashboardSidebar({ role, user }: { role: string; user: any }) {
         { href: "/am/action-plans", label: t("sidebar.action_plans"), icon: FolderKanban },
         { href: "/am/reports", label: t("sidebar.reports"), icon: BarChart3 },
         { href: "/messages", label: t("common.messages"), icon: MessageSquare },
-        { href: "/notifications", label: t("common.notifications"), icon: Bell },
     ];
 
     const clientLinks = [
@@ -57,10 +59,15 @@ export function DashboardSidebar({ role, user }: { role: string; user: any }) {
         { href: "/client/action-plans", label: t("sidebar.action_plans"), icon: FolderKanban },
         { href: "/client/reports", label: t("sidebar.performance"), icon: BarChart3 },
         { href: "/messages", label: t("common.messages"), icon: MessageSquare },
-        { href: "/notifications", label: t("common.notifications"), icon: Bell },
     ];
 
-    const links = role === "ADMIN" ? adminLinks : role === "AM" ? amLinks : clientLinks;
+    const moderatorLinks = [
+        { href: "/moderator", label: t("common.overview"), icon: LayoutDashboard },
+        { href: "/moderator/action-plans", label: isRtl ? "خطط النشر" : "Publishing Plans", icon: FolderKanban },
+        { href: "/messages", label: t("common.messages"), icon: MessageSquare },
+    ];
+
+    const links = role === "ADMIN" ? adminLinks : role === "AM" ? amLinks : role === "MODERATOR" ? moderatorLinks : clientLinks;
 
     const isActive = (href: string) => {
         if (href === "/admin" || href === "/am" || href === "/client") {
@@ -89,14 +96,40 @@ export function DashboardSidebar({ role, user }: { role: string; user: any }) {
                     </div>
                 </div>
 
-                {/* Role badge */}
-                <div className={cn(
-                    "text-[10px] font-black uppercase tracking-[0.2em] px-3 py-1.5 rounded-full bg-white/5 border border-white/10 w-fit",
-                    roleColor,
-                    isRtl ? "mr-auto" : "ml-0"
-                )}>
-                    {roleLabel}
+                {/* Role badge & Global Bell */}
+                <div className="flex items-center justify-between">
+                    <div className={cn(
+                        "text-[10px] font-black uppercase tracking-[0.2em] px-3 py-1.5 rounded-full bg-white/5 border border-white/10 w-fit",
+                        roleColor
+                    )}>
+                        {roleLabel}
+                    </div>
+
+                    <Link
+                        href="/notifications"
+                        className="relative p-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-primary/20 transition-all text-muted-foreground hover:text-primary"
+                    >
+                        <Bell className="h-4 w-4" />
+                        {unreadCount > 0 && (
+                            <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[8px] font-black text-primary-foreground">
+                                {unreadCount > 9 ? "9+" : unreadCount}
+                            </span>
+                        )}
+                    </Link>
                 </div>
+
+                {/* Client Meeting Global Button */}
+                {role === "CLIENT" && (
+                    <Button
+                        className="w-full h-11 bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase tracking-widest shadow-lg shadow-emerald-500/10 rounded-xl"
+                        onClick={() => setMeetingModalOpen(true)}
+                    >
+                        <Plus className={`h-4 w-4 ${isRtl ? 'ml-2' : 'mr-2'}`} />
+                        {isRtl ? "طلب ميتينج" : "Request Meeting"}
+                    </Button>
+                )}
+
+                {role === "CLIENT" && <MeetingRequestModal open={meetingModalOpen} onOpenChange={setMeetingModalOpen} />}
 
                 {/* Search */}
                 <button

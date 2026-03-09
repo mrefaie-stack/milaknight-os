@@ -65,14 +65,28 @@ model Client {
   
   package        String?   @default("BASIC") // e.g., "BASIC", "PREMIUM", "ENTERPRISE"
   activeServices String?   // Comma separated list of active platforms for this client
+  seoScore       Int?      @default(0)
   
   services       Service[]
   serviceRequests ServiceRequest[]
+  meetingRequests MeetingRequest[]
   actionPlans    ActionPlan[]
   reports        Report[]
   
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
+}
+
+model MeetingRequest {
+  id              String         @id @default(cuid())
+  clientId        String
+  client          Client         @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  reason          String
+  teams           String         // Comma separated list of required teams
+  status          String         @default("PENDING") // PENDING, COMPLETED, CANCELLED
+  
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
 }
 
 model GlobalService {

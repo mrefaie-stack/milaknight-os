@@ -115,6 +115,14 @@ export function ClientDashboardView({ client, latestPlan, allReports, globalServ
             accent: "bg-orange-500/5",
             format: (n: number) => `$${formatNumber(n)}`
         },
+        {
+            label: isRtl ? "سكور SEO" : "SEO Score",
+            labelAr: "سكور SEO",
+            value: client.seoScore || 0,
+            color: "text-purple-500",
+            accent: "bg-purple-500/5",
+            format: (n: number) => `${n}%`
+        },
     ];
 
     return (
@@ -126,10 +134,15 @@ export function ClientDashboardView({ client, latestPlan, allReports, globalServ
             dir={isRtl ? "rtl" : "ltr"}
         >
             <motion.div variants={item} className={`flex flex-col md:flex-row md:items-center justify-between gap-6 ${isRtl ? 'text-right' : 'text-left'}`}>
-                <div className="space-y-1">
-                    <h1 className="text-5xl md:text-6xl font-black tracking-tighter premium-gradient-text uppercase">
-                        {t("dashboard.welcome_client").replace("{name}", client.name)}
-                    </h1>
+                <div className="space-y-4">
+                    <div className="flex items-center gap-4">
+                        {client.logoUrl && (
+                            <img src={client.logoUrl} alt={client.name} className="h-16 w-16 object-contain bg-white/5 p-2 rounded-2xl border border-white/10" />
+                        )}
+                        <h1 className="text-3xl md:text-5xl lg:text-6xl font-black tracking-tighter premium-gradient-text uppercase">
+                            {t("dashboard.welcome_client").replace("{name}", client.name)}
+                        </h1>
+                    </div>
                     <div className="flex items-center gap-4 mt-2 flex-wrap">
                         <p className="text-muted-foreground font-medium text-lg opacity-80">
                             {isRtl ? "نظرة على أداء علامتك التجارية" : "Your brand performance at a glance."}
@@ -233,7 +246,7 @@ export function ClientDashboardView({ client, latestPlan, allReports, globalServ
                                     <div className={`flex items-center justify-between pt-6 border-t border-white/5 ${isRtl ? 'flex-row-reverse' : ''}`}>
                                         <div className={`flex flex-col ${isRtl ? 'items-start' : ''}`}>
                                             <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-50">{t("dashboard.metrics")}</span>
-                                            <span className="text-xl font-black text-primary uppercase tracking-tight">{t("dashboard.metrics_analyzed")}</span>
+                                            <span className="text-xl font-black text-primary uppercase tracking-tight">{isRtl ? "تم التحليل" : "METRICS ANALYZED"}</span>
                                         </div>
                                         <Link href={`/client/reports/${latestReport.id}`}>
                                             <Button variant="secondary" size="lg" className="rounded-full font-black uppercase tracking-widest h-12 px-6 bg-white/5 hover:bg-white/10">

@@ -6,6 +6,7 @@ import { PlanApprovalHeader } from "@/components/action-plan/plan-approval-heade
 import { ClientApprovalActions } from "@/components/action-plan/client-approval-actions";
 import { DownloadActionPlanButton } from "@/components/action-plan/download-action-plan-button";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { VideoPlayer } from "@/components/ui/video-player";
 import {
     Image as ImageIcon,
@@ -22,10 +23,15 @@ import {
     Mail,
     ExternalLink,
     Linkedin,
+    Download,
+    X,
+    LayoutGrid,
+    ChevronLeft,
+    ChevronRight,
 } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 
 // ─── Section definitions ─────────────────────────────────────────────────────
-// Order: Social Posts → Videos/Reels → LinkedIn → Polls → Blogs/Articles → Email Marketing
 const SECTIONS = [
     {
         types: ["POST"],
@@ -110,10 +116,6 @@ const STATUS_META_BI: Record<string, { ar: string; en: string; icon: any; color:
     PUBLISHED: { ar: "منشور", en: "Published", icon: CheckCircle2, color: "text-blue-600", bg: "bg-blue-500/10", border: "border-blue-500/20" },
 };
 
-// keep old exports for compat
-const TYPE_META = TYPE_META_BI;
-const STATUS_META = STATUS_META_BI;
-
 const PLATFORM_COLORS = [
     "bg-blue-500", "bg-pink-500", "bg-black",
     "bg-yellow-400", "bg-blue-700", "bg-red-600", "bg-sky-500",
@@ -128,7 +130,7 @@ function PlatformPill({ name, idx }: { name: string; idx: number }) {
     );
 }
 
-function ContentCard({ item, isRtl }: { item: any; isRtl: boolean }) {
+function ContentCard({ item, isRtl, onImageClick, isModerator }: { item: any; isRtl: boolean; onImageClick?: (url: string) => void, isModerator?: boolean }) {
     const typeMeta = TYPE_META_BI[item.type] || TYPE_META_BI.POST;
     const statusMeta = STATUS_META_BI[item.status] || STATUS_META_BI.PENDING;
     const type = { ...typeMeta, label: isRtl ? typeMeta.ar : typeMeta.en };
@@ -157,7 +159,10 @@ function ContentCard({ item, isRtl }: { item: any; isRtl: boolean }) {
             {!isEmail && (item.imageUrl || item.videoUrl) && (
                 <div className="relative w-full overflow-hidden group/media">
                     {item.imageUrl && (
-                        <div className="aspect-video">
+                        <div
+                            className="aspect-video cursor-zoom-in"
+                            onClick={() => onImageClick?.(item.imageUrl!)}
+                        >
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img src={item.imageUrl} alt="Content visual" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                         </div>
@@ -178,7 +183,6 @@ function ContentCard({ item, isRtl }: { item: any; isRtl: boolean }) {
 
             {/* Card Body */}
             <div className="flex flex-col gap-3 p-5 flex-1">
-                {/* Type + Status chips (no media cards or email) */}
                 {!isEmail && !item.imageUrl && !item.videoUrl && (
                     <div className="flex items-center gap-2 flex-wrap">
                         <span className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black ${type.bg} ${type.color}`}>
@@ -190,7 +194,6 @@ function ContentCard({ item, isRtl }: { item: any; isRtl: boolean }) {
                     </div>
                 )}
 
-                {/* Status chip for email */}
                 {isEmail && (
                     <div className="flex items-center gap-2">
                         <span className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black ${status.bg} ${status.color} border ${status.border}`}>
@@ -199,14 +202,12 @@ function ContentCard({ item, isRtl }: { item: any; isRtl: boolean }) {
                     </div>
                 )}
 
-                {/* Platform pills */}
                 {platforms.length > 0 && (
                     <div className="flex flex-wrap gap-1.5">
                         {platforms.map((p: string, i: number) => <PlatformPill key={i} name={p} idx={i} />)}
                     </div>
                 )}
 
-                {/* Scheduled date */}
                 {item.scheduledDate && (
                     <div className="flex items-center gap-1.5 text-[11px] font-bold text-muted-foreground">
                         <CalendarDays className="h-3.5 w-3.5" />
@@ -214,7 +215,6 @@ function ContentCard({ item, isRtl }: { item: any; isRtl: boolean }) {
                     </div>
                 )}
 
-                {/* Per-Platform Captions (Redesigned) */}
                 {item.platformCaptions && (() => {
                     try {
                         const caps: Record<string, string> = JSON.parse(item.platformCaptions);
@@ -260,7 +260,6 @@ function ContentCard({ item, isRtl }: { item: any; isRtl: boolean }) {
                     } catch { return null; }
                 })()}
 
-                {/* General Captions (fallback) */}
                 <div className="space-y-2 text-sm leading-relaxed">
                     {!item.platformCaptions && item.captionAr && (
                         <div className="p-3 bg-muted/30 rounded-xl border border-muted/40" dir="rtl">
@@ -274,8 +273,6 @@ function ContentCard({ item, isRtl }: { item: any; isRtl: boolean }) {
                             <p className="text-foreground/80 text-sm">{item.captionEn}</p>
                         </div>
                     )}
-
-                    {/* Blog/Article */}
                     {item.articleTitle && (
                         <div className="p-3 bg-teal-500/5 rounded-xl border border-teal-500/10">
                             <p className="text-[10px] font-black uppercase text-teal-600 mb-1">{isRtl ? 'عنوان المقال' : 'Article Title'}</p>
@@ -283,8 +280,6 @@ function ContentCard({ item, isRtl }: { item: any; isRtl: boolean }) {
                             {item.articleContent && <p className="text-muted-foreground text-xs mt-1">{item.articleContent}</p>}
                         </div>
                     )}
-
-                    {/* Poll */}
                     {item.pollQuestion && (
                         <div className="p-4 bg-orange-500/5 rounded-xl border border-orange-500/10 space-y-2">
                             <p className="text-[10px] font-black uppercase text-orange-600 mb-2">{isRtl ? 'سؤال التصويت' : 'Poll Question'}</p>
@@ -298,8 +293,6 @@ function ContentCard({ item, isRtl }: { item: any; isRtl: boolean }) {
                             </div>
                         </div>
                     )}
-
-                    {/* Email body */}
                     {isEmail && item.emailBody && (
                         <div className="p-3 bg-rose-500/5 rounded-xl border border-rose-500/10">
                             <p className="text-[10px] font-black uppercase text-rose-600 mb-1">{isRtl ? 'محتوى البريد' : 'Email Body'}</p>
@@ -315,64 +308,154 @@ function ContentCard({ item, isRtl }: { item: any; isRtl: boolean }) {
                     )}
                 </div>
 
-                {/* Content Item Comments Timeline */}
-                {item.comments && item.comments.length > 0 && (
-                    <div className="space-y-4 pt-4 border-t border-white/5 mt-auto">
-                        <Label className={`text-[10px] font-black uppercase text-primary tracking-widest flex items-center gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
-                            <MessageSquare className="h-3 w-3" /> {isRtl ? 'سجل التعليقات' : 'Discussion Log'}
-                        </Label>
-                        <div className="space-y-3">
-                            {item.comments.map((c: any) => (
-                                <div key={c.id} className={`flex flex-col gap-1 p-3 rounded-2xl border transition-all duration-300 ${c.user.role === 'CLIENT' ? 'bg-orange-50/50 border-orange-100/50 ml-4' : 'bg-primary/5 border-primary/10 mr-4'
-                                    }`}>
-                                    <div className={`flex items-center justify-between ${isRtl ? 'flex-row-reverse' : ''}`}>
-                                        <span className="text-[10px] font-black text-foreground/70">{c.user.firstName} {c.user.lastName}</span>
-                                        <span className="text-[9px] font-bold text-muted-foreground">
-                                            {c.createdAt ? new Date(c.createdAt).toISOString().substring(0, 16).replace('T', ' ') : ""}
-                                        </span>
-                                    </div>
-                                    <p className={`text-xs leading-relaxed ${isRtl ? 'text-right' : 'text-left'}`}>{c.text}</p>
-                                </div>
-                            ))}
-                        </div>
+                {!isModerator && (
+                    <div className="pt-2 border-t border-white/5 mt-auto">
+                        <ClientApprovalActions item={item} />
                     </div>
                 )}
-
-                {/* AM Notes */}
-                {item.amComment && (
-                    <div className="p-4 rounded-xl bg-primary/5 border border-primary/20 mt-4">
-                        <div className={`flex items-center gap-2 mb-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
-                            <MessageSquare className="h-3.5 w-3.5 text-primary" />
-                            <span className="text-[10px] font-black uppercase tracking-wider text-primary">{isRtl ? 'ملاحظات مدير الحساب' : 'Account Manager Notes'}</span>
-                        </div>
-                        <p className={`text-sm text-foreground/80 leading-relaxed ${isRtl ? 'text-right' : 'text-left'}`}>{item.amComment}</p>
-                    </div>
-                )}
-
-                {!item.comments?.length && item.clientComment && (
-                    <div className={`p-4 rounded-xl border ${item.feedbackResolved ? 'bg-muted/20 border-muted text-muted-foreground' : 'bg-orange-50 border-orange-200 text-orange-900'}`}>
-                        <div className="flex items-center gap-1.5 mb-1.5">
-                            <MessageSquare className="h-3.5 w-3.5" />
-                            <span className="text-[10px] font-black uppercase">{isRtl ? `ملاحظاتك ${item.feedbackResolved ? '(تم الحل ✓)' : ''}` : `Your Feedback ${item.feedbackResolved ? '(Resolved ✓)' : ''}`}</span>
-                        </div>
-                        <p className="text-sm">{item.clientComment}</p>
-                    </div>
-                )}
-
-                {/* Actions */}
-                <div className="pt-2 border-t border-white/5 mt-2">
-                    <ClientApprovalActions item={item} />
-                </div>
             </div>
         </div>
     );
 }
 
-export function ClientActionPlanView({ plan, items }: { plan: any; items: any[] }) {
-    const { isRtl } = useLanguage();
+function CalendarView({ items, onImageClick, isRtl, isModerator }: { items: any[], onImageClick: (url: string) => void, isRtl: boolean, isModerator?: boolean }) {
+    const [currentDate, setCurrentDate] = useState(new Date());
+    const [selectedDate, setSelectedDate] = useState<string | null>(null);
+
+    const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
+    const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
+
+    const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+    const blanks = Array.from({ length: firstDayOfMonth }, (_, i) => i);
+
+    const getItemsForDate = (day: number) => {
+        const d = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+        const iso = d.toISOString().split('T')[0];
+        return items.filter(item => item.scheduledDate && item.scheduledDate.startsWith(iso));
+    };
+
+    const monthName = currentDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-6"
+        >
+            <div className={`flex items-center justify-between p-6 bg-card/40 backdrop-blur-xl border border-white/10 rounded-3xl ${isRtl ? 'flex-row-reverse' : ''}`}>
+                <h2 className="text-2xl font-black uppercase tracking-tighter premium-gradient-text">{monthName}</h2>
+                <div className={`flex gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                    <Button variant="ghost" size="icon" className="rounded-xl" onClick={() => setCurrentDate(new Date(currentDate.setMonth(currentDate.getMonth() - 1)))}>
+                        <ChevronLeft className="h-5 w-5" />
+                    </Button>
+                    <Button variant="secondary" size="sm" className="rounded-xl font-black" onClick={() => setCurrentDate(new Date())}>
+                        TODAY
+                    </Button>
+                    <Button variant="ghost" size="icon" className="rounded-xl" onClick={() => setCurrentDate(new Date(currentDate.setMonth(currentDate.getMonth() + 1)))}>
+                        <ChevronRight className="h-5 w-5" />
+                    </Button>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-7 gap-2 md:gap-4">
+                {['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'].map(day => (
+                    <div key={day} className="text-center p-2 text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-40">
+                        {day}
+                    </div>
+                ))}
+                {blanks.map(i => <div key={`blank-${i}`} className="aspect-square" />)}
+                {days.map(day => {
+                    const dayItems = getItemsForDate(day);
+                    const isToday = new Date().toDateString() === new Date(currentDate.getFullYear(), currentDate.getMonth(), day).toDateString();
+
+                    return (
+                        <div
+                            key={day}
+                            onClick={() => dayItems.length > 0 && setSelectedDate(new Date(currentDate.getFullYear(), currentDate.getMonth(), day).toISOString().split('T')[0])}
+                            className={`aspect-square relative p-2 md:p-3 rounded-2xl border transition-all duration-300 group
+                                ${dayItems.length > 0 ? 'bg-primary/5 border-primary/20 cursor-pointer hover:bg-primary/10 hover:border-primary/40' : 'bg-white/5 border-white/5 opacity-50'}
+                                ${isToday ? 'ring-2 ring-primary ring-offset-4 ring-offset-background' : ''}
+                            `}
+                        >
+                            <span className={`text-sm md:text-base font-black ${isToday ? 'text-primary' : 'text-muted-foreground/80'} group-hover:text-primary transition-colors`}>{day}</span>
+                            {dayItems.length > 0 && (
+                                <div className="absolute bottom-2 right-2 flex gap-1">
+                                    {dayItems.slice(0, 3).map((item, i) => {
+                                        const typeColor = TYPE_META_BI[item.type]?.color || 'text-primary';
+                                        return <div key={i} className={`h-1.5 w-1.5 rounded-full bg-current ${typeColor}`} />;
+                                    })}
+                                    {dayItems.length > 3 && <div className="h-1.5 w-1.5 rounded-full bg-muted-foreground/40" />}
+                                </div>
+                            )}
+                        </div>
+                    );
+                })}
+            </div>
+
+            <AnimatePresence>
+                {selectedDate && (
+                    <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="absolute inset-0 bg-black/80 backdrop-blur-md"
+                            onClick={() => setSelectedDate(null)}
+                        />
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                            className="relative w-full max-w-2xl max-h-[80vh] bg-card border border-white/10 rounded-3xl shadow-2xl overflow-hidden flex flex-col"
+                            onClick={e => e.stopPropagation()}
+                        >
+                            <div className={`p-6 border-b border-white/5 flex items-center justify-between ${isRtl ? 'flex-row-reverse' : ''}`}>
+                                <h3 className="text-xl font-black uppercase tracking-tighter premium-gradient-text">
+                                    {selectedDate}
+                                </h3>
+                                <Button variant="ghost" size="icon" onClick={() => setSelectedDate(null)} className="rounded-full">
+                                    <X className="h-5 w-5" />
+                                </Button>
+                            </div>
+                            <div className="p-6 overflow-y-auto space-y-4">
+                                {items.filter(item => item.scheduledDate?.startsWith(selectedDate)).map(item => (
+                                    <div key={item.id} className="p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-primary/20 transition-all">
+                                        <ContentCard item={item} isRtl={isRtl} onImageClick={onImageClick} isModerator={isModerator} />
+                                    </div>
+                                ))}
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+        </motion.div>
+    );
+}
+
+export function ClientActionPlanView({ plan, items, isModerator }: { plan: any; items: any[]; isModerator?: boolean }) {
+    const { isRtl, t } = useLanguage();
+    const [selectedImage, setSelectedImage] = useState<string | null>(null);
+    const [viewMode, setViewMode] = useState<'GRID' | 'CALENDAR'>('GRID');
     const total = items.length;
     const approved = items.filter(i => i.status === "APPROVED").length;
     const pending = items.filter(i => i.status !== "APPROVED").length;
+
+    const handleDownload = async (url: string) => {
+        try {
+            const response = await fetch(url);
+            const blob = await response.blob();
+            const blobUrl = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = blobUrl;
+            link.download = `milaknight-${plan.month}-${Date.now()}.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(blobUrl);
+        } catch (error) {
+            window.open(url, '_blank');
+        }
+    };
 
     return (
         <div className="space-y-8 max-w-7xl mx-auto">
@@ -414,50 +497,126 @@ export function ClientActionPlanView({ plan, items }: { plan: any; items: any[] 
                 </div>
             </div>
 
-            {/* Approval Banner */}
-            <PlanApprovalHeader planId={plan.id} status={plan.status} canApprove={true} />
+            {!isModerator && <PlanApprovalHeader planId={plan.id} status={plan.status} canApprove={true} />}
 
-            {/* Sectioned Items */}
-            {items.length > 0 ? (
-                <div className="space-y-12">
-                    {SECTIONS.map(section => {
-                        const sectionItems = items.filter(item => section.types.includes(item.type));
-                        if (sectionItems.length === 0) return null;
-                        const SectionIcon = section.icon;
-                        return (
-                            <div key={section.labelEn} className="space-y-5">
-                                {/* Section Header */}
-                                <div className={`flex items-center gap-3 p-4 rounded-2xl bg-gradient-to-r ${section.accent} border ${section.border}`}>
-                                    <div className={`p-2 rounded-xl bg-white/5 border ${section.border}`}>
-                                        <SectionIcon className={`h-5 w-5 ${section.color}`} />
-                                    </div>
-                                    <div>
-                                        <h2 className={`text-xl font-black ${section.color}`}>{section.label}</h2>
-                                        <p className="text-xs text-muted-foreground font-semibold opacity-70">{section.labelEn} · {sectionItems.length} {sectionItems.length === 1 ? "بند" : "بنود"}</p>
-                                    </div>
-                                    <div className="ml-auto">
-                                        <span className={`text-xs font-black px-3 py-1 rounded-full bg-white/5 border ${section.border} ${section.color}`}>
-                                            {sectionItems.filter(i => i.status === "APPROVED").length} / {sectionItems.length} معتمد
-                                        </span>
-                                    </div>
-                                </div>
-                                {/* Section Grid */}
-                                <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
-                                    {sectionItems.map((item: any) => (
-                                        <ContentCard key={item.id} item={item} isRtl={isRtl} />
-                                    ))}
-                                </div>
-                            </div>
-                        );
-                    })}
+            {/* View Toggle */}
+            <div className="flex justify-center md:justify-end">
+                <div className="inline-flex p-1 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-md">
+                    <Button
+                        variant={viewMode === 'GRID' ? 'default' : 'ghost'}
+                        size="sm"
+                        onClick={() => setViewMode('GRID')}
+                        className={`rounded-xl font-black uppercase tracking-widest text-[10px] h-9 px-4 transition-all ${viewMode === 'GRID' ? 'shadow-lg shadow-primary/20' : ''}`}
+                    >
+                        <LayoutGrid className={`h-3.5 w-3.5 ${isRtl ? 'ml-2' : 'mr-2'}`} />
+                        {isRtl ? "عرض الشبكة" : "GRID VIEW"}
+                    </Button>
+                    <Button
+                        variant={viewMode === 'CALENDAR' ? 'default' : 'ghost'}
+                        size="sm"
+                        onClick={() => setViewMode('CALENDAR')}
+                        className={`rounded-xl font-black uppercase tracking-widest text-[10px] h-9 px-4 transition-all ${viewMode === 'CALENDAR' ? 'shadow-lg shadow-primary/20' : ''}`}
+                    >
+                        <CalendarDays className={`h-3.5 w-3.5 ${isRtl ? 'ml-2' : 'mr-2'}`} />
+                        {isRtl ? "عرض التقويم" : "CALENDAR VIEW"}
+                    </Button>
                 </div>
+            </div>
+
+            {viewMode === 'GRID' ? (
+                items.length > 0 ? (
+                    <div className="space-y-12">
+                        {SECTIONS.map(section => {
+                            const sectionItems = items.filter(item => section.types.includes(item.type));
+                            if (sectionItems.length === 0) return null;
+                            const SectionIcon = section.icon;
+                            return (
+                                <div key={section.labelEn} className="space-y-5">
+                                    <div className={`flex items-center gap-3 p-4 rounded-2xl bg-gradient-to-r ${section.accent} border ${section.border}`}>
+                                        <div className={`p-2 rounded-xl bg-white/5 border ${section.border}`}>
+                                            <SectionIcon className={`h-5 w-5 ${section.color}`} />
+                                        </div>
+                                        <div>
+                                            <h2 className={`text-xl font-black ${section.color}`}>{section.label}</h2>
+                                            <p className="text-xs text-muted-foreground font-semibold opacity-70">{section.labelEn} · {sectionItems.length} {sectionItems.length === 1 ? "بند" : "بنود"}</p>
+                                        </div>
+                                        <div className="ml-auto">
+                                            <span className={`text-xs font-black px-3 py-1 rounded-full bg-white/5 border ${section.border} ${section.color}`}>
+                                                {sectionItems.filter(i => i.status === "APPROVED").length} / {sectionItems.length} معتمد
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
+                                        {sectionItems.map((item: any) => (
+                                            <ContentCard key={item.id} item={item} isRtl={isRtl} onImageClick={setSelectedImage} isModerator={isModerator} />
+                                        ))}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                ) : (
+                    <div className="py-24 rounded-3xl border-2 border-dashed border-white/10 text-center">
+                        <Layers className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-20" />
+                        <p className="text-muted-foreground font-semibold">{isRtl ? 'لا توجد عناصر للمراجعة بعد.' : 'No items available for review yet.'}</p>
+                        <p className="text-sm text-muted-foreground opacity-60 mt-1">{isRtl ? 'سيقوم مدير حسابك بإضافة عناصر المحتوى قريباً.' : 'Your Account Manager will add content items soon.'}</p>
+                    </div>
+                )
             ) : (
-                <div className="py-24 rounded-3xl border-2 border-dashed border-white/10 text-center">
-                    <Layers className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-20" />
-                    <p className="text-muted-foreground font-semibold">{isRtl ? 'لا توجد عناصر للمراجعة بعد.' : 'No items available for review yet.'}</p>
-                    <p className="text-sm text-muted-foreground opacity-60 mt-1">{isRtl ? 'سيقوم مدير حسابك بإضافة عناصر المحتوى قريباً.' : 'Your Account Manager will add content items soon.'}</p>
-                </div>
+                <CalendarView items={items} onImageClick={setSelectedImage} isRtl={isRtl} isModerator={isModerator} />
             )}
+
+            {/* Image Lightbox */}
+            <AnimatePresence>
+                {selectedImage && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 md:p-10"
+                        onClick={() => setSelectedImage(null)}
+                    >
+                        <motion.button
+                            initial={{ scale: 0.5, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            className="absolute top-6 right-6 p-3 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all z-[110]"
+                            onClick={() => setSelectedImage(null)}
+                        >
+                            <X className="h-6 w-6" />
+                        </motion.button>
+
+                        <div className="relative max-w-5xl w-full h-full flex flex-col items-center justify-center gap-6" onClick={e => e.stopPropagation()}>
+                            <motion.img
+                                initial={{ y: 20, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                src={selectedImage}
+                                alt="Full size preview"
+                                className="max-w-full max-h-[80vh] object-contain rounded-xl shadow-2xl"
+                            />
+                            <div className="flex gap-4">
+                                <Button
+                                    size="lg"
+                                    className="rounded-full font-black uppercase tracking-widest px-8 h-12 shadow-xl shadow-primary/20"
+                                    onClick={() => handleDownload(selectedImage)}
+                                >
+                                    <Download className={`h-4 w-4 ${isRtl ? 'ml-2' : 'mr-2'}`} />
+                                    {isRtl ? 'تحميل الصورة' : 'Download Image'}
+                                </Button>
+                                <Button
+                                    variant="secondary"
+                                    size="lg"
+                                    className="rounded-full font-black uppercase tracking-widest px-8 h-12 bg-white/10 hover:bg-white/20 text-white"
+                                    onClick={() => window.open(selectedImage, '_blank')}
+                                >
+                                    <ExternalLink className={`h-4 w-4 ${isRtl ? 'ml-2' : 'mr-2'}`} />
+                                    {isRtl ? 'فتح الرابط الأصلي' : 'Open Original Link'}
+                                </Button>
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }
+

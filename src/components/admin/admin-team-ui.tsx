@@ -9,7 +9,7 @@ export function AdminTeamHeader({ memberCount, totalClients }: { memberCount: nu
                 <p className="text-[11px] font-black uppercase tracking-[0.3em] text-primary/40 mb-1">
                     {isRtl ? "فريق الوكالة" : "Agency Team"}
                 </p>
-                <h1 className="text-5xl font-black tracking-tighter premium-gradient-text uppercase">
+                <h1 className="text-3xl md:text-5xl font-black tracking-tighter premium-gradient-text uppercase">
                     {isRtl ? "الفريق" : "Team"}
                 </h1>
                 <p className="text-muted-foreground font-medium mt-1">

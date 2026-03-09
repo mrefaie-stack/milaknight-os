@@ -26,6 +26,8 @@ export async function getActionPlans() {
         } else {
             return []; // No client linked
         }
+    } else if (session.user.role === "MODERATOR") {
+        where = { status: "APPROVED" };
     }
 
     return prisma.actionPlan.findMany({
@@ -330,6 +332,35 @@ export async function deleteContentItem(itemId: string, planId: string) {
         where: { id: itemId }
     });
 
+    revalidatePath(`/am/action-plans/${planId}`);
+    return { success: true };
+}
+
+export async function unapproveContentItem(itemId: string, planId: string) {
+    const session = await getServerSession(authOptions);
+    if (!session || session.user.role !== "CLIENT") throw new Error("Unauthorized");
+
+    const plan = await prisma.actionPlan.findUnique({
+        where: { id: planId },
+        include: { client: true }
+    });
+
+    if (!plan || plan.client.userId !== session.user.id) throw new Error("Unauthorized Access");
+
+    await prisma.contentItem.update({
+        where: { id: itemId },
+        data: { status: "PENDING" }
+    });
+
+    // Also update plan status to PENDING if it was APPROVED (so AM knows something changed)
+    if (plan.status === "APPROVED") {
+        await prisma.actionPlan.update({
+            where: { id: planId },
+            data: { status: "PENDING" }
+        });
+    }
+
+    revalidatePath(`/client/action-plans/${planId}`);
     revalidatePath(`/am/action-plans/${planId}`);
     return { success: true };
 }
