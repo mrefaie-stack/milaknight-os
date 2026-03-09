@@ -28,6 +28,7 @@ import {
     LayoutGrid,
     ChevronLeft,
     ChevronRight,
+    Plus,
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
