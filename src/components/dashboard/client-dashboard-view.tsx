@@ -48,15 +48,21 @@ export function ClientDashboardView({ client, latestPlan, allReports, globalServ
     const latestReport = allReports && allReports.length > 0 ? allReports[0] : null;
 
     const metrics = useMemo(() => {
-        if (!allReports || allReports.length === 0) return null;
+        if (!allReports || allReports.length === 0) return { platforms: {}, seoScore: client.seoScore || 0 };
+
+        const latestReport = allReports[0];
+        const latestM = typeof latestReport.metrics === 'string' ? JSON.parse(latestReport.metrics) : latestReport.metrics;
+        const currentSeoScore = latestM?.seo?.score || client.seoScore || 0;
 
         if (viewMode === "month") {
             const report = allReports[0];
-            return typeof report.metrics === 'string' ? JSON.parse(report.metrics) : report.metrics;
+            const m = typeof report.metrics === 'string' ? JSON.parse(report.metrics) : report.metrics;
+            return { ...m, seoScore: currentSeoScore };
         } else {
             // Aggregate all reports
             const aggregated = {
-                platforms: {} as any
+                platforms: {} as any,
+                seoScore: currentSeoScore
             };
 
             allReports.forEach(report => {
@@ -76,7 +82,7 @@ export function ClientDashboardView({ client, latestPlan, allReports, globalServ
             });
             return aggregated;
         }
-    }, [allReports, viewMode]);
+    }, [allReports, viewMode, client.seoScore]);
 
     const totalSpend = metrics
         ? Object.values(metrics.platforms || {}).reduce((acc: number, p: any) => acc + (Number(p.spend) || 0), 0)
@@ -118,7 +124,7 @@ export function ClientDashboardView({ client, latestPlan, allReports, globalServ
         {
             label: isRtl ? "سكور SEO" : "SEO Score",
             labelAr: "سكور SEO",
-            value: client.seoScore || 0,
+            value: metrics?.seoScore || 0,
             color: "text-purple-500",
             accent: "bg-purple-500/5",
             format: (n: number) => `${n}%`
