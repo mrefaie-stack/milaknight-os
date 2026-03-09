@@ -18,7 +18,8 @@ import {
     CheckCircle2,
     MessageSquare,
     Mail,
-    Linkedin
+    Linkedin,
+    ExternalLink
 } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/language-context";
@@ -124,9 +125,20 @@ export function PlanItemsList({ items, planId }: { items: any[], planId: string 
                                                     }
                                                 </div>
                                                 {item.imageUrl && (
-                                                    <div className="mt-3 rounded-lg overflow-hidden border border-primary/10 max-w-[200px] shadow-sm">
+                                                    <div className="relative mt-3 rounded-lg overflow-hidden border border-primary/10 max-w-[300px] bg-black/40 group/img shadow-sm flex items-center justify-center min-h-[150px]">
+                                                        {/* Blurred background */}
+                                                        <img src={item.imageUrl} alt="" className="absolute inset-0 w-full h-full object-cover blur-lg opacity-30 scale-110" />
                                                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                        <img src={item.imageUrl} alt="Post visual" className="w-full h-auto object-cover max-h-48 hover:scale-105 transition-transform duration-500" />
+                                                        <img src={item.imageUrl} alt="Post visual" className="relative z-10 w-full h-auto object-contain max-h-64 hover:scale-105 transition-transform duration-500" />
+                                                        <a
+                                                            href={item.imageUrl}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className={`absolute bottom-2 ${isRtl ? 'left-2' : 'right-2'} p-1.5 rounded-lg bg-black/60 backdrop-blur-md border border-white/20 text-white/80 hover:text-white hover:bg-black/80 transition-all opacity-0 group-hover/img:opacity-100 z-20 flex items-center gap-1.5 text-[8px] font-black uppercase tracking-widest`}
+                                                        >
+                                                            <ExternalLink className="h-2.5 w-2.5" />
+                                                            {isRtl ? 'فتح' : 'Open'}
+                                                        </a>
                                                     </div>
                                                 )}
                                                 {item.videoUrl && (

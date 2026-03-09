@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Printer, Facebook, Instagram, Video, Share2, Linkedin, Search, Youtube, TrendingUp, DollarSign, Target, Globe, BarChart3, Send, Mail, Trash2, Download, Loader2, MousePointer2, Zap, MessageSquare, Image as ImageIcon } from "lucide-react";
+import { Printer, Facebook, Instagram, Video, Share2, Linkedin, Search, Youtube, TrendingUp, DollarSign, Target, Globe, BarChart3, Send, Mail, Trash2, Download, Loader2, MousePointer2, Zap, MessageSquare, Image as ImageIcon, ExternalLink } from "lucide-react";
 import { Bar, BarChart, Pie, PieChart, Cell, RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, CartesianGrid } from "recharts";
 import { publishReport, requestReportDeletion } from "@/app/actions/report";
 import { useState } from "react";
@@ -588,14 +588,37 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
                                                             {linkedPosts.map((post: any) => (
                                                                 <div key={post.id} className="group/post relative aspect-square rounded-2xl overflow-hidden border border-white/10 bg-white/5">
                                                                     {post.imageUrl ? (
-                                                                        <img src={post.imageUrl} alt="" className="w-full h-full object-cover transition-transform group-hover/post:scale-110" />
+                                                                        <div className="w-full h-full relative flex items-center justify-center bg-black/40">
+                                                                            <img src={post.imageUrl} alt="" className="absolute inset-0 w-full h-full object-cover blur-lg opacity-30 scale-110" />
+                                                                            <img src={post.imageUrl} alt="" className="relative z-10 w-full h-full object-contain transition-transform group-hover/post:scale-105" />
+                                                                            <a
+                                                                                href={post.imageUrl}
+                                                                                target="_blank"
+                                                                                rel="noopener noreferrer"
+                                                                                className={`absolute bottom-2 ${isRtl ? 'left-2' : 'right-2'} p-1.5 rounded-lg bg-black/60 backdrop-blur-md border border-white/20 text-white/80 hover:text-white hover:bg-black/80 transition-all opacity-0 group-hover/post:opacity-100 z-20 flex items-center gap-1.5 text-[8px] font-black uppercase tracking-widest`}
+                                                                            >
+                                                                                <ExternalLink className="h-2.5 w-2.5" />
+                                                                                {isRtl ? 'فتح' : 'Open'}
+                                                                            </a>
+                                                                        </div>
                                                                     ) : post.videoUrl ? (
-                                                                        <video
-                                                                            src={post.videoUrl}
-                                                                            className="w-full h-full object-cover"
-                                                                            controls
-                                                                            preload="metadata"
-                                                                        />
+                                                                        <div className="w-full h-full relative bg-black/40">
+                                                                            <video
+                                                                                src={post.videoUrl}
+                                                                                className="w-full h-full object-contain"
+                                                                                controls
+                                                                                preload="metadata"
+                                                                            />
+                                                                            <a
+                                                                                href={post.videoUrl}
+                                                                                target="_blank"
+                                                                                rel="noopener noreferrer"
+                                                                                className={`absolute bottom-10 ${isRtl ? 'left-2' : 'right-2'} p-1.5 rounded-lg bg-black/60 backdrop-blur-md border border-white/20 text-white/80 hover:text-white hover:bg-black/80 transition-all opacity-0 group-hover/post:opacity-100 z-20 flex items-center gap-1.5 text-[8px] font-black uppercase tracking-widest`}
+                                                                            >
+                                                                                <ExternalLink className="h-2.5 w-2.5" />
+                                                                                {isRtl ? 'فتح' : 'Open'}
+                                                                            </a>
+                                                                        </div>
                                                                     ) : (
                                                                         <div className="w-full h-full p-4 text-[10px] italic text-muted-foreground overflow-hidden">
                                                                             {post.captionEn || post.captionAr}

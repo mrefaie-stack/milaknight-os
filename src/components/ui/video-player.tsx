@@ -1,13 +1,14 @@
 "use client";
 
-import { Video } from "lucide-react";
+import { Video, ExternalLink } from "lucide-react";
 
 interface VideoPlayerProps {
     url: string;
     isRtl?: boolean;
+    showExternalLink?: boolean;
 }
 
-export function VideoPlayer({ url, isRtl }: VideoPlayerProps) {
+export function VideoPlayer({ url, isRtl, showExternalLink = true }: VideoPlayerProps) {
     if (!url) return null;
 
     // Helper to get embed URL
@@ -73,6 +74,17 @@ export function VideoPlayer({ url, isRtl }: VideoPlayerProps) {
                     allowFullScreen
                     title="Video Player"
                 />
+                {showExternalLink && (
+                    <a
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`absolute bottom-3 ${isRtl ? 'left-3' : 'right-3'} p-2 rounded-lg bg-black/60 backdrop-blur-md border border-white/20 text-white/80 hover:text-white hover:bg-black/80 transition-all opacity-0 group-hover:opacity-100 z-10 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest`}
+                    >
+                        <ExternalLink className="h-3 w-3" />
+                        {isRtl ? 'فتح الرابط' : 'Open Link'}
+                    </a>
+                )}
             </div>
         );
     }
@@ -85,6 +97,17 @@ export function VideoPlayer({ url, isRtl }: VideoPlayerProps) {
                     controls
                     className="w-full h-full object-contain"
                 />
+                {showExternalLink && (
+                    <a
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`absolute bottom-10 ${isRtl ? 'left-3' : 'right-3'} p-2 rounded-lg bg-black/60 backdrop-blur-md border border-white/20 text-white/80 hover:text-white hover:bg-black/80 transition-all opacity-0 group-hover:opacity-100 z-10 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest`}
+                    >
+                        <ExternalLink className="h-3 w-3" />
+                        {isRtl ? 'فتح الرابط' : 'Open Link'}
+                    </a>
+                )}
             </div>
         );
     }

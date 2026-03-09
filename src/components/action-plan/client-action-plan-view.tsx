@@ -159,14 +159,27 @@ function ContentCard({ item, isRtl, onImageClick, isModerator }: { item: any; is
 
             {/* Media Section (non-email) */}
             {!isEmail && (item.imageUrl || item.videoUrl) && (
-                <div className="relative w-full overflow-hidden group/media">
+                <div className="relative w-full overflow-hidden group/media bg-black/40">
                     {item.imageUrl && (
                         <div
-                            className="aspect-video cursor-zoom-in"
+                            className="relative min-h-[250px] max-h-[500px] cursor-zoom-in flex items-center justify-center overflow-hidden"
                             onClick={() => onImageClick?.(item.imageUrl!)}
                         >
+                            {/* Blurred background for portrait images */}
+                            <img src={item.imageUrl} alt="" className="absolute inset-0 w-full h-full object-cover blur-xl opacity-30 scale-110" />
                             {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={item.imageUrl} alt="Content visual" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                            <img src={item.imageUrl} alt="Content visual" className="relative z-10 w-full h-full object-contain group-hover:scale-105 transition-transform duration-700" />
+
+                            <a
+                                href={item.imageUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className={`absolute bottom-3 ${isRtl ? 'left-3' : 'right-3'} p-2 rounded-lg bg-black/60 backdrop-blur-md border border-white/20 text-white/80 hover:text-white hover:bg-black/80 transition-all opacity-0 group-hover/media:opacity-100 z-20 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest`}
+                            >
+                                <ExternalLink className="h-3 w-3" />
+                                {isRtl ? 'فتح الرابط' : 'Open Link'}
+                            </a>
                         </div>
                     )}
                     {item.videoUrl && !item.imageUrl && (
