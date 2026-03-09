@@ -329,12 +329,30 @@ function CalendarView({ items, onImageClick, isRtl, isModerator }: { items: any[
     const blanks = Array.from({ length: firstDayOfMonth }, (_, i) => i);
 
     const getItemsForDate = (day: number) => {
-        const d = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-        const iso = d.toISOString().split('T')[0];
-        return items.filter(item => item.scheduledDate && item.scheduledDate.startsWith(iso));
+        return items.filter(item => {
+            if (!item.scheduledDate) return false;
+            const d = new Date(item.scheduledDate);
+            return d.getFullYear() === currentDate.getFullYear() &&
+                d.getMonth() === currentDate.getMonth() &&
+                d.getDate() === day;
+        });
     };
 
     const monthName = currentDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+
+    const handlePrevMonth = () => {
+        setCurrentDate(prev => {
+            const d = new Date(prev.getFullYear(), prev.getMonth() - 1, 1);
+            return d;
+        });
+    };
+
+    const handleNextMonth = () => {
+        setCurrentDate(prev => {
+            const d = new Date(prev.getFullYear(), prev.getMonth() + 1, 1);
+            return d;
+        });
+    };
 
     return (
         <motion.div
@@ -345,13 +363,13 @@ function CalendarView({ items, onImageClick, isRtl, isModerator }: { items: any[
             <div className={`flex items-center justify-between p-6 bg-card/40 backdrop-blur-xl border border-white/10 rounded-3xl ${isRtl ? 'flex-row-reverse' : ''}`}>
                 <h2 className="text-2xl font-black uppercase tracking-tighter premium-gradient-text">{monthName}</h2>
                 <div className={`flex gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
-                    <Button variant="ghost" size="icon" className="rounded-xl" onClick={() => setCurrentDate(new Date(currentDate.setMonth(currentDate.getMonth() - 1)))}>
+                    <Button variant="ghost" size="icon" className="rounded-xl" onClick={handlePrevMonth}>
                         <ChevronLeft className="h-5 w-5" />
                     </Button>
                     <Button variant="secondary" size="sm" className="rounded-xl font-black" onClick={() => setCurrentDate(new Date())}>
                         TODAY
                     </Button>
-                    <Button variant="ghost" size="icon" className="rounded-xl" onClick={() => setCurrentDate(new Date(currentDate.setMonth(currentDate.getMonth() + 1)))}>
+                    <Button variant="ghost" size="icon" className="rounded-xl" onClick={handleNextMonth}>
                         <ChevronRight className="h-5 w-5" />
                     </Button>
                 </div>
@@ -371,7 +389,12 @@ function CalendarView({ items, onImageClick, isRtl, isModerator }: { items: any[
                     return (
                         <div
                             key={day}
-                            onClick={() => dayItems.length > 0 && setSelectedDate(new Date(currentDate.getFullYear(), currentDate.getMonth(), day).toISOString().split('T')[0])}
+                            onClick={() => {
+                                if (dayItems.length > 0) {
+                                    const d = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+                                    setSelectedDate(d.toISOString().split('T')[0]);
+                                }
+                            }}
                             className={`aspect-square relative p-2 md:p-3 rounded-2xl border transition-all duration-300 group
                                 ${dayItems.length > 0 ? 'bg-primary/5 border-primary/20 cursor-pointer hover:bg-primary/10 hover:border-primary/40' : 'bg-white/5 border-white/5 opacity-50'}
                                 ${isToday ? 'ring-2 ring-primary ring-offset-4 ring-offset-background' : ''}
@@ -418,7 +441,11 @@ function CalendarView({ items, onImageClick, isRtl, isModerator }: { items: any[
                                 </Button>
                             </div>
                             <div className="p-6 overflow-y-auto space-y-4">
-                                {items.filter(item => item.scheduledDate?.startsWith(selectedDate)).map(item => (
+                                {items.filter(item => {
+                                    if (!item.scheduledDate) return false;
+                                    const d = new Date(item.scheduledDate);
+                                    return d.toISOString().split('T')[0] === selectedDate;
+                                }).map(item => (
                                     <div key={item.id} className="p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-primary/20 transition-all">
                                         <ContentCard item={item} isRtl={isRtl} onImageClick={onImageClick} isModerator={isModerator} />
                                     </div>
