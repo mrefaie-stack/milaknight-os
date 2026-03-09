@@ -319,7 +319,14 @@ function ContentCard({ item, isRtl, onImageClick, isModerator }: { item: any; is
 }
 
 function CalendarView({ items, onImageClick, isRtl, isModerator }: { items: any[], onImageClick: (url: string) => void, isRtl: boolean, isModerator?: boolean }) {
-    const [currentDate, setCurrentDate] = useState(new Date());
+    // Default to the first scheduled item's month, or current month if none
+    const initialDate = (() => {
+        const firstScheduled = items.find(i => i.scheduledDate);
+        if (firstScheduled) return new Date(firstScheduled.scheduledDate);
+        return new Date();
+    })();
+
+    const [currentDate, setCurrentDate] = useState(initialDate);
     const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
     const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
@@ -395,19 +402,45 @@ function CalendarView({ items, onImageClick, isRtl, isModerator }: { items: any[
                                     setSelectedDate(d.toISOString().split('T')[0]);
                                 }
                             }}
-                            className={`aspect-square relative p-2 md:p-3 rounded-2xl border transition-all duration-300 group
-                                ${dayItems.length > 0 ? 'bg-primary/5 border-primary/20 cursor-pointer hover:bg-primary/10 hover:border-primary/40' : 'bg-white/5 border-white/5 opacity-50'}
-                                ${isToday ? 'ring-2 ring-primary ring-offset-4 ring-offset-background' : ''}
+                            className={`aspect-square relative p-2 md:p-3 rounded-2xl border transition-all duration-300 group overflow-hidden
+                                ${dayItems.length > 0 ? 'bg-primary/5 border-primary/20 cursor-pointer hover:bg-primary/10 hover:border-primary/40' : 'bg-white/5 border-white/5 opacity-30'}
+                                ${isToday ? 'ring-2 ring-primary ring-offset-2 ring-offset-background' : ''}
                             `}
                         >
-                            <span className={`text-sm md:text-base font-black ${isToday ? 'text-primary' : 'text-muted-foreground/80'} group-hover:text-primary transition-colors`}>{day}</span>
+                            <span className={`text-sm md:text-base font-black ${isToday ? 'text-primary' : 'text-muted-foreground/80'} group-hover:text-primary transition-colors flex items-center justify-between`}>
+                                {day}
+                                {dayItems.length > 0 && <span className="text-[9px] opacity-40">({dayItems.length})</span>}
+                            </span>
+
+                            {/* Improved Cell Previews */}
+                            <div className="mt-1 space-y-1 hidden md:block">
+                                {dayItems.slice(0, 2).map((item, i) => {
+                                    const meta = TYPE_META_BI[item.type] || TYPE_META_BI.POST;
+                                    const TypeIcon = meta.icon;
+                                    const title = item.articleTitle || item.emailSubject || (isRtl ? item.captionAr : item.captionEn) || "...";
+                                    return (
+                                        <div key={i} className="flex items-center gap-1.5 px-1.5 py-0.5 rounded-lg bg-white/5 border border-white/5 group-hover:border-primary/20 transition-all">
+                                            <TypeIcon className={`h-2.5 w-2.5 shrink-0 ${meta.color}`} />
+                                            <span className="text-[8px] font-bold text-muted-foreground truncate opacity-80 group-hover:opacity-100">
+                                                {title.slice(0, 12)}...
+                                            </span>
+                                        </div>
+                                    );
+                                })}
+                                {dayItems.length > 2 && (
+                                    <div className="text-[8px] font-black text-primary/60 px-1.5">
+                                        +{dayItems.length - 2} {isRtl ? 'أكثر' : 'more'}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Mobile dots if items exist */}
                             {dayItems.length > 0 && (
-                                <div className="absolute bottom-2 right-2 flex gap-1">
+                                <div className="absolute bottom-2 right-2 flex gap-1 md:hidden">
                                     {dayItems.slice(0, 3).map((item, i) => {
                                         const typeColor = TYPE_META_BI[item.type]?.color || 'text-primary';
                                         return <div key={i} className={`h-1.5 w-1.5 rounded-full bg-current ${typeColor}`} />;
                                     })}
-                                    {dayItems.length > 3 && <div className="h-1.5 w-1.5 rounded-full bg-muted-foreground/40" />}
                                 </div>
                             )}
                         </div>
