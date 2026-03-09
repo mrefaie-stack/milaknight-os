@@ -50,7 +50,7 @@ export function AdminDashboardView({ clients }: { clients: any[] }) {
                     <p className="text-[11px] font-black uppercase tracking-[0.3em] text-primary/40">
                         {isRtl ? "لوحة تحكم الإدارة" : "Admin Control Panel"}
                     </p>
-                    <h1 className="text-5xl md:text-6xl font-black tracking-tighter premium-gradient-text uppercase">
+                    <h1 className="text-3xl md:text-5xl lg:text-6xl font-black tracking-tighter premium-gradient-text uppercase">
                         {t("dashboard.agency_oversight")}
                     </h1>
                     <p className="text-muted-foreground font-medium text-lg opacity-80">

@@ -414,22 +414,22 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
     return (
         <form onSubmit={handleSubmit} className="space-y-8 max-w-6xl mx-auto pb-24">
             {/* Header Section */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 bg-card/30 p-8 rounded-3xl border border-white/10 backdrop-blur-xl shadow-2xl">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 bg-card/30 p-4 md:p-8 rounded-2xl md:rounded-3xl border border-white/10 backdrop-blur-xl shadow-2xl">
                 <div className={isRtl ? 'text-right' : ''}>
-                    <h1 className="text-5xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-400">
+                    <h1 className="text-3xl md:text-5xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-400">
                         {isRtl ? 'إنشاء تقرير أداء' : 'Generate Report'}
                     </h1>
                     <p className="text-muted-foreground text-lg font-medium mt-2">
                         {isRtl ? 'قم ببناء مراجعة أداء احترافية لعميلك.' : 'Build a premium performance review for your client.'}
                     </p>
                 </div>
-                <div className={`flex flex-col sm:flex-row gap-4 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                <div className={`flex flex-col sm:flex-row gap-3 w-full md:w-auto ${isRtl ? 'sm:flex-row-reverse' : ''}`}>
                     <div className="space-y-1">
                         <Label className={`text-[10px] font-black uppercase text-muted-foreground ${isRtl ? 'mr-1 text-right' : 'ml-1'}`}>
                             {isRtl ? 'العميل' : 'Client'}
                         </Label>
                         <Select name="clientId" defaultValue={initialData?.clientId} onValueChange={setCurrentClientId} required>
-                            <SelectTrigger className="w-64 bg-background/50 border-white/5 h-12 text-base font-bold rounded-xl shadow-lg">
+                            <SelectTrigger className="w-full sm:w-64 bg-background/50 border-white/5 h-12 text-base font-bold rounded-xl shadow-lg">
                                 <SelectValue placeholder={isRtl ? 'اختر العميل' : 'Select Client'} />
                             </SelectTrigger>
                             <SelectContent>
@@ -445,7 +445,7 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                             name="month"
                             type="month"
                             defaultValue={initialData?.month}
-                            className="w-48 bg-background/50 border-white/5 h-12 text-base font-bold rounded-xl shadow-lg"
+                            className="w-full sm:w-48 bg-background/50 border-white/5 h-12 text-base font-bold rounded-xl shadow-lg"
                             required
                         />
                     </div>

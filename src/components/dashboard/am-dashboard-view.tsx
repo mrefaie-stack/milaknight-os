@@ -50,7 +50,7 @@ export function ClientAMDashboard({ clients, userName }: { clients: any[], userN
         >
             <motion.div variants={item} className={`flex flex-col md:flex-row md:items-center justify-between gap-6 ${isRtl ? 'text-right' : 'text-left'}`}>
                 <div className="space-y-1">
-                    <h1 className="text-5xl font-black tracking-tighter premium-gradient-text uppercase">
+                    <h1 className="text-3xl md:text-5xl font-black tracking-tighter premium-gradient-text uppercase">
                         {t("dashboard.am_hub")}
                     </h1>
                     <p className="text-muted-foreground font-medium text-lg opacity-80">
@@ -73,7 +73,7 @@ export function ClientAMDashboard({ clients, userName }: { clients: any[], userN
                                 <stat.icon className={`h-4 w-4 ${stat.color} transition-transform group-hover:scale-125`} />
                             </CardHeader>
                             <CardContent className={isRtl ? 'text-right' : 'text-left'}>
-                                <div className="text-5xl font-black tracking-tighter">{stat.value}</div>
+                                <div className="text-4xl md:text-5xl font-black tracking-tighter">{stat.value}</div>
                             </CardContent>
                             <div className="absolute inset-0 classic-shimmer animate-shimmer -translate-x-full pointer-events-none" />
                         </Card>
