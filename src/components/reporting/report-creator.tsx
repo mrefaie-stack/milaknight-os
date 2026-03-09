@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { createReport, updateReport } from "@/app/actions/report";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -134,15 +134,18 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
     // Fetch approved posts when client changes
     const [currentClientId, setCurrentClientId] = useState(initialData?.clientId || "");
 
-    useMemo(async () => {
-        if (currentClientId) {
-            try {
-                const posts = await getApprovedPosts(currentClientId);
-                setApprovedPosts(posts);
-            } catch (err) {
-                console.error("Failed to fetch posts", err);
+    useEffect(() => {
+        async function loadPosts() {
+            if (currentClientId) {
+                try {
+                    const posts = await getApprovedPosts(currentClientId);
+                    setApprovedPosts(posts);
+                } catch (err) {
+                    console.error("Failed to fetch posts", err);
+                }
             }
         }
+        loadPosts();
     }, [currentClientId]);
 
     const addCampaign = () => {
