@@ -425,7 +425,7 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
 
             {/* === Paid Ads Dedicated Section === */}
             {hasSpend && (() => {
-                const paidPlatforms = activePlatforms.filter(k => (aggregatedPlatforms[k].spend || 0) > 0);
+                const paidPlatforms = activePlatforms.filter(k => getPlatformSpend(aggregatedPlatforms[k]) > 0);
                 return (
                     <div className="space-y-6">
                         <div className={`flex items-center gap-4 ${isRtl ? 'flex-row-reverse text-right' : 'text-left'}`}>
