@@ -62,30 +62,45 @@ export function ClientDashboardView({ client, latestPlan, allReports, globalServ
             // Aggregate all reports
             const aggregated = {
                 platforms: {} as any,
+                campaigns: [] as any[],
                 seoScore: currentSeoScore
             };
 
             allReports.forEach(report => {
                 const m = typeof report.metrics === 'string' ? JSON.parse(report.metrics) : report.metrics;
-                if (m && m.platforms) {
-                    Object.keys(m.platforms).forEach(pKey => {
-                        if (!aggregated.platforms[pKey]) {
-                            aggregated.platforms[pKey] = { impressions: 0, engagement: 0, followers: 0, spend: 0 };
-                        }
-                        const pData = m.platforms[pKey];
-                        aggregated.platforms[pKey].impressions += (Number(pData.impressions) || 0);
-                        aggregated.platforms[pKey].engagement += (Number(pData.engagement) || 0);
-                        aggregated.platforms[pKey].followers += (Number(pData.followers) || 0);
-                        aggregated.platforms[pKey].spend += (Number(pData.spend) || 0);
-                    });
-                }
+                // Handle new multi-campaign structure
+                const campaigns = m?.campaigns || (m?.platforms ? [{ platforms: m.platforms }] : []);
+                campaigns.forEach((camp: any) => {
+                    if (camp.platforms) {
+                        Object.keys(camp.platforms).forEach(pKey => {
+                            if (!aggregated.platforms[pKey]) {
+                                aggregated.platforms[pKey] = { impressions: 0, engagement: 0, followers: 0, spend: 0, paidCampaigns: [] };
+                            }
+                            const pData = camp.platforms[pKey];
+                            aggregated.platforms[pKey].impressions += (Number(pData.impressions) || 0);
+                            aggregated.platforms[pKey].engagement += (Number(pData.engagement) || 0);
+                            aggregated.platforms[pKey].followers += (Number(pData.followers) || 0);
+                            // Sum spend: use paidCampaigns sum if available, else platform.spend
+                            const paidSpend = pData.paidCampaigns?.length > 0
+                                ? pData.paidCampaigns.reduce((acc: number, c: any) => acc + (Number(c.spend) || 0), 0)
+                                : (Number(pData.spend) || 0);
+                            aggregated.platforms[pKey].spend += paidSpend;
+                        });
+                    }
+                });
             });
             return aggregated;
         }
     }, [allReports, viewMode, client.seoScore]);
 
     const totalSpend = metrics
-        ? Object.values(metrics.platforms || {}).reduce((acc: number, p: any) => acc + (Number(p.spend) || 0), 0)
+        ? Object.values(metrics.platforms || {}).reduce((acc: number, p: any) => {
+            // Use paidCampaigns sum if available to avoid double-counting with platform.spend
+            const paidSpend = (p as any).paidCampaigns?.length > 0
+                ? (p as any).paidCampaigns.reduce((s: number, c: any) => s + (Number(c.spend) || 0), 0)
+                : (Number((p as any).spend) || 0);
+            return acc + paidSpend;
+        }, 0)
         : 0;
 
     const statCards = [
@@ -119,7 +134,7 @@ export function ClientDashboardView({ client, latestPlan, allReports, globalServ
             value: totalSpend,
             color: "text-orange-500",
             accent: "bg-orange-500/5",
-            format: (n: number) => `$${formatNumber(n)}`
+            format: (n: number) => `SAR ${formatNumber(n)}`
         },
         {
             label: isRtl ? "سكور SEO" : "SEO Score",

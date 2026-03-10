@@ -113,6 +113,14 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
         });
     });
 
+    // Helper: get effective spend for a platform (paidCampaigns sum if present, else platform.spend)
+    function getPlatformSpend(p: any): number {
+        if (p.paidCampaigns?.length > 0) {
+            return p.paidCampaigns.reduce((acc: number, c: any) => acc + (Number(c.spend) || 0), 0);
+        }
+        return Number(p.spend) || 0;
+    }
+
     const activePlatforms = Object.keys(aggregatedPlatforms).filter(key => {
         const p = aggregatedPlatforms[key];
         return (p.impressions || 0) > 0 || (p.followers || 0) > 0 || (p.engagement || 0) > 0 || (p.views || 0) > 0 || (p.paidReach || 0) > 0;
@@ -124,7 +132,7 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
         engagement: activePlatforms.reduce((acc, key) => acc + (Number(aggregatedPlatforms[key].engagement) || 0), 0),
         followers: activePlatforms.reduce((acc, key) => acc + (Number(aggregatedPlatforms[key].followers) || 0), 0),
         conversions: activePlatforms.reduce((acc, key) => acc + (Number(aggregatedPlatforms[key].conversions) || 0), 0),
-        spend: activePlatforms.reduce((acc, key) => acc + (Number(aggregatedPlatforms[key].spend) || 0), 0),
+        spend: activePlatforms.reduce((acc, key) => acc + getPlatformSpend(aggregatedPlatforms[key]), 0),
         paidReach: activePlatforms.reduce((acc, key) => acc + (Number(aggregatedPlatforms[key].paidReach) || 0), 0),
         views: activePlatforms.reduce((acc, key) => acc + (Number(aggregatedPlatforms[key].views) || 0), 0),
     };
