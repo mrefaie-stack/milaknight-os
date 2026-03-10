@@ -179,10 +179,6 @@ export function AddClientButton({ ams, services }: { ams: any[]; services: any[]
                                     </SelectContent>
                                 </Select>
                             </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="seoScore">{isRtl ? "سكور SEO (%)" : "SEO Score (%)"}</Label>
-                                <Input id="seoScore" name="seoScore" type="number" min="0" max="100" defaultValue="0" className={isRtl ? "text-right" : ""} />
-                            </div>
                         </div>
 
                         <div className="space-y-3">

@@ -3,9 +3,10 @@ import { AddTeamMemberDialog } from "@/components/admin/add-team-member";
 import { EditTeamMemberDialog } from "@/components/admin/edit-am-dialog";
 import { AdminTeamHeader, ClientLoadLabel, NoTeamMembers, TeamStats, MessageButtonLabel, TeamMemberRoleBadge } from "@/components/admin/admin-team-ui";
 import { Badge } from "@/components/ui/badge";
-import { MessageSquare, Users2, Crown } from "lucide-react";
+import { MessageSquare, Users2, Crown, Trash2, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { TeamDeleteButton } from "@/components/admin/team-delete-button";
 
 const ROLE_COLORS: Record<string, { color: string; bg: string }> = {
     ADMIN: { color: "text-purple-500", bg: "bg-purple-500/10 border-purple-500/20" },
@@ -85,6 +86,7 @@ export default async function AdminTeamPage() {
                                         </Button>
                                     </Link>
                                     <EditTeamMemberDialog member={member} />
+                                    <TeamDeleteButton memberId={member.id} memberName={`${member.firstName} ${member.lastName}`} />
                                 </div>
                             </div>
                         );

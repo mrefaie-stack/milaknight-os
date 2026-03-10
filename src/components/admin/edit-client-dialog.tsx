@@ -23,16 +23,18 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Edit, UserCog, Globe } from "lucide-react";
+import { Edit, UserCog, Globe, Wand2, Loader2 } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
 import { Textarea } from "@/components/ui/textarea";
-
+import { translateText } from "@/app/actions/translate";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 
 export function EditClientDialog({ client, accountManagers, services = [] }: { client: any, accountManagers: any[], services?: any[] }) {
     const { t, isRtl } = useLanguage();
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [translating, setTranslating] = useState<string | null>(null);
 
     const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>(
         client.services?.map((s: any) => s.globalServiceId) || []
@@ -46,8 +48,10 @@ export function EditClientDialog({ client, accountManagers, services = [] }: { c
         activeServices: client.activeServices || "",
         email: client.user?.email || "",
         password: "",
-        brief: client.brief || "",
-        deliverables: client.deliverables || "",
+        briefAr: client.briefAr || "",
+        briefEn: client.briefEn || "",
+        deliverablesAr: client.deliverablesAr || "",
+        deliverablesEn: client.deliverablesEn || "",
         facebook: client.facebook || "",
         instagram: client.instagram || "",
         linkedin: client.linkedin || "",
@@ -56,8 +60,33 @@ export function EditClientDialog({ client, accountManagers, services = [] }: { c
         snapchat: client.snapchat || "",
         youtube: client.youtube || "",
         website: client.website || "",
-        seoScore: client.seoScore || 0,
     });
+
+    async function handleAutoTranslate(source: string, targetType: 'brief' | 'deliv', targetLang: 'ar' | 'en') {
+        if (!source.trim()) {
+            toast.error(isRtl ? "يرجى إدخال نص أولاً" : "Please enter text first");
+            return;
+        }
+
+        const id = `${targetType}-${targetLang}`;
+        setTranslating(id);
+
+        try {
+            const result = await translateText(source, targetLang);
+            if (targetType === 'brief') {
+                if (targetLang === 'ar') setFormData(prev => ({ ...prev, briefAr: result }));
+                else setFormData(prev => ({ ...prev, briefEn: result }));
+            } else {
+                if (targetLang === 'ar') setFormData(prev => ({ ...prev, deliverablesAr: result }));
+                else setFormData(prev => ({ ...prev, deliverablesEn: result }));
+            }
+            toast.success(isRtl ? "تمت الترجمة بنجاح!" : "Translated successfully!");
+        } catch (error) {
+            toast.error(isRtl ? "فشلت الترجمة" : "Translation failed");
+        } finally {
+            setTranslating(null);
+        }
+    }
 
     async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
@@ -71,8 +100,10 @@ export function EditClientDialog({ client, accountManagers, services = [] }: { c
                 amId: formData.amId,
                 package: formData.package,
                 activeServices: formData.activeServices,
-                brief: formData.brief,
-                deliverables: formData.deliverables,
+                briefAr: formData.briefAr,
+                briefEn: formData.briefEn,
+                deliverablesAr: formData.deliverablesAr,
+                deliverablesEn: formData.deliverablesEn,
                 facebook: formData.facebook,
                 instagram: formData.instagram,
                 linkedin: formData.linkedin,
@@ -81,7 +112,6 @@ export function EditClientDialog({ client, accountManagers, services = [] }: { c
                 snapchat: formData.snapchat,
                 youtube: formData.youtube,
                 website: formData.website,
-                seoScore: Number(formData.seoScore) || 0,
                 serviceIds: selectedServiceIds,
             });
 
@@ -189,18 +219,6 @@ export function EditClientDialog({ client, accountManagers, services = [] }: { c
                                         </SelectContent>
                                     </Select>
                                 </div>
-                                <div className="grid gap-2">
-                                    <Label htmlFor="seoScore" className={isRtl ? 'text-right' : ''}>{isRtl ? 'سكور SEO (%)' : 'SEO Score (%)'}</Label>
-                                    <Input
-                                        id="seoScore"
-                                        type="number"
-                                        min="0"
-                                        max="100"
-                                        value={formData.seoScore}
-                                        onChange={(e) => setFormData({ ...formData, seoScore: parseInt(e.target.value) || 0 })}
-                                        className={isRtl ? 'text-right' : ''}
-                                    />
-                                </div>
                                 <div className="space-y-3">
                                     <Label className={isRtl ? 'text-right block' : ''}>{t("dashboard.management_services")}</Label>
                                     <div className="grid grid-cols-2 gap-2 mt-2">
@@ -243,24 +261,104 @@ export function EditClientDialog({ client, accountManagers, services = [] }: { c
                                 <Edit className="h-4 w-4" /> {isRtl ? 'موجز العميل والمخرجات' : 'Client Brief & Deliverables'}
                             </h4>
                             <div className="grid gap-4 pl-4 border-l-2 border-primary/10">
-                                <div className="space-y-2">
-                                    <Label htmlFor="brief" className={isRtl ? 'text-right block' : ''}>{isRtl ? 'موجز العميل' : 'Client Brief'}</Label>
-                                    <Textarea
-                                        id="brief"
-                                        className={`min-h-[100px] ${isRtl ? 'text-right' : ''}`}
-                                        value={formData.brief}
-                                        onChange={(e) => setFormData({ ...formData, brief: e.target.value })}
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="deliverables" className={isRtl ? 'text-right block' : ''}>{isRtl ? 'المخرجات الشهرية' : 'Monthly Deliverables'}</Label>
-                                    <Textarea
-                                        id="deliverables"
-                                        className={`min-h-[120px] ${isRtl ? 'text-right' : ''}`}
-                                        value={formData.deliverables}
-                                        onChange={(e) => setFormData({ ...formData, deliverables: e.target.value })}
-                                    />
-                                </div>
+                                <Tabs defaultValue="ar" className="w-full">
+                                    <TabsList className="grid w-full grid-cols-2">
+                                        <TabsTrigger value="ar">العربية</TabsTrigger>
+                                        <TabsTrigger value="en">English</TabsTrigger>
+                                    </TabsList>
+                                    <TabsContent value="ar" className="space-y-4 pt-4">
+                                        <div className="space-y-2">
+                                            <div className={`flex items-center justify-between ${isRtl ? 'flex-row-reverse' : ''}`}>
+                                                <Label htmlFor="briefAr" className={isRtl ? 'text-right block' : ''}>{isRtl ? 'موجز العميل' : 'Client Brief'}</Label>
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="text-[10px] h-6 px-2 gap-1"
+                                                    onClick={() => handleAutoTranslate(formData.briefEn, 'brief', 'ar')}
+                                                    disabled={!!translating}
+                                                >
+                                                    {translating === 'brief-ar' ? <Loader2 className="h-3 w-3 animate-spin" /> : <Wand2 className="h-3 w-3" />}
+                                                    {isRtl ? "ترجمة من الإنجليزي" : "Translate from English"}
+                                                </Button>
+                                            </div>
+                                            <Textarea
+                                                id="briefAr"
+                                                className={`min-h-[100px] ${isRtl ? 'text-right' : ''}`}
+                                                value={formData.briefAr}
+                                                onChange={(e) => setFormData({ ...formData, briefAr: e.target.value })}
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <div className={`flex items-center justify-between ${isRtl ? 'flex-row-reverse' : ''}`}>
+                                                <Label htmlFor="deliverablesAr" className={isRtl ? 'text-right block' : ''}>{isRtl ? 'المخرجات الشهرية' : 'Monthly Deliverables'}</Label>
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="text-[10px] h-6 px-2 gap-1"
+                                                    onClick={() => handleAutoTranslate(formData.deliverablesEn, 'deliv', 'ar')}
+                                                    disabled={!!translating}
+                                                >
+                                                    {translating === 'deliv-ar' ? <Loader2 className="h-3 w-3 animate-spin" /> : <Wand2 className="h-3 w-3" />}
+                                                    {isRtl ? "ترجمة من الإنجليزي" : "Translate from English"}
+                                                </Button>
+                                            </div>
+                                            <Textarea
+                                                id="deliverablesAr"
+                                                className={`min-h-[120px] ${isRtl ? 'text-right' : ''}`}
+                                                value={formData.deliverablesAr}
+                                                onChange={(e) => setFormData({ ...formData, deliverablesAr: e.target.value })}
+                                            />
+                                        </div>
+                                    </TabsContent>
+                                    <TabsContent value="en" className="space-y-4 pt-4">
+                                        <div className="space-y-2">
+                                            <div className="flex items-center justify-between">
+                                                <Label htmlFor="briefEn">Client Brief (En)</Label>
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="text-[10px] h-6 px-2 gap-1"
+                                                    onClick={() => handleAutoTranslate(formData.briefAr, 'brief', 'en')}
+                                                    disabled={!!translating}
+                                                >
+                                                    {translating === 'brief-en' ? <Loader2 className="h-3 w-3 animate-spin" /> : <Wand2 className="h-3 w-3" />}
+                                                    Translate from Arabic
+                                                </Button>
+                                            </div>
+                                            <Textarea
+                                                id="briefEn"
+                                                className="min-h-[100px]"
+                                                value={formData.briefEn}
+                                                onChange={(e) => setFormData({ ...formData, briefEn: e.target.value })}
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <div className="flex items-center justify-between">
+                                                <Label htmlFor="deliverablesEn">Monthly Deliverables (En)</Label>
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="text-[10px] h-6 px-2 gap-1"
+                                                    onClick={() => handleAutoTranslate(formData.deliverablesAr, 'deliv', 'en')}
+                                                    disabled={!!translating}
+                                                >
+                                                    {translating === 'deliv-en' ? <Loader2 className="h-3 w-3 animate-spin" /> : <Wand2 className="h-3 w-3" />}
+                                                    Translate from Arabic
+                                                </Button>
+                                            </div>
+                                            <Textarea
+                                                id="deliverablesEn"
+                                                className="min-h-[120px]"
+                                                value={formData.deliverablesEn}
+                                                onChange={(e) => setFormData({ ...formData, deliverablesEn: e.target.value })}
+                                            />
+                                        </div>
+                                    </TabsContent>
+                                </Tabs>
                             </div>
                         </div>
 

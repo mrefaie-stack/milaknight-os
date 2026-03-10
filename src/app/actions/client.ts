@@ -187,3 +187,35 @@ export async function updateClient(clientId: string, data: any) {
     revalidatePath(`/admin/clients/${clientId}`);
     return { success: true };
 }
+
+export async function deleteClient(clientId: string) {
+    const session = await getServerSession(authOptions);
+    if (session?.user?.role !== "ADMIN") {
+        throw new Error("Unauthorized");
+    }
+
+    const client = await prisma.client.findUnique({
+        where: { id: clientId },
+        select: { userId: true, name: true }
+    });
+
+    if (!client) {
+        throw new Error("Client not found");
+    }
+
+    // Deleting the user will cascade delete the client due to onDelete: Cascade in schema
+    if (client.userId) {
+        await prisma.user.delete({
+            where: { id: client.userId }
+        });
+    } else {
+        await prisma.client.delete({
+            where: { id: clientId }
+        });
+    }
+
+    await logActivity(`deleted client: ${client.name}`, "User", session.user.id);
+
+    revalidatePath("/admin/clients");
+    return { success: true };
+}

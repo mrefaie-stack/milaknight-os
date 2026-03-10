@@ -4,9 +4,21 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EditClientDialog } from "@/components/admin/edit-client-dialog";
-import { ArrowRight, ArrowLeft, User2, BarChart2, Users2, Search } from "lucide-react";
+import { ArrowRight, ArrowLeft, User2, BarChart2, Users2, Search, Trash2, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useLanguage } from "@/contexts/language-context";
+import { deleteClient } from "@/app/actions/client";
+import { toast } from "sonner";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+    DialogClose,
+} from "@/components/ui/dialog";
 
 const PACKAGE_COLORS: Record<string, string> = {
     STARTER: "bg-blue-500/10 text-blue-500 border-blue-500/20",
@@ -156,7 +168,10 @@ export function ClientList({ clients, accountManagers, services }: { clients: an
                                     </Button>
                                 </Link>
                                 {accountManagers && (
-                                    <EditClientDialog client={client} accountManagers={accountManagers} services={services} />
+                                    <div className="flex items-center gap-1">
+                                        <EditClientDialog client={client} accountManagers={accountManagers} services={services} />
+                                        <DeleteClientButton clientId={client.id} clientName={client.name} />
+                                    </div>
                                 )}
                             </div>
                         </div>
@@ -170,5 +185,59 @@ export function ClientList({ clients, accountManagers, services }: { clients: an
                 </div>
             )}
         </div>
+    );
+}
+
+function DeleteClientButton({ clientId, clientName }: { clientId: string, clientName: string }) {
+    const { t, isRtl } = useLanguage();
+    const [loading, setLoading] = useState(false);
+
+    async function handleDelete() {
+        setLoading(true);
+        try {
+            await deleteClient(clientId);
+            toast.success(isRtl ? "تم حذف العميل بنجاح" : "Client deleted successfully");
+        } catch (error: any) {
+            toast.error(error.message || "Failed to delete client");
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    return (
+        <Dialog>
+            <DialogTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10">
+                    <Trash2 className="h-4 w-4" />
+                </Button>
+            </DialogTrigger>
+            <DialogContent dir={isRtl ? "rtl" : "ltr"}>
+                <DialogHeader>
+                    <DialogTitle className={isRtl ? "text-right" : ""}>
+                        {isRtl ? "هل أنت متأكد من الحذف؟" : "Are you sure?"}
+                    </DialogTitle>
+                    <DialogDescription className={isRtl ? "text-right" : ""}>
+                        {isRtl 
+                            ? `سيتم حذف العميل "${clientName}" وكافة البيانات المرتبطة به نهائياً.`
+                            : `This will permanently delete the client "${clientName}" and all associated data.`}
+                    </DialogDescription>
+                </DialogHeader>
+                <DialogFooter className={isRtl ? "flex-row-reverse gap-2" : ""}>
+                    <DialogClose asChild>
+                        <Button variant="outline">{t("common.cancel")}</Button>
+                    </DialogClose>
+                    <Button 
+                        variant="destructive"
+                        onClick={(e) => {
+                            e.preventDefault();
+                            handleDelete();
+                        }}
+                        disabled={loading}
+                    >
+                        {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : (isRtl ? "حذف" : "Delete")}
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     );
 }
