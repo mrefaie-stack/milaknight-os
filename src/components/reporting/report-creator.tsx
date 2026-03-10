@@ -974,7 +974,7 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                         </div>
                     ) : (
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 p-4">
-                            {approvedPosts.filter(p => p.platform === selectedPlatformForLinking).map((post) => (
+                            {approvedPosts.filter(p => p.platform?.toLowerCase() === selectedPlatformForLinking?.toLowerCase()).map((post) => (
                                 <div
                                     key={post.id}
                                     className="cursor-pointer group relative aspect-square rounded-xl overflow-hidden border border-white/5 hover:border-primary/50 transition-all"
