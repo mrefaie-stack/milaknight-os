@@ -578,6 +578,53 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
                                                     ) : null)}
                                                 </div>
 
+                                                {data.paidCampaigns?.length > 0 && (
+                                                    <div className="space-y-4">
+                                                        <div className={`flex items-center gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                                                            <DollarSign className="h-4 w-4 text-orange-500" />
+                                                            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{isRtl ? 'تفاصيل الحملات الممولة' : 'Paid Campaign Details'}</span>
+                                                        </div>
+                                                        <div className="grid gap-4">
+                                                            {data.paidCampaigns.map((paidCamp: any, pIdx: number) => (
+                                                                <div key={pIdx} className="p-4 rounded-2xl bg-orange-500/5 border border-orange-500/10 space-y-3">
+                                                                    <div className={`flex justify-between items-center ${isRtl ? 'flex-row-reverse' : ''}`}>
+                                                                        <div className="font-bold text-sm text-orange-600">{paidCamp.name}</div>
+                                                                        <div className="text-[10px] font-black px-2 py-0.5 rounded-full bg-orange-500/10 text-orange-500 uppercase">
+                                                                            {isRtl ? (
+                                                                                paidCamp.objective === 'AWARENESS' ? 'وعي' :
+                                                                                    paidCamp.objective === 'REACH' ? 'وصول' :
+                                                                                        paidCamp.objective === 'TRAFFIC' ? 'زيارة' :
+                                                                                            paidCamp.objective === 'ENGAGEMENT' ? 'تفاعل' :
+                                                                                                paidCamp.objective === 'MESSAGES' ? 'رسايل' :
+                                                                                                    paidCamp.objective === 'LEADS' ? 'ليدز' :
+                                                                                                        paidCamp.objective === 'CONVERSIONS' ? 'تحويل' : paidCamp.objective
+                                                                            ) : paidCamp.objective.toLowerCase()}
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="grid grid-cols-3 gap-4">
+                                                                        <div className={isRtl ? 'text-right' : 'text-left'}>
+                                                                            <div className="text-[10px] text-muted-foreground uppercase">{isRtl ? 'الإنفاق' : 'Spend'}</div>
+                                                                            <div className="text-sm font-black italic">SAR {paidCamp.spend?.toLocaleString()}</div>
+                                                                        </div>
+                                                                        <div className={isRtl ? 'text-right' : 'text-left'}>
+                                                                            <div className="text-[10px] text-muted-foreground uppercase">{isRtl ? 'الوصول' : 'Reach'}</div>
+                                                                            <div className="text-sm font-black italic">{paidCamp.reach?.toLocaleString()}</div>
+                                                                        </div>
+                                                                        <div className={isRtl ? 'text-right' : 'text-left'}>
+                                                                            <div className="text-[10px] text-muted-foreground uppercase">
+                                                                                {paidCamp.objective === 'MESSAGES' ? (isRtl ? 'رسايل' : 'Msgs') :
+                                                                                    paidCamp.objective === 'LEADS' ? (isRtl ? 'ليدز' : 'Leads') :
+                                                                                        (isRtl ? 'نتايج' : 'Results')}
+                                                                            </div>
+                                                                            <div className="text-sm font-black italic">{paidCamp.results?.toLocaleString()}</div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+
                                                 {linkedPosts.length > 0 && (
                                                     <div className="space-y-4">
                                                         <div className={`flex items-center gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>

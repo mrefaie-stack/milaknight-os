@@ -378,7 +378,7 @@ export async function getApprovedPosts(clientId: string) {
         where: {
             plan: {
                 clientId,
-                status: "APPROVED"
+                status: { in: ["APPROVED", "SCHEDULED"] }
             },
             status: "APPROVED"
         },
