@@ -148,7 +148,7 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
         engagement: aggregatedPlatforms[key].engagement || 0,
         followers: aggregatedPlatforms[key].followers || 0,
         views: aggregatedPlatforms[key].views || 0,
-        spend: aggregatedPlatforms[key].spend || 0,
+        spend: getPlatformSpend(aggregatedPlatforms[key]),
         paidReach: aggregatedPlatforms[key].paidReach || 0,
         conversions: aggregatedPlatforms[key].conversions || 0,
     }));
@@ -444,7 +444,8 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
                         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                             {paidPlatforms.map(key => {
                                 const d = aggregatedPlatforms[key];
-                                const cpa = d.conversions > 0 && d.spend > 0 ? (d.spend / d.conversions).toFixed(2) : null;
+                                const currentPlatformSpend = getPlatformSpend(d);
+                                const cpa = d.conversions > 0 && currentPlatformSpend > 0 ? (currentPlatformSpend / d.conversions).toFixed(2) : null;
                                 const Icon = PLATFORM_ICONS[key as keyof typeof PLATFORM_ICONS] || BarChart3;
                                 return (
                                     <div key={key} className="p-6 rounded-3xl bg-orange-500/5 border border-orange-500/15 space-y-4">
@@ -500,7 +501,7 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
                                             <div className="grid grid-cols-2 gap-3">
                                                 <div className="p-3 bg-background/50 rounded-xl">
                                                     <div className="text-[10px] font-black uppercase text-orange-500 mb-1">{isRtl ? 'الإنفاق' : 'Spend'}</div>
-                                                    <div className="text-xl font-black">SAR {(d.spend || 0).toLocaleString()}</div>
+                                                    <div className="text-xl font-black">SAR {currentPlatformSpend.toLocaleString()}</div>
                                                 </div>
                                                 {d.paidReach > 0 && <div className="p-3 bg-background/50 rounded-xl">
                                                     <div className="text-[10px] font-black uppercase text-muted-foreground mb-1">{isRtl ? 'الوصول المدفوع' : 'Paid Reach'}</div>
@@ -546,9 +547,10 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
                             <div className="grid gap-8 grid-cols-1 lg:grid-cols-2 print:grid-cols-1">
                                 {Object.keys(camp.platforms || {}).map(platId => {
                                     const data = camp.platforms[platId];
+                                    const currentPlatformSpend = getPlatformSpend(data);
                                     const Icon = PLATFORM_ICONS[platId as keyof typeof PLATFORM_ICONS] || BarChart3;
                                     const engRate = data.impressions > 0 ? ((data.engagement / data.impressions) * 100).toFixed(2) : "0.00";
-                                    const cpa = data.conversions > 0 && data.spend > 0 ? (data.spend / data.conversions).toFixed(2) : null;
+                                    const cpa = data.conversions > 0 && currentPlatformSpend > 0 ? (currentPlatformSpend / data.conversions).toFixed(2) : null;
                                     const linkedPosts = (camp.linkedItems || []).filter((item: any) => item.platform === platId);
 
                                     return (
@@ -564,7 +566,7 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
                                                             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{t("reports.platform_deep_dive")}</p>
                                                         </div>
                                                     </div>
-                                                    {data.spend > 0 && <div className="text-[10px] bg-orange-500/20 text-orange-500 border border-orange-500/20 px-3 py-1 rounded-full font-black">{t("reports.ad_active")}</div>}
+                                                    {currentPlatformSpend > 0 && <div className="text-[10px] bg-orange-500/20 text-orange-500 border border-orange-500/20 px-3 py-1 rounded-full font-black">{t("reports.ad_active")}</div>}
                                                 </div>
                                             </CardHeader>
                                             <CardContent className="p-8 space-y-8 print:p-6 print:space-y-4">
