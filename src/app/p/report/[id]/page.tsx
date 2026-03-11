@@ -15,6 +15,15 @@ export default async function PublicReportPage({ params }: { params: Promise<{ i
     if (!report) return notFound();
 
     const metrics: any = typeof report.metrics === 'string' ? JSON.parse(report.metrics) : report.metrics;
+    
+    // Fetch previous report for deltas/X growth
+    const reports = await prisma.report.findMany({
+        where: { clientId: report.clientId, status: "SENT" },
+        orderBy: { month: "desc" },
+    });
+    const idx = reports.findIndex(r => r.month === report.month);
+    const previousReport = idx >= 0 ? reports[idx + 1] : null;
+    const previousMetrics = previousReport ? (typeof previousReport.metrics === 'string' ? JSON.parse(previousReport.metrics) : previousReport.metrics) : null;
 
     return (
         <div className="min-h-screen bg-background">
@@ -32,7 +41,7 @@ export default async function PublicReportPage({ params }: { params: Promise<{ i
                 </div>
             </div>
             <div className="p-4 md:p-8">
-                <ReportClientView report={report} metrics={metrics} role="PUBLIC" />
+                <ReportClientView report={report} metrics={metrics} role="PUBLIC" previousMetrics={previousMetrics} />
             </div>
         </div>
     );

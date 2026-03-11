@@ -150,7 +150,7 @@ export function ClientDashboardView({ client, latestPlan, allReports, globalServ
     const statCards = [
         {
             label: t("reports.impressions"),
-            value: metrics ? Object.values(metrics.platforms || {}).reduce((acc: number, p: any) => acc + (Number(p.impressions) || 0), 0) : 0,
+            value: Object.values(metrics.platforms).reduce((acc: number, p: any) => acc + (p.impressions || 0), 0),
             color: "text-primary",
             accent: "bg-primary/5",
             icon: <BarChart className="h-3 w-3" />,
@@ -158,7 +158,7 @@ export function ClientDashboardView({ client, latestPlan, allReports, globalServ
         },
         {
             label: t("reports.engagements"),
-            value: metrics ? Object.values(metrics.platforms || {}).reduce((acc: number, p: any) => acc + (Number(p.engagement) || 0), 0) : 0,
+            value: Object.values(metrics.platforms).reduce((acc: number, p: any) => acc + (p.engagement || 0), 0),
             color: "text-emerald-500",
             accent: "bg-emerald-500/5",
             icon: <Sparkles className="h-3 w-3" />,
@@ -166,7 +166,7 @@ export function ClientDashboardView({ client, latestPlan, allReports, globalServ
         },
         {
             label: t("reports.growth"),
-            value: metrics ? Object.values(metrics.platforms || {}).reduce((acc: number, p: any) => acc + (Number(p.followers) || 0), 0) : 0,
+            value: Object.values(metrics.platforms).reduce((acc: number, p: any) => acc + (p.followers || 0), 0),
             color: "text-blue-500",
             accent: "bg-blue-500/5",
             icon: <TrendingUp className="h-3 w-3" />,
@@ -174,7 +174,7 @@ export function ClientDashboardView({ client, latestPlan, allReports, globalServ
         },
         {
             label: isRtl ? "الإنفاق الإعلاني" : "Ad Spend",
-            value: totalSpend,
+            value: Object.values(metrics.platforms).reduce((acc: number, p: any) => acc + (p.spend || 0), 0),
             color: "text-orange-500",
             accent: "bg-orange-500/5",
             icon: <DollarSign className="h-3 w-3" />,
@@ -182,13 +182,13 @@ export function ClientDashboardView({ client, latestPlan, allReports, globalServ
         },
         {
             label: t("reports.completed_actions"),
-            value: metrics ? Object.values(metrics.platforms || {}).reduce((acc: number, p: any) => acc + (Number(p.conversions) || 0), 0) : 0,
+            value: Object.values(metrics.platforms).reduce((acc: number, p: any) => acc + (p.conversions || 0), 0),
             color: "text-rose-500",
             accent: "bg-rose-500/5",
             icon: <CheckCircle2 className="h-3 w-3" />,
             format: formatNumber
         },
-        ...(metrics?.emailMarketing?.emailsSent > 0 ? [{
+        ...(metrics.emailMarketing.emailsSent > 0 ? [{
             label: isRtl ? "رسائل البريد" : "Emails Dispatched",
             value: metrics.emailMarketing.emailsSent,
             color: "text-rose-500",
