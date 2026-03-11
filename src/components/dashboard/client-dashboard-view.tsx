@@ -87,11 +87,15 @@ export function ClientDashboardView({ client, latestPlan, allReports, globalServ
             let prevXFollowers = 0;
             if (prevReport) {
                 const prevM = typeof prevReport.metrics === 'string' ? JSON.parse(prevReport.metrics) : prevReport.metrics;
-                const prevCampaigns = prevM?.campaigns || (prevM?.platforms ? [{ platforms: prevM.platforms }] : []);
-                prevCampaigns.forEach((c: any) => {
-                    const px = c.platforms?.['x'];
-                    if (px) prevXFollowers += (Number(px.currentFollowers) || 0);
-                });
+                const prevCamps = prevM?.campaigns || (prevM?.platforms ? [{ platforms: prevM.platforms }] : []);
+                prevXFollowers = prevCamps.reduce((max: number, c: any) => Math.max(max, Number(c.platforms?.['x']?.currentFollowers) || 0), 0);
+            }
+
+            // Current report max X followers
+            const currentReportX = campaigns.reduce((max: number, c: any) => Math.max(max, Number(c.platforms?.['x']?.currentFollowers) || 0), 0);
+            if (currentReportX > 0 && prevXFollowers > 0) {
+                if (!aggregated.platforms['x']) aggregated.platforms['x'] = { impressions: 0, engagement: 0, followers: 0, spend: 0, conversions: 0 };
+                aggregated.platforms['x'].followers += Math.max(0, currentReportX - prevXFollowers);
             }
 
             campaigns.forEach((camp: any) => {
@@ -104,11 +108,9 @@ export function ClientDashboardView({ client, latestPlan, allReports, globalServ
                         aggregated.platforms[pKey].impressions += (Number(pData.impressions) || 0);
                         aggregated.platforms[pKey].engagement += (Number(pData.engagement) || 0);
                         
-                        if (pKey === 'x') {
-                            const current = Number(pData.currentFollowers) || 0;
-                            const diff = Math.max(0, current - prevXFollowers);
-                            aggregated.platforms[pKey].followers += diff;
-                        } else {
+                        // Only add growth from 'followers' field if NOT 'x' 
+                        // (for 'x' we already added growth from currentFollowers diff above)
+                        if (pKey !== 'x') {
                             aggregated.platforms[pKey].followers += (Number(pData.followers) || 0);
                         }
 

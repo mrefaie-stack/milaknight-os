@@ -134,7 +134,7 @@ export function ReportClientView({ report, metrics, role, previousMetrics }: { r
                 agg[k].impressions = (agg[k].impressions || 0) + (p.impressions || 0);
                 agg[k].engagement = (agg[k].engagement || 0) + (p.engagement || 0);
                 agg[k].followers = (agg[k].followers || 0) + (p.followers || 0);
-                agg[k].currentFollowers = (agg[k].currentFollowers || 0) + (p.currentFollowers || 0);
+                agg[k].currentFollowers = Math.max(agg[k].currentFollowers || 0, p.currentFollowers || 0);
                 agg[k].spend = (agg[k].spend || 0) + (getPlatformSpend(p) || 0);
             }
         }));
@@ -205,7 +205,7 @@ export function ReportClientView({ report, metrics, role, previousMetrics }: { r
                 aggregatedPlatforms[platId] = {
                     ...existing,
                     followers: (existing.followers || 0) + (p.followers || 0),
-                    currentFollowers: (existing.currentFollowers || 0) + (p.currentFollowers || 0),
+                    currentFollowers: Math.max(existing.currentFollowers || 0, p.currentFollowers || 0),
                     engagement: (existing.engagement || 0) + (p.engagement || 0),
                     impressions: (existing.impressions || 0) + (p.impressions || 0),
                     views: (existing.views || 0) + (p.views || 0),
@@ -245,10 +245,10 @@ export function ReportClientView({ report, metrics, role, previousMetrics }: { r
     }
 
     function getPlatformResults(p: any): number {
-        if (p.paidCampaigns?.length > 0) {
-            return p.paidCampaigns.reduce((acc: number, c: any) => acc + (Number(c.results) || 0), 0);
-        }
-        return Number(p.conversions) || 0;
+        const paidResults = p.paidCampaigns?.length > 0
+            ? p.paidCampaigns.reduce((acc: number, c: any) => acc + (Number(c.results) || 0), 0)
+            : 0;
+        return Math.max(Number(p.conversions) || 0, paidResults);
     }
 
     const activePlatforms = Object.keys(aggregatedPlatforms).filter(key => {
