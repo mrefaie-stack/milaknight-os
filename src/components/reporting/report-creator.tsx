@@ -555,7 +555,11 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                         </TabsTrigger>
                         <TabsTrigger value="seo" className="group flex-shrink-0 gap-3 py-3 px-6 rounded-xl data-[state=active]:bg-emerald-500 data-[state=active]:text-white">
                             <Globe className="h-4 w-4 text-emerald-400 transition-colors group-data-[state=active]:text-white" />
-                            <span className="font-bold tracking-tight">{isRtl ? 'SEO والملخص' : 'SEO & Summary'}</span>
+                            <span className="font-bold tracking-tight">{isRtl ? 'الموقع و SEO' : 'Website & SEO'}</span>
+                        </TabsTrigger>
+                        <TabsTrigger value="summary" className="group flex-shrink-0 gap-3 py-3 px-6 rounded-xl data-[state=active]:bg-purple-500 data-[state=active]:text-white">
+                            <BarChart3 className="h-4 w-4 text-purple-400 transition-colors group-data-[state=active]:text-white" />
+                            <span className="font-bold tracking-tight">{isRtl ? 'الملخص الاستراتيجي' : 'Strategic Summary'}</span>
                         </TabsTrigger>
                     </TabsList>
                 </div>
@@ -891,108 +895,92 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                 </TabsContent>
 
                 <TabsContent value="seo" className="mt-0 focus-visible:ring-0">
-                    <div className="grid gap-8">
-                        <div className="grid md:grid-cols-3 gap-6">
-                            <Card className="border-white/10 bg-card/20 backdrop-blur-md shadow-lg">
-                                <CardHeader className="bg-emerald-500/5 border-b border-white/5">
-                                    <CardTitle className="text-emerald-400 flex items-center gap-2 text-sm font-black uppercase tracking-widest">
-                                        <TrendingUp className="h-4 w-4" /> Authority
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent className="p-6 space-y-4">
-                                    <MetricField
-                                        label="SEO Score"
-                                        icon={Globe}
-                                        value={metrics.seo?.score}
-                                        onChange={(v) => updateSEOMetric('score', v)}
-                                        suffix="/100"
-                                    />
-                                    <MetricField
-                                        label="Primary Rank"
-                                        icon={Target}
-                                        value={metrics.seo?.rank}
-                                        onChange={(v) => updateSEOMetric('rank', v)}
-                                        type="text"
-                                        placeholder="#1 Marketing"
-                                    />
-                                </CardContent>
-                            </Card>
-
-                            <Card className="border-white/10 bg-card/20 backdrop-blur-md shadow-lg">
-                                <CardHeader className="bg-emerald-500/5 border-b border-white/5">
-                                    <CardTitle className="text-emerald-400 flex items-center gap-2 text-sm font-black uppercase tracking-widest">
-                                        <Zap className="h-4 w-4" /> Technical
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent className="p-6 space-y-4">
-                                    <MetricField
-                                        label="Page Speed"
-                                        icon={Zap}
-                                        value={metrics.seo?.speed}
-                                        onChange={(v) => updateSEOMetric('speed', v)}
-                                        suffix="%"
-                                    />
-                                    <MetricField
-                                        label="Mobile Friendly"
-                                        icon={Globe}
-                                        value={metrics.seo?.mobile}
-                                        onChange={(v) => updateSEOMetric('mobile', v)}
-                                        suffix="%"
-                                    />
-                                </CardContent>
-                            </Card>
-
-                            <div className="space-y-4">
-                                <Label className="text-xs font-black uppercase tracking-wider text-muted-foreground ml-1">Quick Note</Label>
-                                <div className="p-6 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl">
-                                    <p className="text-emerald-400 text-sm italic font-medium">"SEO is a compounding game. Month-over-month growth in domain authority directly translates to lower customer acquisition costs."</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <Card className="border-white/10 bg-card/30 backdrop-blur-md shadow-2xl">
-                            <CardHeader className={`border-b border-white/5 flex flex-row items-center justify-between ${isRtl ? 'flex-row-reverse' : ''}`}>
-                                <CardTitle className={`text-xl font-black flex items-center gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
-                                    <BarChart3 className="h-5 w-5 text-primary" /> {isRtl ? 'الملخص الاستراتيجي' : 'Executive Strategic Summary'}
+                    <div className="grid md:grid-cols-2 gap-8">
+                        <Card className="border-white/10 bg-card/20 backdrop-blur-md shadow-lg">
+                            <CardHeader className="bg-emerald-500/5 border-b border-white/5">
+                                <CardTitle className="text-emerald-400 flex items-center gap-2 text-sm font-black uppercase tracking-widest">
+                                    <Globe className="h-4 w-4" /> {isRtl ? 'مقاييس الموقع و SEO' : 'Website & SEO Metrics'}
                                 </CardTitle>
-                                <Button
-                                    type="button"
-                                    onClick={async () => {
-                                        setIsGeneratingSummary(true);
-                                        try {
-                                            const result = await generateReportSummary(metrics);
-                                            setMetrics((prev: any) => ({
-                                                ...prev,
-                                                summary: isRtl ? result.summaryAr : result.summaryEn
-                                            }));
-                                            toast.success(isRtl ? "تم توليد الملخص بنجاح" : "Summary generated successfully");
-                                        } catch (err) {
-                                            toast.error("Failed to generate summary");
-                                        } finally {
-                                            setIsGeneratingSummary(false);
-                                        }
-                                    }}
-                                    disabled={isGeneratingSummary}
-                                    className="h-9 rounded-xl bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 font-bold text-xs"
-                                >
-                                    {isGeneratingSummary ? <Zap className="h-3 w-3 animate-spin mr-2" /> : <Zap className="h-3 w-3 mr-2" />}
-                                    {isRtl ? "توليد ذكي ملخص" : "AI Auto Summary"}
-                                </Button>
                             </CardHeader>
-                            <CardContent className="p-8">
-                                <textarea
-                                    name="summary"
-                                    rows={8}
-                                    required
-                                    value={metrics.summary || ""}
-                                    onChange={(e) => setMetrics((prev: any) => ({ ...prev, summary: e.target.value }))}
-                                    className={`flex w-full rounded-2xl border-white/10 bg-background/50 p-6 text-base font-medium shadow-inner focus:border-primary/50 focus:ring-primary/20 transition-all outline-none ${isRtl ? 'text-right' : ''}`}
-                                    placeholder={isRtl ? "ترجم البيانات إلى نتائج أعمال. ما هي الإنجازات الكبرى؟ وما الذي سنعمل عليه الشهر القادم؟" : "Translate the data into business results. What were the big wins? What are we optimizing next?"}
-                                    dir={isRtl ? 'rtl' : 'ltr'}
+                            <CardContent className="p-6 grid grid-cols-2 gap-6">
+                                <MetricField
+                                    label="SEO Score"
+                                    icon={Globe}
+                                    value={metrics.seo?.score}
+                                    onChange={(v) => updateSEOMetric('score', v)}
+                                    suffix="/100"
+                                />
+                                <MetricField
+                                    label={isRtl ? "النقرات" : "Clicks"}
+                                    icon={MousePointer2}
+                                    value={metrics.seo?.clicks}
+                                    onChange={(v) => updateSEOMetric('clicks', v)}
+                                />
+                                <MetricField
+                                    label={isRtl ? "الظهور" : "Impressions"}
+                                    icon={Eye}
+                                    value={metrics.seo?.impressions}
+                                    onChange={(v) => updateSEOMetric('impressions', v)}
+                                />
+                                <MetricField
+                                    label={isRtl ? "سرعة الصفحة" : "Page Speed"}
+                                    icon={Zap}
+                                    value={metrics.seo?.speed}
+                                    onChange={(v) => updateSEOMetric('speed', v)}
                                 />
                             </CardContent>
                         </Card>
                     </div>
+                </TabsContent>
+
+                <TabsContent value="summary" className="mt-0 focus-visible:ring-0">
+                    <Card className="border-white/10 bg-card/30 backdrop-blur-md shadow-2xl">
+                        <CardHeader className={`border-b border-white/5 flex flex-row items-center justify-between ${isRtl ? 'flex-row-reverse' : ''}`}>
+                            <CardTitle className={`text-xl font-black flex items-center gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                                <BarChart3 className="h-5 w-5 text-primary" /> {isRtl ? 'الملخص الاستراتيجي التنفيذي' : 'Executive Strategic Summary'}
+                            </CardTitle>
+                            <Button
+                                type="button"
+                                onClick={async () => {
+                                    setIsGeneratingSummary(true);
+                                    try {
+                                        const result = await generateReportSummary(metrics);
+                                        setMetrics((prev: any) => ({
+                                            ...prev,
+                                            summary: isRtl ? result.summaryAr : result.summaryEn
+                                        }));
+                                        toast.success(isRtl ? "تم توليد الملخص بنجاح" : "Summary generated successfully");
+                                    } catch (err) {
+                                        toast.error("Failed to generate summary");
+                                    } finally {
+                                        setIsGeneratingSummary(false);
+                                    }
+                                }}
+                                disabled={isGeneratingSummary}
+                                className="h-10 px-6 rounded-xl bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 font-bold uppercase tracking-widest text-xs"
+                            >
+                                {isGeneratingSummary ? <Zap className="h-4 w-4 animate-spin mr-2" /> : <Zap className="h-4 w-4 mr-2" />}
+                                {isRtl ? "توليد ذكي ملخص بالذكاء الاصطناعي" : "AI Auto Generate Summary"}
+                            </Button>
+                        </CardHeader>
+                        <CardContent className="p-8">
+                            <div className="space-y-4">
+                                <p className={`text-sm text-muted-foreground font-semibold ${isRtl ? 'text-right' : ''}`}>
+                                    {isRtl ? 'هذا الملخص يظهر في أعلى التقرير وهو أول ما يقرأه العميل. احرص على أن يعكس الإنجازات الرئيسية والتوصيات الاستراتيجية بوضوح.' : 'This summary appears at the top of the report and is the first thing the client reads. Make sure it reflects key achievements and strategic recommendations clearly.'}
+                                </p>
+                                <textarea
+                                    name="summary"
+                                    rows={10}
+                                    required
+                                    value={metrics.summary || ""}
+                                    onChange={(e) => setMetrics((prev: any) => ({ ...prev, summary: e.target.value }))}
+                                    className={`flex w-full rounded-2xl border-white/10 bg-background/50 p-6 text-base font-medium shadow-inner focus:border-primary/50 focus:ring-primary/20 transition-all outline-none leading-relaxed ${isRtl ? 'text-right' : ''}`}
+                                    placeholder={isRtl ? "ملخص أداء هذا الشهر، النتائج الاستراتيجية للمنصات والموقع، وتوصيات الشهر القادم..." : "Summary of this month's performance, strategic results for platforms and website, and recommendations for next month..."}
+                                    dir={isRtl ? 'rtl' : 'ltr'}
+                                />
+                            </div>
+                        </CardContent>
+                    </Card>
                 </TabsContent>
             </Tabs>
 

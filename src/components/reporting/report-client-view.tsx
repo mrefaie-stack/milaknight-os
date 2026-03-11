@@ -765,20 +765,16 @@ export function ReportClientView({ report, metrics, role, previousMetrics }: { r
                     <CardContent className="p-10 grid md:grid-cols-2 gap-12">
                         <div className="grid gap-4 sm:grid-cols-2">
                             <div className={`p-6 bg-purple-500/5 rounded-2xl border border-purple-500/10 ${isRtl ? 'text-right' : ''}`}>
-                                <h4 className="text-xs font-black text-purple-600 uppercase mb-2 tracking-widest">{t("dashboard.primary_keyword")}</h4>
-                                <p className="text-2xl font-black italic">"{metrics.seo?.rank || t("dashboard.authority_growth")}"</p>
-                            </div>
-                            <div className={`p-6 bg-emerald-500/5 rounded-2xl border border-emerald-500/10 ${isRtl ? 'text-right' : ''}`}>
-                                <h4 className="text-xs font-black text-emerald-600 uppercase mb-2 tracking-widest">{isRtl ? 'سرعة الصفحة' : 'Page Speed'}</h4>
-                                <p className="text-2xl font-black">{metrics.seo?.speed || 0}%</p>
+                                <h4 className="text-xs font-black text-purple-600 uppercase mb-2 tracking-widest">{isRtl ? 'النقرات' : 'Clicks'}</h4>
+                                <p className="text-2xl font-black italic">{metrics.seo?.clicks?.toLocaleString() || 0}</p>
                             </div>
                             <div className={`p-6 bg-blue-500/5 rounded-2xl border border-blue-500/10 ${isRtl ? 'text-right' : ''}`}>
-                                <h4 className="text-xs font-black text-blue-600 uppercase mb-2 tracking-widest">{isRtl ? 'جاهزية الجوال' : 'Mobile Ready'}</h4>
-                                <p className="text-2xl font-black">{metrics.seo?.mobile || 0}%</p>
+                                <h4 className="text-xs font-black text-blue-600 uppercase mb-2 tracking-widest">{isRtl ? 'مرات الظهور' : 'Impressions'}</h4>
+                                <p className="text-2xl font-black">{metrics.seo?.impressions?.toLocaleString() || 0}</p>
                             </div>
-                            <div className={`p-6 bg-muted/10 rounded-2xl border border-border ${isRtl ? 'text-right' : ''}`}>
-                                <h4 className="text-xs font-black text-muted-foreground uppercase mb-2 tracking-widest">{t("reports.technical_performance")}</h4>
-                                <p className="text-xs font-bold leading-tight">{metrics.seo?.notes || t("dashboard.seo_notes")}</p>
+                            <div className={`p-6 bg-emerald-500/5 rounded-2xl border border-emerald-500/10 sm:col-span-2 ${isRtl ? 'text-right' : ''}`}>
+                                <h4 className="text-xs font-black text-emerald-600 uppercase mb-2 tracking-widest">{isRtl ? 'سرعة الصفحة' : 'Page Speed'}</h4>
+                                <p className="text-2xl font-black">{metrics.seo?.speed || 0}</p>
                             </div>
                         </div>
                         <div className="flex flex-col items-center justify-center p-10 bg-muted/20 rounded-3xl relative overflow-hidden ring-1 ring-white/5 shadow-inner">
