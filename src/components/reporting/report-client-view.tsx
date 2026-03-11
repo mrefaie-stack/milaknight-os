@@ -129,20 +129,27 @@ export function ReportClientView({ report, metrics, role, previousMetrics }: { r
         const prevCamps = prevM.campaigns || [{ platforms: prevM.platforms || {} }];
         const agg: Record<string, any> = {};
         prevCamps.forEach((c: any) => Object.entries(c.platforms || {}).forEach(([k, p]: [string, any]) => {
-            if (!agg[k]) agg[k] = { ...p };
-            else {
-                agg[k].impressions = (agg[k].impressions || 0) + (p.impressions || 0);
-                agg[k].engagement = (agg[k].engagement || 0) + (p.engagement || 0);
-                agg[k].followers = (agg[k].followers || 0) + (p.followers || 0);
-                agg[k].currentFollowers = Math.max(agg[k].currentFollowers || 0, p.currentFollowers || 0);
-                agg[k].spend = (agg[k].spend || 0) + (getPlatformSpend(p) || 0);
+            if (!agg[k]) {
+                agg[k] = {
+                    impressions: Number(p.impressions) || 0,
+                    engagement: Number(p.engagement) || 0,
+                    followers: Number(p.followers) || 0,
+                    currentFollowers: Number(p.currentFollowers) || 0,
+                    spend: getPlatformSpend(p) || 0
+                };
+            } else {
+                agg[k].impressions += (Number(p.impressions) || 0);
+                agg[k].engagement += (Number(p.engagement) || 0);
+                agg[k].followers += (Number(p.followers) || 0);
+                agg[k].currentFollowers = Math.max(agg[k].currentFollowers, Number(p.currentFollowers) || 0);
+                agg[k].spend += (getPlatformSpend(p) || 0);
             }
         }));
         return {
-            impressions: Object.values(agg).reduce((s: number, p: any) => s + (Number(p.impressions) || 0), 0),
-            engagement: Object.values(agg).reduce((s: number, p: any) => s + (Number(p.engagement) || 0), 0),
-            followers: Object.values(agg).reduce((s: number, p: any) => s + (Number(p.followers) || 0), 0),
-            spend: Object.values(agg).reduce((s: number, p: any) => s + (Number(p.spend) || 0), 0),
+            impressions: Object.values(agg).reduce((s: number, p: any) => s + (p.impressions || 0), 0),
+            engagement: Object.values(agg).reduce((s: number, p: any) => s + (p.engagement || 0), 0),
+            followers: Object.values(agg).reduce((s: number, p: any) => s + (p.followers || 0), 0),
+            spend: Object.values(agg).reduce((s: number, p: any) => s + (p.spend || 0), 0),
             platforms: agg
         };
     }
@@ -226,11 +233,13 @@ export function ReportClientView({ report, metrics, role, previousMetrics }: { r
     if (aggregatedPlatforms['x']) {
         const x = aggregatedPlatforms['x'];
         const prevX = prevGlobal?.platforms?.['x'];
-        if (x.currentFollowers > 0 && prevX?.currentFollowers > 0) {
-            // Growth = current - previous
-            const growth = x.currentFollowers - prevX.currentFollowers;
+        const currentTotalX = Number(x.currentFollowers) || 0;
+        const previousTotalX = Number(prevX?.currentFollowers) || 0;
+        
+        if (currentTotalX > 0 && previousTotalX > 0) {
+            const growth = currentTotalX - previousTotalX;
             // Only use this if they didn't manually enter a followers (growth) number
-            if (!x.followers || x.followers === 0) {
+            if (!x.followers || Number(x.followers) === 0) {
                 x.followers = growth;
             }
         }
@@ -253,7 +262,16 @@ export function ReportClientView({ report, metrics, role, previousMetrics }: { r
 
     const activePlatforms = Object.keys(aggregatedPlatforms).filter(key => {
         const p = aggregatedPlatforms[key];
-        return (p.impressions || 0) > 0 || (p.followers || 0) > 0 || (p.engagement || 0) > 0 || (p.views || 0) > 0 || (p.paidReach || 0) > 0;
+        return (
+            (Number(p.impressions) || 0) !== 0 ||
+            (Number(p.followers) || 0) !== 0 ||
+            (Number(p.engagement) || 0) !== 0 ||
+            (Number(p.views) || 0) !== 0 ||
+            (Number(p.paidReach) || 0) !== 0 ||
+            (Number(p.spend) || 0) !== 0 ||
+            (Number(p.conversions) || 0) !== 0 ||
+            (p.paidCampaigns?.length > 0)
+        );
     });
 
     // Calculate Global Totals from aggregated data
@@ -290,19 +308,20 @@ export function ReportClientView({ report, metrics, role, previousMetrics }: { r
     const hasSpend = globalTotals.spend > 0;
 
     const chartData = activePlatforms.map(key => ({
+        key,
         name: PLATFORM_NAMES[key as keyof typeof PLATFORM_NAMES] || key,
-        impressions: aggregatedPlatforms[key].impressions || 0,
-        engagement: aggregatedPlatforms[key].engagement || 0,
-        followers: aggregatedPlatforms[key].followers || 0,
-        views: aggregatedPlatforms[key].views || 0,
+        impressions: Number(aggregatedPlatforms[key].impressions) || 0,
+        engagement: Number(aggregatedPlatforms[key].engagement) || 0,
+        followers: Number(aggregatedPlatforms[key].followers) || 0,
+        views: Number(aggregatedPlatforms[key].views) || 0,
         spend: getPlatformSpend(aggregatedPlatforms[key]),
-        paidReach: aggregatedPlatforms[key].paidReach || 0,
-        conversions: aggregatedPlatforms[key].conversions || 0,
+        paidReach: Number(aggregatedPlatforms[key].paidReach) || 0,
+        conversions: getPlatformResults(aggregatedPlatforms[key]),
     }));
 
     const platformChartData = chartData.filter(d =>
-        (d.impressions > 0 || d.followers > 0 || d.engagement > 0 || d.views > 0) &&
-        !['google', 'youtube', 'google_ads'].includes(d.name.toLowerCase().replace(' ', '_'))
+        (d.impressions !== 0 || d.followers !== 0 || d.engagement !== 0 || d.views !== 0 || d.spend !== 0 || d.conversions !== 0) &&
+        !['google', 'youtube', 'google_ads', 'seo', 'email'].includes(d.key)
     );
 
     const spendData = chartData.filter(d => d.spend > 0);
