@@ -537,7 +537,12 @@ export function ReportClientView({ report, metrics, role, previousMetrics }: { r
                                     <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="rgba(255,255,255,0.05)" />
                                     <XAxis type="number" fontSize={11} tickLine={false} axisLine={false} />
                                     <YAxis dataKey="name" type="category" fontSize={11} tickLine={false} axisLine={false} width={80} />
-                                    <Tooltip contentStyle={{ borderRadius: '16px', background: 'rgba(15,15,25,0.95)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff' }} formatter={(v: any) => [v?.toLocaleString(), isRtl ? 'متابع جديد' : 'New Followers']} />
+                                    <Tooltip 
+                                        contentStyle={{ borderRadius: '16px', background: 'rgba(15,15,25,0.95)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff' }} 
+                                        itemStyle={{ color: '#fff' }}
+                                        labelStyle={{ color: '#fff' }}
+                                        formatter={(v: any) => [v?.toLocaleString(), isRtl ? 'متابع جديد' : 'New Followers']} 
+                                    />
                                     <Bar dataKey="followers" name={isRtl ? "متابعون جدد" : "New Followers"} radius={[0, 8, 8, 0]} barSize={25}>
                                         {chartData.filter(d => d.followers !== 0).map((_, i) => (<Cell key={i} fill={["#a855f7", "#3b82f6", "#10b981", "#f97316"][i % 4]} />))}
                                     </Bar>
@@ -561,7 +566,12 @@ export function ReportClientView({ report, metrics, role, previousMetrics }: { r
                                         label={({ name, percent }: any) => `${name} ${((percent || 0) * 100).toFixed(0)}%`} labelLine={false}>
                                         {chartData.filter(d => d.impressions > 0).map((_, index) => (<Cell key={index} fill={["#3b82f6", "#10b981", "#f97316", "#ef4444", "#eab308"][index % 5]} />))}
                                     </Pie>
-                                    <Tooltip contentStyle={{ borderRadius: '16px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(15,15,25,0.95)', color: '#fff' }} formatter={(v: any) => [v?.toLocaleString(), t("reports.impressions")]} />
+                                    <Tooltip 
+                                        contentStyle={{ borderRadius: '16px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(15,15,25,0.95)', color: '#fff' }} 
+                                        itemStyle={{ color: '#fff' }}
+                                        labelStyle={{ color: '#fff' }}
+                                        formatter={(v: any) => [v?.toLocaleString(), t("reports.impressions")]} 
+                                    />
                                     <Legend />
                                 </PieChart>
                             </ResponsiveContainer>
@@ -583,10 +593,12 @@ export function ReportClientView({ report, metrics, role, previousMetrics }: { r
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
                                 <XAxis dataKey="name" fontSize={12} fontWeight="700" tickLine={false} axisLine={false} />
                                 <YAxis fontSize={12} tickLine={false} axisLine={false} />
-                                <Tooltip
-                                    cursor={{ fill: 'rgba(255,255,255,0.05)' }}
-                                    contentStyle={{ borderRadius: '16px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(15,15,25,0.95)', color: '#fff' }}
-                                />
+                                    <Tooltip
+                                        cursor={{ fill: 'rgba(255,255,255,0.05)' }}
+                                        contentStyle={{ borderRadius: '16px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(15,15,25,0.95)', color: '#fff' }}
+                                        itemStyle={{ color: '#fff' }}
+                                        labelStyle={{ color: '#fff' }}
+                                    />
                                 <Legend />
                                 <Bar dataKey="conversions" name={isRtl ? 'النتائج والتحويلات' : 'Conversions'} fill="#f43f5e" radius={[10, 10, 0, 0]} barSize={35} />
                                 <Bar dataKey="engagement" name={isRtl ? 'تفاعلات إستراتيجية' : 'Strategic Interest'} fill="#10b981" radius={[10, 10, 0, 0]} barSize={35} />
@@ -613,7 +625,12 @@ export function ReportClientView({ report, metrics, role, previousMetrics }: { r
                                         <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="rgba(255,255,255,0.05)" />
                                         <XAxis type="number" fontSize={11} tickLine={false} axisLine={false} />
                                         <YAxis dataKey="name" type="category" fontSize={11} tickLine={false} axisLine={false} width={70} />
-                                        <Tooltip contentStyle={{ borderRadius: '16px', background: 'rgba(15,15,25,0.95)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff' }} formatter={(v: any) => [v?.toLocaleString(), t("common.views")]} />
+                                        <Tooltip 
+                                            contentStyle={{ borderRadius: '16px', background: 'rgba(15,15,25,0.95)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff' }} 
+                                            itemStyle={{ color: '#fff' }}
+                                            labelStyle={{ color: '#fff' }}
+                                            formatter={(v: any) => [v?.toLocaleString(), t("common.views")]} 
+                                        />
                                         <Bar dataKey="views" name={t("common.views")} radius={[0, 8, 8, 0]} barSize={22} fill="#ec4899">
                                             {chartData.filter(d => d.views > 0).map((_, i) => (<Cell key={i} fill={["#ec4899", "#f97316", "#06b6d4", "#8b5cf6"][i % 4]} />))}
                                         </Bar>
