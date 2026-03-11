@@ -35,9 +35,9 @@ export default async function ClientDashboardPage() {
         );
     }
 
-    const allReports: any[] = (client as any).reports;
-    const latestReport = allReports[0];
-    const latestPlan = (client as any).actionPlans[0];
+    const clientData = client as typeof client & { reports: typeof client extends { reports: infer R } ? R : never; actionPlans: typeof client extends { actionPlans: infer A } ? A : never };
+    const allReports = clientData.reports;
+    const latestPlan = clientData.actionPlans[0];
 
     return (
         <ClientDashboardView

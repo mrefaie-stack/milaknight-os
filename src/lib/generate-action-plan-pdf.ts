@@ -164,8 +164,7 @@ export async function generateActionPlanPdf(plan: any, items: any[]) {
         },
     });
 
-    // @ts-ignore
-    y = (doc as any).lastAutoTable.finalY + 10;
+        y = (doc as any).lastAutoTable.finalY + 10;
 
     // ─── CONTENT BY SECTION ──────────────────────────────────────────────────
     doc.setFontSize(11);
@@ -234,8 +233,7 @@ export async function generateActionPlanPdf(plan: any, items: any[]) {
                     margin: { left: margin + 3, right: margin },
                     theme: "plain",
                 });
-                // @ts-ignore
-                y = (doc as any).lastAutoTable.finalY + 2;
+                                y = (doc as any).lastAutoTable.finalY + 2;
             }
 
             // Try to embed image from URL
@@ -330,8 +328,7 @@ export async function generateActionPlanPdf(plan: any, items: any[]) {
                     margin: { left: margin + 3, right: margin },
                     theme: "plain",
                 });
-                // @ts-ignore
-                y = (doc as any).lastAutoTable.finalY + 4;
+                                y = (doc as any).lastAutoTable.finalY + 4;
             }
 
             // Poll

@@ -3,7 +3,7 @@ import { AddTeamMemberDialog } from "@/components/admin/add-team-member";
 import { EditTeamMemberDialog } from "@/components/admin/edit-am-dialog";
 import { AdminTeamHeader, ClientLoadLabel, NoTeamMembers, TeamStats, MessageButtonLabel, TeamMemberRoleBadge } from "@/components/admin/admin-team-ui";
 import { Badge } from "@/components/ui/badge";
-import { MessageSquare, Users2, Crown, Trash2, Loader2 } from "lucide-react";
+import { MessageSquare, Users2, Crown } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { TeamDeleteButton } from "@/components/admin/team-delete-button";

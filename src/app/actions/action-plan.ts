@@ -53,10 +53,6 @@ export async function createActionPlan(clientId: string, month: string) {
         const client = await prisma.client.findUnique({ where: { id: clientId } });
         if (!client || client.amId !== session.user.id) throw new Error("Unauthorized Access");
     }
-    if (session.user.role === "AM") {
-        const client = await prisma.client.findUnique({ where: { id: clientId } });
-        if (!client || client.amId !== session.user.id) throw new Error("Unauthorized Access");
-    }
 
     const plan = await prisma.actionPlan.create({
         data: {

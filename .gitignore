@@ -42,4 +42,11 @@ next-env.d.ts
 
 /src/generated/prisma
 
-.vercel
+# database
+*.db
+
+# debug/test scripts
+get-users.js
+test-data.js
+test-data2.js
+vercel_status.txt

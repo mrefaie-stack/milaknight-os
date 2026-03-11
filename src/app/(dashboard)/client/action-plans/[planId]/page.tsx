@@ -2,7 +2,6 @@ import { prisma } from "@/lib/prisma";
 import { notFound, redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { PlanApprovalHeader } from "@/components/action-plan/plan-approval-header";
 import { ClientActionPlanView } from "@/components/action-plan/client-action-plan-view";
 
 export default async function ClientActionPlanPage({ params }: { params: Promise<{ planId: string }> }) {
