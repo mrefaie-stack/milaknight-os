@@ -99,8 +99,8 @@ export async function generateReportPdf(report: any, metrics: any) {
     });
 
     const totals = {
-        impressions: activePlatforms.reduce((a, k) => a + (Number(aggregatedPlatforms[k].impressions) || 0), 2),
-        engagement: activePlatforms.reduce((a, k) => a + (Number(aggregatedPlatforms[k].engagement) || 0), 2),
+        impressions: activePlatforms.reduce((a, k) => a + (Number(aggregatedPlatforms[k].impressions) || 0), 0),
+        engagement: activePlatforms.reduce((a, k) => a + (Number(aggregatedPlatforms[k].engagement) || 0), 0),
         followers: activePlatforms.reduce((a, k) => a + (Number(aggregatedPlatforms[k].followers) || 0), 0),
         views: activePlatforms.reduce((a, k) => a + (Number(aggregatedPlatforms[k].views) || 0), 0),
         spend: activePlatforms.reduce((a, k) => a + (Number(aggregatedPlatforms[k].spend) || 0), 0),
@@ -210,7 +210,6 @@ export async function generateReportPdf(report: any, metrics: any) {
         margin: { left: margin, right: margin },
     });
 
-    // @ts-ignore
     y = (doc as any).lastAutoTable.finalY + 10;
 
     // ─── PER-PLATFORM DEEP DIVE ───────────────────────────────────────────────
@@ -359,7 +358,6 @@ export async function generateReportPdf(report: any, metrics: any) {
             theme: "plain",
         });
 
-        // @ts-ignore
         y = (doc as any).lastAutoTable.finalY + 10;
     }
 
@@ -389,7 +387,6 @@ export async function generateReportPdf(report: any, metrics: any) {
             theme: "plain",
         });
 
-        // @ts-ignore
         y = (doc as any).lastAutoTable.finalY + 10;
     }
 
@@ -416,7 +413,6 @@ export async function generateReportPdf(report: any, metrics: any) {
             theme: "plain",
         });
 
-        // @ts-ignore
         y = (doc as any).lastAutoTable.finalY + 10;
     }
 

@@ -288,7 +288,6 @@ export async function generateReportSummary(metricsData: any) {
 
     // Heuristic-based summary generation (Bilingual)
     const metrics = metricsData;
-    const isRtl = true; // Default for this app's main audience
 
     const summaryAr = `ملخص الأداء: 
 شهد هذا الشهر ${metrics.global?.reach?.value > 1000 ? 'نمواً ملحوظاً في الوصول' : 'أداءً مستقراً'}. 
