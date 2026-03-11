@@ -317,17 +317,56 @@ export function ReportClientView({ report, metrics, role, previousMetrics }: { r
     const hasConversions = globalTotals.conversions > 0;
     const hasSpend = globalTotals.spend > 0;
 
-    const chartData = activePlatforms.map(key => ({
-        key,
-        name: PLATFORM_NAMES[key as keyof typeof PLATFORM_NAMES] || key,
-        impressions: Number(aggregatedPlatforms[key].impressions) || 0,
-        engagement: Number(aggregatedPlatforms[key].engagement) || 0,
-        followers: Number(aggregatedPlatforms[key].followers) || 0,
-        views: Number(aggregatedPlatforms[key].views) || 0,
-        spend: getPlatformSpend(aggregatedPlatforms[key]),
-        paidReach: Number(aggregatedPlatforms[key].paidReach) || 0,
-        conversions: getPlatformResults(aggregatedPlatforms[key]),
-    }));
+    const baseChartData = activePlatforms.map(key => {
+        const p = aggregatedPlatforms[key];
+        // Logical mapping: For search/ads, clicks are the primary interaction
+        let engagement = Number(p.engagement) || 0;
+        if (['google', 'google_ads', 'google'].includes(key) && engagement === 0) {
+            engagement = Number(p.clicks) || 0;
+        }
+
+        return {
+            key,
+            name: PLATFORM_NAMES[key as keyof typeof PLATFORM_NAMES] || key,
+            impressions: Number(p.impressions) || 0,
+            engagement,
+            followers: Number(p.followers) || 0,
+            views: Number(p.views) || 0,
+            spend: getPlatformSpend(p),
+            paidReach: Number(p.paidReach) || 0,
+            conversions: getPlatformResults(p),
+        };
+    });
+
+    if (hasSeo) {
+        baseChartData.push({
+            key: 'seo',
+            name: isRtl ? 'تحسين محركات البحث' : 'SEO',
+            impressions: Number(metrics.seo?.impressions) || 0,
+            engagement: Number(metrics.seo?.clicks) || 0,
+            followers: 0,
+            views: 0,
+            spend: 0,
+            paidReach: 0,
+            conversions: 0
+        });
+    }
+
+    if (hasEmail) {
+        baseChartData.push({
+            key: 'email',
+            name: isRtl ? 'التسويق عبر البريد' : 'Email Marketing',
+            impressions: emailTotals.emailsSent,
+            engagement: Math.round(emailTotals.emailsSent * ((emailTotals.openRate || 0) / 100)),
+            followers: 0,
+            views: 0,
+            spend: 0,
+            paidReach: 0,
+            conversions: 0
+        });
+    }
+
+    const chartData = baseChartData;
 
     const platformChartData = chartData.filter(d =>
         (d.impressions !== 0 || d.followers !== 0 || d.engagement !== 0 || d.views !== 0 || d.spend !== 0 || d.conversions !== 0 || (aggregatedPlatforms[d.key]?.currentFollowers || 0) !== 0) &&
