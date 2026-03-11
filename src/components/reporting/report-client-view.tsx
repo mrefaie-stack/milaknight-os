@@ -130,12 +130,20 @@ export function ReportClientView({ report, metrics, role, previousMetrics }: { r
         const agg: Record<string, any> = {};
         prevCamps.forEach((c: any) => Object.entries(c.platforms || {}).forEach(([k, p]: [string, any]) => {
             if (!agg[k]) agg[k] = { ...p };
-            else { agg[k].impressions = (agg[k].impressions || 0) + (p.impressions || 0); agg[k].engagement = (agg[k].engagement || 0) + (p.engagement || 0); agg[k].followers = (agg[k].followers || 0) + (p.followers || 0); }
+            else {
+                agg[k].impressions = (agg[k].impressions || 0) + (p.impressions || 0);
+                agg[k].engagement = (agg[k].engagement || 0) + (p.engagement || 0);
+                agg[k].followers = (agg[k].followers || 0) + (p.followers || 0);
+                agg[k].currentFollowers = (agg[k].currentFollowers || 0) + (p.currentFollowers || 0);
+                agg[k].spend = (agg[k].spend || 0) + (getPlatformSpend(p) || 0);
+            }
         }));
         return {
             impressions: Object.values(agg).reduce((s: number, p: any) => s + (Number(p.impressions) || 0), 0),
             engagement: Object.values(agg).reduce((s: number, p: any) => s + (Number(p.engagement) || 0), 0),
             followers: Object.values(agg).reduce((s: number, p: any) => s + (Number(p.followers) || 0), 0),
+            spend: Object.values(agg).reduce((s: number, p: any) => s + (Number(p.spend) || 0), 0),
+            platforms: agg
         };
     }
     const prevGlobal = getPrevGlobal(previousMetrics);
@@ -197,6 +205,7 @@ export function ReportClientView({ report, metrics, role, previousMetrics }: { r
                 aggregatedPlatforms[platId] = {
                     ...existing,
                     followers: (existing.followers || 0) + (p.followers || 0),
+                    currentFollowers: (existing.currentFollowers || 0) + (p.currentFollowers || 0),
                     engagement: (existing.engagement || 0) + (p.engagement || 0),
                     impressions: (existing.impressions || 0) + (p.impressions || 0),
                     views: (existing.views || 0) + (p.views || 0),
@@ -213,12 +222,33 @@ export function ReportClientView({ report, metrics, role, previousMetrics }: { r
         });
     });
 
+    // Special handling for X: Calculate growth if currentFollowers is used instead of growth
+    if (aggregatedPlatforms['x']) {
+        const x = aggregatedPlatforms['x'];
+        const prevX = prevGlobal?.platforms?.['x'];
+        if (x.currentFollowers > 0 && prevX?.currentFollowers > 0) {
+            // Growth = current - previous
+            const growth = x.currentFollowers - prevX.currentFollowers;
+            // Only use this if they didn't manually enter a followers (growth) number
+            if (!x.followers || x.followers === 0) {
+                x.followers = growth;
+            }
+        }
+    }
+
     // Helper: get effective spend for a platform (paidCampaigns sum if present, else platform.spend)
     function getPlatformSpend(p: any): number {
         if (p.paidCampaigns?.length > 0) {
             return p.paidCampaigns.reduce((acc: number, c: any) => acc + (Number(c.spend) || 0), 0);
         }
         return Number(p.spend) || 0;
+    }
+
+    function getPlatformResults(p: any): number {
+        if (p.paidCampaigns?.length > 0) {
+            return p.paidCampaigns.reduce((acc: number, c: any) => acc + (Number(c.results) || 0), 0);
+        }
+        return Number(p.conversions) || 0;
     }
 
     const activePlatforms = Object.keys(aggregatedPlatforms).filter(key => {
@@ -231,7 +261,7 @@ export function ReportClientView({ report, metrics, role, previousMetrics }: { r
         impressions: activePlatforms.reduce((acc, key) => acc + (Number(aggregatedPlatforms[key].impressions) || 0), 0),
         engagement: activePlatforms.reduce((acc, key) => acc + (Number(aggregatedPlatforms[key].engagement) || 0), 0),
         followers: activePlatforms.reduce((acc, key) => acc + (Number(aggregatedPlatforms[key].followers) || 0), 0),
-        conversions: activePlatforms.reduce((acc, key) => acc + (Number(aggregatedPlatforms[key].conversions) || 0), 0),
+        conversions: activePlatforms.reduce((acc, key) => acc + getPlatformResults(aggregatedPlatforms[key]), 0),
         spend: activePlatforms.reduce((acc, key) => acc + getPlatformSpend(aggregatedPlatforms[key]), 0),
         paidReach: activePlatforms.reduce((acc, key) => acc + (Number(aggregatedPlatforms[key].paidReach) || 0), 0),
         views: activePlatforms.reduce((acc, key) => acc + (Number(aggregatedPlatforms[key].views) || 0), 0),
@@ -351,7 +381,7 @@ export function ReportClientView({ report, metrics, role, previousMetrics }: { r
                     { label: t("reports.impressions"), value: globalTotals.impressions, color: 'bg-primary/5', sub: t("common.combined"), subColor: 'text-emerald-500', icon: <TrendingUp className="h-3 w-3" />, momKey: 'impressions' as const },
                     { label: t("reports.engagements"), value: globalTotals.engagement, color: 'bg-blue-500/5', sub: t("reports.interactions"), subColor: 'text-blue-500', icon: null, momKey: 'engagement' as const },
                     { label: t("reports.growth"), value: globalTotals.followers, color: 'bg-purple-500/5', sub: t("reports.new_followers"), subColor: 'text-purple-500', icon: null, momKey: 'followers' as const },
-                    { label: t("reports.investment"), value: null, rawValue: `SAR ${(globalTotals.spend).toLocaleString()}`, color: 'bg-orange-500/5', sub: t("reports.paid_media"), subColor: 'text-orange-500', icon: <DollarSign className="h-3 w-3" />, momKey: null },
+                    { label: t("reports.investment"), value: globalTotals.spend, rawValue: `SAR ${(globalTotals.spend).toLocaleString()}`, color: 'bg-orange-500/5', sub: t("reports.paid_media"), subColor: 'text-orange-500', icon: <DollarSign className="h-3 w-3" />, momKey: 'spend' as const },
                     ...(hasEmail ? [{ label: isRtl ? 'البريد الإلكتروني' : 'Email Marketing', value: emailTotals.emailsSent, color: 'bg-rose-500/5', sub: isRtl ? `فتح ${emailTotals.openRate.toFixed(0)}%` : `${emailTotals.openRate.toFixed(0)}% Open Rate`, subColor: 'text-rose-500', icon: <Mail className="h-3 w-3" />, momKey: null }] : []),
                 ].map((card) => {
                     const delta = card.momKey ? getMoMDelta(card.value || 0, prevGlobal, (m) => m[card.momKey!] || 0) : null;
@@ -544,9 +574,10 @@ export function ReportClientView({ report, metrics, role, previousMetrics }: { r
                                 {Object.keys(camp.platforms || {}).map(platId => {
                                     const data = camp.platforms[platId];
                                     const currentPlatformSpend = getPlatformSpend(data);
+                                    const currentPlatformResults = getPlatformResults(data);
                                     const Icon = PLATFORM_ICONS[platId as keyof typeof PLATFORM_ICONS] || BarChart3;
                                     const engRate = data.impressions > 0 ? ((data.engagement / data.impressions) * 100).toFixed(2) : "0.00";
-                                    const cpa = data.conversions > 0 && currentPlatformSpend > 0 ? (currentPlatformSpend / data.conversions).toFixed(2) : null;
+                                    const cpa = currentPlatformResults > 0 && currentPlatformSpend > 0 ? (currentPlatformSpend / currentPlatformResults).toFixed(2) : null;
                                     const linkedPosts = (camp.linkedItems || []).filter((item: any) => item.platform === platId);
 
                                     return (

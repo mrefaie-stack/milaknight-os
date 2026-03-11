@@ -305,7 +305,7 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
     };
 
     const updatePlatformMetric = (platformId: string, field: string, value: any) => {
-        const numFields = ['followers', 'engagement', 'views', 'impressions', 'paidReach', 'spend', 'conversions', 'organicReach', 'shares', 'watchTime', 'saves', 'profileVisits', 'cpc', 'ctr'];
+        const numFields = ['followers', 'engagement', 'views', 'impressions', 'paidReach', 'spend', 'conversions', 'organicReach', 'shares', 'watchTime', 'saves', 'profileVisits', 'cpc', 'ctr', 'currentFollowers'];
         const val = numFields.includes(field) ? (parseFloat(value) || 0) : value;
 
         setMetrics((prev: any) => ({

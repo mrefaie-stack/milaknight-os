@@ -98,7 +98,7 @@ export function ClientDashboardView({ client, latestPlan, allReports, globalServ
                 if (camp.platforms) {
                     Object.keys(camp.platforms).forEach(pKey => {
                         if (!aggregated.platforms[pKey]) {
-                            aggregated.platforms[pKey] = { impressions: 0, engagement: 0, followers: 0, spend: 0 };
+                            aggregated.platforms[pKey] = { impressions: 0, engagement: 0, followers: 0, spend: 0, conversions: 0 };
                         }
                         const pData = camp.platforms[pKey];
                         aggregated.platforms[pKey].impressions += (Number(pData.impressions) || 0);
@@ -117,6 +117,11 @@ export function ClientDashboardView({ client, latestPlan, allReports, globalServ
                             ? pData.paidCampaigns.reduce((acc: number, c: any) => acc + (Number(c.spend) || 0), 0)
                             : (Number(pData.spend) || 0);
                         aggregated.platforms[pKey].spend += paidSpend;
+
+                        const paidResults = pData.paidCampaigns?.length > 0
+                            ? pData.paidCampaigns.reduce((acc: number, c: any) => acc + (Number(c.results) || 0), 0)
+                            : (Number(pData.conversions) || 0);
+                        aggregated.platforms[pKey].conversions += paidResults;
                     });
                 }
             });
@@ -172,6 +177,14 @@ export function ClientDashboardView({ client, latestPlan, allReports, globalServ
             accent: "bg-orange-500/5",
             icon: <DollarSign className="h-3 w-3" />,
             format: (n: number) => `SAR ${formatNumber(n)}`
+        },
+        {
+            label: t("reports.completed_actions"),
+            value: metrics ? Object.values(metrics.platforms || {}).reduce((acc: number, p: any) => acc + (Number(p.conversions) || 0), 0) : 0,
+            color: "text-rose-500",
+            accent: "bg-rose-500/5",
+            icon: <CheckCircle2 className="h-3 w-3" />,
+            format: formatNumber
         },
         ...(metrics?.emailMarketing?.emailsSent > 0 ? [{
             label: isRtl ? "رسائل البريد" : "Emails Dispatched",
@@ -351,7 +364,7 @@ export function ClientDashboardView({ client, latestPlan, allReports, globalServ
                     </Link>
                 </div>
 
-                <div className="grid gap-6 grid-cols-1 md:grid-cols-3">
+                <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-6">
                     {globalServices
                         .filter(gs => !client.services?.some((s: any) => s.globalServiceId === gs.id))
                         .slice(0, 3)
