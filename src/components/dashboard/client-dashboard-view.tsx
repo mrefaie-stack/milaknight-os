@@ -50,47 +50,63 @@ export function ClientDashboardView({ client, latestPlan, allReports, globalServ
     const metrics = useMemo(() => {
         if (!allReports || allReports.length === 0) return { platforms: {}, seoScore: client.seoScore || 0 };
 
-        const latestReport = allReports[0];
-        const latestM = typeof latestReport.metrics === 'string' ? JSON.parse(latestReport.metrics) : latestReport.metrics;
-        const currentSeoScore = latestM?.seo?.score || client.seoScore || 0;
+        const currentSeoScore = (() => {
+            const latestReport = allReports[0];
+            const latestM = typeof latestReport.metrics === 'string' ? JSON.parse(latestReport.metrics) : latestReport.metrics;
+            return latestM?.seo?.score || client.seoScore || 0;
+        })();
 
-        if (viewMode === "month") {
-            const report = allReports[0];
+        const aggregated = {
+            platforms: {} as any,
+            seoScore: currentSeoScore
+        };
+
+        const reportsToProcess = viewMode === "month" ? [allReports[0]] : allReports;
+
+        reportsToProcess.forEach((report, index) => {
             const m = typeof report.metrics === 'string' ? JSON.parse(report.metrics) : report.metrics;
-            return { ...m, seoScore: currentSeoScore };
-        } else {
-            // Aggregate all reports
-            const aggregated = {
-                platforms: {} as any,
-                campaigns: [] as any[],
-                seoScore: currentSeoScore
-            };
-
-            allReports.forEach(report => {
-                const m = typeof report.metrics === 'string' ? JSON.parse(report.metrics) : report.metrics;
-                // Handle new multi-campaign structure
-                const campaigns = m?.campaigns || (m?.platforms ? [{ platforms: m.platforms }] : []);
-                campaigns.forEach((camp: any) => {
-                    if (camp.platforms) {
-                        Object.keys(camp.platforms).forEach(pKey => {
-                            if (!aggregated.platforms[pKey]) {
-                                aggregated.platforms[pKey] = { impressions: 0, engagement: 0, followers: 0, spend: 0, paidCampaigns: [] };
-                            }
-                            const pData = camp.platforms[pKey];
-                            aggregated.platforms[pKey].impressions += (Number(pData.impressions) || 0);
-                            aggregated.platforms[pKey].engagement += (Number(pData.engagement) || 0);
-                            aggregated.platforms[pKey].followers += (Number(pData.followers) || 0);
-                            // Sum spend: use paidCampaigns sum if available, else platform.spend
-                            const paidSpend = pData.paidCampaigns?.length > 0
-                                ? pData.paidCampaigns.reduce((acc: number, c: any) => acc + (Number(c.spend) || 0), 0)
-                                : (Number(pData.spend) || 0);
-                            aggregated.platforms[pKey].spend += paidSpend;
-                        });
-                    }
+            const campaigns = m?.campaigns || (m?.platforms ? [{ platforms: m.platforms }] : []);
+            
+            // For X dynamic followers, we need the previous report backwards in time
+            const prevReport = allReports[index + 1];
+            let prevXFollowers = 0;
+            if (prevReport) {
+                const prevM = typeof prevReport.metrics === 'string' ? JSON.parse(prevReport.metrics) : prevReport.metrics;
+                const prevCampaigns = prevM?.campaigns || (prevM?.platforms ? [{ platforms: prevM.platforms }] : []);
+                prevCampaigns.forEach((c: any) => {
+                    const px = c.platforms?.['x'];
+                    if (px) prevXFollowers += (Number(px.currentFollowers) || 0);
                 });
+            }
+
+            campaigns.forEach((camp: any) => {
+                if (camp.platforms) {
+                    Object.keys(camp.platforms).forEach(pKey => {
+                        if (!aggregated.platforms[pKey]) {
+                            aggregated.platforms[pKey] = { impressions: 0, engagement: 0, followers: 0, spend: 0 };
+                        }
+                        const pData = camp.platforms[pKey];
+                        aggregated.platforms[pKey].impressions += (Number(pData.impressions) || 0);
+                        aggregated.platforms[pKey].engagement += (Number(pData.engagement) || 0);
+                        
+                        if (pKey === 'x') {
+                            const current = Number(pData.currentFollowers) || 0;
+                            const diff = Math.max(0, current - prevXFollowers);
+                            aggregated.platforms[pKey].followers += diff;
+                        } else {
+                            aggregated.platforms[pKey].followers += (Number(pData.followers) || 0);
+                        }
+
+                        const paidSpend = pData.paidCampaigns?.length > 0
+                            ? pData.paidCampaigns.reduce((acc: number, c: any) => acc + (Number(c.spend) || 0), 0)
+                            : (Number(pData.spend) || 0);
+                        aggregated.platforms[pKey].spend += paidSpend;
+                    });
+                }
             });
-            return aggregated;
-        }
+        });
+
+        return aggregated;
     }, [allReports, viewMode, client.seoScore]);
 
     const totalSpend = metrics

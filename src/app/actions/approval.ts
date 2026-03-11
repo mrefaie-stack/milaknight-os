@@ -12,7 +12,18 @@ export async function approveItem(itemId: string) {
         throw new Error("Unauthorized");
     }
 
-    const item = await prisma.contentItem.update({
+    const item = await prisma.contentItem.findUnique({
+        where: { id: itemId },
+        include: { plan: { include: { client: true } } }
+    });
+
+    if (!item) throw new Error("Item not found");
+
+    if (session?.user?.role === "CLIENT") {
+        if (item.plan.client.userId !== session.user.id) throw new Error("Unauthorized Access");
+    }
+
+    await prisma.contentItem.update({
         where: { id: itemId },
         data: { status: "APPROVED" }
     });
@@ -28,7 +39,18 @@ export async function requestEdit(itemId: string, comment: string) {
     }
 
     // Update item status and feedback
-    const item = await prisma.contentItem.update({
+    const item = await prisma.contentItem.findUnique({
+        where: { id: itemId },
+        include: { plan: { include: { client: true } } }
+    });
+
+    if (!item) throw new Error("Item not found");
+
+    if (session?.user?.role === "CLIENT") {
+        if (item.plan.client.userId !== session.user.id) throw new Error("Unauthorized Access");
+    }
+
+    await prisma.contentItem.update({
         where: { id: itemId },
         data: {
             status: "NEEDS_EDIT",
@@ -75,12 +97,29 @@ export async function approveActionPlan(planId: string) {
         throw new Error("Unauthorized");
     }
 
+    const plan = await prisma.actionPlan.findUnique({
+        where: { id: planId },
+        include: { client: true }
+    });
+
+    if (!plan) throw new Error("Plan not found");
+
+    if (session?.user?.role === "CLIENT") {
+        if (plan.client.userId !== session.user.id) throw new Error("Unauthorized Access");
+    }
+
     // Update ActionPlan status
-    const plan = await prisma.actionPlan.update({
+    await prisma.actionPlan.update({
         where: { id: planId },
         data: { status: "APPROVED" },
+    });
+
+    // Re-fetch to include account manager for notification
+    const updatedPlan = await prisma.actionPlan.findUnique({
+        where: { id: planId },
         include: { client: { include: { accountManager: true } } }
     });
+    if (!updatedPlan) throw new Error("Plan not found");
 
     // Update all items in the plan to APPROVED
     await prisma.contentItem.updateMany({
@@ -89,19 +128,19 @@ export async function approveActionPlan(planId: string) {
     });
 
     // Notify AM
-    if (plan.client?.accountManager?.id) {
+    if (updatedPlan.client?.accountManager?.id) {
         await prisma.notification.create({
             data: {
-                userId: plan.client.accountManager.id,
+                userId: updatedPlan.client.accountManager.id,
                 title: "Action Plan Approved",
-                message: `The client ${plan.client.name} has approved the action plan for ${plan.month}.`,
+                message: `The client ${updatedPlan.client.name} has approved the action plan for ${updatedPlan.month}.`,
                 type: "SYSTEM",
                 link: `/am/action-plans/${planId}`
             }
         });
     }
 
-    await logActivity(`fully approved the content plan for ${plan.client.name} (${plan.month})`, "ActionPlan", planId);
+    await logActivity(`fully approved the content plan for ${updatedPlan.client.name} (${updatedPlan.month})`, "ActionPlan", planId);
 
     revalidatePath(`/client/action-plans/${planId}`);
     revalidatePath(`/am/action-plans/${planId}`);

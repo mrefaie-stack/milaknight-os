@@ -26,6 +26,7 @@ model User {
   notifications  Notification[]
   activityLogs   ActivityLog[]
   deletionRequests DeletionRequest[]
+  contentItemHistory ContentItemHistory[]
 }
 
 model Client {
@@ -66,6 +67,7 @@ model Client {
   package        String?   @default("BASIC") // e.g., "BASIC", "PREMIUM", "ENTERPRISE"
   activeServices String?   // Comma separated list of active platforms for this client
   seoScore       Int?      @default(0)
+  monthlyFee     Int?      @default(0) // Monthly retainer fee in SAR
   
   services       Service[]
   serviceRequests ServiceRequest[]
@@ -182,9 +184,21 @@ model ContentItem {
   feedbackResolved Boolean @default(false)
   
   comments       Comment[]
+  history        ContentItemHistory[]
   
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
+}
+
+model ContentItemHistory {
+  id             String      @id @default(cuid())
+  itemId         String
+  item           ContentItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  changedById    String
+  changedBy      User        @relation(fields: [changedById], references: [id])
+  changeSummary  String?     // e.g., "Updated caption and image"
+  
+  createdAt      DateTime    @default(now())
 }
 
 model Comment {
@@ -207,6 +221,9 @@ model Report {
   // Stored as String for SQLite
   metrics        String      
   status         String    @default("DRAFT") // DRAFT, SENT, VIEWED
+  scheduledSendAt DateTime? // If set, auto-publish on this date
+  clientFeedback  String?   // Client's feedback text
+  clientFeedbackAt DateTime? // When the client submitted feedback
   
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt

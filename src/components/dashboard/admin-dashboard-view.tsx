@@ -24,6 +24,7 @@ const STAT_COLORS = [
     { bg: "bg-orange-500/10", border: "border-orange-500/20", text: "text-orange-500", glow: "shadow-orange-500/10" },
     { bg: "bg-emerald-500/10", border: "border-emerald-500/20", text: "text-emerald-500", glow: "shadow-emerald-500/10" },
     { bg: "bg-primary/10", border: "border-primary/20", text: "text-primary", glow: "shadow-primary/10" },
+    { bg: "bg-purple-500/10", border: "border-purple-500/20", text: "text-purple-500", glow: "shadow-purple-500/10" },
 ];
 
 export function AdminDashboardView({ clients }: { clients: any[] }) {
@@ -33,12 +34,15 @@ export function AdminDashboardView({ clients }: { clients: any[] }) {
     const pendingPlans = clients.filter(c => c.actionPlans?.some((p: any) => p.status === "PENDING")).length;
     const reportsThisMonth = clients.filter(c => c.reports?.some((r: any) => r.status === "SENT")).length;
     const totalPlans = clients.reduce((acc, c) => acc + (c.actionPlans?.length || 0), 0);
+    const totalRevenue = clients.reduce((acc, c) => acc + (c.monthlyFee || 0), 0);
+    const topClients = [...clients].sort((a,b) => (b.monthlyFee || 0) - (a.monthlyFee || 0)).slice(0, 5);
 
     const stats = [
-        { label: t("dashboard.active_clients"), value: totalClients, icon: Users, href: "/admin/clients" },
-        { label: t("dashboard.pending_approvals"), value: pendingPlans, icon: Clock, href: "/admin/clients" },
-        { label: t("dashboard.reports_this_month"), value: reportsThisMonth, icon: CheckCircle, href: "/admin/clients" },
-        { label: t("dashboard.managed_plans"), value: totalPlans, icon: FileText, href: "/admin/clients" },
+        { label: t("dashboard.active_clients"), value: totalClients, icon: Users, href: "/admin/clients", cols: 1 },
+        { label: t("dashboard.pending_approvals"), value: pendingPlans, icon: Clock, href: "/admin/clients", cols: 1 },
+        { label: t("dashboard.reports_this_month"), value: reportsThisMonth, icon: CheckCircle, href: "/admin/clients", cols: 1 },
+        { label: t("dashboard.managed_plans"), value: totalPlans, icon: FileText, href: "/admin/clients", cols: 1 },
+        { label: isRtl ? "الإيرادات الشهرية" : "Monthly Revenue", value: `SAR ${totalRevenue.toLocaleString()}`, icon: TrendingUp, href: "/admin/clients", cols: 2 },
     ];
 
     return (
@@ -71,13 +75,14 @@ export function AdminDashboardView({ clients }: { clients: any[] }) {
             </motion.div>
 
             {/* ── KPI Cards ── */}
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-6">
                 {stats.map((stat, idx) => {
-                    const c = STAT_COLORS[idx];
+                    const c = STAT_COLORS[idx % STAT_COLORS.length];
+                    const colSpanClass = stat.cols === 2 ? "md:col-span-2 lg:col-span-2" : "md:col-span-1 lg:col-span-1";
                     return (
-                        <motion.div key={stat.label} variants={item}>
+                        <motion.div key={stat.label} variants={item} className={colSpanClass}>
                             <Link href={stat.href}>
-                                <Card className={`glass-card hover-lift border ${c.border} overflow-hidden group cursor-pointer shadow-xl ${c.glow}`}>
+                                <Card className={`h-full glass-card hover-lift border ${c.border} overflow-hidden group cursor-pointer shadow-xl ${c.glow}`}>
                                     <CardHeader className={`flex flex-row items-center justify-between pb-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
                                         <CardTitle className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-70">
                                             {stat.label}
@@ -87,7 +92,7 @@ export function AdminDashboardView({ clients }: { clients: any[] }) {
                                         </div>
                                     </CardHeader>
                                     <CardContent className={isRtl ? 'text-right' : 'text-left'}>
-                                        <div className={`text-5xl font-black tracking-tighter ${c.text}`}>{stat.value}</div>
+                                        <div className={`text-4xl lg:text-5xl font-black tracking-tighter ${c.text}`}>{stat.value}</div>
                                     </CardContent>
                                     <div className={`h-1 ${c.bg} border-t ${c.border} scale-x-0 group-hover:scale-x-100 transition-transform origin-left`} />
                                 </Card>
@@ -190,17 +195,51 @@ export function AdminDashboardView({ clients }: { clients: any[] }) {
                 </motion.div>
 
                 <motion.div variants={item} className="md:col-span-3">
-                    <Card className="glass-card border-none h-full overflow-hidden">
-                        <CardHeader className={`border-b border-white/5 pb-6 ${isRtl ? 'text-right' : 'text-left'}`}>
-                            <CardTitle className="text-xl font-black tracking-tight">{t("dashboard.internal_feed")}</CardTitle>
-                            <p className="text-xs text-muted-foreground font-medium mt-1">
-                                {isRtl ? "آخر التحديثات الداخلية" : "Agency-wide mission updates"}
-                            </p>
-                        </CardHeader>
-                        <CardContent className="pt-6">
-                            <ActivityFeed />
-                        </CardContent>
-                    </Card>
+                    <div className="space-y-8 flex flex-col h-full">
+                        <Card className="glass-card border-none overflow-hidden flex-1 max-h-[400px]">
+                            <CardHeader className={`border-b border-white/5 pb-4 ${isRtl ? 'text-right' : 'text-left'}`}>
+                                <CardTitle className="text-xl font-black tracking-tight flex items-center gap-2">
+                                    <TrendingUp className="h-5 w-5 text-emerald-500" />
+                                    {isRtl ? "قائمة كبار العملاء" : "Client Leaderboard"}
+                                </CardTitle>
+                                <p className="text-xs text-muted-foreground font-medium mt-1">
+                                    {isRtl ? "مقارنة العملاء حسب الرسوم الشهرية" : "Top clients by monthly fee"}
+                                </p>
+                            </CardHeader>
+                            <CardContent className="pt-4 overflow-y-auto max-h-[300px] no-scrollbar">
+                                <div className="space-y-3">
+                                    {topClients.map((client, i) => (
+                                        <div key={client.id} className={`flex items-center justify-between p-3 rounded-xl bg-muted/50 border border-border/50 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                                            <div className={`flex items-center gap-3 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                                                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-black shadow-inner ${i===0 ? 'bg-yellow-500/20 text-yellow-500 border border-yellow-500/50' : i===1 ? 'bg-slate-300/20 text-slate-300 border border-slate-300/50' : i===2 ? 'bg-orange-600/20 text-orange-600 border border-orange-600/50' : 'bg-primary/10 text-primary'}`}>
+                                                    #{i+1}
+                                                </div>
+                                                <div className={`flex flex-col ${isRtl ? 'text-right' : 'text-left'}`}>
+                                                    <span className="font-bold text-sm">{client.name}</span>
+                                                    <span className="text-[10px] text-muted-foreground uppercase">{client.industry || 'Unknown'}</span>
+                                                </div>
+                                            </div>
+                                            <div className="font-black text-emerald-500 tracking-tighter">
+                                                SAR {(client.monthlyFee || 0).toLocaleString()}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        <Card className="glass-card border-none flex-1 overflow-hidden min-h-[400px]">
+                            <CardHeader className={`border-b border-white/5 pb-6 ${isRtl ? 'text-right' : 'text-left'}`}>
+                                <CardTitle className="text-xl font-black tracking-tight">{t("dashboard.internal_feed")}</CardTitle>
+                                <p className="text-xs text-muted-foreground font-medium mt-1">
+                                    {isRtl ? "آخر التحديثات الداخلية" : "Agency-wide mission updates"}
+                                </p>
+                            </CardHeader>
+                            <CardContent className="pt-6">
+                                <ActivityFeed />
+                            </CardContent>
+                        </Card>
+                    </div>
                 </motion.div>
             </div>
         </motion.div>

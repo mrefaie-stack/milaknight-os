@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { notFound, redirect } from "next/navigation";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AddItemDialog } from "@/components/action-plan/add-item-dialog";
@@ -29,6 +31,15 @@ export default async function ActionPlanBuilderPage({ params }: { params: Promis
     });
 
     if (!plan) return notFound();
+
+    // Permission Check
+    const session = await getServerSession(authOptions);
+    if (!session) redirect("/login");
+    if (session.user.role === "AM" && (plan as any).client.amId !== session.user.id) {
+        return notFound();
+    } else if (session.user.role !== "ADMIN" && session.user.role !== "AM") {
+        return notFound();
+    }
 
     const hasDrafts = (plan as any).items.some((i: any) => i.status === "DRAFT");
 

@@ -60,6 +60,7 @@ export function EditClientDialog({ client, accountManagers, services = [] }: { c
         snapchat: client.snapchat || "",
         youtube: client.youtube || "",
         website: client.website || "",
+        monthlyFee: client.monthlyFee || 0,
     });
 
     async function handleAutoTranslate(source: string, targetType: 'brief' | 'deliv', targetLang: 'ar' | 'en') {
@@ -112,6 +113,7 @@ export function EditClientDialog({ client, accountManagers, services = [] }: { c
                 snapchat: formData.snapchat,
                 youtube: formData.youtube,
                 website: formData.website,
+                monthlyFee: formData.monthlyFee,
                 serviceIds: selectedServiceIds,
             });
 
@@ -218,6 +220,17 @@ export function EditClientDialog({ client, accountManagers, services = [] }: { c
                                             <SelectItem value="ENTERPRISE">Enterprise</SelectItem>
                                         </SelectContent>
                                     </Select>
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="monthlyFee" className={isRtl ? 'text-right' : ''}>{isRtl ? 'الرسوم الشهرية (ريال)' : 'Monthly Fee (SAR)'}</Label>
+                                    <Input
+                                        id="monthlyFee"
+                                        type="number"
+                                        min="0"
+                                        value={formData.monthlyFee}
+                                        onChange={(e) => setFormData({ ...formData, monthlyFee: parseFloat(e.target.value) || 0 })}
+                                        className={isRtl ? 'text-right' : ''}
+                                    />
                                 </div>
                                 <div className="space-y-3">
                                     <Label className={isRtl ? 'text-right block' : ''}>{t("dashboard.management_services")}</Label>

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useLanguage } from "@/contexts/language-context";
 import { PlanApprovalHeader } from "@/components/action-plan/plan-approval-header";
+import { toast } from "sonner";
 import { ClientApprovalActions } from "@/components/action-plan/client-approval-actions";
 import { DownloadActionPlanButton } from "@/components/action-plan/download-action-plan-button";
 import { Label } from "@/components/ui/label";
@@ -29,8 +30,17 @@ import {
     ChevronLeft,
     ChevronRight,
     Plus,
+    History,
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
+import { getContentItemHistory, batchApproveContentItems } from "@/app/actions/action-plan";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog";
 
 // ─── Section definitions ─────────────────────────────────────────────────────
 const SECTIONS = [
@@ -132,6 +142,72 @@ function PlatformPill({ name, idx }: { name: string; idx: number }) {
     );
 }
 
+function HistoryDialog({ itemId, isRtl }: { itemId: string; isRtl: boolean }) {
+    const [history, setHistory] = useState<any[]>([]);
+    const [isOpen, setIsOpen] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+
+    const loadHistory = async () => {
+        setIsLoading(true);
+        try {
+            const data = await getContentItemHistory(itemId);
+            setHistory(data);
+        } catch (error) {
+            console.error("Failed to load history", error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    return (
+        <Dialog open={isOpen} onOpenChange={(open) => {
+            setIsOpen(open);
+            if (open) loadHistory();
+        }}>
+            <DialogTrigger asChild>
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute top-2 right-2 z-30 h-8 w-8 rounded-full bg-black/20 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary hover:text-white"
+                >
+                    <History className="h-4 w-4" />
+                </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md max-h-[70vh] overflow-y-auto" dir={isRtl ? 'rtl' : 'ltr'}>
+                <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                        <History className="h-5 w-5 text-primary" />
+                        {isRtl ? 'سجل التعديلات' : 'Revision History'}
+                    </DialogTitle>
+                </DialogHeader>
+                <div className="py-4 space-y-4">
+                    {isLoading ? (
+                        <div className="py-8 text-center text-muted-foreground animate-pulse">
+                            {isRtl ? 'جاري تحميل السجل...' : 'Loading history...'}
+                        </div>
+                    ) : history.length === 0 ? (
+                        <div className="py-8 text-center text-muted-foreground italic">
+                            {isRtl ? 'لا توجد تعديلات مسجلة بعد.' : 'No revisions recorded yet.'}
+                        </div>
+                    ) : (
+                        history.map((h, i) => (
+                            <div key={h.id} className="relative flex gap-4 pr-4 border-r-2 border-primary/10 last:border-0 pb-4">
+                                <div className="absolute right-[-7px] top-0 h-3 w-3 rounded-full bg-primary shadow-lg shadow-primary/20" />
+                                <div className="space-y-1">
+                                    <p className="text-xs font-black text-muted-foreground">
+                                        {new Date(h.createdAt).toLocaleString(isRtl ? 'ar-EG' : 'en-US')}
+                                    </p>
+                                    <p className="text-sm font-medium leading-relaxed">{h.changeSummary}</p>
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </div>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
 function ContentCard({ item, isRtl, onImageClick, isModerator }: { item: any; isRtl: boolean; onImageClick?: (url: string) => void, isModerator?: boolean }) {
     const typeMeta = TYPE_META_BI[item.type] || TYPE_META_BI.POST;
     const statusMeta = STATUS_META_BI[item.status] || STATUS_META_BI.PENDING;
@@ -145,6 +221,8 @@ function ContentCard({ item, isRtl, onImageClick, isModerator }: { item: any; is
 
     return (
         <div className="group relative flex flex-col rounded-2xl border border-white/10 bg-card/50 backdrop-blur-sm overflow-hidden shadow-md hover:shadow-xl hover:border-primary/20 hover:-translate-y-0.5 transition-all duration-300">
+            {/* History Toggle */}
+            <HistoryDialog itemId={item.id} isRtl={isRtl} />
 
             {/* Email special header */}
             {isEmail && (
@@ -642,10 +720,30 @@ export function ClientActionPlanView({ plan, items, isModerator }: { plan: any; 
                                             <h2 className={`text-xl font-black ${section.color}`}>{section.label}</h2>
                                             <p className="text-xs text-muted-foreground font-semibold opacity-70">{section.labelEn} · {sectionItems.length} {sectionItems.length === 1 ? "بند" : "بنود"}</p>
                                         </div>
-                                        <div className="ml-auto">
+                                        <div className="ml-auto flex items-center gap-4">
                                             <span className={`text-xs font-black px-3 py-1 rounded-full bg-white/5 border ${section.border} ${section.color}`}>
                                                 {sectionItems.filter(i => i.status === "APPROVED").length} / {sectionItems.length} معتمد
                                             </span>
+                                            {!isModerator && sectionItems.some(i => i.status !== "APPROVED") && (
+                                                <Button
+                                                    size="sm"
+                                                    variant="secondary"
+                                                    onClick={async () => {
+                                                        if (confirm(isRtl ? `هل أنت متأكد من اعتماد جميع ${section.label}؟` : `Are you sure you want to approve all ${section.labelEn}?`)) {
+                                                            try {
+                                                                await batchApproveContentItems(sectionItems.filter(i => i.status !== "APPROVED").map(i => i.id), plan.id);
+                                                                toast.success(isRtl ? "تم اعتماد القسم بنجاح" : "Section approved successfully");
+                                                            } catch (err) {
+                                                                toast.error("Failed to batch approve");
+                                                            }
+                                                        }
+                                                    }}
+                                                    className="rounded-xl font-black text-[10px] uppercase h-8 px-4 bg-white/10 hover:bg-emerald-500 hover:text-white border-white/10 transition-all shadow-lg shadow-emerald-500/0 hover:shadow-emerald-500/20"
+                                                >
+                                                    <CheckCircle2 className="h-3.5 w-3.5 mr-2" />
+                                                    {isRtl ? 'اعتماد الكل' : 'Approve All'}
+                                                </Button>
+                                            )}
                                         </div>
                                     </div>
                                     <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">

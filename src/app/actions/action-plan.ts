@@ -110,6 +110,109 @@ export async function addContentItem(planId: string, data: any) {
     return item;
 }
 
+export async function updateContentItem(itemId: string, planId: string, data: any) {
+    const session = await getServerSession(authOptions);
+    if (!session || (session.user.role !== "AM" && session.user.role !== "ADMIN")) {
+        throw new Error("Unauthorized");
+    }
+
+    const oldItem = await prisma.contentItem.findUnique({ where: { id: itemId } });
+    if (!oldItem) throw new Error("Item not found");
+
+    const updatedItem = await prisma.contentItem.update({
+        where: { id: itemId },
+        data: {
+            type: data.type,
+            platform: data.platform,
+            scheduledDate: data.scheduledDate ? new Date(data.scheduledDate) : null,
+            imageUrl: data.imageUrl,
+            videoUrl: data.videoUrl,
+            captionAr: data.captionAr,
+            captionEn: data.captionEn,
+            pollQuestion: data.pollQuestion,
+            pollOptionA: data.pollOptionA,
+            pollOptionB: data.pollOptionB,
+            articleTitle: data.articleTitle,
+            articleContent: data.articleContent,
+            emailSubject: data.emailSubject,
+            emailBody: data.emailBody,
+            emailDesign: data.emailDesign,
+            platformCaptions: data.platformCaptions,
+            amComment: data.amComment,
+            // Revert back to pending if edited from a needs_edit or revision_requested state
+            status: (oldItem.status === "NEEDS_EDIT" || oldItem.status === "REVISION_REQUESTED") ? "PENDING" : oldItem.status
+        }
+    });
+
+    // Log History
+    await (prisma as any).contentItemHistory.create({
+        data: {
+            itemId,
+            changedById: session.user.id,
+            changeSummary: `Updated by ${session.user.name}. Fields changed: ${Object.keys(data).filter(k => data[k] !== (oldItem as any)[k]).join(', ')}`
+        }
+    });
+
+    revalidatePath(`/am/action-plans/${planId}`);
+    return updatedItem;
+}
+
+export async function getContentItemHistory(itemId: string) {
+    const session = await getServerSession(authOptions);
+    if (!session) throw new Error("Unauthorized");
+
+    const item = await prisma.contentItem.findUnique({
+        where: { id: itemId },
+        include: { plan: { include: { client: true } } }
+    });
+    if (!item) throw new Error("Item not found");
+
+    // Ownership Check
+    if (session.user.role === "CLIENT") {
+        if (item.plan.client.userId !== session.user.id) throw new Error("Unauthorized Access");
+    } else if (session.user.role === "AM") {
+        if (item.plan.client.amId !== session.user.id) throw new Error("Unauthorized Access");
+    } else if (session.user.role !== "ADMIN") {
+        throw new Error("Unauthorized Access");
+    }
+
+    return (prisma as any).contentItemHistory.findMany({
+        where: { itemId },
+        include: { changedBy: true },
+        orderBy: { createdAt: "desc" }
+    });
+}
+
+export async function batchApproveContentItems(itemIds: string[], planId: string) {
+    const session = await getServerSession(authOptions);
+    if (!session || (session.user.role !== "CLIENT" && session.user.role !== "ADMIN")) {
+        throw new Error("Unauthorized");
+    }
+
+    const plan = await prisma.actionPlan.findUnique({
+        where: { id: planId },
+        include: { client: true }
+    });
+
+    if (!plan) throw new Error("Plan not found");
+
+    if (session.user.role === "CLIENT") {
+        if (plan.client.userId !== session.user.id) throw new Error("Unauthorized Access");
+    }
+
+    await (prisma as any).contentItem.updateMany({
+        where: { 
+            id: { in: itemIds },
+            planId: planId // Ensure items belong to the plan
+        },
+        data: { status: "APPROVED" }
+    });
+
+    revalidatePath(`/client/action-plans/${planId}`);
+    revalidatePath(`/am/action-plans/${planId}`);
+    return { success: true };
+}
+
 export async function submitForApproval(planId: string) {
     const session = await getServerSession(authOptions);
     if (!session || (session.user.role !== "AM" && session.user.role !== "ADMIN")) throw new Error("Unauthorized");
@@ -273,6 +376,16 @@ export async function resolveActionPlanItem(itemId: string, planId: string) {
         throw new Error("Unauthorized");
     }
 
+    const item = await prisma.contentItem.findUnique({
+        where: { id: itemId },
+        include: { plan: { include: { client: true } } }
+    });
+
+    if (!item) throw new Error("Item not found");
+    if (session.user.role === "AM" && item.plan.client.amId !== session.user.id) {
+        throw new Error("Unauthorized Access");
+    }
+
     await prisma.contentItem.update({
         where: { id: itemId },
         data: { feedbackResolved: true }
@@ -332,6 +445,16 @@ export async function deleteContentItem(itemId: string, planId: string) {
         throw new Error("Unauthorized");
     }
 
+    const item = await prisma.contentItem.findUnique({
+        where: { id: itemId },
+        include: { plan: { include: { client: true } } }
+    });
+
+    if (!item) throw new Error("Item not found");
+    if (session.user.role === "AM" && item.plan.client.amId !== session.user.id) {
+        throw new Error("Unauthorized Access");
+    }
+
     await prisma.contentItem.delete({
         where: { id: itemId }
     });
@@ -372,6 +495,16 @@ export async function unapproveContentItem(itemId: string, planId: string) {
 export async function getApprovedPosts(clientId: string) {
     const session = await getServerSession(authOptions);
     if (!session) throw new Error("Unauthorized");
+
+    if (session.user.role === "CLIENT") {
+        const client = await prisma.client.findUnique({ where: { userId: session.user.id } });
+        if (!client || client.id !== clientId) throw new Error("Unauthorized Access");
+    } else if (session.user.role === "AM") {
+        const client = await prisma.client.findUnique({ where: { id: clientId } });
+        if (!client || client.amId !== session.user.id) throw new Error("Unauthorized Access");
+    } else if (session.user.role !== "ADMIN") {
+        throw new Error("Unauthorized Access");
+    }
 
     // Fetch approved content items for this client from across all action plans
     return prisma.contentItem.findMany({

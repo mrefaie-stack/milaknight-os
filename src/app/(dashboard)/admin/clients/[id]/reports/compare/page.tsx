@@ -14,6 +14,7 @@ export default async function AdminCompareReportsPage({
     const { id: clientId } = await params;
     const { ids } = await searchParams;
     const session = await getServerSession(authOptions);
+    if (session?.user?.role !== "ADMIN") return notFound();
 
     if (!ids) {
         redirect(`/admin/clients/${clientId}/reports`);

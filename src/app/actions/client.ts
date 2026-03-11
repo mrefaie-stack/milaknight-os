@@ -130,6 +130,7 @@ export async function createClient(data: FormData) {
             youtube,
             website,
             ...({ seoScore: Number(data.get("seoScore")) || 0 } as any),
+            ...({ monthlyFee: Number(data.get("monthlyFee")) || 0 } as any),
             services: {
                 create: servicesInput ? servicesInput.split(",").filter(id => id.trim()).map(id => ({
                     globalService: { connect: { id: id.trim() } }
@@ -171,7 +172,8 @@ export async function updateClient(clientId: string, data: any) {
             snapchat: data.snapchat,
             youtube: data.youtube,
             website: data.website,
-            ...({ seoScore: Number(data.seoScore) || 0 } as any),
+            seoScore: Number(data.seoScore) || 0,
+            monthlyFee: Number(data.monthlyFee) || 0,
             services: data.serviceIds ? {
                 deleteMany: {},
                 create: data.serviceIds.map((id: string) => ({

@@ -7,7 +7,7 @@ import { revalidatePath } from "next/cache";
 import { sendEmail } from "@/lib/email";
 import { logActivity } from "./activity";
 
-export async function createReport(clientId: string, month: string, metricsData: any) {
+export async function createReport(clientId: string, month: string, metricsData: any, scheduledSendAt?: Date) {
     const session = await getServerSession(authOptions);
     if (!session || (session.user.role !== "AM" && session.user.role !== "ADMIN")) {
         throw new Error("Unauthorized");
@@ -17,12 +17,13 @@ export async function createReport(clientId: string, month: string, metricsData:
         if (!client || client.amId !== session.user.id) throw new Error("Unauthorized Access");
     }
 
-    const report = await prisma.report.create({
+    const report = await (prisma as any).report.create({
         data: {
             clientId,
             month,
             metrics: JSON.stringify(metricsData),
             status: "DRAFT",
+            scheduledSendAt
         },
         include: { client: true }
     });
@@ -33,7 +34,7 @@ export async function createReport(clientId: string, month: string, metricsData:
     return report;
 }
 
-export async function updateReport(reportId: string, metricsData: any, month?: string, clientId?: string) {
+export async function updateReport(reportId: string, metricsData: any, month?: string, clientId?: string, scheduledSendAt?: Date | null) {
     const session = await getServerSession(authOptions);
     if (!session || (session.user.role !== "AM" && session.user.role !== "ADMIN")) {
         throw new Error("Unauthorized");
@@ -43,12 +44,13 @@ export async function updateReport(reportId: string, metricsData: any, month?: s
         if (!checkReport || checkReport.client.amId !== session.user.id) throw new Error("Unauthorized Access");
     }
 
-    const report = await prisma.report.update({
+    const report = await (prisma as any).report.update({
         where: { id: reportId },
         data: {
             metrics: JSON.stringify(metricsData),
             month: month || undefined,
             clientId: clientId || undefined,
+            scheduledSendAt: scheduledSendAt !== undefined ? scheduledSendAt : undefined
         }
     });
 
@@ -148,10 +150,69 @@ export async function getReports() {
 }
 
 export async function getReportById(id: string) {
-    return prisma.report.findUnique({
+    const session = await getServerSession(authOptions);
+    if (!session) throw new Error("Unauthorized");
+
+    const report = await prisma.report.findUnique({
         where: { id },
         include: { client: true }
     });
+
+    if (!report) return null;
+
+    // Permission Check
+    if (session.user.role === "CLIENT") {
+        if (report.client.userId !== session.user.id) throw new Error("Unauthorized Access");
+    } else if (session.user.role === "AM") {
+        if (report.client.amId !== session.user.id) throw new Error("Unauthorized Access");
+    } else if (session.user.role !== "ADMIN" && session.user.role !== "MODERATOR") {
+        throw new Error("Unauthorized Access");
+    }
+
+    return report;
+}
+
+export async function getPreviousReport(clientId: string, currentMonth: string) {
+    // Get all reports for this client ordered by month descending
+    const reports = await prisma.report.findMany({
+        where: { clientId, status: "SENT" },
+        orderBy: { month: "desc" },
+    });
+    // Find the one just before the current month
+    const idx = reports.findIndex(r => r.month === currentMonth);
+    const prev = idx >= 0 ? reports[idx + 1] : reports[0];
+    if (!prev) return null;
+    return { ...prev, metrics: typeof prev.metrics === 'string' ? JSON.parse(prev.metrics) : prev.metrics };
+}
+
+export async function submitReportFeedback(reportId: string, feedback: string) {
+    const session = await getServerSession(authOptions);
+    if (!session || session.user.role !== "CLIENT") throw new Error("Unauthorized");
+
+    const report = await prisma.report.findUnique({ where: { id: reportId }, include: { client: { include: { accountManager: true } } } });
+    if (!report || report.client.userId !== session.user.id) throw new Error("Unauthorized Access");
+
+    const updated = await prisma.report.update({
+        where: { id: reportId },
+        data: { clientFeedback: feedback, clientFeedbackAt: new Date() } as any,
+    });
+
+    // Notify the AM
+    if (report.client.accountManager) {
+        await prisma.notification.create({
+            data: {
+                userId: report.client.accountManager.id,
+                title: `Client Feedback on Report`,
+                message: `${report.client.name} left feedback on the ${report.month} report.`,
+                type: "SYSTEM",
+                link: `/am/reports/${reportId}`,
+            }
+        });
+    }
+
+    revalidatePath(`/am/reports/${reportId}`);
+    revalidatePath(`/client/reports/${reportId}`);
+    return updated;
 }
 
 export async function requestReportDeletion(reportId: string) {
@@ -217,4 +278,30 @@ export async function rejectDeletionRequest(requestId: string) {
     });
 
     revalidatePath("/admin");
+}
+
+export async function generateReportSummary(metricsData: any) {
+    const session = await getServerSession(authOptions);
+    if (!session || (session.user.role !== "AM" && session.user.role !== "ADMIN")) {
+        throw new Error("Unauthorized");
+    }
+
+    // Heuristic-based summary generation (Bilingual)
+    const metrics = metricsData;
+    const isRtl = true; // Default for this app's main audience
+
+    const summaryAr = `ملخص الأداء: 
+شهد هذا الشهر ${metrics.global?.reach?.value > 1000 ? 'نمواً ملحوظاً في الوصول' : 'أداءً مستقراً'}. 
+تم تحقيق ${metrics.global?.conversions?.value || 0} عملية تحويل بنسبة تفاعل ${metrics.global?.engagement?.value || 0}%.
+التركيز في المرحلة القادمة سيكون على ${metrics.seo?.score < 70 ? 'تحسين السيو' : 'زيادة وتيرة النشر'}.`;
+
+    const summaryEn = `Performance Summary:
+This month showed ${metrics.global?.reach?.value > 1000 ? 'significant growth in reach' : 'stable performance'}.
+Achieved ${metrics.global?.conversions?.value || 0} conversions with an engagement rate of ${metrics.global?.engagement?.value || 0}%.
+Next phase focus will be on ${metrics.seo?.score < 70 ? 'improving SEO' : 'increasing posting frequency'}.`;
+
+    return {
+        summaryAr,
+        summaryEn
+    };
 }

@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/prisma";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { PlanApprovalHeader } from "@/components/action-plan/plan-approval-header";
 import { ClientActionPlanView } from "@/components/action-plan/client-action-plan-view";
 
@@ -22,6 +24,12 @@ export default async function ClientActionPlanPage({ params }: { params: Promise
     });
 
     if (!plan) return notFound();
+
+    // Permission Check
+    const session = await getServerSession(authOptions);
+    if (!session) redirect("/login");
+    const client = await prisma.client.findUnique({ where: { userId: session.user.id } });
+    if (!client || plan.clientId !== client.id) return notFound();
 
     return (
         <ClientActionPlanView plan={plan as any} items={(plan as any).items} />

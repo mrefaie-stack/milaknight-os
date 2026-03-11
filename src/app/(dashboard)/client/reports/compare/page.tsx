@@ -14,8 +14,15 @@ export default async function CompareReportsPage({ searchParams }: { searchParam
 
     const reportIds = ids.split(",");
 
+    if (!session) redirect("/login");
+    const client = await prisma.client.findUnique({ where: { userId: session.user.id } });
+    if (!client) return notFound();
+
     const reports = await prisma.report.findMany({
-        where: { id: { in: reportIds } },
+        where: { 
+            id: { in: reportIds },
+            clientId: client.id
+        },
         include: { client: true }
     });
 

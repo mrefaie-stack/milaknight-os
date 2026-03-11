@@ -14,8 +14,15 @@ export default async function CompareReportsPage({ searchParams }: { searchParam
 
     const reportIds = ids.split(",");
 
+    const where: any = { id: { in: reportIds } };
+    if (session?.user?.role === "AM") {
+        where.client = { amId: session.user.id };
+    } else if (session?.user?.role !== "ADMIN" && session?.user?.role !== "MODERATOR") {
+        return notFound();
+    }
+
     const reports = await prisma.report.findMany({
-        where: { id: { in: reportIds } },
+        where,
         include: { client: true }
     });
 

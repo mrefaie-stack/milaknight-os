@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { createReport, updateReport } from "@/app/actions/report";
+import { createReport, updateReport, generateReportSummary } from "@/app/actions/report";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -35,11 +35,12 @@ import {
     Target,
     Zap,
     MessageSquare,
-    Save,
-    BarChart3,
     Trash2,
     Link,
     X,
+    Twitter,
+    Save,
+    BarChart3,
     Image as ImageIcon
 } from "lucide-react";
 import { getApprovedPosts } from "@/app/actions/action-plan";
@@ -51,9 +52,75 @@ const PLATFORMS = [
     { id: "tiktok", name: "TikTok", icon: Video, color: "text-slate-900" },
     { id: "snapchat", name: "Snapchat", icon: Share2, color: "text-yellow-500" },
     { id: "linkedin", name: "LinkedIn", icon: Linkedin, color: "text-blue-700" },
+    { id: "x", name: "X (Twitter)", icon: Twitter, color: "text-slate-900" },
     { id: "google", name: "Google Ads", icon: Search, color: "text-red-500" },
     { id: "youtube", name: "YouTube", icon: Youtube, color: "text-red-600" },
 ];
+
+const PLATFORM_METRICS: Record<string, { id: string, labelAr: string, labelEn: string, icon: any }[]> = {
+    facebook: [
+        { id: "impressions", labelAr: "المشاهدات", labelEn: "Views", icon: Eye },
+        { id: "reach", labelAr: "الوصول", labelEn: "Viewers", icon: Users },
+        { id: "engagement", labelAr: "التفاعلات", labelEn: "Content interactions", icon: MousePointer2 },
+        { id: "clicks", labelAr: "النقرات على الرابط", labelEn: "Link clicks", icon: Target },
+        { id: "profileVisits", labelAr: "الزيارات", labelEn: "Visits", icon: Target },
+        { id: "followers", labelAr: "متابعون جدد", labelEn: "New followers", icon: Users },
+    ],
+    instagram: [
+        { id: "views", labelAr: "المشاهدات", labelEn: "Views", icon: Eye },
+        { id: "reach", labelAr: "الوصول", labelEn: "Reach", icon: Users },
+        { id: "engagement", labelAr: "التفاعلات", labelEn: "Content interactions", icon: MousePointer2 },
+        { id: "clicks", labelAr: "النقرات على الرابط", labelEn: "Link clicks", icon: Target },
+        { id: "profileVisits", labelAr: "الزيارات", labelEn: "Visits", icon: Target },
+        { id: "followers", labelAr: "متابعون جدد", labelEn: "New followers", icon: Users },
+    ],
+    linkedin: [
+        { id: "impressions", labelAr: "الظهور", labelEn: "Impressions", icon: Eye },
+        { id: "engagement", labelAr: "التفاعلات", labelEn: "Reactions", icon: MousePointer2 },
+        { id: "comments", labelAr: "التعليقات", labelEn: "Comments", icon: MessageSquare },
+        { id: "shares", labelAr: "إعادة النشر", labelEn: "Reposts", icon: Share2 },
+        { id: "profileVisits", labelAr: "مشاهدات الصفحة", labelEn: "Page views", icon: Eye },
+        { id: "followers", labelAr: "متابعون جدد", labelEn: "New followers", icon: Users },
+        { id: "searches", labelAr: "عمليات البحث عن الصفحة", labelEn: "Page searches", icon: Search },
+    ],
+    tiktok: [
+        { id: "views", labelAr: "مشاهدات الفيديو", labelEn: "Video views", icon: Video },
+        { id: "profileVisits", labelAr: "مشاهدات الملف الشخصي", labelEn: "Profile views", icon: Eye },
+        { id: "likes", labelAr: "الإعجابات", labelEn: "Likes", icon: Target },
+        { id: "comments", labelAr: "التعليقات", labelEn: "Comments", icon: MessageSquare },
+        { id: "shares", labelAr: "المشاركات", labelEn: "Shares", icon: Share2 },
+        { id: "followers", labelAr: "متابعون جدد", labelEn: "New followers", icon: Users },
+    ],
+    snapchat: [
+        { id: "followers", labelAr: "متابعون جدد", labelEn: "New followers", icon: Users },
+        { id: "views", labelAr: "إجمالي المشاهدات", labelEn: "Total views", icon: Eye },
+        { id: "profileVisits", labelAr: "مشاهدات الملف الشخصي", labelEn: "Profile views", icon: Eye },
+    ],
+    x: [
+        { id: "impressions", labelAr: "الظهور", labelEn: "Impressions", icon: Eye },
+        { id: "engagement", labelAr: "التفاعلات", labelEn: "Engagements", icon: MousePointer2 },
+        { id: "profileVisits", labelAr: "زيارات الملف الشخصي", labelEn: "Profile visits", icon: Eye },
+        { id: "replies", labelAr: "الردود", labelEn: "Replies", icon: MessageSquare },
+        { id: "likes", labelAr: "الإعجابات", labelEn: "Likes", icon: Target },
+        { id: "reposts", labelAr: "إعادة النشر", labelEn: "Reposts", icon: Share2 },
+        { id: "bookmarks", labelAr: "العلامات المرجعية", labelEn: "Bookmarks", icon: Save },
+        { id: "shares", labelAr: "المشاركات", labelEn: "Shares", icon: Share2 },
+        { id: "currentFollowers", labelAr: "عدد المتابعين الحالي", labelEn: "Current follow number", icon: Users },
+    ],
+    google: [
+        { id: "clicks", labelAr: "النقرات", labelEn: "Clicks", icon: MousePointer2 },
+        { id: "impressions", labelAr: "الظهور", labelEn: "Impressions", icon: Eye },
+        { id: "cpc", labelAr: "تكلفة النقرة", labelEn: "CPC", icon: DollarSign },
+        { id: "conversions", labelAr: "التحويلات", labelEn: "Conversions", icon: Target },
+    ],
+    youtube: [
+        { id: "views", labelAr: "المشاهدات", labelEn: "Views", icon: Video },
+        { id: "watchTime", labelAr: "وقت المشاهدة", labelEn: "Watch Time", icon: Eye },
+        { id: "engagement", labelAr: "التفاعلات", labelEn: "Engagement", icon: MousePointer2 },
+        { id: "followers", labelAr: "مشتركون جدد", labelEn: "New Subscribers", icon: Users },
+    ]
+};
+
 
 interface MetricFieldProps {
     label: string;
@@ -110,6 +177,8 @@ function CalcMetric({ label, value, suffix = "", prefix = "" }: { label: string,
 export function ReportCreatorClient({ clients, initialData }: { clients: any[], initialData?: any }) {
     const { t, isRtl } = useLanguage();
     const [loading, setLoading] = useState(false);
+    const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
+    const [scheduledSendAt, setScheduledSendAt] = useState(initialData?.scheduledSendAt ? new Date(initialData.scheduledSendAt).toISOString().split('T')[0] : "");
     const router = useRouter();
 
     const initialMetrics = (() => {
@@ -368,6 +437,8 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
         const formData = new FormData(e.currentTarget);
         const clientId = formData.get("clientId") as string;
         const month = formData.get("month") as string;
+        const scheduledSendAtStr = formData.get("scheduledSendAt") as string;
+        const scheduledSendAt = scheduledSendAtStr ? new Date(scheduledSendAtStr) : undefined;
 
         // Calculate Global Totals across all campaigns
         const totals = { reach: 0, spend: 0, conversions: 0 };
@@ -395,13 +466,14 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
         };
 
         try {
+            const scheduledDate = scheduledSendAt ? new Date(scheduledSendAt) : undefined;
             if (initialData) {
-                await updateReport(initialData.id, finalMetrics, month, clientId);
+                await updateReport(initialData.id, finalMetrics, month, clientId, scheduledDate);
                 toast.success("Report updated successfully!");
                 router.push(`/am/reports/${initialData.id}`);
             } else {
-                const report = await createReport(clientId, month, finalMetrics);
-                toast.success("Report generated and sent to client!");
+                const report = await createReport(clientId, month, finalMetrics, scheduledDate);
+                toast.success("Report generated successfully!");
                 router.push(`/am/reports/${report.id}`);
             }
         } catch (error: any) {
@@ -447,6 +519,17 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                             defaultValue={initialData?.month}
                             className="w-full sm:w-48 bg-background/50 border-white/5 h-12 text-base font-bold rounded-xl shadow-lg"
                             required
+                        />
+                    </div>
+                    <div className="space-y-1">
+                        <Label className={`text-[10px] font-black uppercase text-muted-foreground ${isRtl ? 'mr-1 text-right' : 'ml-1'}`}>
+                            {isRtl ? 'جدولة النشر (اختياري)' : 'Schedule Publish (Optional)'}
+                        </Label>
+                        <Input
+                            name="scheduledSendAt"
+                            type="datetime-local"
+                            defaultValue={initialData?.scheduledSendAt ? new Date(initialData.scheduledSendAt).toISOString().slice(0, 16) : undefined}
+                            className="w-full sm:w-56 bg-background/50 border-white/5 h-12 text-sm font-bold rounded-xl shadow-lg"
                         />
                     </div>
                 </div>
@@ -499,72 +582,26 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                             </div>
 
                             <div className="grid md:grid-cols-3 gap-6">
-                                {/* Awareness & Growth */}
-                                <Card className="border-white/10 bg-card/20 backdrop-blur-md shadow-lg overflow-hidden">
+                                {/* Dynamic Metrics Panel */}
+                                <Card className="border-white/10 bg-card/20 backdrop-blur-md shadow-lg overflow-hidden md:col-span-2">
                                     <CardHeader className="bg-primary/5 border-b border-white/5 py-4">
                                         <CardTitle className={`text-xs font-black uppercase tracking-[0.2em] text-primary/80 flex items-center gap-2 ${isRtl ? 'flex-row-reverse text-right' : ''}`}>
-                                            <TrendingUp className="h-3 w-3" /> {isRtl ? 'النمو والوعي' : 'Growth & Awareness'}
+                                            <TrendingUp className="h-3 w-3" /> {isRtl ? 'مقاييس الأداء' : 'Performance Metrics'}
                                         </CardTitle>
                                     </CardHeader>
-                                    <CardContent className="p-6 space-y-5">
-                                        <MetricField
-                                            label="New Followers"
-                                            icon={Users}
-                                            value={activeCampaign.platforms[p.id]?.followers}
-                                            onChange={(v) => updatePlatformMetric(p.id, 'followers', v)}
-                                        />
-                                        <MetricField
-                                            label="Impressions"
-                                            icon={Eye}
-                                            value={activeCampaign.platforms[p.id]?.impressions}
-                                            onChange={(v) => updatePlatformMetric(p.id, 'impressions', v)}
-                                        />
-                                        <MetricField
-                                            label="Organic Reach"
-                                            icon={Globe}
-                                            value={activeCampaign.platforms[p.id]?.organicReach}
-                                            onChange={(v) => updatePlatformMetric(p.id, 'organicReach', v)}
-                                        />
-                                        {(p.id === 'instagram' || p.id === 'facebook') && (
+                                    <CardContent className="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                        {(PLATFORM_METRICS[p.id] || []).map((metric) => (
                                             <MetricField
-                                                label="Profile Visits"
-                                                icon={Target}
-                                                value={activeCampaign.platforms[p.id]?.profileVisits}
-                                                onChange={(v) => updatePlatformMetric(p.id, 'profileVisits', v)}
+                                                key={metric.id}
+                                                label={isRtl ? metric.labelAr : metric.labelEn}
+                                                icon={metric.icon}
+                                                value={activeCampaign.platforms[p.id]?.[metric.id]}
+                                                onChange={(v) => updatePlatformMetric(p.id, metric.id, v)}
                                             />
-                                        )}
-                                    </CardContent>
-                                </Card>
-
-                                {/* Engagement & Content */}
-                                <Card className="border-white/10 bg-card/20 backdrop-blur-md shadow-lg overflow-hidden">
-                                    <CardHeader className="bg-primary/5 border-b border-white/5 py-4">
-                                        <CardTitle className={`text-xs font-black uppercase tracking-[0.2em] text-primary/80 flex items-center gap-2 ${isRtl ? 'flex-row-reverse text-right' : ''}`}>
-                                            <MessageSquare className="h-3 w-3" /> {isRtl ? 'التفاعل والمحتوى' : 'Interaction & Content'}
-                                        </CardTitle>
-                                    </CardHeader>
-                                    <CardContent className="p-6 space-y-5">
-                                        <MetricField
-                                            label="Total Engagement"
-                                            icon={MousePointer2}
-                                            value={activeCampaign.platforms[p.id]?.engagement}
-                                            onChange={(v) => updatePlatformMetric(p.id, 'engagement', v)}
-                                        />
-                                        <MetricField
-                                            label="Total Views"
-                                            icon={Video}
-                                            value={activeCampaign.platforms[p.id]?.views}
-                                            onChange={(v) => updatePlatformMetric(p.id, 'views', v)}
-                                        />
-                                        <MetricField
-                                            label="Content Shares"
-                                            icon={Share2}
-                                            value={activeCampaign.platforms[p.id]?.shares}
-                                            onChange={(v) => updatePlatformMetric(p.id, 'shares', v)}
-                                        />
+                                        ))}
                                         {(p.id === 'tiktok' || p.id === 'youtube') && (
                                             <MetricField
-                                                label="Avg. Watch Time"
+                                                label={isRtl ? "وقت المشاهدة" : "Avg. Watch Time"}
                                                 icon={Eye}
                                                 value={activeCampaign.platforms[p.id]?.watchTime}
                                                 onChange={(v) => updatePlatformMetric(p.id, 'watchTime', v)}
@@ -914,10 +951,33 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                         </div>
 
                         <Card className="border-white/10 bg-card/30 backdrop-blur-md shadow-2xl">
-                            <CardHeader className={`border-b border-white/5 ${isRtl ? 'text-right' : ''}`}>
+                            <CardHeader className={`border-b border-white/5 flex flex-row items-center justify-between ${isRtl ? 'flex-row-reverse' : ''}`}>
                                 <CardTitle className={`text-xl font-black flex items-center gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
                                     <BarChart3 className="h-5 w-5 text-primary" /> {isRtl ? 'الملخص الاستراتيجي' : 'Executive Strategic Summary'}
                                 </CardTitle>
+                                <Button
+                                    type="button"
+                                    onClick={async () => {
+                                        setIsGeneratingSummary(true);
+                                        try {
+                                            const result = await generateReportSummary(metrics);
+                                            setMetrics((prev: any) => ({
+                                                ...prev,
+                                                summary: isRtl ? result.summaryAr : result.summaryEn
+                                            }));
+                                            toast.success(isRtl ? "تم توليد الملخص بنجاح" : "Summary generated successfully");
+                                        } catch (err) {
+                                            toast.error("Failed to generate summary");
+                                        } finally {
+                                            setIsGeneratingSummary(false);
+                                        }
+                                    }}
+                                    disabled={isGeneratingSummary}
+                                    className="h-9 rounded-xl bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 font-bold text-xs"
+                                >
+                                    {isGeneratingSummary ? <Zap className="h-3 w-3 animate-spin mr-2" /> : <Zap className="h-3 w-3 mr-2" />}
+                                    {isRtl ? "توليد ذكي ملخص" : "AI Auto Summary"}
+                                </Button>
                             </CardHeader>
                             <CardContent className="p-8">
                                 <textarea
@@ -937,7 +997,19 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
             </Tabs>
 
             {/* Bottom Actions */}
-            <div className={`fixed bottom-0 left-0 right-0 p-6 bg-background/80 backdrop-blur-2xl border-t border-white/5 flex justify-end gap-4 z-50 ${isRtl ? 'flex-row-reverse' : ''}`}>
+            <div className={`fixed bottom-0 left-0 right-0 p-6 bg-background/80 backdrop-blur-2xl border-t border-white/5 flex items-center justify-end gap-6 z-50 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                <div className={`flex items-center gap-3 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground whitespace-nowrap">
+                        {isRtl ? 'جدولة الإرسال' : 'Schedule Delivery'}
+                    </Label>
+                    <Input
+                        type="date"
+                        value={scheduledSendAt}
+                        onChange={(e) => setScheduledSendAt(e.target.value)}
+                        className="h-10 w-44 rounded-xl bg-background/50 border-white/10 text-xs font-bold"
+                    />
+                </div>
+                <div className="h-8 w-px bg-white/10 hidden md:block" />
                 <Button
                     type="button"
                     variant="ghost"

@@ -2,9 +2,9 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Printer, Facebook, Instagram, Video, Share2, Linkedin, Search, Youtube, TrendingUp, DollarSign, Target, Globe, BarChart3, Send, Mail, Trash2, Download, Loader2, MousePointer2, Zap, MessageSquare, Image as ImageIcon, ExternalLink } from "lucide-react";
+import { Printer, Facebook, Instagram, Video, Share2, Linkedin, Search, Youtube, TrendingUp, DollarSign, Target, Globe, BarChart3, Send, Mail, Trash2, Download, Loader2, MousePointer2, Zap, MessageSquare, Image as ImageIcon, ExternalLink, Users, Eye, Twitter, Save } from "lucide-react";
 import { Bar, BarChart, Pie, PieChart, Cell, RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, CartesianGrid } from "recharts";
-import { publishReport, requestReportDeletion } from "@/app/actions/report";
+import { publishReport, requestReportDeletion, submitReportFeedback } from "@/app/actions/report";
 import { useState } from "react";
 import { toast } from "sonner";
 import { generateReportPdf } from "@/lib/generate-report-pdf";
@@ -19,6 +19,7 @@ const PLATFORM_ICONS = {
     linkedin: Linkedin,
     google: Search,
     youtube: Youtube,
+    x: Twitter,
 };
 
 const PLATFORM_NAMES = {
@@ -29,16 +30,115 @@ const PLATFORM_NAMES = {
     linkedin: "LinkedIn",
     google: "Google Ads",
     youtube: "YouTube",
-    google_ads: "Google Ads"
+    google_ads: "Google Ads",
+    x: "X (Twitter)",
 };
 
-export function ReportClientView({ report, metrics, role }: { report: any, metrics: any, role: string }) {
+// Export PLATFORM_METRICS to use in other components
+export const PLATFORM_METRICS: Record<string, { id: string, labelAr: string, labelEn: string, icon: any, suffix?: string }[]> = {
+    facebook: [
+        { id: "impressions", labelAr: "المشاهدات", labelEn: "Views", icon: Eye },
+        { id: "reach", labelAr: "الوصول", labelEn: "Viewers", icon: Users },
+        { id: "engagement", labelAr: "التفاعلات", labelEn: "Content interactions", icon: MousePointer2 },
+        { id: "clicks", labelAr: "النقرات على الرابط", labelEn: "Link clicks", icon: Target },
+        { id: "profileVisits", labelAr: "الزيارات", labelEn: "Visits", icon: Target },
+        { id: "followers", labelAr: "متابعون جدد", labelEn: "New followers", icon: Users },
+    ],
+    instagram: [
+        { id: "views", labelAr: "المشاهدات", labelEn: "Views", icon: Eye },
+        { id: "reach", labelAr: "الوصول", labelEn: "Reach", icon: Users },
+        { id: "engagement", labelAr: "التفاعلات", labelEn: "Content interactions", icon: MousePointer2 },
+        { id: "clicks", labelAr: "النقرات على الرابط", labelEn: "Link clicks", icon: Target },
+        { id: "profileVisits", labelAr: "الزيارات", labelEn: "Visits", icon: Target },
+        { id: "followers", labelAr: "متابعون جدد", labelEn: "New followers", icon: Users },
+    ],
+    linkedin: [
+        { id: "impressions", labelAr: "الظهور", labelEn: "Impressions", icon: Eye },
+        { id: "engagement", labelAr: "التفاعلات", labelEn: "Reactions", icon: MousePointer2 },
+        { id: "comments", labelAr: "التعليقات", labelEn: "Comments", icon: MessageSquare },
+        { id: "shares", labelAr: "إعادة النشر", labelEn: "Reposts", icon: Share2 },
+        { id: "profileVisits", labelAr: "مشاهدات الصفحة", labelEn: "Page views", icon: Eye },
+        { id: "followers", labelAr: "متابعون جدد", labelEn: "New followers", icon: Users },
+        { id: "searches", labelAr: "عمليات البحث عن الصفحة", labelEn: "Page searches", icon: Search },
+    ],
+    tiktok: [
+        { id: "views", labelAr: "مشاهدات الفيديو", labelEn: "Video views", icon: Video },
+        { id: "profileVisits", labelAr: "مشاهدات الملف الشخصي", labelEn: "Profile views", icon: Eye },
+        { id: "likes", labelAr: "الإعجابات", labelEn: "Likes", icon: Target },
+        { id: "comments", labelAr: "التعليقات", labelEn: "Comments", icon: MessageSquare },
+        { id: "shares", labelAr: "المشاركات", labelEn: "Shares", icon: Share2 },
+        { id: "followers", labelAr: "متابعون جدد", labelEn: "New followers", icon: Users },
+    ],
+    snapchat: [
+        { id: "followers", labelAr: "متابعون جدد", labelEn: "New followers", icon: Users },
+        { id: "views", labelAr: "إجمالي المشاهدات", labelEn: "Total views", icon: Eye },
+        { id: "profileVisits", labelAr: "مشاهدات الملف الشخصي", labelEn: "Profile views", icon: Eye },
+    ],
+    x: [
+        { id: "impressions", labelAr: "الظهور", labelEn: "Impressions", icon: Eye },
+        { id: "engagement", labelAr: "التفاعلات", labelEn: "Engagements", icon: MousePointer2 },
+        { id: "profileVisits", labelAr: "زيارات الملف الشخصي", labelEn: "Profile visits", icon: Eye },
+        { id: "replies", labelAr: "الردود", labelEn: "Replies", icon: MessageSquare },
+        { id: "likes", labelAr: "الإعجابات", labelEn: "Likes", icon: Target },
+        { id: "reposts", labelAr: "إعادة النشر", labelEn: "Reposts", icon: Share2 },
+        { id: "bookmarks", labelAr: "العلامات المرجعية", labelEn: "Bookmarks", icon: Save },
+        { id: "shares", labelAr: "المشاركات", labelEn: "Shares", icon: Share2 },
+        { id: "currentFollowers", labelAr: "متابعون جدد", labelEn: "New followers", icon: Users },
+    ],
+    google: [
+        { id: "clicks", labelAr: "النقرات", labelEn: "Clicks", icon: MousePointer2 },
+        { id: "impressions", labelAr: "الظهور", labelEn: "Impressions", icon: Eye },
+        { id: "cpc", labelAr: "تكلفة النقرة", labelEn: "CPC", icon: DollarSign },
+        { id: "conversions", labelAr: "التحويلات", labelEn: "Conversions", icon: Target },
+    ],
+    youtube: [
+        { id: "views", labelAr: "المشاهدات", labelEn: "Views", icon: Video },
+        { id: "watchTime", labelAr: "وقت المشاهدة", labelEn: "Watch Time", icon: Eye, suffix: "s" },
+        { id: "engagement", labelAr: "التفاعلات", labelEn: "Engagement", icon: MousePointer2 },
+        { id: "followers", labelAr: "مشتركون جدد", labelEn: "New Subscribers", icon: Users },
+    ]
+};
+
+const PLATFORM_COLORS = [
+    "text-blue-500", "text-emerald-500", "text-purple-500", "text-pink-500", "text-orange-500", "text-teal-500", "text-rose-500", "text-indigo-500"
+];
+
+export function ReportClientView({ report, metrics, role, previousMetrics }: { report: any, metrics: any, role: string, previousMetrics?: any }) {
     const { t, isRtl } = useLanguage();
     const [isPublishing, setIsPublishing] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [isDownloading, setIsDownloading] = useState(false);
     const [status, setStatus] = useState(report.status);
     const [isDeletionRequested, setIsDeletionRequested] = useState(false);
+    const [feedback, setFeedback] = useState(report.clientFeedback || "");
+    const [isSendingFeedback, setIsSendingFeedback] = useState(false);
+    const [feedbackSent, setFeedbackSent] = useState(!!report.clientFeedback);
+
+    // MoM Delta helper: compare current value vs previous
+    function getMoMDelta(current: number, prevMetrics: any, extractor: (m: any) => number): string | null {
+        if (!prevMetrics) return null;
+        const prev = extractor(prevMetrics);
+        if (!prev || prev === 0) return null;
+        const pct = ((current - prev) / prev) * 100;
+        return (pct >= 0 ? '+' : '') + pct.toFixed(1) + '%';
+    }
+
+    // Build previous month global totals for MoM
+    function getPrevGlobal(prevM: any) {
+        if (!prevM) return null;
+        const prevCamps = prevM.campaigns || [{ platforms: prevM.platforms || {} }];
+        const agg: Record<string, any> = {};
+        prevCamps.forEach((c: any) => Object.entries(c.platforms || {}).forEach(([k, p]: [string, any]) => {
+            if (!agg[k]) agg[k] = { ...p };
+            else { agg[k].impressions = (agg[k].impressions || 0) + (p.impressions || 0); agg[k].engagement = (agg[k].engagement || 0) + (p.engagement || 0); agg[k].followers = (agg[k].followers || 0) + (p.followers || 0); }
+        }));
+        return {
+            impressions: Object.values(agg).reduce((s: number, p: any) => s + (Number(p.impressions) || 0), 0),
+            engagement: Object.values(agg).reduce((s: number, p: any) => s + (Number(p.engagement) || 0), 0),
+            followers: Object.values(agg).reduce((s: number, p: any) => s + (Number(p.followers) || 0), 0),
+        };
+    }
+    const prevGlobal = getPrevGlobal(previousMetrics);
 
     async function handleDownloadPdf() {
         setIsDownloading(true);
@@ -231,23 +331,32 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
             {/* Global Performance Matrix — Row 1 */}
             <div className={`grid gap-4 grid-cols-2 md:grid-cols-4 ${isRtl ? 'flex-row-reverse' : ''}`}>
                 {[
-                    { label: t("reports.impressions"), value: globalTotals.impressions, color: 'bg-primary/5', valueColor: '', sub: t("common.combined"), subColor: 'text-emerald-500', icon: <TrendingUp className="h-3 w-3" /> },
-                    { label: t("reports.engagements"), value: globalTotals.engagement, color: 'bg-blue-500/5', valueColor: '', sub: t("reports.interactions"), subColor: 'text-blue-500', icon: null },
-                    { label: t("reports.growth"), value: globalTotals.followers, color: 'bg-purple-500/5', valueColor: '', sub: t("reports.new_followers"), subColor: 'text-purple-500', icon: null },
-                    { label: t("reports.investment"), value: null, rawValue: `SAR ${(globalTotals.spend).toLocaleString()}`, color: 'bg-orange-500/5', valueColor: '', sub: t("reports.paid_media"), subColor: 'text-orange-500', icon: <DollarSign className="h-3 w-3" /> },
-                ].map((card) => (
-                    <Card key={card.label} className={`${card.color} border-none shadow-none backdrop-blur-md`}>
-                        <CardHeader className={`pb-2 ${isRtl ? 'text-right' : 'text-left'}`}>
-                            <CardTitle className="text-[10px] uppercase font-black tracking-widest text-muted-foreground">{card.label}</CardTitle>
-                        </CardHeader>
-                        <CardContent className={isRtl ? 'text-right' : 'text-left'}>
-                            <div className="text-2xl md:text-4xl font-black italic">{card.rawValue ?? (card.value || 0).toLocaleString()}</div>
-                            <div className={`text-[10px] font-bold mt-2 flex items-center gap-1 ${card.subColor} ${isRtl ? 'flex-row-reverse' : ''}`}>
-                                {card.icon}{card.sub}
-                            </div>
-                        </CardContent>
-                    </Card>
-                ))}
+                    { label: t("reports.impressions"), value: globalTotals.impressions, color: 'bg-primary/5', sub: t("common.combined"), subColor: 'text-emerald-500', icon: <TrendingUp className="h-3 w-3" />, momKey: 'impressions' as const },
+                    { label: t("reports.engagements"), value: globalTotals.engagement, color: 'bg-blue-500/5', sub: t("reports.interactions"), subColor: 'text-blue-500', icon: null, momKey: 'engagement' as const },
+                    { label: t("reports.growth"), value: globalTotals.followers, color: 'bg-purple-500/5', sub: t("reports.new_followers"), subColor: 'text-purple-500', icon: null, momKey: 'followers' as const },
+                    { label: t("reports.investment"), value: null, rawValue: `SAR ${(globalTotals.spend).toLocaleString()}`, color: 'bg-orange-500/5', sub: t("reports.paid_media"), subColor: 'text-orange-500', icon: <DollarSign className="h-3 w-3" />, momKey: null },
+                ].map((card) => {
+                    const delta = card.momKey ? getMoMDelta(card.value || 0, prevGlobal, (m) => m[card.momKey!] || 0) : null;
+                    const isUp = delta?.startsWith('+');
+                    return (
+                        <Card key={card.label} className={`${card.color} border-none shadow-none backdrop-blur-md`}>
+                            <CardHeader className={`pb-2 ${isRtl ? 'text-right' : 'text-left'}`}>
+                                <CardTitle className="text-[10px] uppercase font-black tracking-widest text-muted-foreground">{card.label}</CardTitle>
+                            </CardHeader>
+                            <CardContent className={isRtl ? 'text-right' : 'text-left'}>
+                                <div className="text-2xl md:text-4xl font-black italic">{card.rawValue ?? (card.value || 0).toLocaleString()}</div>
+                                <div className={`text-[10px] font-bold mt-2 flex items-center gap-1 ${card.subColor} ${isRtl ? 'flex-row-reverse' : ''}`}>
+                                    {card.icon}{card.sub}
+                                </div>
+                                {delta && (
+                                    <div className={`mt-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black ${isUp ? 'bg-emerald-500/10 text-emerald-500' : 'bg-red-500/10 text-red-500'}`}>
+                                        {isUp ? '↑' : '↓'} {delta} {isRtl ? 'مقارنة بالشهر الماضي' : 'vs last month'}
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+                    );
+                })}
             </div>
 
             {/* Global Performance Matrix — Row 2: extra metrics when available */}
@@ -372,29 +481,6 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
                         </CardContent>
                     </Card>
 
-                    {/* Spend Distribution — only when spend data exists */}
-                    {hasSpend && (
-                        <Card className="border-none shadow-sm bg-card/40 backdrop-blur-sm p-4 md:p-6">
-                            <CardHeader className={`px-0 pt-0 ${isRtl ? 'text-right' : ''}`}>
-                                <CardTitle className="text-xl font-black">{t("reports.spend_dist")}</CardTitle>
-                                <p className="text-sm text-muted-foreground">{t("reports.spend_dist_sub")}</p>
-                            </CardHeader>
-                            <CardContent className="h-[280px] px-0">
-                                <div dir="ltr">
-                                    <ResponsiveContainer width="100%" height={280}>
-                                        <PieChart>
-                                            <Pie data={spendData} dataKey="spend" nameKey="name" cx="50%" cy="45%" outerRadius={85} innerRadius={45} paddingAngle={3}
-                                                label={({ name, percent }: any) => `${name} ${((percent || 0) * 100).toFixed(0)}%`} labelLine={false}>
-                                                {spendData.map((_, i) => (<Cell key={i} fill={["#f97316", "#ef4444", "#eab308", "#3b82f6", "#a855f7", "#10b981", "#06b6d4"][i % 7]} />))}
-                                            </Pie>
-                                            <Tooltip contentStyle={{ borderRadius: '16px', background: 'rgba(15,15,25,0.95)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff' }} formatter={(v: any) => [`$${v?.toLocaleString()}`, t("reports.investment")]} />
-                                            <Legend />
-                                        </PieChart>
-                                    </ResponsiveContainer>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    )}
 
                     {/* Video Views bar — only when views data exists */}
                     {hasViews && (
@@ -460,22 +546,41 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
                                                 </div>
                                             </CardHeader>
                                             <CardContent className="p-8 space-y-8 print:p-6 print:space-y-4">
-                                                <div className="grid grid-cols-2 gap-4">
-                                                    {[
-                                                        { label: t('reports.impressions'), value: data.impressions, color: 'text-blue-500' },
-                                                        { label: t('reports.engagements'), value: data.engagement, color: 'text-emerald-500' },
-                                                        { label: t('reports.growth'), value: data.followers, color: 'text-purple-500' },
-                                                        { label: t('common.views'), value: data.views, color: 'text-pink-500' },
-                                                        { label: isRtl ? 'الحفظ والمشاركة' : 'Saves / Shares', value: (data.saves || 0) + (data.shares || 0), color: 'text-orange-500' },
-                                                        { label: isRtl ? 'وقت المشاهدة' : 'Watch Time', value: data.watchTime, suffix: 's', color: 'text-indigo-500' },
-                                                        { label: t('reports.paid_reach'), value: data.paidReach, color: 'text-teal-500' },
-                                                        { label: t('reports.conversions'), value: data.conversions, color: 'text-rose-500' },
-                                                    ].map((item, i) => (item.value || 0) > 0 ? (
-                                                        <div key={i} className={`p-4 rounded-2xl bg-muted/20 border border-border/50 print:bg-white print:border ${isRtl ? 'text-right' : 'text-left'}`}>
-                                                            <div className="text-[10px] font-black uppercase text-muted-foreground mb-1">{item.label}</div>
-                                                            <div className={`text-2xl font-black ${item.color}`}>{(item.value || 0).toLocaleString()}{item.suffix || ''}</div>
+                                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                                    {(PLATFORM_METRICS[platId] || []).map((metric, i) => {
+                                                        let val = data[metric.id];
+                                                        // X (Twitter) special logic for New followers
+                                                        if (platId === 'x' && metric.id === 'currentFollowers' && (val !== undefined && val !== null)) {
+                                                            let prevVol = 0;
+                                                            if (previousMetrics) {
+                                                                const prevCamps = previousMetrics.campaigns || [{ platforms: previousMetrics.platforms || {} }];
+                                                                prevCamps.forEach((c: any) => {
+                                                                    const p = c.platforms?.[platId];
+                                                                    if (p) prevVol += (Number(p.currentFollowers) || 0);
+                                                                });
+                                                            }
+                                                            val = Math.max(0, val - prevVol); // Display difference
+                                                        }
+                                                        if (val === undefined || val === null || (val === 0 && metric.id !== 'currentFollowers')) return null; // Don't show empty metrics
+                                                        return (
+                                                            <div key={metric.id} className={`p-4 rounded-2xl bg-muted/20 border border-border/50 print:bg-white print:border ${isRtl ? 'text-right' : 'text-left'}`}>
+                                                                <div className="text-[10px] font-black uppercase text-muted-foreground mb-1 flex items-center gap-1.5 justify-start">
+                                                                    <metric.icon className={`h-3 w-3 ${PLATFORM_COLORS[i % PLATFORM_COLORS.length]}`} />
+                                                                    {isRtl ? metric.labelAr : metric.labelEn}
+                                                                </div>
+                                                                <div className={`text-2xl font-black ${PLATFORM_COLORS[i % PLATFORM_COLORS.length]}`}>{(val || 0).toLocaleString()}{metric.suffix || ''}</div>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                    {['tiktok', 'youtube'].includes(platId) && data.watchTime > 0 && PLATFORM_METRICS[platId]?.every(m => m.id !== 'watchTime') && (
+                                                        <div className={`p-4 rounded-2xl bg-muted/20 border border-border/50 print:bg-white print:border ${isRtl ? 'text-right' : 'text-left'}`}>
+                                                            <div className="text-[10px] font-black uppercase text-muted-foreground mb-1 flex items-center gap-1.5 justify-start">
+                                                                <Eye className={`h-3 w-3 text-indigo-500`} />
+                                                                {isRtl ? 'وقت المشاهدة' : 'Watch Time'}
+                                                            </div>
+                                                            <div className={`text-2xl font-black text-indigo-500`}>{(data.watchTime || 0).toLocaleString()}s</div>
                                                         </div>
-                                                    ) : null)}
+                                                    )}
                                                 </div>
 
                                                 {data.paidCampaigns?.length > 0 && (
@@ -689,6 +794,58 @@ export function ReportClientView({ report, metrics, role }: { report: any, metri
 
             <div className="text-center py-20 opacity-20 print:block hidden font-bold uppercase tracking-widest text-xs">
                 {t("dashboard.performance_portfolio_generated")}
+            </div>
+
+            {/* Client Feedback Section */}
+            <div className={`print:hidden space-y-4 border border-white/10 rounded-3xl p-6 bg-card/30 backdrop-blur-md ${isRtl ? 'text-right' : 'text-left'}`}>
+                <div className={`flex items-center gap-3 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                    <MessageSquare className="h-5 w-5 text-primary" />
+                    <h3 className="font-black text-lg">{isRtl ? 'ملاحظاتك على التقرير' : 'Your Feedback on This Report'}</h3>
+                </div>
+                {/* AM sees client feedback if submitted */}
+                {role !== 'CLIENT' && report.clientFeedback && (
+                    <div className={`p-4 rounded-2xl bg-primary/5 border border-primary/10 space-y-1 ${isRtl ? 'text-right' : 'text-left'}`}>
+                        <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">{isRtl ? 'ملاحظة العميل' : "Client's Feedback"}</p>
+                        <p className="text-sm font-medium">{report.clientFeedback}</p>
+                    </div>
+                )}
+                {role !== 'CLIENT' && !report.clientFeedback && (
+                    <p className="text-sm text-muted-foreground">{isRtl ? 'لم يترك العميل أي ملاحظات بعد.' : 'No client feedback yet.'}</p>
+                )}
+                {role === 'CLIENT' && (
+                    feedbackSent ? (
+                        <div className="p-4 rounded-2xl bg-emerald-500/5 border border-emerald-500/20">
+                            <p className="text-sm font-bold text-emerald-500">{isRtl ? '✓ تم إرسال ملاحظاتك بنجاح!' : '✓ Your feedback was submitted successfully!'}</p>
+                            {feedback && <p className="text-sm text-muted-foreground mt-1">{feedback}</p>}
+                        </div>
+                    ) : (
+                        <div className="space-y-3">
+                            <textarea
+                                className={`flex w-full rounded-2xl border border-white/10 bg-background/50 p-4 text-sm font-medium shadow-inner focus:border-primary/50 outline-none placeholder:text-muted-foreground/40 min-h-[100px] ${isRtl ? 'text-right' : ''}`}
+                                placeholder={isRtl ? 'شاركنا رأيك بالتقرير، ما أعجبك وما تودّ تطويره...' : 'Share your thoughts on this report — what you liked, what could be improved...'}
+                                value={feedback}
+                                onChange={e => setFeedback(e.target.value)}
+                                dir={isRtl ? 'rtl' : 'ltr'}
+                            />
+                            <Button
+                                disabled={!feedback.trim() || isSendingFeedback}
+                                onClick={async () => {
+                                    setIsSendingFeedback(true);
+                                    try {
+                                        await submitReportFeedback(report.id, feedback);
+                                        setFeedbackSent(true);
+                                        toast.success(isRtl ? 'تم إرسال ملاحظاتك!' : 'Feedback submitted!');
+                                    } catch { toast.error('Failed to submit feedback'); }
+                                    finally { setIsSendingFeedback(false); }
+                                }}
+                                className="rounded-full font-bold"
+                            >
+                                {isSendingFeedback ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}
+                                {isRtl ? 'إرسال الملاحظة' : 'Submit Feedback'}
+                            </Button>
+                        </div>
+                    )
+                )}
             </div>
         </div>
     );
