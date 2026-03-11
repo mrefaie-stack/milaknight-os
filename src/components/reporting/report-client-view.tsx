@@ -37,19 +37,19 @@ const PLATFORM_NAMES = {
 // Export PLATFORM_METRICS to use in other components
 export const PLATFORM_METRICS: Record<string, { id: string, labelAr: string, labelEn: string, icon: any, suffix?: string }[]> = {
     facebook: [
-        { id: "impressions", labelAr: "المشاهدات", labelEn: "Views", icon: Eye },
-        { id: "reach", labelAr: "الوصول", labelEn: "Viewers", icon: Users },
-        { id: "engagement", labelAr: "التفاعلات", labelEn: "Content interactions", icon: MousePointer2 },
-        { id: "clicks", labelAr: "النقرات على الرابط", labelEn: "Link clicks", icon: Target },
-        { id: "profileVisits", labelAr: "الزيارات", labelEn: "Visits", icon: Target },
+        { id: "impressions", labelAr: "المشاهدات", labelEn: "Impressions", icon: Eye },
+        { id: "reach", labelAr: "الوصول", labelEn: "Reach", icon: Users },
+        { id: "engagement", labelAr: "تفاعلات المحتوى", labelEn: "Content interactions", icon: MousePointer2 },
+        { id: "clicks", labelAr: "نقرات الرابط", labelEn: "Link clicks", icon: Target },
+        { id: "profileVisits", labelAr: "إعجابات الصفحة", labelEn: "Page Likes", icon: Target },
         { id: "followers", labelAr: "متابعون جدد", labelEn: "New followers", icon: Users },
     ],
     instagram: [
         { id: "views", labelAr: "المشاهدات", labelEn: "Views", icon: Eye },
         { id: "reach", labelAr: "الوصول", labelEn: "Reach", icon: Users },
-        { id: "engagement", labelAr: "التفاعلات", labelEn: "Content interactions", icon: MousePointer2 },
-        { id: "clicks", labelAr: "النقرات على الرابط", labelEn: "Link clicks", icon: Target },
-        { id: "profileVisits", labelAr: "الزيارات", labelEn: "Visits", icon: Target },
+        { id: "engagement", labelAr: "تفاعلات المحتوى", labelEn: "Content interactions", icon: MousePointer2 },
+        { id: "clicks", labelAr: "نقرات الرابط", labelEn: "Link clicks", icon: Target },
+        { id: "profileVisits", labelAr: "زيارات الحساب", labelEn: "Profile visits", icon: Target },
         { id: "followers", labelAr: "متابعون جدد", labelEn: "New followers", icon: Users },
     ],
     linkedin: [
@@ -59,7 +59,7 @@ export const PLATFORM_METRICS: Record<string, { id: string, labelAr: string, lab
         { id: "shares", labelAr: "إعادة النشر", labelEn: "Reposts", icon: Share2 },
         { id: "profileVisits", labelAr: "مشاهدات الصفحة", labelEn: "Page views", icon: Eye },
         { id: "followers", labelAr: "متابعون جدد", labelEn: "New followers", icon: Users },
-        { id: "searches", labelAr: "عمليات البحث عن الصفحة", labelEn: "Page searches", icon: Search },
+        { id: "searches", labelAr: "عمليات البحث", labelEn: "Page searches", icon: Search },
     ],
     tiktok: [
         { id: "views", labelAr: "مشاهدات الفيديو", labelEn: "Video views", icon: Video },
@@ -72,7 +72,7 @@ export const PLATFORM_METRICS: Record<string, { id: string, labelAr: string, lab
     snapchat: [
         { id: "followers", labelAr: "متابعون جدد", labelEn: "New followers", icon: Users },
         { id: "views", labelAr: "إجمالي المشاهدات", labelEn: "Total views", icon: Eye },
-        { id: "profileVisits", labelAr: "مشاهدات الملف الشخصي", labelEn: "Profile views", icon: Eye },
+        { id: "profileVisits", labelAr: "زيارات الملف", labelEn: "Profile views", icon: Eye },
     ],
     x: [
         { id: "impressions", labelAr: "الظهور", labelEn: "Impressions", icon: Eye },
@@ -523,105 +523,105 @@ export function ReportClientView({ report, metrics, role, previousMetrics }: { r
                 </CardContent>
             </Card>
 
-            {/* Global Reach Graph */}
+            {/* Strategic Dashboard: Growth Board */}
+            <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
+                <Card className="border-none shadow-sm bg-card/40 backdrop-blur-sm p-4 md:p-6">
+                    <CardHeader className={`px-0 pt-0 ${isRtl ? 'text-right' : ''}`}>
+                        <CardTitle className="text-xl font-black">{isRtl ? 'محرك النمو' : 'Growth Engine'}</CardTitle>
+                        <p className="text-sm text-muted-foreground">{isRtl ? 'زيادة الجمهور عبر المنصات' : 'Audience acquisition across platforms'}</p>
+                    </CardHeader>
+                    <CardContent className="h-[300px] px-0">
+                        <div dir="ltr">
+                            <ResponsiveContainer width="100%" height={300}>
+                                <BarChart data={chartData.filter(d => d.followers !== 0)} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="rgba(255,255,255,0.05)" />
+                                    <XAxis type="number" fontSize={11} tickLine={false} axisLine={false} />
+                                    <YAxis dataKey="name" type="category" fontSize={11} tickLine={false} axisLine={false} width={80} />
+                                    <Tooltip contentStyle={{ borderRadius: '16px', background: 'rgba(15,15,25,0.95)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff' }} formatter={(v: any) => [v?.toLocaleString(), isRtl ? 'متابع جديد' : 'New Followers']} />
+                                    <Bar dataKey="followers" name={isRtl ? "متابعون جدد" : "New Followers"} radius={[0, 8, 8, 0]} barSize={25}>
+                                        {chartData.filter(d => d.followers !== 0).map((_, i) => (<Cell key={i} fill={["#a855f7", "#3b82f6", "#10b981", "#f97316"][i % 4]} />))}
+                                    </Bar>
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Strategic Dashboard: Attention Board */}
+                <Card className="border-none shadow-sm bg-card/40 backdrop-blur-sm p-4 md:p-6">
+                    <CardHeader className={`px-0 pt-0 ${isRtl ? 'text-right' : ''}`}>
+                        <CardTitle className="text-xl font-black">{isRtl ? 'خريطة الانتشار' : 'Attention Map'}</CardTitle>
+                        <p className="text-sm text-muted-foreground">{isRtl ? 'توزيع المشاهدات والوصول' : 'Visibility distribution by platform'}</p>
+                    </CardHeader>
+                    <CardContent className="h-[300px] px-0">
+                        <div dir="ltr">
+                            <ResponsiveContainer width="100%" height={300}>
+                                <PieChart>
+                                    <Pie data={chartData.filter(d => d.impressions > 0)} dataKey="impressions" nameKey="name" cx="50%" cy="45%" outerRadius={90} innerRadius={50} paddingAngle={4}
+                                        label={({ name, percent }: any) => `${name} ${((percent || 0) * 100).toFixed(0)}%`} labelLine={false}>
+                                        {chartData.filter(d => d.impressions > 0).map((_, index) => (<Cell key={index} fill={["#3b82f6", "#10b981", "#f97316", "#ef4444", "#eab308"][index % 5]} />))}
+                                    </Pie>
+                                    <Tooltip contentStyle={{ borderRadius: '16px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(15,15,25,0.95)', color: '#fff' }} formatter={(v: any) => [v?.toLocaleString(), t("reports.impressions")]} />
+                                    <Legend />
+                                </PieChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+
+            {/* Strategic Dashboard: Intent & Results Board */}
             <Card className="border-none shadow-sm bg-card/40 backdrop-blur-sm p-4 md:p-10">
                 <CardHeader className={`px-0 pt-0 ${isRtl ? 'text-right' : ''}`}>
-                    <CardTitle className="text-2xl font-black">{t("reports.performance_dist")}</CardTitle>
-                    <p className="text-sm text-muted-foreground">{t("reports.compare_metrics")}</p>
+                    <CardTitle className="text-2xl font-black">{isRtl ? 'الأفعال والنتائج المؤثرة' : 'High-Intent Results'}</CardTitle>
+                    <p className="text-sm text-muted-foreground">{isRtl ? 'تجميع الأهداف المحققة والنقرات الإستراتيجية' : 'Aggregated conversions and strategic interactions'}</p>
                 </CardHeader>
-                <CardContent className="h-[300px] md:h-[400px] w-full pt-10 px-0">
+                <CardContent className="h-[340px] w-full pt-10 px-0">
                     <div dir="ltr">
                         <ResponsiveContainer width="100%" height={340}>
-                            <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                            <BarChart data={chartData.filter(d => (d.conversions > 0 || d.engagement > 0))} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
                                 <XAxis dataKey="name" fontSize={12} fontWeight="700" tickLine={false} axisLine={false} />
                                 <YAxis fontSize={12} tickLine={false} axisLine={false} />
                                 <Tooltip
                                     cursor={{ fill: 'rgba(255,255,255,0.05)' }}
-                                    contentStyle={{ borderRadius: '16px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(15,15,25,0.95)', backdropFilter: 'blur(10px)', color: '#fff' }}
+                                    contentStyle={{ borderRadius: '16px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(15,15,25,0.95)', color: '#fff' }}
                                 />
-                                <Legend wrapperStyle={{ paddingTop: '20px' }} />
-                                <Bar dataKey="impressions" name={t("reports.impressions")} fill="#3b82f6" radius={[10, 10, 0, 0]} barSize={40} />
-                                <Bar dataKey="engagement" name={t("reports.interactions")} fill="#10b981" radius={[10, 10, 0, 0]} barSize={40} />
+                                <Legend />
+                                <Bar dataKey="conversions" name={isRtl ? 'النتائج والتحويلات' : 'Conversions'} fill="#f43f5e" radius={[10, 10, 0, 0]} barSize={35} />
+                                <Bar dataKey="engagement" name={isRtl ? 'تفاعلات إستراتيجية' : 'Strategic Interest'} fill="#10b981" radius={[10, 10, 0, 0]} barSize={35} />
                             </BarChart>
                         </ResponsiveContainer>
                     </div>
                 </CardContent>
             </Card>
 
-            {/* Two-column charts: Pie + Followers Bar */}
-            {platformChartData.length > 0 && (
-                <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
-                    {/* Impressions Distribution Pie */}
-                    <Card className="border-none shadow-sm bg-card/40 backdrop-blur-sm p-4 md:p-6">
-                        <CardHeader className={`px-0 pt-0 ${isRtl ? 'text-right' : ''}`}>
-                            <CardTitle className="text-xl font-black">{isRtl ? `توزيع ${t('reports.impressions')}` : `${t('reports.impressions')} Distribution`}</CardTitle>
-                            <p className="text-sm text-muted-foreground">{isRtl ? 'حسب كل منصة' : 'Breakdown by platform'}</p>
-                        </CardHeader>
-                        <CardContent className="h-[280px] px-0">
-                            <div dir="ltr">
-                                <ResponsiveContainer width="100%" height={280}>
-                                    <PieChart>
-                                        <Pie data={platformChartData} dataKey="impressions" nameKey="name" cx="50%" cy="45%" outerRadius={85} innerRadius={45} paddingAngle={3}
-                                            label={({ name, percent }: any) => `${name} ${((percent || 0) * 100).toFixed(0)}%`} labelLine={false}>
-                                            {platformChartData.map((_, index) => (<Cell key={index} fill={["#3b82f6", "#10b981", "#f97316", "#a855f7", "#ef4444", "#eab308", "#06b6d4"][index % 7]} />))}
-                                        </Pie>
-                                        <Tooltip contentStyle={{ borderRadius: '16px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(15,15,25,0.95)', color: '#fff' }} formatter={(v: any) => [v?.toLocaleString(), t("reports.impressions")]} />
-                                        <Legend />
-                                    </PieChart>
-                                </ResponsiveContainer>
-                            </div>
-                        </CardContent>
-                    </Card>
 
-                    {/* Followers horizontal bar */}
+
+            {/* Standard Metrics fallback for Video/Specific views */}
+            {hasViews && (
+                <div className="grid gap-6 grid-cols-1">
                     <Card className="border-none shadow-sm bg-card/40 backdrop-blur-sm p-4 md:p-6">
                         <CardHeader className={`px-0 pt-0 ${isRtl ? 'text-right' : ''}`}>
-                            <CardTitle className="text-xl font-black">{isRtl ? 'متابعون جدد' : 'New Followers'}</CardTitle>
-                            <p className="text-sm text-muted-foreground">{isRtl ? 'النمو لكل منصة هذه الفترة' : 'Growth per platform this period'}</p>
+                            <CardTitle className="text-xl font-black">{t("reports.video_views")}</CardTitle>
+                            <p className="text-sm text-muted-foreground">{t("reports.video_views_sub")}</p>
                         </CardHeader>
                         <CardContent className="h-[280px] px-0">
                             <div dir="ltr">
                                 <ResponsiveContainer width="100%" height={280}>
-                                    <BarChart data={platformChartData} layout="vertical" margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
+                                    <BarChart data={chartData.filter(d => d.views > 0)} layout="vertical" margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
                                         <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="rgba(255,255,255,0.05)" />
                                         <XAxis type="number" fontSize={11} tickLine={false} axisLine={false} />
                                         <YAxis dataKey="name" type="category" fontSize={11} tickLine={false} axisLine={false} width={70} />
-                                        <Tooltip contentStyle={{ borderRadius: '16px', background: 'rgba(15,15,25,0.95)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff' }} formatter={(v: any) => [v?.toLocaleString(), t("reports.growth")]} />
-                                        <Bar dataKey="followers" name={isRtl ? "متابعون جدد" : t("reports.new_followers")} radius={[0, 8, 8, 0]} barSize={22}>
-                                            {platformChartData.map((_, i) => (<Cell key={i} fill={["#a855f7", "#3b82f6", "#10b981", "#f97316", "#ef4444", "#eab308", "#06b6d4"][i % 7]} />))}
+                                        <Tooltip contentStyle={{ borderRadius: '16px', background: 'rgba(15,15,25,0.95)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff' }} formatter={(v: any) => [v?.toLocaleString(), t("common.views")]} />
+                                        <Bar dataKey="views" name={t("common.views")} radius={[0, 8, 8, 0]} barSize={22} fill="#ec4899">
+                                            {chartData.filter(d => d.views > 0).map((_, i) => (<Cell key={i} fill={["#ec4899", "#f97316", "#06b6d4", "#8b5cf6"][i % 4]} />))}
                                         </Bar>
                                     </BarChart>
                                 </ResponsiveContainer>
                             </div>
                         </CardContent>
                     </Card>
-
-
-                    {/* Video Views bar — only when views data exists */}
-                    {hasViews && (
-                        <Card className="border-none shadow-sm bg-card/40 backdrop-blur-sm p-4 md:p-6">
-                            <CardHeader className={`px-0 pt-0 ${isRtl ? 'text-right' : ''}`}>
-                                <CardTitle className="text-xl font-black">{t("reports.video_views")}</CardTitle>
-                                <p className="text-sm text-muted-foreground">{t("reports.video_views_sub")}</p>
-                            </CardHeader>
-                            <CardContent className="h-[280px] px-0">
-                                <div dir="ltr">
-                                    <ResponsiveContainer width="100%" height={280}>
-                                        <BarChart data={chartData.filter(d => d.views > 0)} layout="vertical" margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
-                                            <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="rgba(255,255,255,0.05)" />
-                                            <XAxis type="number" fontSize={11} tickLine={false} axisLine={false} />
-                                            <YAxis dataKey="name" type="category" fontSize={11} tickLine={false} axisLine={false} width={70} />
-                                            <Tooltip contentStyle={{ borderRadius: '16px', background: 'rgba(15,15,25,0.95)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff' }} formatter={(v: any) => [v?.toLocaleString(), t("common.views")]} />
-                                            <Bar dataKey="views" name={t("common.views")} radius={[0, 8, 8, 0]} barSize={22} fill="#ec4899">
-                                                {chartData.filter(d => d.views > 0).map((_, i) => (<Cell key={i} fill={["#ec4899", "#f97316", "#06b6d4", "#8b5cf6"][i % 4]} />))}
-                                            </Bar>
-                                        </BarChart>
-                                    </ResponsiveContainer>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    )}
                 </div>
             )}
 
@@ -665,6 +665,37 @@ export function ReportClientView({ report, metrics, role, previousMetrics }: { r
                                                 </div>
                                             </CardHeader>
                                             <CardContent className="p-8 space-y-8 print:p-6 print:space-y-4">
+                                                {/* Hero Platform Stats - Strategic Scorecard */}
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                    <div className="bg-primary/5 rounded-3xl p-6 border border-primary/10 flex items-center justify-between">
+                                                        <div>
+                                                            <div className="text-[10px] uppercase font-black tracking-widest text-primary/60 mb-1">{isRtl ? 'الأداء الرئيسي' : 'Primary Performance'}</div>
+                                                            <div className="text-3xl font-black text-primary">
+                                                                {platId === 'google' || platId === 'google_ads' 
+                                                                    ? `${(Number(data.clicks) || 0).toLocaleString()}` 
+                                                                    : `${(Number(data.engagement) || 0).toLocaleString()}`}
+                                                            </div>
+                                                            <div className="text-[10px] font-bold opacity-60">
+                                                                {platId === 'google' || platId === 'google_ads' ? (isRtl ? 'نقرات إستراتيجية' : 'Strategic Clicks') : (isRtl ? 'تفاعلات نشطة' : 'Active Interactions')}
+                                                            </div>
+                                                        </div>
+                                                        <Zap className="h-8 w-8 text-primary/20 rotate-12" />
+                                                    </div>
+                                                    
+                                                    {data.followers > 0 && (
+                                                        <div className="bg-indigo-500/5 rounded-3xl p-6 border border-indigo-500/10 flex items-center justify-between">
+                                                            <div>
+                                                                <div className="text-[10px] uppercase font-black tracking-widest text-indigo-500/60 mb-1">{isRtl ? 'محرك النمو' : 'Growth Factor'}</div>
+                                                                <div className="text-3xl font-black text-indigo-500">+{data.followers.toLocaleString()}</div>
+                                                                <div className="text-[10px] font-bold opacity-60">
+                                                                    {platId === 'youtube' ? (isRtl ? 'مشترك جديد' : 'New Subscribers') : (isRtl ? 'متابع جديد' : 'New Followers')}
+                                                                </div>
+                                                            </div>
+                                                            <Users className="h-8 w-8 text-indigo-500/20" />
+                                                        </div>
+                                                    )}
+                                                </div>
+
                                                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                                                     {(PLATFORM_METRICS[platId] || []).map((metric, i) => {
                                                         let val = data[metric.id];

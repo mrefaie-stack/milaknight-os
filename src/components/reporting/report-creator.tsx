@@ -59,19 +59,19 @@ const PLATFORMS = [
 
 const PLATFORM_METRICS: Record<string, { id: string, labelAr: string, labelEn: string, icon: any }[]> = {
     facebook: [
-        { id: "impressions", labelAr: "المشاهدات", labelEn: "Views", icon: Eye },
-        { id: "reach", labelAr: "الوصول", labelEn: "Viewers", icon: Users },
-        { id: "engagement", labelAr: "التفاعلات", labelEn: "Content interactions", icon: MousePointer2 },
-        { id: "clicks", labelAr: "النقرات على الرابط", labelEn: "Link clicks", icon: Target },
-        { id: "profileVisits", labelAr: "الزيارات", labelEn: "Visits", icon: Target },
+        { id: "impressions", labelAr: "المشاهدات", labelEn: "Impressions", icon: Eye },
+        { id: "reach", labelAr: "الوصول", labelEn: "Reach", icon: Users },
+        { id: "engagement", labelAr: "تفاعلات المحتوى", labelEn: "Content interactions", icon: MousePointer2 },
+        { id: "clicks", labelAr: "نقرات الرابط", labelEn: "Link clicks", icon: Target },
+        { id: "profileVisits", labelAr: "إعجابات الصفحة", labelEn: "Page Likes", icon: Target },
         { id: "followers", labelAr: "متابعون جدد", labelEn: "New followers", icon: Users },
     ],
     instagram: [
         { id: "views", labelAr: "المشاهدات", labelEn: "Views", icon: Eye },
         { id: "reach", labelAr: "الوصول", labelEn: "Reach", icon: Users },
-        { id: "engagement", labelAr: "التفاعلات", labelEn: "Content interactions", icon: MousePointer2 },
-        { id: "clicks", labelAr: "النقرات على الرابط", labelEn: "Link clicks", icon: Target },
-        { id: "profileVisits", labelAr: "الزيارات", labelEn: "Visits", icon: Target },
+        { id: "engagement", labelAr: "تفاعلات المحتوى", labelEn: "Content interactions", icon: MousePointer2 },
+        { id: "clicks", labelAr: "نقرات الرابط", labelEn: "Link clicks", icon: Target },
+        { id: "profileVisits", labelAr: "زيارات الحساب", labelEn: "Profile visits", icon: Target },
         { id: "followers", labelAr: "متابعون جدد", labelEn: "New followers", icon: Users },
     ],
     linkedin: [
@@ -81,7 +81,7 @@ const PLATFORM_METRICS: Record<string, { id: string, labelAr: string, labelEn: s
         { id: "shares", labelAr: "إعادة النشر", labelEn: "Reposts", icon: Share2 },
         { id: "profileVisits", labelAr: "مشاهدات الصفحة", labelEn: "Page views", icon: Eye },
         { id: "followers", labelAr: "متابعون جدد", labelEn: "New followers", icon: Users },
-        { id: "searches", labelAr: "عمليات البحث عن الصفحة", labelEn: "Page searches", icon: Search },
+        { id: "searches", labelAr: "عمليات البحث", labelEn: "Page searches", icon: Search },
     ],
     tiktok: [
         { id: "views", labelAr: "مشاهدات الفيديو", labelEn: "Video views", icon: Video },
@@ -94,7 +94,7 @@ const PLATFORM_METRICS: Record<string, { id: string, labelAr: string, labelEn: s
     snapchat: [
         { id: "followers", labelAr: "متابعون جدد", labelEn: "New followers", icon: Users },
         { id: "views", labelAr: "إجمالي المشاهدات", labelEn: "Total views", icon: Eye },
-        { id: "profileVisits", labelAr: "مشاهدات الملف الشخصي", labelEn: "Profile views", icon: Eye },
+        { id: "profileVisits", labelAr: "زيارات الملف", labelEn: "Profile views", icon: Eye },
     ],
     x: [
         { id: "impressions", labelAr: "الظهور", labelEn: "Impressions", icon: Eye },
