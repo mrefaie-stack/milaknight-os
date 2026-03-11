@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Check, X, Trash2, FileText, LayoutDashboard } from "lucide-react";
-import { revalidatePath } from "next/cache";
 
 export default async function DeletionsPage() {
     const requests = await getDeletionRequests();

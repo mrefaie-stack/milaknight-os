@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
-import { getReportById, getPreviousReport } from "@/app/actions/report";
-import { notFound, redirect } from "next/navigation";
+import { getPreviousReport } from "@/app/actions/report";
+import { notFound } from "next/navigation";
 import { ReportClientView } from "@/components/reporting/report-client-view";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";

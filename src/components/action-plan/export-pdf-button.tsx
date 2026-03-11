@@ -57,8 +57,7 @@ export function ExportPdfButton({ className, targetId = "pdf-content", fileName 
     const handleExport = async () => {
         setIsGenerating(true);
         try {
-            // @ts-ignore
-            const html2pdf = (await import('html2pdf.js')).default;
+            const html2pdf = (await import('html2pdf.js' as any)).default;
             const element = document.getElementById(targetId);
 
             if (!element) {

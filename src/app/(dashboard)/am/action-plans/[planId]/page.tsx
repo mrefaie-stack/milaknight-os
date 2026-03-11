@@ -3,7 +3,6 @@ import { notFound, redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { AddItemDialog } from "@/components/action-plan/add-item-dialog";
 import { PlanItemsList } from "@/components/action-plans/plan-items-list";
 import { submitForApproval, requestActionPlanDeletion, notifyClientOfActionPlanUpdate } from "@/app/actions/action-plan";
