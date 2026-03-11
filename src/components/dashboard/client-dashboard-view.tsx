@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { FileText, CheckCircle2, MessageSquare, BarChart, Calendar, DollarSign } from "lucide-react";
+import { FileText, CheckCircle2, MessageSquare, BarChart, Calendar, DollarSign, TrendingUp, Mail, Globe } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/language-context";
@@ -48,7 +48,7 @@ export function ClientDashboardView({ client, latestPlan, allReports, globalServ
     const latestReport = allReports && allReports.length > 0 ? allReports[0] : null;
 
     const metrics = useMemo(() => {
-        if (!allReports || allReports.length === 0) return { platforms: {}, seoScore: client.seoScore || 0 };
+        if (!allReports || allReports.length === 0) return { platforms: {}, seoScore: client.seoScore || 0, emailMarketing: { emailsSent: 0, openRate: 0, clickRate: 0 } };
 
         const currentSeoScore = (() => {
             const latestReport = allReports[0];
@@ -56,18 +56,33 @@ export function ClientDashboardView({ client, latestPlan, allReports, globalServ
             return latestM?.seo?.score || client.seoScore || 0;
         })();
 
+        const reportsToProcess = viewMode === "month" ? [allReports[0]] : allReports;
+
         const aggregated = {
             platforms: {} as any,
-            seoScore: currentSeoScore
+            seoScore: currentSeoScore,
+            emailMarketing: { emailsSent: 0, openRate: 0, clickRate: 0 }
         };
 
-        const reportsToProcess = viewMode === "month" ? [allReports[0]] : allReports;
+        let emailWeight = 0;
 
         reportsToProcess.forEach((report, index) => {
             const m = typeof report.metrics === 'string' ? JSON.parse(report.metrics) : report.metrics;
             const campaigns = m?.campaigns || (m?.platforms ? [{ platforms: m.platforms }] : []);
             
-            // For X dynamic followers, we need the previous report backwards in time
+            // Email Marketing aggregation
+            const em = m?.emailMarketing;
+            if (em) {
+                const emCampaigns = em.campaigns || (em.emailsSent > 0 ? [em] : []);
+                emCampaigns.forEach((ec: any) => {
+                    aggregated.emailMarketing.emailsSent += (Number(ec.emailsSent) || 0);
+                    aggregated.emailMarketing.openRate += (Number(ec.openRate) || 0);
+                    aggregated.emailMarketing.clickRate += (Number(ec.clickRate) || 0);
+                    emailWeight++;
+                });
+            }
+
+            // For X dynamic followers
             const prevReport = allReports[index + 1];
             let prevXFollowers = 0;
             if (prevReport) {
@@ -97,6 +112,7 @@ export function ClientDashboardView({ client, latestPlan, allReports, globalServ
                             aggregated.platforms[pKey].followers += (Number(pData.followers) || 0);
                         }
 
+                        // Handle both old flat and new nested paidCampaigns
                         const paidSpend = pData.paidCampaigns?.length > 0
                             ? pData.paidCampaigns.reduce((acc: number, c: any) => acc + (Number(c.spend) || 0), 0)
                             : (Number(pData.spend) || 0);
@@ -105,6 +121,11 @@ export function ClientDashboardView({ client, latestPlan, allReports, globalServ
                 }
             });
         });
+
+        if (emailWeight > 0) {
+            aggregated.emailMarketing.openRate /= emailWeight;
+            aggregated.emailMarketing.clickRate /= emailWeight;
+        }
 
         return aggregated;
     }, [allReports, viewMode, client.seoScore]);
@@ -121,43 +142,51 @@ export function ClientDashboardView({ client, latestPlan, allReports, globalServ
 
     const statCards = [
         {
-            label: t("dashboard.impressions"),
-            labelAr: "الوصول",
+            label: t("reports.impressions"),
             value: metrics ? Object.values(metrics.platforms || {}).reduce((acc: number, p: any) => acc + (Number(p.impressions) || 0), 0) : 0,
             color: "text-primary",
             accent: "bg-primary/5",
+            icon: <BarChart className="h-3 w-3" />,
             format: formatNumber
         },
         {
-            label: t("dashboard.engagements"),
-            labelAr: "التفاعلات",
+            label: t("reports.engagements"),
             value: metrics ? Object.values(metrics.platforms || {}).reduce((acc: number, p: any) => acc + (Number(p.engagement) || 0), 0) : 0,
             color: "text-emerald-500",
             accent: "bg-emerald-500/5",
+            icon: <Sparkles className="h-3 w-3" />,
             format: formatNumber
         },
         {
-            label: t("dashboard.growth"),
-            labelAr: "متابعون جدد",
+            label: t("reports.growth"),
             value: metrics ? Object.values(metrics.platforms || {}).reduce((acc: number, p: any) => acc + (Number(p.followers) || 0), 0) : 0,
             color: "text-blue-500",
             accent: "bg-blue-500/5",
+            icon: <TrendingUp className="h-3 w-3" />,
             format: formatNumber
         },
         {
             label: isRtl ? "الإنفاق الإعلاني" : "Ad Spend",
-            labelAr: "الإنفاق الإعلاني",
             value: totalSpend,
             color: "text-orange-500",
             accent: "bg-orange-500/5",
+            icon: <DollarSign className="h-3 w-3" />,
             format: (n: number) => `SAR ${formatNumber(n)}`
         },
+        ...(metrics?.emailMarketing?.emailsSent > 0 ? [{
+            label: isRtl ? "رسائل البريد" : "Emails Dispatched",
+            value: metrics.emailMarketing.emailsSent,
+            color: "text-rose-500",
+            accent: "bg-rose-500/5",
+            icon: <Mail className="h-3 w-3" />,
+            format: formatNumber
+        }] : []),
         {
             label: isRtl ? "سكور SEO" : "SEO Score",
-            labelAr: "سكور SEO",
             value: metrics?.seoScore || 0,
             color: "text-purple-500",
             accent: "bg-purple-500/5",
+            icon: <Globe className="h-3 w-3" />,
             format: (n: number) => `${n}%`
         },
     ];
@@ -212,8 +241,8 @@ export function ClientDashboardView({ client, latestPlan, allReports, globalServ
                         <Card className={`glass-card hover-lift border-none overflow-hidden rounded-2xl ${m.accent}`}>
                             <CardHeader className={`pb-1 ${isRtl ? 'text-right' : 'text-left'}`}>
                                 <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground opacity-60 flex items-center gap-2">
-                                    {viewMode === 'total' ? <BarChart className="h-3 w-3" /> : <Calendar className="h-3 w-3" />}
-                                    {isRtl ? m.labelAr : m.label}
+                                    {(m as any).icon}
+                                    {m.label}
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className={isRtl ? 'text-right' : 'text-left'}>

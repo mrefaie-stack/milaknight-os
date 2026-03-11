@@ -237,6 +237,23 @@ export function ReportClientView({ report, metrics, role, previousMetrics }: { r
         views: activePlatforms.reduce((acc, key) => acc + (Number(aggregatedPlatforms[key].views) || 0), 0),
     };
 
+    // Email Marketing: support both old flat format and new campaigns array
+    const emailCampaigns: any[] = (() => {
+        const em = metrics.emailMarketing;
+        if (!em) return [];
+        if (em.campaigns && em.campaigns.length > 0) return em.campaigns;
+        // Legacy flat format fallback
+        if (em.emailsSent > 0) return [{ name: isRtl ? 'الحملة البريدية' : 'Email Campaign', emailsSent: em.emailsSent, openRate: em.openRate, clickRate: em.clickRate, unsubscribes: em.unsubscribes }];
+        return [];
+    })();
+    const emailTotals = {
+        emailsSent: emailCampaigns.reduce((s, c) => s + (Number(c.emailsSent) || 0), 0),
+        openRate: emailCampaigns.length > 0 ? (emailCampaigns.reduce((s, c) => s + (Number(c.openRate) || 0), 0) / emailCampaigns.length) : 0,
+        clickRate: emailCampaigns.length > 0 ? (emailCampaigns.reduce((s, c) => s + (Number(c.clickRate) || 0), 0) / emailCampaigns.length) : 0,
+    };
+    const hasEmail = emailTotals.emailsSent > 0;
+    const hasSeo = (metrics.seo?.score > 0 || metrics.seo?.clicks > 0 || metrics.seo?.impressions > 0);
+
     const hasViews = globalTotals.views > 0;
     const hasPaidReach = globalTotals.paidReach > 0;
     const hasConversions = globalTotals.conversions > 0;
@@ -329,12 +346,13 @@ export function ReportClientView({ report, metrics, role, previousMetrics }: { r
             </div>
 
             {/* Global Performance Matrix — Row 1 */}
-            <div className={`grid gap-4 grid-cols-2 md:grid-cols-4 ${isRtl ? 'flex-row-reverse' : ''}`}>
+            <div className={`grid gap-4 grid-cols-2 md:grid-cols-${hasEmail ? '5' : '4'} ${isRtl ? 'flex-row-reverse' : ''}`}>
                 {[
                     { label: t("reports.impressions"), value: globalTotals.impressions, color: 'bg-primary/5', sub: t("common.combined"), subColor: 'text-emerald-500', icon: <TrendingUp className="h-3 w-3" />, momKey: 'impressions' as const },
                     { label: t("reports.engagements"), value: globalTotals.engagement, color: 'bg-blue-500/5', sub: t("reports.interactions"), subColor: 'text-blue-500', icon: null, momKey: 'engagement' as const },
                     { label: t("reports.growth"), value: globalTotals.followers, color: 'bg-purple-500/5', sub: t("reports.new_followers"), subColor: 'text-purple-500', icon: null, momKey: 'followers' as const },
                     { label: t("reports.investment"), value: null, rawValue: `SAR ${(globalTotals.spend).toLocaleString()}`, color: 'bg-orange-500/5', sub: t("reports.paid_media"), subColor: 'text-orange-500', icon: <DollarSign className="h-3 w-3" />, momKey: null },
+                    ...(hasEmail ? [{ label: isRtl ? 'البريد الإلكتروني' : 'Email Marketing', value: emailTotals.emailsSent, color: 'bg-rose-500/5', sub: isRtl ? `فتح ${emailTotals.openRate.toFixed(0)}%` : `${emailTotals.openRate.toFixed(0)}% Open Rate`, subColor: 'text-rose-500', icon: <Mail className="h-3 w-3" />, momKey: null }] : []),
                 ].map((card) => {
                     const delta = card.momKey ? getMoMDelta(card.value || 0, prevGlobal, (m) => m[card.momKey!] || 0) : null;
                     const isUp = delta?.startsWith('+');
@@ -346,7 +364,7 @@ export function ReportClientView({ report, metrics, role, previousMetrics }: { r
                             <CardContent className={isRtl ? 'text-right' : 'text-left'}>
                                 <div className="text-2xl md:text-4xl font-black italic">{card.rawValue ?? (card.value || 0).toLocaleString()}</div>
                                 <div className={`text-[10px] font-bold mt-2 flex items-center gap-1 ${card.subColor} ${isRtl ? 'flex-row-reverse' : ''}`}>
-                                    {card.icon}{card.sub}
+                                    {(card as any).icon}{card.sub}
                                 </div>
                                 {delta && (
                                     <div className={`mt-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black ${isUp ? 'bg-emerald-500/10 text-emerald-500' : 'bg-red-500/10 text-red-500'}`}>
@@ -513,12 +531,14 @@ export function ReportClientView({ report, metrics, role, previousMetrics }: { r
             <div className="space-y-16 print:space-y-8">
                 <h2 className={`text-3xl font-black border-primary py-2 uppercase tracking-tighter print:text-2xl ${isRtl ? 'border-r-8 pr-6 text-right' : 'border-l-8 pl-6 text-left'}`}>{t("reports.platform_analysis")}</h2>
                 <div className="space-y-16">
-                    {campaigns.map((camp: any) => (
-                        <div key={camp.id} className="space-y-8">
-                            <div className={`flex items-center gap-4 border-b-2 border-primary/20 pb-4 ${isRtl ? 'flex-row-reverse' : ''}`}>
-                                <div className="h-10 w-2 bg-primary rounded-full" />
-                                <h3 className="text-2xl font-black tracking-tight">{camp.name}</h3>
-                            </div>
+                    {campaigns.map((camp: any, cIdx: number) => (
+                        <div key={camp.id || cIdx} className="space-y-8">
+                            {campaigns.length > 1 && (
+                                <div className={`flex items-center gap-4 border-b-2 border-primary/20 pb-4 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                                    <div className="h-10 w-2 bg-primary rounded-full" />
+                                    <h3 className="text-2xl font-black tracking-tight">{camp.name}</h3>
+                                </div>
+                            )}
 
                             <div className="grid gap-8 grid-cols-1 lg:grid-cols-2 print:grid-cols-1">
                                 {Object.keys(camp.platforms || {}).map(platId => {
@@ -717,42 +737,84 @@ export function ReportClientView({ report, metrics, role, previousMetrics }: { r
             </div>
 
             {/* Email Marketing Section */}
-            {metrics.emailMarketing?.emailsSent > 0 && (
+            {hasEmail && (
                 <div className="space-y-8">
                     <h2 className={`text-3xl font-black border-primary py-2 uppercase tracking-tighter ${isRtl ? 'border-r-8 pr-6 text-right' : 'border-l-8 pl-6 text-left'}`}>{t("reports.email_analysis")}</h2>
-                    <Card className="border-none bg-emerald-500/5 backdrop-blur-md shadow-xl overflow-hidden">
-                        <CardHeader className="bg-emerald-500/10 py-6 px-10">
-                            <div className={`flex items-center gap-4 ${isRtl ? 'flex-row-reverse' : ''}`}>
-                                <Mail className="h-6 w-6 text-emerald-600" />
-                                <CardTitle className="text-2xl font-black">{t("reports.pipeline")}</CardTitle>
+
+                    {/* Email Summary Totals */}
+                    <div className={`grid gap-4 grid-cols-2 md:grid-cols-3 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                        <Card className="bg-rose-500/5 border-none shadow-none">
+                            <CardHeader className={`pb-2 ${isRtl ? 'text-right' : 'text-left'}`}><CardTitle className="text-[10px] uppercase font-black tracking-widest text-muted-foreground">{t("reports.total_broadcasts")}</CardTitle></CardHeader>
+                            <CardContent className={isRtl ? 'text-right' : 'text-left'}>
+                                <div className="text-2xl md:text-4xl font-black italic text-rose-500">{emailTotals.emailsSent.toLocaleString()}</div>
+                                <div className="text-[10px] text-rose-500 font-bold mt-2">{t("reports.emails_dispatched")}</div>
+                            </CardContent>
+                        </Card>
+                        <Card className="bg-emerald-500/5 border-none shadow-none">
+                            <CardHeader className={`pb-2 ${isRtl ? 'text-right' : 'text-left'}`}><CardTitle className="text-[10px] uppercase font-black tracking-widest text-muted-foreground">{t("reports.open_velocity")}</CardTitle></CardHeader>
+                            <CardContent className={isRtl ? 'text-right' : 'text-left'}>
+                                <div className="text-2xl md:text-4xl font-black italic text-emerald-500">{emailTotals.openRate.toFixed(1)}%</div>
+                                <div className="text-[10px] text-emerald-500 font-bold mt-2">{isRtl ? 'متوسط معدل الفتح' : 'Avg. Open Rate'}</div>
+                            </CardContent>
+                        </Card>
+                        <Card className="bg-blue-500/5 border-none shadow-none">
+                            <CardHeader className={`pb-2 ${isRtl ? 'text-right' : 'text-left'}`}><CardTitle className="text-[10px] uppercase font-black tracking-widest text-muted-foreground">{t("reports.click_confidence")}</CardTitle></CardHeader>
+                            <CardContent className={isRtl ? 'text-right' : 'text-left'}>
+                                <div className="text-2xl md:text-4xl font-black italic text-blue-500">{emailTotals.clickRate.toFixed(1)}%</div>
+                                <div className="text-[10px] text-blue-500 font-bold mt-2">{isRtl ? 'متوسط معدل النقر' : 'Avg. Click Rate'}</div>
+                            </CardContent>
+                        </Card>
+                    </div>
+
+                    {/* Per-Campaign Breakdown */}
+                    {emailCampaigns.length > 1 && (
+                        <div className="space-y-4">
+                            <h3 className={`text-sm font-black uppercase tracking-widest text-muted-foreground ${isRtl ? 'text-right' : ''}`}>{isRtl ? 'تفاصيل الحملات' : 'Campaign Breakdown'}</h3>
+                            <div className="grid gap-4">
+                                {emailCampaigns.map((camp: any, idx: number) => (
+                                    <Card key={idx} className="border-none bg-card/30 backdrop-blur-md overflow-hidden">
+                                        <CardHeader className={`bg-rose-500/5 border-b border-white/5 py-4 px-6 flex flex-row items-center gap-3 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                                            <Mail className="h-4 w-4 text-rose-400" />
+                                            <CardTitle className="text-sm font-black">{camp.name || `${isRtl ? 'حملة' : 'Campaign'} ${idx + 1}`}</CardTitle>
+                                        </CardHeader>
+                                        <CardContent className="p-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+                                            {camp.emailsSent > 0 && (
+                                                <div className={`p-4 rounded-2xl bg-rose-500/5 border border-rose-500/10 ${isRtl ? 'text-right' : ''}`}>
+                                                    <div className="text-[10px] font-black uppercase text-rose-500 mb-1">{isRtl ? 'مرسلة' : 'Sent'}</div>
+                                                    <div className="text-xl font-black">{Number(camp.emailsSent).toLocaleString()}</div>
+                                                </div>
+                                            )}
+                                            {camp.openRate > 0 && (
+                                                <div className={`p-4 rounded-2xl bg-emerald-500/5 border border-emerald-500/10 ${isRtl ? 'text-right' : ''}`}>
+                                                    <div className="text-[10px] font-black uppercase text-emerald-500 mb-1">{isRtl ? 'معدل الفتح' : 'Open Rate'}</div>
+                                                    <div className="text-xl font-black text-emerald-500">{camp.openRate}%</div>
+                                                    <div className="w-full h-1.5 bg-emerald-100/20 rounded-full mt-2"><div className="h-full bg-emerald-500 rounded-full" style={{ width: `${camp.openRate}%` }} /></div>
+                                                </div>
+                                            )}
+                                            {camp.clickRate > 0 && (
+                                                <div className={`p-4 rounded-2xl bg-blue-500/5 border border-blue-500/10 ${isRtl ? 'text-right' : ''}`}>
+                                                    <div className="text-[10px] font-black uppercase text-blue-500 mb-1">{isRtl ? 'معدل النقر' : 'Click Rate'}</div>
+                                                    <div className="text-xl font-black text-blue-500">{camp.clickRate}%</div>
+                                                    <div className="w-full h-1.5 bg-blue-100/20 rounded-full mt-2"><div className="h-full bg-blue-500 rounded-full" style={{ width: `${camp.clickRate}%` }} /></div>
+                                                </div>
+                                            )}
+                                            {camp.unsubscribes > 0 && (
+                                                <div className={`p-4 rounded-2xl bg-muted/20 border border-border/30 ${isRtl ? 'text-right' : ''}`}>
+                                                    <div className="text-[10px] font-black uppercase text-muted-foreground mb-1">{isRtl ? 'إلغاء اشتراك' : 'Unsubscribes'}</div>
+                                                    <div className="text-xl font-black">{camp.unsubscribes}</div>
+                                                </div>
+                                            )}
+                                        </CardContent>
+                                    </Card>
+                                ))}
                             </div>
-                        </CardHeader>
-                        <CardContent className="p-10 grid md:grid-cols-3 gap-8">
-                            <div className={`text-center ${isRtl ? 'md:text-right' : 'md:text-left'}`}>
-                                <p className="text-sm font-black text-muted-foreground uppercase mb-2">{t("reports.total_broadcasts")}</p>
-                                <div className="text-5xl font-black">{metrics.emailMarketing.emailsSent.toLocaleString()}</div>
-                                <p className="text-[10px] font-bold text-emerald-600 mt-2">{t("reports.emails_dispatched")}</p>
-                            </div>
-                            <div className={`text-center ${isRtl ? 'md:text-right' : 'md:text-left'}`}>
-                                <p className="text-sm font-black text-muted-foreground uppercase mb-2">{t("reports.open_velocity")}</p>
-                                <div className="text-5xl font-black text-emerald-600">{metrics.emailMarketing.openRate}%</div>
-                                <div className="w-full h-2 bg-emerald-100 rounded-full mt-4 overflow-hidden">
-                                    <div className={`h-full bg-emerald-500 ${isRtl ? 'float-right' : ''}`} style={{ width: `${metrics.emailMarketing.openRate}%` }} />
-                                </div>
-                            </div>
-                            <div className={`text-center ${isRtl ? 'md:text-right' : 'md:text-left'}`}>
-                                <p className="text-sm font-black text-muted-foreground uppercase mb-2">{t("reports.click_confidence")}</p>
-                                <div className="text-5xl font-black text-blue-600">{metrics.emailMarketing.clickRate}%</div>
-                                <div className="w-full h-2 bg-blue-100 rounded-full mt-4 overflow-hidden">
-                                    <div className={`h-full bg-blue-500 ${isRtl ? 'float-right' : ''}`} style={{ width: `${metrics.emailMarketing.clickRate}%` }} />
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
+                        </div>
+                    )}
                 </div>
             )}
 
             {/* SEO Section */}
+            {hasSeo && (
             <div className="space-y-8">
                 <h2 className={`text-3xl font-black border-primary py-2 uppercase tracking-tighter ${isRtl ? 'border-r-8 pr-6 text-right' : 'border-l-8 pl-6 text-left'}`}>{t("dashboard.search_authority")}</h2>
                 <Card className="border-none shadow-sm bg-card/40 backdrop-blur-sm overflow-hidden">
@@ -787,6 +849,7 @@ export function ReportClientView({ report, metrics, role, previousMetrics }: { r
                     </CardContent>
                 </Card>
             </div>
+            )}
 
             <div className="text-center py-20 opacity-20 print:block hidden font-bold uppercase tracking-widest text-xs">
                 {t("dashboard.performance_portfolio_generated")}
