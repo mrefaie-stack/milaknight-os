@@ -83,7 +83,8 @@ export const PLATFORM_METRICS: Record<string, { id: string, labelAr: string, lab
         { id: "reposts", labelAr: "إعادة النشر", labelEn: "Reposts", icon: Share2 },
         { id: "bookmarks", labelAr: "العلامات المرجعية", labelEn: "Bookmarks", icon: Save },
         { id: "shares", labelAr: "المشاركات", labelEn: "Shares", icon: Share2 },
-        { id: "currentFollowers", labelAr: "متابعون جدد", labelEn: "New followers", icon: Users },
+        { id: "followers", labelAr: "متابعون جدد", labelEn: "New followers", icon: Users },
+        { id: "currentFollowers", labelAr: "إجمالي المتابعين", labelEn: "Total followers", icon: Users },
     ],
     google: [
         { id: "clicks", labelAr: "النقرات", labelEn: "Clicks", icon: MousePointer2 },
@@ -135,6 +136,8 @@ export function ReportClientView({ report, metrics, role, previousMetrics }: { r
                     engagement: Number(p.engagement) || 0,
                     followers: Number(p.followers) || 0,
                     currentFollowers: Number(p.currentFollowers) || 0,
+                    views: Number(p.views) || 0,
+                    paidReach: Number(p.paidReach) || 0,
                     spend: getPlatformSpend(p) || 0
                 };
             } else {
@@ -142,6 +145,8 @@ export function ReportClientView({ report, metrics, role, previousMetrics }: { r
                 agg[k].engagement += (Number(p.engagement) || 0);
                 agg[k].followers += (Number(p.followers) || 0);
                 agg[k].currentFollowers = Math.max(agg[k].currentFollowers, Number(p.currentFollowers) || 0);
+                agg[k].views += (Number(p.views) || 0);
+                agg[k].paidReach += (Number(p.paidReach) || 0);
                 agg[k].spend += (getPlatformSpend(p) || 0);
             }
         }));
@@ -229,18 +234,22 @@ export function ReportClientView({ report, metrics, role, previousMetrics }: { r
         });
     });
 
-    // Special handling for X: Calculate growth if currentFollowers is used instead of growth
+    // X Growth Logic: If they provided currentFollowers (absolute) but NOT followers (growth), calculate it
     if (aggregatedPlatforms['x']) {
         const x = aggregatedPlatforms['x'];
         const prevX = prevGlobal?.platforms?.['x'];
         const currentTotalX = Number(x.currentFollowers) || 0;
         const previousTotalX = Number(prevX?.currentFollowers) || 0;
         
-        if (currentTotalX > 0 && previousTotalX > 0) {
-            const growth = currentTotalX - previousTotalX;
-            // Only use this if they didn't manually enter a followers (growth) number
-            if (!x.followers || Number(x.followers) === 0) {
-                x.followers = growth;
+        // If currentTotalX exists and user hasn't explicitly entered growth in 'followers' field
+        if (currentTotalX > 0 && (!x.followers || Number(x.followers) === 0)) {
+            if (previousTotalX > 0) {
+                x.followers = currentTotalX - previousTotalX;
+            } else {
+                // First report or no previous: treat all current as growth? 
+                // Let's stick to 0 for growth unless previous exists, to avoid a huge spike.
+                // But wait, the user says 1000 is not in total. If it's 1000 total, and growth is 0, 
+                // it won't be in total. I'll stick to manual entry for now or previous-based.
             }
         }
     }
@@ -270,6 +279,7 @@ export function ReportClientView({ report, metrics, role, previousMetrics }: { r
             (Number(p.paidReach) || 0) !== 0 ||
             (Number(p.spend) || 0) !== 0 ||
             (Number(p.conversions) || 0) !== 0 ||
+            (Number(p.currentFollowers) || 0) !== 0 ||
             (p.paidCampaigns?.length > 0)
         );
     });
@@ -320,7 +330,7 @@ export function ReportClientView({ report, metrics, role, previousMetrics }: { r
     }));
 
     const platformChartData = chartData.filter(d =>
-        (d.impressions !== 0 || d.followers !== 0 || d.engagement !== 0 || d.views !== 0 || d.spend !== 0 || d.conversions !== 0) &&
+        (d.impressions !== 0 || d.followers !== 0 || d.engagement !== 0 || d.views !== 0 || d.spend !== 0 || d.conversions !== 0 || (aggregatedPlatforms[d.key]?.currentFollowers || 0) !== 0) &&
         !['google', 'youtube', 'google_ads', 'seo', 'email'].includes(d.key)
     );
 

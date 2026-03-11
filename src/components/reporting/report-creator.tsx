@@ -105,7 +105,8 @@ const PLATFORM_METRICS: Record<string, { id: string, labelAr: string, labelEn: s
         { id: "reposts", labelAr: "إعادة النشر", labelEn: "Reposts", icon: Share2 },
         { id: "bookmarks", labelAr: "العلامات المرجعية", labelEn: "Bookmarks", icon: Save },
         { id: "shares", labelAr: "المشاركات", labelEn: "Shares", icon: Share2 },
-        { id: "currentFollowers", labelAr: "عدد المتابعين الحالي", labelEn: "Current follow number", icon: Users },
+        { id: "followers", labelAr: "متابعون جدد", labelEn: "New followers", icon: Users },
+        { id: "currentFollowers", labelAr: "إجمالي المتابعين", labelEn: "Total followers", icon: Users },
     ],
     google: [
         { id: "clicks", labelAr: "النقرات", labelEn: "Clicks", icon: MousePointer2 },

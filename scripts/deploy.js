@@ -3,7 +3,7 @@ const { Client } = require('ssh2');
 const conn = new Client();
 conn.on('ready', () => {
   console.log('Client :: ready');
-  conn.exec('cd milaknight-os && git fetch origin && git reset --hard origin/main && npm install && npm run build && pm2 restart all', (err, stream) => {
+  conn.exec('cd milaknight-os && git fetch origin && git reset --hard origin/main && npm install && npx prisma db push && npm run build && pm2 restart all', (err, stream) => {
     if (err) throw err;
     stream.on('close', (code, signal) => {
       console.log('Stream :: close :: code: ' + code + ', signal: ' + signal);
