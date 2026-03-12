@@ -13,7 +13,7 @@ export function LiveMetrics() {
     const [metaData, setMetaData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [activeTab, setActiveTab] = useState('meta');
+    const [activeTab, setActiveTab] = useState('facebook');
 
     useEffect(() => {
         async function fetchData() {
@@ -55,21 +55,43 @@ export function LiveMetrics() {
 
     const platforms = [
         {
-            id: 'meta',
-            name: 'Meta',
-            accountName: metaData?.accountName || 'Facebook & Instagram',
+            id: 'facebook',
+            name: 'Facebook',
+            accountName: metaData?.accountName || 'Facebook Page',
             icon: <Facebook className="w-5 h-5" />,
             color: '#1877F2',
             isLive: !error && metaData,
             error: error,
             organicMetrics: [
-                { label: isRtl ? "متابعي فيسبوك" : "FB Followers", value: metaData?.organicMetrics?.fb_followers?.toLocaleString() || '0', color: "text-blue-400", icon: <Facebook className="w-4 h-4" /> },
-                { label: isRtl ? "متابعي انستجرام" : "IG Followers", value: metaData?.organicMetrics?.ig_followers?.toLocaleString() || '0', color: "text-rose-400", icon: <Instagram className="w-4 h-4" /> },
-                { label: isRtl ? "الوصول الإجمالي" : "Total Reach", value: metaData?.organicMetrics?.reach?.toLocaleString() || '0', color: "text-emerald-500", icon: <Activity className="w-4 h-4" /> },
-                { label: isRtl ? "تفاعل فيسبوك" : "FB Engagement", value: metaData?.organicMetrics?.engagement?.toLocaleString() || '0', color: "text-primary", icon: <TrendingUp className="w-4 h-4" /> },
+                { label: isRtl ? "المتابعون" : "Followers", value: metaData?.organicMetrics?.fb?.followers?.toLocaleString() || '0', color: "text-blue-400", icon: <Users className="w-4 h-4" /> },
+                { label: isRtl ? "الوصول" : "Reach", value: metaData?.organicMetrics?.fb?.reach?.toLocaleString() || '0', color: "text-emerald-500", icon: <Activity className="w-4 h-4" /> },
+                { label: isRtl ? "التفاعل" : "Engagement", value: metaData?.organicMetrics?.fb?.engagement?.toLocaleString() || '0', color: "text-primary", icon: <TrendingUp className="w-4 h-4" /> },
+                { label: isRtl ? "بينات الصفحة" : "Page Views", value: 'Live', color: "text-purple-400", icon: <Eye className="w-4 h-4" /> },
             ],
             adMetrics: metaData ? [
-                { label: isRtl ? "الإنفاق" : "Total Spend", value: `SAR ${metaData.metrics.spend}`, color: "text-orange-500", icon: <DollarSign className="w-4 h-4" /> },
+                { label: isRtl ? "الإنفاق" : "Spend", value: `SAR ${metaData.metrics.spend}`, color: "text-orange-500", icon: <DollarSign className="w-4 h-4" /> },
+                { label: isRtl ? "الظهور" : "Impressions", value: metaData.metrics.impressions?.toLocaleString() || '0', color: "text-primary", icon: <Eye className="w-4 h-4" /> },
+                { label: isRtl ? "النقرات" : "Link Clicks", value: metaData.metrics.clicks?.toLocaleString() || '0', color: "text-emerald-500", icon: <MousePointer2 className="w-4 h-4" /> },
+                { label: isRtl ? "تكلفة النقرة" : "Avg. CPC", value: `SAR ${metaData.metrics.cpc}`, color: "text-blue-500", icon: <BarChart className="w-4 h-4" /> },
+            ] : [],
+            activeAds: metaData?.activeAds || []
+        },
+        {
+            id: 'instagram',
+            name: 'Instagram',
+            accountName: metaData?.accountName || 'Instagram Business',
+            icon: <Instagram className="w-5 h-5" />,
+            color: '#E4405F',
+            isLive: !error && metaData?.organicMetrics?.ig?.connected,
+            error: !metaData?.organicMetrics?.ig?.connected ? (isRtl ? "حساب إنستجرام غير مربوط بهذه الصفحة" : "Instagram account not linked to this page") : error,
+            organicMetrics: [
+                { label: isRtl ? "المتابعون" : "Followers", value: metaData?.organicMetrics?.ig?.followers?.toLocaleString() || '0', color: "text-rose-400", icon: <Users className="w-4 h-4" /> },
+                { label: isRtl ? "الوصول" : "Reach", value: metaData?.organicMetrics?.ig?.reach?.toLocaleString() || '0', color: "text-emerald-500", icon: <Activity className="w-4 h-4" /> },
+                { label: isRtl ? "زيارات الملف" : "Profile Views", value: metaData?.organicMetrics?.ig?.profileViews?.toLocaleString() || '0', color: "text-primary", icon: <TrendingUp className="w-4 h-4" /> },
+                { label: isRtl ? "التفاعل" : "Engagement", value: 'Active', color: "text-orange-400", icon: <Heart className="w-4 h-4" /> },
+            ],
+            adMetrics: metaData ? [
+                { label: isRtl ? "الإنفاق" : "Spend", value: `SAR ${metaData.metrics.spend}`, color: "text-orange-500", icon: <DollarSign className="w-4 h-4" /> },
                 { label: isRtl ? "الظهور" : "Impressions", value: metaData.metrics.impressions?.toLocaleString() || '0', color: "text-primary", icon: <Eye className="w-4 h-4" /> },
                 { label: isRtl ? "النقرات" : "Link Clicks", value: metaData.metrics.clicks?.toLocaleString() || '0', color: "text-emerald-500", icon: <MousePointer2 className="w-4 h-4" /> },
                 { label: isRtl ? "تكلفة النقرة" : "Avg. CPC", value: `SAR ${metaData.metrics.cpc}`, color: "text-blue-500", icon: <BarChart className="w-4 h-4" /> },
@@ -146,7 +168,7 @@ export function LiveMetrics() {
                             <motion.div 
                                 layoutId="activeTab" 
                                 className="absolute inset-0 z-0 shadow-lg"
-                                style={{ backgroundColor: platform.id === 'snapchat' ? '#FFFC00' : (platform.id === 'meta' ? '#1877F2' : '#000000') }}
+                                style={{ backgroundColor: platform.color }}
                             />
                         )}
                         <span className={cn(
