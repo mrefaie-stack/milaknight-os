@@ -63,24 +63,52 @@ export async function publishReport(reportId: string) {
     if (!session || (session.user.role !== "AM" && session.user.role !== "ADMIN")) {
         throw new Error("Unauthorized");
     }
-    if (session.user.role === "AM") {
-        const checkReport = await prisma.report.findUnique({ where: { id: reportId }, include: { client: true } });
-        if (!checkReport || checkReport.client.amId !== session.user.id) throw new Error("Unauthorized Access");
+
+    const report = await (prisma as any).report.findUnique({
+        where: { id: reportId },
+        include: { client: { include: { user: true } } }
+    });
+
+    if (!report) throw new Error("Report not found");
+    if (session.user.role === "AM" && report.client.amId !== session.user.id) throw new Error("Unauthorized Access");
+
+    // If there is a Marketing Manager, it needs their approval first
+    if (report.client.mmId) {
+        await (prisma as any).report.update({
+            where: { id: reportId },
+            data: { mmStatus: "PENDING" }
+        });
+
+        // Notify MM
+        await prisma.notification.create({
+            data: {
+                userId: report.client.mmId,
+                title: "Annual/Monthly Report Review Required",
+                message: `The account manager has submitted a report for ${report.client.name} (${report.month}) for your review.`,
+                type: "SYSTEM",
+                link: `/tasks`
+            }
+        });
+
+        await logActivity(`submitted report for ${report.client.name} (${report.month}) for internal MM review`, "Report", reportId);
+        
+        revalidatePath(`/am/reports/${reportId}`);
+        return { success: true, internalReview: true };
     }
 
-    const report = await prisma.report.update({
+    // No MM, proceed directly to client
+    await (prisma as any).report.update({
         where: { id: reportId },
         data: { status: "SENT" },
-        include: { client: { include: { user: true } } }
     });
 
     // Update client's global SEO score from this report
     try {
         const m = typeof report.metrics === 'string' ? JSON.parse(report.metrics) : report.metrics;
         if (m?.seo?.score !== undefined) {
-            await prisma.client.update({
+            await (prisma as any).client.update({
                 where: { id: report.clientId },
-                data: { seoScore: Number(m.seo.score) || 0 } as any
+                data: { seoScore: Number(m.seo.score) || 0 }
             });
         }
     } catch (e) {
@@ -99,7 +127,6 @@ export async function publishReport(reportId: string) {
             }
         });
 
-        // Send Email
         await sendEmail({
             to: report.client.user.email,
             subject: `Performance Report - ${report.month}`,
@@ -123,7 +150,124 @@ export async function publishReport(reportId: string) {
     revalidatePath("/am/reports");
     revalidatePath(`/am/reports/${reportId}`);
     revalidatePath("/client/reports");
-    return report;
+    return { success: true, toClient: true };
+}
+
+export async function approveReportByMM(reportId: string) {
+    const session = await getServerSession(authOptions);
+    if (!session || (session.user.role !== "MARKETING_MANAGER" && session.user.role !== "ADMIN")) {
+        throw new Error("Unauthorized");
+    }
+
+    const report = await (prisma as any).report.findUnique({
+        where: { id: reportId },
+        include: { client: { include: { user: true, accountManager: true } } }
+    });
+
+    if (!report) throw new Error("Report not found");
+    if (session.user.role === "MARKETING_MANAGER" && report.client.mmId !== session.user.id) {
+        throw new Error("Unauthorized Access");
+    }
+
+    // Approve internally
+    await (prisma as any).report.update({
+        where: { id: reportId },
+        data: { 
+            mmStatus: "APPROVED",
+            status: "SENT" // Now it can go to client
+        }
+    });
+
+    // Notify AM
+    if (report.client?.accountManager) {
+        await prisma.notification.create({
+            data: {
+                userId: report.client.accountManager.id,
+                title: "Report Approved by MM",
+                message: `The Marketing Manager has approved the report for ${report.client.name} (${report.month}) and it has been published to the client.`,
+                type: "SYSTEM",
+                link: `/am/reports/${reportId}`
+            }
+        });
+    }
+
+    // Notify Client
+    if (report.client?.user) {
+        await prisma.notification.create({
+            data: {
+                userId: report.client.user.id,
+                title: "New Performance Report Available",
+                message: `Your performance report for ${report.month} is ready for viewing.`,
+                type: "SYSTEM",
+                link: `/client/reports/${report.id}`
+            }
+        });
+
+        await sendEmail({
+            to: report.client.user.email,
+            subject: `Performance Report - ${report.month}`,
+            html: `
+                <div style="font-family: sans-serif; padding: 20px; background: #f4f4f5; border-radius: 8px; max-width: 600px; margin: auto;">
+                    <h2 style="color: #4f46e5; margin-bottom: 20px;">MilaKnight Reports</h2>
+                    <p style="font-size: 16px;">Hello ${report.client.user.firstName},</p>
+                    <p style="font-size: 16px;">Your performance report for <strong>${report.month}</strong> is now available for review.</p>
+                    <br/>
+                    <a href="${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/client/reports/${report.id}" style="display: inline-block; padding: 12px 24px; background-color: #4f46e5; color: white; text-decoration: none; border-radius: 6px; font-weight: bold;">View Report</a>
+                </div>
+            `
+        });
+    }
+
+    await logActivity(`MM approved report for ${report.client.name} (${report.month})`, "Report", reportId);
+
+    revalidatePath(`/am/reports/${reportId}`);
+    revalidatePath("/client/reports");
+    revalidatePath("/tasks");
+    return { success: true };
+}
+
+export async function rejectReportByMM(reportId: string, feedback: string) {
+    const session = await getServerSession(authOptions);
+    if (!session || (session.user.role !== "MARKETING_MANAGER" && session.user.role !== "ADMIN")) {
+        throw new Error("Unauthorized");
+    }
+
+    const report = await (prisma as any).report.findUnique({
+        where: { id: reportId },
+        include: { client: { include: { accountManager: true } } }
+    });
+
+    if (!report) throw new Error("Report not found");
+    if (session.user.role === "MARKETING_MANAGER" && report.client.mmId !== session.user.id) {
+        throw new Error("Unauthorized Access");
+    }
+
+    // Reject internally
+    await (prisma as any).report.update({
+        where: { id: reportId },
+        data: { 
+            mmStatus: "REJECTED",
+        }
+    });
+
+    // Notify AM
+    if (report.client?.accountManager) {
+        await prisma.notification.create({
+            data: {
+                userId: report.client.accountManager.id,
+                title: "Report Rejected by MM",
+                message: `The Marketing Manager rejected the report for ${report.client.name} (${report.month}). Reason: ${feedback}`,
+                type: "SYSTEM",
+                link: `/am/reports/${reportId}`
+            }
+        });
+    }
+
+    await logActivity(`MM rejected report for ${report.client.name} (${report.month})`, "Report", reportId);
+
+    revalidatePath(`/am/reports/${reportId}`);
+    revalidatePath("/tasks");
+    return { success: true };
 }
 
 export async function getReports() {
@@ -133,6 +277,8 @@ export async function getReports() {
     let where = {};
     if (session.user.role === "AM") {
         where = { client: { amId: session.user.id } };
+    } else if (session.user.role === "MARKETING_MANAGER") {
+        where = { client: { mmId: session.user.id } };
     } else if (session.user.role === "CLIENT") {
         const client = await prisma.client.findUnique({ where: { userId: session.user.id } });
         if (client) {
@@ -165,6 +311,8 @@ export async function getReportById(id: string) {
         if (report.client.userId !== session.user.id) throw new Error("Unauthorized Access");
     } else if (session.user.role === "AM") {
         if (report.client.amId !== session.user.id) throw new Error("Unauthorized Access");
+    } else if (session.user.role === "MARKETING_MANAGER") {
+        if ((report.client as any).mmId !== session.user.id) throw new Error("Unauthorized Access");
     } else if (session.user.role !== "ADMIN" && session.user.role !== "MODERATOR") {
         throw new Error("Unauthorized Access");
     }

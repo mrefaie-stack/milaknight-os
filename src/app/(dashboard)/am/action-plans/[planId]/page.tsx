@@ -5,7 +5,7 @@ import { authOptions } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { AddItemDialog } from "@/components/action-plan/add-item-dialog";
 import { PlanItemsList } from "@/components/action-plans/plan-items-list";
-import { submitForApproval, requestActionPlanDeletion, notifyClientOfActionPlanUpdate } from "@/app/actions/action-plan";
+import { submitForApproval, requestActionPlanDeletion, notifyClientOfActionPlanUpdate, approveActionPlanByMM, rejectActionPlanByMM } from "@/app/actions/action-plan";
 import { Trash2, LayoutDashboard, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { PlanApprovalHeader } from "@/components/action-plan/plan-approval-header";
@@ -36,7 +36,7 @@ export default async function ActionPlanBuilderPage({ params }: { params: Promis
     if (!session) redirect("/login");
     if (session.user.role === "AM" && (plan as any).client.amId !== session.user.id) {
         return notFound();
-    } else if (session.user.role !== "ADMIN" && session.user.role !== "AM") {
+    } else if (session.user.role !== "ADMIN" && session.user.role !== "AM" && session.user.role !== "MARKETING_MANAGER") {
         return notFound();
     }
 
@@ -88,12 +88,37 @@ export default async function ActionPlanBuilderPage({ params }: { params: Promis
                         </form>
                     )}
 
-                    {(plan.status === "DRAFT" || hasDrafts) && !pendingDeletion && plan.status !== "REVISION_REQUESTED" && (
+                    {(plan.status === "DRAFT" || hasDrafts) && !pendingDeletion && plan.status !== "REVISION_REQUESTED" && (plan as any).mmStatus !== "PENDING" && (
                         <form action={submitAction}>
                             <Button type="submit" variant="default" className="font-bold shadow-lg shadow-primary/20 h-11 px-6 rounded-full">
-                                Send to Client for Approval
+                                Send to Manager for Approval
                             </Button>
                         </form>
+                    )}
+
+                    {session.user.role === "MARKETING_MANAGER" && (plan as any).mmStatus === "PENDING" && (
+                        <div className="flex gap-2">
+                            <form action={async () => {
+                                "use server";
+                                await approveActionPlanByMM(planId);
+                                redirect(`/am/action-plans/${planId}`);
+                            }}>
+                                <Button type="submit" variant="default" className="bg-emerald-600 hover:bg-emerald-700 font-bold h-11 px-6 rounded-full">
+                                    Approve Plan
+                                </Button>
+                            </form>
+                            <form action={async (formData) => {
+                                "use server";
+                                const reason = formData.get("reason") as string;
+                                await rejectActionPlanByMM(planId, reason || "No reason provided");
+                                redirect(`/am/action-plans/${planId}`);
+                            }}>
+                                <input type="hidden" name="reason" value="Revisions needed" />
+                                <Button type="submit" variant="destructive" className="font-bold h-11 px-6 rounded-full text-white">
+                                    Reject & Request Fix
+                                </Button>
+                            </form>
+                        </div>
                     )}
 
                     {!pendingDeletion ? (

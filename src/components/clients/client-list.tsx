@@ -36,7 +36,13 @@ const REPORT_STATUS_AR: Record<string, string> = {
     SENT: "مُرسل", DRAFT: "مسودة",
 };
 
-export function ClientList({ clients, accountManagers, services }: { clients: any[], accountManagers?: any[], services?: any[] }) {
+export function ClientList({ clients, accountManagers, marketingManagers, services, canEdit = true }: { 
+    clients: any[], 
+    accountManagers?: any[], 
+    marketingManagers?: any[], 
+    services?: any[],
+    canEdit?: boolean 
+}) {
     const { isRtl } = useLanguage();
     const [search, setSearch] = useState("");
 
@@ -167,9 +173,14 @@ export function ClientList({ clients, accountManagers, services }: { clients: an
                                         <ArrowIcon className="h-3 w-3" />
                                     </Button>
                                 </Link>
-                                {accountManagers && (
+                                {canEdit && accountManagers && (
                                     <div className="flex items-center gap-1">
-                                        <EditClientDialog client={client} accountManagers={accountManagers} services={services} />
+                                        <EditClientDialog 
+                                            client={client} 
+                                            accountManagers={accountManagers} 
+                                            marketingManagers={marketingManagers || []}
+                                            services={services} 
+                                        />
                                         <DeleteClientButton clientId={client.id} clientName={client.name} />
                                     </div>
                                 )}

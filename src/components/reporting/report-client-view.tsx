@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Printer, Facebook, Instagram, Video, Share2, Linkedin, Search, Youtube, TrendingUp, DollarSign, Target, Globe, BarChart3, Send, Mail, Trash2, Download, Loader2, MousePointer2, Zap, MessageSquare, Image as ImageIcon, ExternalLink, Users, Eye, Twitter, Save } from "lucide-react";
 import { Bar, BarChart, Pie, PieChart, Cell, RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, CartesianGrid } from "recharts";
-import { publishReport, requestReportDeletion, submitReportFeedback } from "@/app/actions/report";
+import { publishReport, requestReportDeletion, submitReportFeedback, approveReportByMM, rejectReportByMM } from "@/app/actions/report";
 import { useState } from "react";
 import { toast } from "sonner";
 import { generateReportPdf } from "@/lib/generate-report-pdf";
@@ -175,9 +175,14 @@ export function ReportClientView({ report, metrics, role, previousMetrics }: { r
     async function handlePublish() {
         setIsPublishing(true);
         try {
-            await publishReport(report.id);
-            setStatus("SENT");
-            toast.success(t("dashboard.publish"));
+            const res = await publishReport(report.id);
+            if (res.internalReview) {
+                setStatus("PENDING");
+                toast.success(isRtl ? "تم إرسال التقرير للمراجعة الداخلية" : "Report sent for internal review");
+            } else {
+                setStatus("SENT");
+                toast.success(t("dashboard.publish"));
+            }
         } catch (error) {
             toast.error("Failed to publish report");
         } finally {
@@ -395,8 +400,52 @@ export function ReportClientView({ report, metrics, role, previousMetrics }: { r
                             variant="default"
                             className="font-bold bg-emerald-600 hover:bg-emerald-700 shadow-xl shadow-emerald-500/20 rounded-full h-12 px-8"
                         >
-                            <Send className={`h-4 w-4 ${isRtl ? 'ml-2' : 'mr-2'}`} /> {isPublishing ? t("dashboard.publishing") : t("dashboard.publish")}
+                            <Send className={`h-4 w-4 ${isRtl ? 'ml-2' : 'mr-2'}`} /> {isPublishing ? t("dashboard.publishing") : (report.mmId ? (isRtl ? "إرسال للمدير" : "Send to Manager") : t("dashboard.publish"))}
                         </Button>
+                    )}
+
+                    {role === "MARKETING_MANAGER" && report.mmStatus === "PENDING" && (
+                        <div className="flex gap-2">
+                            <Button
+                                onClick={async () => {
+                                    setIsPublishing(true);
+                                    try {
+                                        await approveReportByMM(report.id);
+                                        setStatus("SENT");
+                                        toast.success(isRtl ? "تمت الموافقة ونشر التقرير" : "Report approved and published");
+                                    } catch (e) {
+                                        toast.error("Failed to approve");
+                                    } finally {
+                                        setIsPublishing(false);
+                                    }
+                                }}
+                                disabled={isPublishing}
+                                variant="default"
+                                className="font-bold bg-emerald-600 hover:bg-emerald-700 h-12 px-8 rounded-full"
+                            >
+                                {isPublishing ? <Loader2 className="h-4 w-4 animate-spin" /> : (isRtl ? "موافقة ونشر" : "Approve & Publish")}
+                            </Button>
+                            <Button
+                                onClick={async () => {
+                                    const reason = prompt(isRtl ? "سبب الرفض:" : "Reason for rejection:");
+                                    if (!reason) return;
+                                    setIsPublishing(true);
+                                    try {
+                                        await rejectReportByMM(report.id, reason);
+                                        toast.success(isRtl ? "تم رفض التقرير" : "Report rejected");
+                                    } catch (e) {
+                                        toast.error("Failed to reject");
+                                    } finally {
+                                        setIsPublishing(false);
+                                    }
+                                }}
+                                disabled={isPublishing}
+                                variant="destructive"
+                                className="font-bold h-12 px-8 rounded-full"
+                            >
+                                {isRtl ? "رفض" : "Reject"}
+                            </Button>
+                        </div>
                     )}
                     {role === "AM" && (
                         <Button

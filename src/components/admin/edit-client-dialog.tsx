@@ -30,7 +30,7 @@ import { translateText } from "@/app/actions/translate";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 
-export function EditClientDialog({ client, accountManagers, services = [] }: { client: any, accountManagers: any[], services?: any[] }) {
+export function EditClientDialog({ client, accountManagers, marketingManagers = [], services = [] }: { client: any, accountManagers: any[], marketingManagers?: any[], services?: any[] }) {
     const { t, isRtl } = useLanguage();
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -44,6 +44,7 @@ export function EditClientDialog({ client, accountManagers, services = [] }: { c
         name: client.name,
         industry: client.industry || "",
         amId: client.amId || "none",
+        mmId: client.mmId || "none",
         package: client.package || "BASIC",
         activeServices: client.activeServices || "",
         email: client.user?.email || "",
@@ -99,6 +100,7 @@ export function EditClientDialog({ client, accountManagers, services = [] }: { c
                 name: formData.name,
                 industry: formData.industry,
                 amId: formData.amId,
+                mmId: formData.mmId,
                 package: formData.package,
                 activeServices: formData.activeServices,
                 briefAr: formData.briefAr,
@@ -187,7 +189,7 @@ export function EditClientDialog({ client, accountManagers, services = [] }: { c
                             </h4>
                             <div className="grid gap-4 pl-4 border-l-2 border-primary/10">
                                 <div className="grid gap-2">
-                                    <Label htmlFor="amId" className={isRtl ? 'text-right' : ''}>{t("dashboard.account_manager")}</Label>
+                                    <Label htmlFor="amId" className={isRtl ? 'text-right' : ''}>{isRtl ? 'مدير الحساب (AM)' : 'Account Manager'}</Label>
                                     <Select
                                         value={formData.amId}
                                         onValueChange={(val) => setFormData({ ...formData, amId: val })}
@@ -200,6 +202,25 @@ export function EditClientDialog({ client, accountManagers, services = [] }: { c
                                             {accountManagers.map((am) => (
                                                 <SelectItem key={am.id} value={am.id}>
                                                     {am.firstName} {am.lastName}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="mmId" className={isRtl ? 'text-right' : ''}>{isRtl ? 'مدير التسويق (MM)' : 'Marketing Manager'}</Label>
+                                    <Select
+                                        value={formData.mmId}
+                                        onValueChange={(val) => setFormData({ ...formData, mmId: val })}
+                                    >
+                                        <SelectTrigger dir={isRtl ? 'rtl' : 'ltr'}>
+                                            <SelectValue placeholder={isRtl ? 'اختر مدير تسويق' : 'Select MM'} />
+                                        </SelectTrigger>
+                                        <SelectContent dir={isRtl ? 'rtl' : 'ltr'}>
+                                            <SelectItem value="none">{t("dashboard.none")}</SelectItem>
+                                            {marketingManagers.map((mm) => (
+                                                <SelectItem key={mm.id} value={mm.id}>
+                                                    {mm.firstName} {mm.lastName}
                                                 </SelectItem>
                                             ))}
                                         </SelectContent>

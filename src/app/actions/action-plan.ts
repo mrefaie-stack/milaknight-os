@@ -16,6 +16,8 @@ export async function getActionPlans(clientId?: string) {
     let where = {};
     if (session.user.role === "AM") {
         where = { client: { amId: session.user.id } };
+    } else if (session.user.role === "MARKETING_MANAGER") {
+        where = { client: { mmId: session.user.id } };
     } else if (session.user.role === "CLIENT") {
         const client = await prisma.client.findUnique({ where: { userId: session.user.id } });
         if (client) {
@@ -213,16 +215,42 @@ export async function submitForApproval(planId: string) {
     const session = await getServerSession(authOptions);
     if (!session || (session.user.role !== "AM" && session.user.role !== "ADMIN")) throw new Error("Unauthorized");
 
-    if (session.user.role === "AM") {
-        const checkPlan = await prisma.actionPlan.findUnique({ where: { id: planId }, include: { client: true } });
-        if (!checkPlan || checkPlan.client.amId !== session.user.id) throw new Error("Unauthorized Access");
+    const plan = await prisma.actionPlan.findUnique({ 
+        where: { id: planId }, 
+        include: { client: { include: { user: true, marketingManager: true } } } 
+    });
+
+    if (!plan) throw new Error("Plan not found");
+    if (session.user.role === "AM" && plan.client.amId !== session.user.id) throw new Error("Unauthorized Access");
+
+    // If there is a Marketing Manager, it needs their approval first
+    if (plan.client.mmId) {
+        await prisma.actionPlan.update({
+            where: { id: planId },
+            data: { mmStatus: "PENDING" }
+        });
+
+        // Notify MM
+        await prisma.notification.create({
+            data: {
+                userId: plan.client.mmId,
+                title: "Action Plan Review Required",
+                message: `The account manager has submitted an action plan for ${plan.client.name} (${plan.month}) for your review.`,
+                type: "SYSTEM",
+                link: `/tasks` // Or a specific review page if we create one, for now tasks or clients
+            }
+        });
+
+        await logActivity(`submitted content plan for ${plan.client.name} (${plan.month}) for internal MM review`, "ActionPlan", planId);
+        
+        revalidatePath(`/am/action-plans/${planId}`);
+        return { success: true, internalReview: true };
     }
 
-    // Update the plan status
-    const plan = await prisma.actionPlan.update({
+    // No MM, proceed directly to client
+    await prisma.actionPlan.update({
         where: { id: planId },
         data: { status: "PENDING" },
-        include: { client: { include: { user: true } } }
     });
 
     // Update all items in this plan that are DRAFT to PENDING
@@ -243,7 +271,6 @@ export async function submitForApproval(planId: string) {
             }
         });
 
-        // Send Email
         await sendEmail({
             to: plan.client.user.email,
             subject: `Action Plan Ready for Approval - ${plan.month}`,
@@ -262,10 +289,11 @@ export async function submitForApproval(planId: string) {
         });
     }
 
-    await logActivity(`submitted content plan for ${plan.client.name} (${plan.month}) for approval`, "ActionPlan", planId);
+    await logActivity(`submitted content plan for ${plan.client.name} (${plan.month}) to client`, "ActionPlan", planId);
 
     revalidatePath(`/am/action-plans/${planId}`);
     revalidatePath("/client/action-plans");
+    return { success: true, toClient: true };
 }
 
 export async function requestActionPlanDeletion(planId: string) {
@@ -575,11 +603,130 @@ export async function approveActionPlan(planId: string) {
 
     await logActivity(`approved the action plan for ${plan.month}`, "ActionPlan", planId);
 
-    revalidatePath(`/client/action-plans/${planId}`);
-    revalidatePath(`/am/action-plans/${planId}`);
-    revalidatePath("/am/action-plans");
-    revalidatePath("/client/action-plans");
+    return { success: true };
+}
 
+export async function approveActionPlanByMM(planId: string) {
+    const session = await getServerSession(authOptions);
+    if (!session || (session.user.role !== "MARKETING_MANAGER" && session.user.role !== "ADMIN")) {
+        throw new Error("Unauthorized");
+    }
+
+    const plan = await (prisma as any).actionPlan.findUnique({
+        where: { id: planId },
+        include: { client: { include: { user: true, accountManager: true } } }
+    });
+
+    if (!plan) throw new Error("Plan not found");
+    // Only the assigned MM can approve
+    if (session.user.role === "MARKETING_MANAGER" && plan.client.mmId !== session.user.id) {
+        throw new Error("Unauthorized Access");
+    }
+
+    // Approve the plan internally
+    await (prisma as any).actionPlan.update({
+        where: { id: planId },
+        data: { 
+            mmStatus: "APPROVED",
+            status: "PENDING" // Now it can go to client
+        }
+    });
+
+    // Update all items to PENDING so client can see them
+    await prisma.contentItem.updateMany({
+        where: { planId, status: "DRAFT" },
+        data: { status: "PENDING" }
+    });
+
+    // Notify the AM that it's approved and sent to client
+    if (plan.client?.accountManager) {
+        await prisma.notification.create({
+            data: {
+                userId: plan.client.accountManager.id,
+                title: "Action Plan Approved by MM",
+                message: `The Marketing Manager has approved the action plan for ${plan.client.name} (${plan.month}) and it is now with the client.`,
+                type: "SYSTEM",
+                link: `/am/action-plans/${planId}`
+            }
+        });
+    }
+
+    // Notify the client
+    if (plan.client?.user) {
+        await prisma.notification.create({
+            data: {
+                userId: plan.client.user.id,
+                title: "Action Plan Ready",
+                message: `Your action plan for ${plan.month} is ready for approval.`,
+                type: "SYSTEM",
+                link: `/client/action-plans`
+            }
+        });
+
+        await sendEmail({
+            to: plan.client.user.email,
+            subject: `Action Plan Ready for Approval - ${plan.month}`,
+            html: `
+                <div style="font-family: sans-serif; padding: 20px; background: #f4f4f5; border-radius: 8px; max-width: 600px; margin: auto;">
+                    <h2 style="color: #4f46e5; margin-bottom: 20px;">MilaKnight Action Plans</h2>
+                    <p style="font-size: 16px;">Hello ${plan.client.user.firstName},</p>
+                    <p style="font-size: 16px;">Your action plan for <strong>${plan.month}</strong> is ready for your review and approval.</p>
+                    <br/>
+                    <a href="${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/client/action-plans/${plan.id}" style="display: inline-block; padding: 12px 24px; background-color: #4f46e5; color: white; text-decoration: none; border-radius: 6px; font-weight: bold;">Review Action Plan</a>
+                </div>
+            `
+        });
+    }
+
+    await logActivity(`MM approved action plan for ${plan.client.name} (${plan.month})`, "ActionPlan", planId);
+
+    revalidatePath(`/am/action-plans/${planId}`);
+    revalidatePath("/client/action-plans");
+    revalidatePath("/tasks");
+    return { success: true };
+}
+
+export async function rejectActionPlanByMM(planId: string, feedback: string) {
+    const session = await getServerSession(authOptions);
+    if (!session || (session.user.role !== "MARKETING_MANAGER" && session.user.role !== "ADMIN")) {
+        throw new Error("Unauthorized");
+    }
+
+    const plan = await (prisma as any).actionPlan.findUnique({
+        where: { id: planId },
+        include: { client: { include: { accountManager: true } } }
+    });
+
+    if (!plan) throw new Error("Plan not found");
+    if (session.user.role === "MARKETING_MANAGER" && plan.client.mmId !== session.user.id) {
+        throw new Error("Unauthorized Access");
+    }
+
+    // Reject the plan internally
+    await (prisma as any).actionPlan.update({
+        where: { id: planId },
+        data: { 
+            mmStatus: "REJECTED",
+        }
+    });
+
+    // Notify the AM
+    if (plan.client?.accountManager) {
+        await prisma.notification.create({
+            data: {
+                userId: plan.client.accountManager.id,
+                title: "Action Plan Rejected by MM",
+                message: `The Marketing Manager rejected the action plan for ${plan.client.name} (${plan.month}). Reason: ${feedback}`,
+                type: "SYSTEM",
+                link: `/am/action-plans/${planId}`
+            }
+        });
+    }
+
+    await logActivity(`MM rejected action plan for ${plan.client.name} (${plan.month})`, "ActionPlan", planId);
+
+    revalidatePath(`/am/action-plans/${planId}`);
+    revalidatePath("/tasks");
     return { success: true };
 }
 export async function scheduleActionPlan(planId: string) {
