@@ -9,15 +9,8 @@ export default withAuth(
 
         if (isAuthPage) {
             if (isAuth) {
-                if (token.role === "ADMIN") {
-                    return NextResponse.redirect(new URL("/admin", req.url));
-                } else if (token.role === "AM") {
-                    return NextResponse.redirect(new URL("/am", req.url));
-                } else if (token.role === "MODERATOR") {
-                    return NextResponse.redirect(new URL("/moderator", req.url));
-                } else {
-                    return NextResponse.redirect(new URL("/client", req.url));
-                }
+                // If authenticated and trying to access login, send to root to let RootPage handle redirection
+                return NextResponse.redirect(new URL("/", req.url));
             }
             return null;
         }
@@ -33,17 +26,17 @@ export default withAuth(
         }
 
         // Role-based protection
-        if (req.nextUrl.pathname.startsWith("/admin") && token?.role !== "ADMIN") {
-            return NextResponse.redirect(new URL("/login", req.url));
+        if (req.nextUrl.pathname.startsWith("/admin") && token?.role !== "ADMIN" && token?.role !== "MARKETING_MANAGER") {
+            return NextResponse.redirect(new URL("/", req.url));
         }
-        if (req.nextUrl.pathname.startsWith("/am") && token?.role !== "AM" && token?.role !== "ADMIN") {
-            return NextResponse.redirect(new URL("/login", req.url));
+        if (req.nextUrl.pathname.startsWith("/am") && token?.role !== "AM" && token?.role !== "ADMIN" && token?.role !== "MARKETING_MANAGER") {
+            return NextResponse.redirect(new URL("/", req.url));
         }
         if (req.nextUrl.pathname.startsWith("/client") && token?.role !== "CLIENT" && token?.role !== "ADMIN") {
-            return NextResponse.redirect(new URL("/login", req.url));
+            return NextResponse.redirect(new URL("/", req.url));
         }
         if (req.nextUrl.pathname.startsWith("/moderator") && token?.role !== "MODERATOR" && token?.role !== "ADMIN") {
-            return NextResponse.redirect(new URL("/login", req.url));
+            return NextResponse.redirect(new URL("/", req.url));
         }
     },
     {

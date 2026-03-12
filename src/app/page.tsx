@@ -9,16 +9,18 @@ export default async function RootPage() {
     redirect("/login");
   }
 
-  const role = session.user.role;
+  const role = session.user.role?.toUpperCase();
 
   if (role === "ADMIN") {
     redirect("/admin");
-  } else if (role === "AM") {
+  } else if (role === "AM" || role === "ACCOUNT_MANAGER") {
     redirect("/am");
   } else if (role === "MODERATOR") {
     redirect("/moderator");
   } else if (role === "CLIENT") {
     redirect("/client");
+  } else if (role === "MARKETING_MANAGER") {
+    redirect("/admin");
   }
 
   redirect("/login");
