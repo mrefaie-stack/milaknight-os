@@ -79,14 +79,23 @@ export async function GET() {
                         try { pageInsights = await meta.getPageInsights(pageId, pageToken); } catch(e) { console.log('error fetching page insights'); }
                     }
                     
+                    // Helper to get the most recent value from insights data
+                    const getMetricValue = (data: any, name: string) => {
+                        const row = data?.find((r: any) => r.name === name);
+                        if (!row?.values?.length) return 0;
+                        // Return the most recent value (last in array)
+                        const lastValue = row.values[row.values.length - 1].value;
+                        console.log(`Metric ${name}:`, row.values);
+                        return lastValue || 0;
+                    };
+
+                    const insightsData = pageInsights?.data || [];
                     let fbReach = 0;
                     let fbEngagement = 0;
-                    
-                    const insightsData = pageInsights?.data || [];
-                    for (const row of insightsData) {
-                        if (row.name === 'page_impressions_unique') fbReach = row.values?.[0]?.value || 0;
-                        if (row.name === 'page_post_engagements') fbEngagement = row.values?.[0]?.value || 0;
-                    }
+                    fbReach = getMetricValue(insightsData, 'page_impressions_unique');
+                    fbEngagement = getMetricValue(insightsData, 'page_post_engagements');
+
+                    console.log('Organic FB Data:', { fbReach, fbEngagement });
 
                     // Fetch IG insights
                     let igFollowers = 0;
@@ -96,12 +105,17 @@ export async function GET() {
                     if (igAccount?.id && pageToken) {
                         igFollowers = igAccount.followers_count || 0;
                         try {
-                            const igInsights: any = await meta.getIgInsights(igAccount.id, pageToken);
-                            for (const row of igInsights?.data || []) {
-                                if (row.name === 'reach') igReach = row.values?.[0]?.value || 0;
-                                if (row.name === 'profile_views') igProfileViews = row.values?.[0]?.value || 0;
-                            }
-                        } catch(e) { console.log('error fetching ig insights'); }
+                            console.log(`Fetching IG insights for account: ${igAccount.id}`);
+                            const h = { access_token: pageToken };
+                            
+                            const igReachData: any = await meta.getIgReach(igAccount.id, pageToken);
+                            igReach = getMetricValue(igReachData?.data || [], 'reach');
+                            
+                            const igViewsData: any = await meta.getIgProfileViews(igAccount.id, pageToken);
+                            igProfileViews = getMetricValue(igViewsData?.data || [], 'profile_views');
+                            
+                            console.log('Organic IG Data:', { igReach, igProfileViews });
+                        } catch(e) { console.error('error fetching ig insights', e); }
                     }
 
                     organicData = {

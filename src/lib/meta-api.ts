@@ -61,7 +61,7 @@ export class MetaAPI {
      */
     async getPageInsights(pageId: string, pageToken?: string) {
         const params: Record<string, string> = {
-            metric: 'page_impressions_unique,page_post_engagements,page_fans',
+            metric: 'page_impressions_unique,page_post_engagements',
             period: 'days_28'
         };
         if (pageToken) params.access_token = pageToken;
@@ -78,12 +78,17 @@ export class MetaAPI {
         });
     }
 
-    /**
-     * Fetch IG insights (requires page access token)
-     */
-    async getIgInsights(igAccountId: string, pageToken: string) {
+    async getIgReach(igAccountId: string, pageToken: string) {
         return this.fetch(`/${igAccountId}/insights`, {
-            metric: 'reach,profile_views',
+            metric: 'reach',
+            period: 'days_28',
+            access_token: pageToken
+        });
+    }
+
+    async getIgProfileViews(igAccountId: string, pageToken: string) {
+        return this.fetch(`/${igAccountId}/insights`, {
+            metric: 'profile_views',
             period: 'day',
             access_token: pageToken
         });
