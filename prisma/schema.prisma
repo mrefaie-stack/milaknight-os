@@ -27,6 +27,7 @@ model User {
   activityLogs   ActivityLog[]
   deletionRequests DeletionRequest[]
   contentItemHistory ContentItemHistory[]
+  aiConversations    AiConversation[]
 }
 
 model Client {
@@ -274,4 +275,24 @@ model DeletionRequest {
   requestedBy    User      @relation(fields: [requestedById], references: [id])
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
+}
+
+model AiConversation {
+  id        String      @id @default(cuid())
+  userId    String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String?
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  messages  AiMessage[]
+}
+
+model AiMessage {
+  id             String         @id @default(cuid())
+  conversationId String
+  conversation   AiConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role           String
+  content        String
+  toolCalls      String?
+  createdAt      DateTime       @default(now())
 }
