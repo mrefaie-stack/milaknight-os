@@ -2,7 +2,7 @@
 
 import { useState, useEffect, cloneElement } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart, DollarSign, Eye, LineChart, MousePointer2, PlaySquare, TrendingUp, Activity, Smartphone, Hash, Users, MapPin, Search, CalendarDays, ExternalLink, RefreshCw, AlertCircle, Sparkles, Plus, Image as ImageIcon, MessageCircle, Heart, Share2, Info, Facebook, Instagram, Loader2, Ghost } from 'lucide-react';
+import { BarChart, DollarSign, Eye, LineChart, MousePointer2, PlaySquare, TrendingUp, Activity, Smartphone, Hash, Users, MapPin, Search, CalendarDays, ExternalLink, RefreshCw, AlertCircle, Sparkles, Plus, Image as ImageIcon, MessageCircle, Heart, Share2, Info, Facebook, Instagram, Loader2, Ghost, Linkedin, Twitter } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/contexts/language-context';
 import { cn } from '@/lib/utils';
@@ -144,6 +144,48 @@ export function LiveMetrics() {
             activeAds: [
                 { id: '3', name: isRtl ? "فلتر رمضان" : "Ramadan Lens", status: 'active', spend: '200 SAR', results: '500 Scans' }
             ]
+        },
+        {
+            id: 'x',
+            name: 'X',
+            accountName: 'X Business Account',
+            icon: <Twitter className="w-5 h-5" />,
+            color: '#000000',
+            isLive: false,
+            organicMetrics: [
+                { label: isRtl ? "المتابعون" : "Followers", value: '12.5K', color: "text-blue-400", icon: <Users className="w-4 h-4" /> },
+                { label: isRtl ? "مرات الظهور" : "Impressions", value: '140K', color: "text-emerald-500", icon: <Activity className="w-4 h-4" /> },
+                { label: isRtl ? "التفاعل" : "Engagement Rate", value: '3.2%', color: "text-primary", icon: <TrendingUp className="w-4 h-4" /> },
+                { label: isRtl ? "إعادة النشر" : "Reposts", value: '450', color: "text-purple-400", icon: <RefreshCw className="w-4 h-4" /> },
+            ],
+            adMetrics: [
+                { label: isRtl ? "الإنفاق" : "Spend", value: `SAR 410`, color: "text-orange-500", icon: <DollarSign className="w-4 h-4" /> },
+                { label: isRtl ? "ظهور الإعلان" : "Ad Impressions", value: '55,000', color: "text-primary", icon: <Eye className="w-4 h-4" /> },
+                { label: isRtl ? "النقرات" : "Link Clicks", value: '820', color: "text-emerald-500", icon: <MousePointer2 className="w-4 h-4" /> },
+                { label: isRtl ? "التكلفة لكل نقرة" : "Avg. CPC", value: `SAR 0.50`, color: "text-blue-500", icon: <BarChart className="w-4 h-4" /> },
+            ],
+            activeAds: []
+        },
+        {
+            id: 'linkedin',
+            name: 'LinkedIn',
+            accountName: 'LinkedIn Company Page',
+            icon: <Linkedin className="w-5 h-5" />,
+            color: '#0077B5',
+            isLive: false,
+            organicMetrics: [
+                { label: isRtl ? "المتابعون" : "Followers", value: '5,200', color: "text-blue-400", icon: <Users className="w-4 h-4" /> },
+                { label: isRtl ? "الوصول" : "Unique Visitors", value: '1,200', color: "text-emerald-500", icon: <Activity className="w-4 h-4" /> },
+                { label: isRtl ? "التفاعل" : "Engagement Rate", value: '5.8%', color: "text-primary", icon: <TrendingUp className="w-4 h-4" /> },
+                { label: isRtl ? "المنشورات" : "Post Reach", value: '8,500', color: "text-purple-400", icon: <Search className="w-4 h-4" /> },
+            ],
+            adMetrics: [
+                { label: isRtl ? "الإنفاق" : "Spend", value: `SAR 1,200`, color: "text-orange-500", icon: <DollarSign className="w-4 h-4" /> },
+                { label: isRtl ? "الظهور" : "Ad Impressions", value: '12,400', color: "text-primary", icon: <Eye className="w-4 h-4" /> },
+                { label: isRtl ? "النقرات" : "Link Clicks", value: '340', color: "text-emerald-500", icon: <MousePointer2 className="w-4 h-4" /> },
+                { label: isRtl ? "التكلفة للحصول على عميل" : "Avg. CPL", value: `SAR 35.00`, color: "text-blue-500", icon: <BarChart className="w-4 h-4" /> },
+            ],
+            activeAds: []
         }
     ];
 
