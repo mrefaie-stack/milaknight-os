@@ -1,10 +1,20 @@
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import FacebookProvider from "next-auth/providers/facebook";
 import { prisma } from "./prisma";
 import bcrypt from "bcryptjs";
 
 export const authOptions: NextAuthOptions = {
     providers: [
+        FacebookProvider({
+            clientId: process.env.FACEBOOK_CLIENT_ID!,
+            clientSecret: process.env.FACEBOOK_CLIENT_SECRET!,
+            authorization: {
+                params: {
+                    scope: "email,public_profile,ads_read,read_insights,pages_show_list,pages_read_engagement",
+                },
+            },
+        }),
         CredentialsProvider({
             name: "Credentials",
             credentials: {
@@ -46,7 +56,36 @@ export const authOptions: NextAuthOptions = {
         strategy: "jwt"
     },
     callbacks: {
-        async jwt({ token, user }) {
+        async signIn({ user, account, profile }) {
+            if (account?.provider === "facebook" && account.access_token) {
+                // When a user signs in with Facebook, we link it to their account
+                // This assumes the user is already logged in or we match by email
+                await prisma.socialConnection.upsert({
+                    where: {
+                        userId_platform_platformAccountId: {
+                            userId: user.id,
+                            platform: "FACEBOOK",
+                            platformAccountId: account.providerAccountId,
+                        },
+                    },
+                    update: {
+                        accessToken: account.access_token,
+                        refreshToken: account.refresh_token,
+                        expiresAt: account.expires_at ? new Date(account.expires_at * 1000) : null,
+                    },
+                    create: {
+                        userId: user.id,
+                        platform: "FACEBOOK",
+                        platformAccountId: account.providerAccountId,
+                        accessToken: account.access_token,
+                        refreshToken: account.refresh_token,
+                        expiresAt: account.expires_at ? new Date(account.expires_at * 1000) : null,
+                    },
+                });
+            }
+            return true;
+        },
+        async jwt({ token, user, account }) {
             if (user) {
                 token.id = user.id;
                 token.role = user.role;
