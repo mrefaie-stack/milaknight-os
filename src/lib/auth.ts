@@ -67,8 +67,8 @@ export const authOptions: NextAuthOptions = {
 
                 console.log(`Attempting Facebook link for email: ${email}`);
 
-                // Find user case-insensitively
-                const dbUser = await (prisma as any).user.findFirst({
+                // 1. Try to find user by exact email match
+                let dbUser = await (prisma as any).user.findFirst({
                     where: { 
                         email: {
                             equals: email,
@@ -77,8 +77,18 @@ export const authOptions: NextAuthOptions = {
                     }
                 });
 
+                // 2. AGENCY FALLBACK: If no email match, and it's a Meta connection,
+                // link it to the primary ADMIN so they can map it to clients.
+                if (!dbUser) {
+                    console.log(`No direct email match for ${email}. Finding primary Admin...`);
+                    dbUser = await prisma.user.findFirst({
+                        where: { role: 'ADMIN' },
+                        orderBy: { createdAt: 'asc' }
+                    });
+                }
+
                 if (dbUser) {
-                    console.log(`User found: ${dbUser.id}. Linking account...`);
+                    console.log(`Linking Meta account [${account.providerAccountId}] to user [${dbUser.email}]`);
                     await (prisma as any).socialConnection.upsert({
                         where: {
                             userId_platform_platformAccountId: {
@@ -101,11 +111,10 @@ export const authOptions: NextAuthOptions = {
                             expiresAt: account.expires_at ? new Date(account.expires_at * 1000) : null,
                         },
                     });
+                    // IMPORTANT: Return true to allow the sign-in to complete in NextAuth
+                    return true;
                 } else {
-                    console.error(`Facebook login failed: No matching user found for email [${email}] in database.`);
-                    // To help debug, let's see if there are ANY users
-                    const userCount = await prisma.user.count();
-                    console.log(`Total users in DB: ${userCount}`);
+                    console.error(`Facebook login failed: No Admin user found to link connection.`);
                     return false;
                 }
             }
