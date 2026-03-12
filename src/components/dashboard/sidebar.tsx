@@ -6,7 +6,7 @@ import { UserNav } from "@/components/dashboard/user-nav";
 import {
     LayoutDashboard, Users, FolderKanban, BarChart3,
     MessageSquare, ShieldCheck, Trash2, Bell, Search,
-    ChevronLeft, ChevronRight, Sparkles, Plus, CalendarDays, Link2
+    ChevronLeft, ChevronRight, Sparkles, Plus, CalendarDays, Link2, Activity
 } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
 import { LanguageToggle } from "@/components/ui/language-toggle";
@@ -59,6 +59,7 @@ export function DashboardSidebar({ role, user }: { role: string; user: any }) {
 
     const clientLinks = [
         { href: "/client", label: t("common.overview"), icon: LayoutDashboard },
+        { href: "/client/live", label: isRtl ? "الاحصائيات الحية" : "Live Analytics", icon: Activity },
         { href: "/client/services", label: t("sidebar.services"), icon: Sparkles },
         { href: "/client/meetings", label: isRtl ? "الاجتماعات" : "Meetings", icon: CalendarDays },
         { href: "/client/action-plans", label: t("sidebar.action_plans"), icon: FolderKanban },
