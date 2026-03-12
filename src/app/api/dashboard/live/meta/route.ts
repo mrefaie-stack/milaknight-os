@@ -90,31 +90,32 @@ export async function GET() {
                     };
 
                     const insightsData = pageInsights?.data || [];
-                    let fbReach = 0;
-                    let fbEngagement = 0;
-                    fbReach = getMetricValue(insightsData, 'page_impressions_unique');
-                    fbEngagement = getMetricValue(insightsData, 'page_post_engagements');
+                    let fbReach = getMetricValue(insightsData, 'page_impressions_unique');
+                    let fbEngagement = getMetricValue(insightsData, 'page_post_engagements');
 
                     console.log('Organic FB Data:', { fbReach, fbEngagement });
 
                     // Fetch IG insights
                     let igFollowers = 0;
                     let igReach = 0;
-                    let igProfileViews = 0;
+                    let igImpressions = 0;
+                    let igWebsiteClicks = 0;
 
                     if (igAccount?.id && pageToken) {
                         igFollowers = igAccount.followers_count || 0;
                         try {
                             console.log(`Fetching IG insights for account: ${igAccount.id}`);
-                            const h = { access_token: pageToken };
                             
                             const igReachData: any = await meta.getIgReach(igAccount.id, pageToken);
                             igReach = getMetricValue(igReachData?.data || [], 'reach');
                             
-                            const igViewsData: any = await meta.getIgProfileViews(igAccount.id, pageToken);
-                            igProfileViews = getMetricValue(igViewsData?.data || [], 'profile_views');
+                            const igImpressionsData: any = await meta.getIgImpressions(igAccount.id, pageToken);
+                            igImpressions = getMetricValue(igImpressionsData?.data || [], 'impressions');
+
+                            const igClicksData: any = await meta.getIgWebsiteClicks(igAccount.id, pageToken);
+                            igWebsiteClicks = getMetricValue(igClicksData?.data || [], 'website_clicks');
                             
-                            console.log('Organic IG Data:', { igReach, igProfileViews });
+                            console.log('Organic IG Data:', { igReach, igImpressions, igWebsiteClicks });
                         } catch(e) { console.error('error fetching ig insights', e); }
                     }
 
@@ -127,7 +128,8 @@ export async function GET() {
                         ig: {
                             followers: igFollowers,
                             reach: igReach,
-                            profileViews: igProfileViews,
+                            impressions: igImpressions,
+                            websiteClicks: igWebsiteClicks,
                             connected: !!igAccount?.id
                         }
                     };

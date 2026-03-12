@@ -86,9 +86,17 @@ export class MetaAPI {
         });
     }
 
-    async getIgProfileViews(igAccountId: string, pageToken: string) {
+    async getIgImpressions(igAccountId: string, pageToken: string) {
         return this.fetch(`/${igAccountId}/insights`, {
-            metric: 'profile_views',
+            metric: 'impressions',
+            period: 'days_28',
+            access_token: pageToken
+        });
+    }
+
+    async getIgWebsiteClicks(igAccountId: string, pageToken: string) {
+        return this.fetch(`/${igAccountId}/insights`, {
+            metric: 'website_clicks',
             period: 'day',
             access_token: pageToken
         });
