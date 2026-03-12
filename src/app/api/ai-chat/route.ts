@@ -79,6 +79,13 @@ export async function POST(req: Request) {
             tools: tools.length > 0 ? tools : undefined,
           });
 
+          // Add assistant message to history immediately
+          currentMessages.push({
+            role: "assistant",
+            content: response.content,
+          });
+
+          const toolResultBlocks: Anthropic.ToolResultBlockParam[] = [];
           continueLoop = false;
 
           for (const block of response.content) {
@@ -96,23 +103,13 @@ export async function POST(req: Request) {
 
               // Security check
               if (!isToolAllowedForRole(toolName, userRole)) {
-                const errorResult = JSON.stringify({
-                  error: `Tool ${toolName} is not available for your role`,
-                });
-                // Add tool result to messages and continue
-                currentMessages.push({
-                  role: "assistant",
-                  content: response.content,
-                });
-                currentMessages.push({
-                  role: "user",
-                  content: [
-                    {
-                      type: "tool_result",
-                      tool_use_id: block.id,
-                      content: errorResult,
-                    },
-                  ],
+                toolResultBlocks.push({
+                  type: "tool_result",
+                  tool_use_id: block.id,
+                  content: JSON.stringify({
+                    error: `Tool ${toolName} is not available for your role`,
+                  }),
+                  is_error: true,
                 });
                 continueLoop = true;
                 continue;
@@ -121,7 +118,11 @@ export async function POST(req: Request) {
               // Notify client about tool execution
               controller.enqueue(
                 encoder.encode(
-                  `data: ${JSON.stringify({ type: "tool_start", tool: toolName, input: toolInput })}\n\n`
+                  `data: ${JSON.stringify({
+                    type: "tool_start",
+                    tool: toolName,
+                    input: toolInput,
+                  })}\n\n`
                 )
               );
 
@@ -137,27 +138,27 @@ export async function POST(req: Request) {
 
               controller.enqueue(
                 encoder.encode(
-                  `data: ${JSON.stringify({ type: "tool_end", tool: toolName })}\n\n`
+                  `data: ${JSON.stringify({
+                    type: "tool_end",
+                    tool: toolName,
+                  })}\n\n`
                 )
               );
 
-              // Add tool call and result to messages for next iteration
-              currentMessages.push({
-                role: "assistant",
-                content: response.content,
-              });
-              currentMessages.push({
-                role: "user",
-                content: [
-                  {
-                    type: "tool_result",
-                    tool_use_id: block.id,
-                    content: result,
-                  },
-                ],
+              toolResultBlocks.push({
+                type: "tool_result",
+                tool_use_id: block.id,
+                content: result,
               });
               continueLoop = true;
             }
+          }
+
+          if (toolResultBlocks.length > 0) {
+            currentMessages.push({
+              role: "user",
+              content: toolResultBlocks,
+            });
           }
 
           // Check stop reason
