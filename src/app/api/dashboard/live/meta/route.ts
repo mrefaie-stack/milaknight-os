@@ -66,28 +66,52 @@ export async function GET() {
                 if (parsedMeta?.pageId) {
                     const pageId = parsedMeta.pageId;
                     
-                    // Fetch page info for fan count (followers)
+                    // Fetch page info for fan count (followers) and IG connection
                     let pageInfo: any = {};
                     try { pageInfo = await meta.getPageInfo(pageId); } catch(e) { console.log('error fetching page info'); }
                     
-                    // Fetch page insights for engagement and reach
-                    let pageInsights: any = {};
-                    try { pageInsights = await meta.getPageInsights(pageId); } catch(e) { console.log('error fetching page insights'); }
+                    const pageToken = pageInfo?.access_token;
+                    const igAccount = pageInfo?.instagram_business_account;
                     
-                    let reach = 0;
-                    let engagement = 0;
+                    // Fetch FB page insights for engagement and reach
+                    let pageInsights: any = {};
+                    if (pageToken) {
+                        try { pageInsights = await meta.getPageInsights(pageId, pageToken); } catch(e) { console.log('error fetching page insights'); }
+                    }
+                    
+                    let fbReach = 0;
+                    let fbEngagement = 0;
                     
                     const insightsData = pageInsights?.data || [];
                     for (const row of insightsData) {
-                        if (row.name === 'page_impressions_unique') reach = row.values?.[0]?.value || 0;
-                        if (row.name === 'page_post_engagements') engagement = row.values?.[0]?.value || 0;
+                        if (row.name === 'page_impressions_unique') fbReach = row.values?.[0]?.value || 0;
+                        if (row.name === 'page_post_engagements') fbEngagement = row.values?.[0]?.value || 0;
+                    }
+
+                    // Fetch IG insights
+                    let igFollowers = 0;
+                    let igReach = 0;
+                    let igProfileViews = 0;
+
+                    if (igAccount?.id && pageToken) {
+                        igFollowers = igAccount.followers_count || 0;
+                        try {
+                            const igInsights: any = await meta.getIgInsights(igAccount.id, pageToken);
+                            for (const row of igInsights?.data || []) {
+                                if (row.name === 'reach') igReach = row.values?.[0]?.value || 0;
+                                if (row.name === 'profile_views') igProfileViews = row.values?.[0]?.value || 0;
+                            }
+                        } catch(e) { console.log('error fetching ig insights'); }
                     }
 
                     organicData = {
-                        followers: pageInfo?.fan_count || 0,
-                        engagement: engagement,
-                        reach: reach,
-                        pageViews: 0 // Cannot reliably get page views without read_insights for pages
+                        followers: (pageInfo?.fan_count || 0) + igFollowers,
+                        engagement: fbEngagement, // Using FB engagement as general interaction proxy
+                        reach: fbReach + igReach,
+                        pageViews: igProfileViews, // Falling back to IG Profile views since FB page views endpoint takes diff permissions
+                        fb_followers: pageInfo?.fan_count || 0,
+                        ig_followers: igFollowers,
+                        ig_connected: !!igAccount?.id
                     };
                 }
             } catch(e) { console.error('Error fetching organic stats', e); }

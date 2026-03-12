@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart, DollarSign, MousePointer2, Eye, Loader2, Facebook, AlertCircle, TrendingUp, PlaySquare, Ghost, Search, Image as ImageIcon, Activity } from 'lucide-react';
+import { BarChart, DollarSign, Eye, LineChart, MousePointer2, PlaySquare, TrendingUp, Activity, Smartphone, Hash, Users, MapPin, Search, CalendarDays, ExternalLink, RefreshCw, AlertCircle, Sparkles, Plus, Image as ImageIcon, MessageCircle, Heart, Share2, Info, Facebook, Instagram, Loader2, Ghost } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/contexts/language-context';
 import { cn } from '@/lib/utils';
@@ -52,10 +52,10 @@ export function LiveMetrics() {
             isLive: !error && metaData,
             error: error,
             organicMetrics: [
-                { label: isRtl ? "المتابعون" : "Total Followers", value: metaData?.organicMetrics?.followers?.toLocaleString() || '0', color: "text-blue-400", icon: <TrendingUp className="w-4 h-4" /> },
-                { label: isRtl ? "التفاعل" : "Engagement", value: metaData?.organicMetrics?.engagement?.toLocaleString() || '0', color: "text-rose-500", icon: <TrendingUp className="w-4 h-4" /> },
-                { label: isRtl ? "الوصول" : "Organic Reach", value: metaData?.organicMetrics?.reach?.toLocaleString() || '0', color: "text-emerald-500", icon: <Activity className="w-4 h-4" /> },
-                { label: isRtl ? "زيارات الصفحة" : "Page Views", value: metaData?.organicMetrics?.pageViews?.toLocaleString() || '0', color: "text-purple-500", icon: <Eye className="w-4 h-4" /> },
+                { label: isRtl ? "متابعي فيسبوك" : "FB Followers", value: metaData?.organicMetrics?.fb_followers?.toLocaleString() || '0', color: "text-blue-400", icon: <Facebook className="w-4 h-4" /> },
+                { label: metaData?.organicMetrics?.ig_connected ? (isRtl ? "متابعي انستجرام" : "IG Followers") : (isRtl ? "غير مربوط بانستجرام" : "IG Not Connected"), value: metaData?.organicMetrics?.ig_followers?.toLocaleString() || '0', color: "text-rose-400", icon: <Instagram className="w-4 h-4" /> },
+                { label: isRtl ? "الوصول الإجمالي" : "Total Reach", value: metaData?.organicMetrics?.reach?.toLocaleString() || '0', color: "text-emerald-500", icon: <Activity className="w-4 h-4" /> },
+                { label: isRtl ? "تفاعل فيسبوك" : "FB Engagement", value: metaData?.organicMetrics?.engagement?.toLocaleString() || '0', color: "text-primary", icon: <TrendingUp className="w-4 h-4" /> },
             ],
             adMetrics: metaData ? [
                 { label: isRtl ? "الإنفاق (30 يوم)" : "Spend (30d)", value: `SAR ${metaData.metrics.spend}`, color: "text-orange-500", icon: <DollarSign className="w-4 h-4" /> },
