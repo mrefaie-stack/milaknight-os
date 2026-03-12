@@ -35,6 +35,7 @@ export function AiChatWidget({ user }: { user: { name: string; role: string; id:
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeTool, setActiveTool] = useState<ToolEvent | null>(null);
+  const [showWelcome, setShowWelcome] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -223,15 +224,52 @@ export function AiChatWidget({ user }: { user: { name: string; role: string; id:
 
   return (
     <>
-      {/* Floating Button */}
+      {/* Floating Button and Welcome Bubble */}
       <motion.div
-        className="fixed bottom-6 left-6 z-50"
+        className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3"
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
         transition={{ delay: 0.5, type: "spring" }}
       >
+        <AnimatePresence>
+          {showWelcome && !isOpen && (
+            <motion.div
+              initial={{ opacity: 0, x: 20, scale: 0.8 }}
+              animate={{ opacity: 1, x: 0, scale: 1 }}
+              exit={{ opacity: 0, x: 20, scale: 0.8 }}
+              className="relative group"
+            >
+              <div 
+                className="bg-primary text-primary-foreground px-4 py-3 rounded-2xl rounded-br-none shadow-xl cursor-pointer hover:bg-primary/95 transition-colors max-w-[200px] text-right"
+                onClick={() => {
+                  setIsOpen(true);
+                  setShowWelcome(false);
+                }}
+              >
+                <p className="text-sm font-medium leading-relaxed">
+                  أنا مساعدك الذكي، كيف يمكنني مساعدتك اليوم؟
+                </p>
+              </div>
+              <Button
+                variant="secondary"
+                size="icon-xs"
+                className="absolute -top-2 -left-2 size-5 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowWelcome(false);
+                }}
+              >
+                <X className="size-3" />
+              </Button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <Button
-          onClick={() => setIsOpen(!isOpen)}
+          onClick={() => {
+            setIsOpen(!isOpen);
+            if (!isOpen) setShowWelcome(false);
+          }}
           size="icon-lg"
           className={cn(
             "rounded-full shadow-lg size-14 transition-all",
@@ -252,7 +290,7 @@ export function AiChatWidget({ user }: { user: { name: string; role: string; id:
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="fixed bottom-24 left-6 z-50 flex flex-col w-[400px] h-[550px] max-h-[70vh] rounded-2xl border bg-background/95 backdrop-blur-xl shadow-2xl overflow-hidden"
+            className="fixed bottom-24 right-6 z-50 flex flex-col w-[400px] h-[550px] max-h-[70vh] rounded-2xl border bg-background/95 backdrop-blur-xl shadow-2xl overflow-hidden"
           >
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b bg-muted/30">
