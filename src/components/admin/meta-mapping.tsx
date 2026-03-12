@@ -1,0 +1,166 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Loader2, Check, ExternalLink, Link2, Search, Facebook } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { toast } from 'sonner';
+
+export function MetaMapping() {
+    const [clients, setClients] = useState<any[]>([]);
+    const [adAccounts, setAdAccounts] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [search, setSearch] = useState('');
+    const [linking, setLinking] = useState<string | null>(null);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const [clientsRes, accountsRes] = await Promise.all([
+                    fetch('/api/admin/clients/list-with-social'),
+                    fetch('/api/admin/meta/ad-accounts')
+                ]);
+                
+                const clientsJson = await clientsRes.json();
+                const accountsJson = await accountsRes.json();
+                
+                if (clientsJson.clients) setClients(clientsJson.clients);
+                if (accountsJson.accounts) setAdAccounts(accountsJson.accounts);
+            } catch (error) {
+                console.error('Fetch error:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchData();
+    }, []);
+
+    const handleLink = async (clientId: string, accountId: string, accountName: string) => {
+        setLinking(clientId);
+        try {
+            const res = await fetch('/api/admin/clients/link-social', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    clientId,
+                    platformAccountId: accountId,
+                    platformAccountName: accountName,
+                    platform: 'FACEBOOK'
+                })
+            });
+
+            if (!res.ok) throw new Error('Failed to link');
+            
+            toast.success(`Account linked successfully to ${accountName}`);
+            
+            // Update local state
+            setClients(prev => prev.map(c => 
+                c.id === clientId 
+                ? { ...c, socialConnections: [{ platformAccountId: accountId, platformAccountName: accountName }] }
+                : c
+            ));
+        } catch (error: any) {
+            toast.error(error.message);
+        } finally {
+            setLinking(null);
+        }
+    };
+
+    const filteredClients = clients.filter(c => 
+        c.name.toLowerCase().includes(search.toLowerCase())
+    );
+
+    if (loading) {
+        return (
+            <div className="h-64 flex items-center justify-center">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+        );
+    }
+
+    if (adAccounts.length === 0) {
+        return null; // Don't show mapping if not connected to meta
+    }
+
+    return (
+        <Card className="mt-8 border-none bg-white/[0.02] shadow-2xl">
+            <CardHeader className="border-b border-white/5 pb-6">
+                <div className="flex items-center gap-3">
+                    <div className="p-2 bg-rose-500/10 rounded-lg">
+                        <Link2 className="w-5 h-5 text-rose-500" />
+                    </div>
+                    <div>
+                        <CardTitle className="text-xl font-black uppercase tracking-tight">Client Meta Mapping</CardTitle>
+                        <CardDescription>Assign specific Facebook Ad Accounts to your clients.</CardDescription>
+                    </div>
+                </div>
+            </CardHeader>
+            <CardContent className="pt-6 space-y-6">
+                <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input 
+                        placeholder="Search clients..." 
+                        className="pl-10 bg-white/5 border-white/10 rounded-xl"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                    />
+                </div>
+
+                <div className="space-y-4">
+                    {filteredClients.map(client => {
+                        const currentMapping = client.socialConnections?.[0];
+                        return (
+                            <div key={client.id} className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/10 hover:border-white/20 transition-all">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-10 h-10 rounded-full bg-white/10 overflow-hidden flex items-center justify-center">
+                                        {client.logoUrl ? (
+                                            <img src={client.logoUrl} className="w-full h-full object-cover" />
+                                        ) : (
+                                            <span className="text-xs font-bold">{client.name[0]}</span>
+                                        )}
+                                    </div>
+                                    <div>
+                                        <h4 className="font-bold text-sm">{client.name}</h4>
+                                        <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">
+                                            {currentMapping ? (
+                                                <span className="text-emerald-500 flex items-center gap-1">
+                                                    <Check className="w-3 h-3" /> Linked to {currentMapping.platformAccountName}
+                                                </span>
+                                            ) : (
+                                                "No account assigned"
+                                            )}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-2">
+                                    <Select 
+                                        defaultValue={currentMapping?.platformAccountId}
+                                        onValueChange={(val) => {
+                                            const acc = adAccounts.find(a => a.id === val);
+                                            handleLink(client.id, val, acc?.name || 'Unknown');
+                                        }}
+                                        disabled={linking === client.id}
+                                    >
+                                        <SelectTrigger className="w-[200px] bg-white/5 border-white/10 rounded-xl text-xs h-10">
+                                            <SelectValue placeholder="Select Ad Account" />
+                                        </SelectTrigger>
+                                        <SelectContent className="bg-zinc-900 border-white/10 rounded-xl">
+                                            {adAccounts.map(acc => (
+                                                <SelectItem key={acc.id} value={acc.id} className="text-xs focus:bg-white/10">
+                                                    {acc.name}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            </CardContent>
+        </Card>
+    );
+}
