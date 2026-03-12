@@ -8,7 +8,11 @@ export class MetaAPI {
 
     private async fetch(endpoint: string, params: Record<string, string> = {}) {
         const url = new URL(`${this.baseUrl}${endpoint}`);
-        url.searchParams.append('access_token', this.accessToken);
+        
+        if (!params.access_token) {
+            url.searchParams.append('access_token', this.accessToken);
+        }
+        
         for (const [key, value] of Object.entries(params)) {
             url.searchParams.append(key, value);
         }
@@ -55,11 +59,14 @@ export class MetaAPI {
     /**
      * Fetch page insights (Organic)
      */
-    async getPageInsights(pageId: string) {
-        return this.fetch(`/${pageId}/insights`, {
+    async getPageInsights(pageId: string, pageToken?: string) {
+        const params: Record<string, string> = {
             metric: 'page_impressions_unique,page_post_engagements,page_fans',
             period: 'days_28'
-        });
+        };
+        if (pageToken) params.access_token = pageToken;
+        
+        return this.fetch(`/${pageId}/insights`, params);
     }
 
     /**
@@ -67,17 +74,43 @@ export class MetaAPI {
      */
     async getPageInfo(pageId: string) {
         return this.fetch(`/${pageId}`, {
-            fields: 'name,fan_count,username,picture'
+            fields: 'name,fan_count,username,picture,access_token,instagram_business_account{id,username,followers_count,profile_picture_url}'
         });
     }
 
     /**
-     * Fetch all pages associated with the token
+     * Fetch IG insights (requires page access token)
+     */
+    async getIgInsights(igAccountId: string, pageToken: string) {
+        return this.fetch(`/${igAccountId}/insights`, {
+            metric: 'reach,profile_views',
+            period: 'day',
+            access_token: pageToken
+        });
+    }
+
+    /**
+     * Fetch all pages associated with the token (with pagination loop)
      */
     async getPages() {
-        return this.fetch('/me/accounts', {
-            fields: 'name,id,access_token,category,picture',
-            limit: '500'
-        });
+        let pages: any[] = [];
+        let after = '';
+        
+        try {
+            do {
+                const params: any = { fields: 'name,id,access_token,category,picture', limit: '100' };
+                if (after) params.after = after;
+                
+                const res: any = await this.fetch('/me/accounts', params);
+                if (res.data) pages = pages.concat(res.data);
+                
+                after = res.paging?.cursors?.after || '';
+                if (!res.paging?.next) break;
+            } while (after);
+        } catch (e) {
+            console.error('Error fetching pages globally', e);
+        }
+        
+        return { data: pages };
     }
 }
