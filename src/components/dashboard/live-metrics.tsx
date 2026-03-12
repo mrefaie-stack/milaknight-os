@@ -87,8 +87,8 @@ export function LiveMetrics() {
             organicMetrics: [
                 { label: isRtl ? "المتابعون" : "Followers", value: metaData?.organicMetrics?.ig?.followers?.toLocaleString() || '0', color: "text-rose-400", icon: <Users className="w-4 h-4" /> },
                 { label: isRtl ? "الوصول" : "Reach", value: metaData?.organicMetrics?.ig?.reach?.toLocaleString() || '0', color: "text-emerald-500", icon: <Activity className="w-4 h-4" /> },
-                { label: isRtl ? "مرات الظهور" : "Impressions", value: metaData?.organicMetrics?.ig?.impressions?.toLocaleString() || '0', color: "text-primary", icon: <LineChart className="w-4 h-4" /> },
-                { label: isRtl ? "إجمالي المنشورات" : "Total Posts", value: metaData?.organicMetrics?.ig?.totalPosts?.toLocaleString() || '0', color: "text-orange-400", icon: <Search className="w-4 h-4" /> },
+                { label: isRtl ? "مشاهدات الفيديو" : "Video Views", value: metaData?.organicMetrics?.ig?.videoViews?.toLocaleString() || '0', color: "text-primary", icon: <PlaySquare className="w-4 h-4" /> },
+                { label: isRtl ? "التفاعلات" : "Interactions", value: metaData?.organicMetrics?.ig?.interactions?.toLocaleString() || '0', color: "text-rose-500", icon: <Heart className="w-4 h-4" /> },
             ],
             adMetrics: metaData ? [
                 { label: isRtl ? "الإنفاق" : "Spend", value: `SAR ${metaData.metrics.spend}`, color: "text-orange-500", icon: <DollarSign className="w-4 h-4" /> },
