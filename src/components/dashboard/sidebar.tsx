@@ -42,6 +42,8 @@ export function DashboardSidebar({ role, user }: { role: string; user: any }) {
         { href: "/admin/services", label: t("sidebar.services"), icon: FolderKanban },
         { href: "/admin/requests", label: t("sidebar.service_requests"), icon: Sparkles },
         { href: "/admin/team", label: t("common.team"), icon: ShieldCheck },
+        { href: "/am/action-plans", label: t("sidebar.action_plans"), icon: FolderKanban },
+        { href: "/am/reports", label: t("sidebar.reports"), icon: BarChart3 },
         { href: "/admin/deletions", label: t("sidebar.deletions"), icon: Trash2 },
         { href: "/admin/connections", label: isRtl ? "ربط المنصات" : "Connections", icon: Link2 },
         { href: "/tasks", label: isRtl ? "المهام الداخلية" : "Internal Tasks", icon: ListTodo },

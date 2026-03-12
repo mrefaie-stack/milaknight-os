@@ -96,7 +96,7 @@ export default async function ActionPlanBuilderPage({ params }: { params: Promis
                         </form>
                     )}
 
-                    {session.user.role === "MARKETING_MANAGER" && (plan as any).mmStatus === "PENDING" && (
+                    {(session.user.role === "MARKETING_MANAGER" || session.user.role === "ADMIN") && (plan as any).mmStatus === "PENDING" && (
                         <div className="flex gap-2">
                             <form action={async () => {
                                 "use server";

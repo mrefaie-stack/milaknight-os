@@ -15,7 +15,7 @@ export function ReportListClient({
     role
 }: {
     initialReports: any[],
-    role: "AM" | "CLIENT" | "ADMIN"
+    role: "AM" | "CLIENT" | "ADMIN" | "MARKETING_MANAGER"
 }) {
     const { t, isRtl } = useLanguage();
     const router = useRouter();
@@ -142,7 +142,7 @@ export function ReportListClient({
                                                     {isRtl ? 'عرض التقرير' : 'View Dashboard'}
                                                 </Button>
                                             </Link>
-                                            {role === 'AM' && (
+                                            {(role === 'AM' || role === 'ADMIN' || role === 'MARKETING_MANAGER') && (
                                                 <Link href={`/am/reports/${report.id}/edit`}>
                                                     <Button variant="outline" size="icon" className="h-12 w-12 rounded-2xl border-2 hover:bg-primary/5 hover:text-primary transition-all">
                                                         <Settings className="h-5 w-5" />
