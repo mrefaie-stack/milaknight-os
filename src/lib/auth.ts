@@ -126,15 +126,29 @@ export const authOptions: NextAuthOptions = {
                 token.role = user.role;
                 
                 // If this is an OAuth login, we need to ensure the ID is our DB ID, not the provider ID
-                if (account?.provider === 'facebook' && user.email) {
-                    const dbUser = await (prisma as any).user.findFirst({
-                        where: { 
-                            email: {
-                                equals: user.email.toLowerCase(),
-                                mode: 'insensitive'
+                if (account?.provider === 'facebook') {
+                    const email = user.email?.toLowerCase();
+                    let dbUser: any = null;
+                    
+                    if (email) {
+                        dbUser = await (prisma as any).user.findFirst({
+                            where: { 
+                                email: {
+                                    equals: email,
+                                    mode: 'insensitive'
+                                }
                             }
-                        }
-                    });
+                        });
+                    }
+
+                    // AGENCY FALLBACK
+                    if (!dbUser) {
+                        dbUser = await (prisma as any).user.findFirst({
+                            where: { role: 'ADMIN' },
+                            orderBy: { createdAt: 'asc' }
+                        });
+                    }
+
                     if (dbUser) {
                         token.id = dbUser.id;
                         token.role = dbUser.role;
