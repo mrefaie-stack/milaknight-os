@@ -166,7 +166,7 @@ export function MetaMapping() {
                                     <div className="flex flex-col gap-1">
                                         <span className="text-[9px] uppercase font-bold text-muted-foreground tracking-widest">Ad Account</span>
                                         <Select 
-                                            defaultValue={currentMapping?.platformAccountId}
+                                            value={currentMapping?.platformAccountId || ""}
                                             onValueChange={(val) => {
                                                 const acc = adAccounts.find(a => a.id === val);
                                                 handleLink(client.id, val, acc?.name || 'Unknown', parsedMeta?.pageId, parsedMeta?.pageName);
@@ -190,7 +190,7 @@ export function MetaMapping() {
                                     <div className="flex flex-col gap-1">
                                         <span className="text-[9px] uppercase font-bold text-muted-foreground tracking-widest">FB/IG Page</span>
                                         <Select 
-                                            defaultValue={parsedMeta?.pageId}
+                                            value={parsedMeta?.pageId || ""}
                                             onValueChange={(val) => {
                                                 const page = pages.find(p => p.id === val);
                                                 handleLink(client.id, currentMapping?.platformAccountId || '', currentMapping?.platformAccountName || '', val, page?.name);
