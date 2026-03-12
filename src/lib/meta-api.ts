@@ -77,7 +77,7 @@ export class MetaAPI {
     async getPages() {
         return this.fetch('/me/accounts', {
             fields: 'name,id,access_token,category,picture',
-            limit: '100'
+            limit: '500'
         });
     }
 }

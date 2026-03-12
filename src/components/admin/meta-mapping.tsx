@@ -15,6 +15,7 @@ export function MetaMapping() {
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
     const [linking, setLinking] = useState<string | null>(null);
+    const [draftLinks, setDraftLinks] = useState<Record<string, { accountId?: string; pageId?: string }>>({});
 
     useEffect(() => {
         const fetchData = async () => {
@@ -84,6 +85,35 @@ export function MetaMapping() {
         }
     };
 
+    const handleSave = async (clientId: string) => {
+        const draft = draftLinks[clientId] || {};
+        const client = clients.find(c => c.id === clientId);
+        const currentMapping = client?.socialConnections?.[0];
+        let parsedMeta: Record<string, any> = {};
+        if (currentMapping?.metadata) {
+            try { parsedMeta = JSON.parse(currentMapping.metadata); } catch(e) {}
+        }
+        
+        const finalAccountId = draft.accountId !== undefined ? draft.accountId : currentMapping?.platformAccountId;
+        const finalPageId = draft.pageId !== undefined ? draft.pageId : parsedMeta?.pageId;
+        
+        if (!finalAccountId) {
+            toast.error("Please select an Ad Account before saving.");
+            return;
+        }
+
+        const accName = adAccounts.find(a => a.id === finalAccountId)?.name || 'Unknown';
+        const pageName = pages.find(p => p.id === finalPageId)?.name;
+
+        await handleLink(clientId, finalAccountId, accName, finalPageId, pageName);
+        
+        setDraftLinks(prev => {
+            const next = { ...prev };
+            delete next[clientId];
+            return next;
+        });
+    };
+
     const filteredClients = clients.filter(c => 
         c.name.toLowerCase().includes(search.toLowerCase())
     );
@@ -131,6 +161,12 @@ export function MetaMapping() {
                         if (currentMapping?.metadata) {
                             try { parsedMeta = JSON.parse(currentMapping.metadata); } catch(e) {}
                         }
+                        
+                        const draft = draftLinks[client.id] || {};
+                        const selectedAccountId = draft.accountId !== undefined ? draft.accountId : (currentMapping?.platformAccountId || "");
+                        const selectedPageId = draft.pageId !== undefined ? draft.pageId : (parsedMeta?.pageId || "");
+                        
+                        const isDrafting = draft.accountId !== undefined || draft.pageId !== undefined;
 
                         return (
                             <div key={client.id} className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 bg-white/5 rounded-2xl border border-white/10 hover:border-white/20 transition-all">
@@ -161,22 +197,19 @@ export function MetaMapping() {
                                     </div>
                                 </div>
 
-                                <div className="flex items-center gap-3">
+                                <div className="flex flex-col sm:flex-row items-end sm:items-center gap-3">
                                     {/* Ad Account Select */}
-                                    <div className="flex flex-col gap-1">
+                                    <div className="flex flex-col gap-1 w-full sm:w-auto">
                                         <span className="text-[9px] uppercase font-bold text-muted-foreground tracking-widest">Ad Account</span>
                                         <Select 
-                                            value={currentMapping?.platformAccountId || ""}
-                                            onValueChange={(val) => {
-                                                const acc = adAccounts.find(a => a.id === val);
-                                                handleLink(client.id, val, acc?.name || 'Unknown', parsedMeta?.pageId, parsedMeta?.pageName);
-                                            }}
+                                            value={selectedAccountId}
+                                            onValueChange={(val) => setDraftLinks(p => ({ ...p, [client.id]: { ...p[client.id], accountId: val } }))}
                                             disabled={linking === client.id}
                                         >
-                                            <SelectTrigger className="w-[180px] bg-white/5 border-white/10 rounded-xl text-xs h-9">
+                                            <SelectTrigger className="w-full sm:w-[180px] bg-white/5 border-white/10 rounded-xl text-xs h-9">
                                                 <SelectValue placeholder="Select Ad Account" />
                                             </SelectTrigger>
-                                            <SelectContent className="bg-zinc-900 border-white/10 rounded-xl">
+                                            <SelectContent className="bg-zinc-900 border-white/10 rounded-xl max-h-[300px]">
                                                 {adAccounts.map(acc => (
                                                     <SelectItem key={acc.id} value={acc.id} className="text-xs focus:bg-white/10">
                                                         {acc.name}
@@ -187,20 +220,17 @@ export function MetaMapping() {
                                     </div>
 
                                     {/* Page Select */}
-                                    <div className="flex flex-col gap-1">
+                                    <div className="flex flex-col gap-1 w-full sm:w-auto">
                                         <span className="text-[9px] uppercase font-bold text-muted-foreground tracking-widest">FB/IG Page</span>
                                         <Select 
-                                            value={parsedMeta?.pageId || ""}
-                                            onValueChange={(val) => {
-                                                const page = pages.find(p => p.id === val);
-                                                handleLink(client.id, currentMapping?.platformAccountId || '', currentMapping?.platformAccountName || '', val, page?.name);
-                                            }}
+                                            value={selectedPageId}
+                                            onValueChange={(val) => setDraftLinks(p => ({ ...p, [client.id]: { ...p[client.id], pageId: val } }))}
                                             disabled={linking === client.id || pages.length === 0}
                                         >
-                                            <SelectTrigger className="w-[180px] bg-white/5 border-white/10 rounded-xl text-xs h-9">
+                                            <SelectTrigger className="w-full sm:w-[180px] bg-white/5 border-white/10 rounded-xl text-xs h-9">
                                                 <SelectValue placeholder={pages.length > 0 ? "Select Page" : "Loading..."} />
                                             </SelectTrigger>
-                                            <SelectContent className="bg-zinc-900 border-white/10 rounded-xl">
+                                            <SelectContent className="bg-zinc-900 border-white/10 rounded-xl max-h-[300px]">
                                                 {pages.map(page => (
                                                     <SelectItem key={page.id} value={page.id} className="text-xs focus:bg-white/10">
                                                         {page.name}
@@ -208,6 +238,18 @@ export function MetaMapping() {
                                                 ))}
                                             </SelectContent>
                                         </Select>
+                                    </div>
+
+                                    {/* Save Button */}
+                                    <div className="flex flex-col justify-end mt-2 sm:mt-0">
+                                        <Button 
+                                            size="sm" 
+                                            disabled={!isDrafting || linking === client.id}
+                                            onClick={() => handleSave(client.id)}
+                                            className="h-9 rounded-xl px-6 bg-primary font-bold text-xs"
+                                        >
+                                            {linking === client.id ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save"}
+                                        </Button>
                                     </div>
                                 </div>
                             </div>
