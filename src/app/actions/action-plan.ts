@@ -104,6 +104,15 @@ export async function addContentItem(planId: string, data: any) {
         }
     });
 
+    // Reset plan approval and client visibility if items are added
+    await (prisma as any).actionPlan.update({
+        where: { id: planId },
+        data: { 
+            mmStatus: "DRAFT",
+            status: "DRAFT" 
+        }
+    });
+
     revalidatePath(`/am/action-plans/${planId}`);
     return item;
 }
@@ -148,6 +157,15 @@ export async function updateContentItem(itemId: string, planId: string, data: an
             itemId,
             changedById: session.user.id,
             changeSummary: `Updated by ${session.user.name}. Fields changed: ${Object.keys(data).filter(k => data[k] !== (oldItem as any)[k]).join(', ')}`
+        }
+    });
+
+    // Reset plan approval and client visibility if items are updated
+    await (prisma as any).actionPlan.update({
+        where: { id: planId },
+        data: { 
+            mmStatus: "DRAFT",
+            status: "DRAFT" 
         }
     });
 
@@ -215,17 +233,17 @@ export async function submitForApproval(planId: string) {
     const session = await getServerSession(authOptions);
     if (!session || (session.user.role !== "AM" && session.user.role !== "ADMIN")) throw new Error("Unauthorized");
 
-    const plan = await prisma.actionPlan.findUnique({ 
+    const plan = await (prisma as any).actionPlan.findUnique({ 
         where: { id: planId }, 
         include: { client: { include: { user: true, marketingManager: true } } } 
     });
 
     if (!plan) throw new Error("Plan not found");
-    if (session.user.role === "AM" && plan.client.amId !== session.user.id) throw new Error("Unauthorized Access");
+    if (session.user.role === "AM" && (plan as any).client.amId !== session.user.id) throw new Error("Unauthorized Access");
 
     // If there is a Marketing Manager, it needs their approval first
-    if (plan.client.mmId) {
-        await prisma.actionPlan.update({
+    if ((plan as any).client.mmId) {
+        await (prisma as any).actionPlan.update({
             where: { id: planId },
             data: { mmStatus: "PENDING" }
         });
@@ -233,22 +251,22 @@ export async function submitForApproval(planId: string) {
         // Notify MM
         await prisma.notification.create({
             data: {
-                userId: plan.client.mmId,
+                userId: (plan as any).client.mmId,
                 title: "Action Plan Review Required",
-                message: `The account manager has submitted an action plan for ${plan.client.name} (${plan.month}) for your review.`,
+                message: `The account manager has submitted an action plan for ${(plan as any).client.name} (${(plan as any).month}) for your review.`,
                 type: "SYSTEM",
-                link: `/tasks` // Or a specific review page if we create one, for now tasks or clients
+                link: `/tasks` 
             }
         });
 
-        await logActivity(`submitted content plan for ${plan.client.name} (${plan.month}) for internal MM review`, "ActionPlan", planId);
+        await logActivity(`submitted content plan for ${(plan as any).client.name} (${(plan as any).month}) for internal MM review`, "ActionPlan", planId);
         
         revalidatePath(`/am/action-plans/${planId}`);
         return { success: true, internalReview: true };
     }
 
     // No MM, proceed directly to client
-    await prisma.actionPlan.update({
+    await (prisma as any).actionPlan.update({
         where: { id: planId },
         data: { status: "PENDING" },
     });
@@ -260,27 +278,27 @@ export async function submitForApproval(planId: string) {
     });
 
     // Notify the client
-    if (plan.client?.user) {
+    if ((plan as any).client?.user) {
         await prisma.notification.create({
             data: {
-                userId: plan.client.user.id,
+                userId: (plan as any).client.user.id,
                 title: "Action Plan Ready",
-                message: `Your action plan for ${plan.month} is ready for approval.`,
+                message: `Your action plan for ${(plan as any).month} is ready for approval.`,
                 type: "SYSTEM",
                 link: `/client/action-plans`
             }
         });
 
         await sendEmail({
-            to: plan.client.user.email,
-            subject: `Action Plan Ready for Approval - ${plan.month}`,
+            to: (plan as any).client.user.email,
+            subject: `Action Plan Ready for Approval - ${(plan as any).month}`,
             html: `
                 <div style="font-family: sans-serif; padding: 20px; background: #f4f4f5; border-radius: 8px; max-width: 600px; margin: auto;">
                     <h2 style="color: #4f46e5; margin-bottom: 20px;">MilaKnight Action Plans</h2>
-                    <p style="font-size: 16px;">Hello ${plan.client.user.firstName},</p>
-                    <p style="font-size: 16px;">Your action plan for <strong>${plan.month}</strong> is ready for your review and approval.</p>
+                    <p style="font-size: 16px;">Hello ${(plan as any).client.user.firstName},</p>
+                    <p style="font-size: 16px;">Your action plan for <strong>${(plan as any).month}</strong> is ready for your review and approval.</p>
                     <br/>
-                    <a href="${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/client/action-plans/${plan.id}" style="display: inline-block; padding: 12px 24px; background-color: #4f46e5; color: white; text-decoration: none; border-radius: 6px; font-weight: bold;">Review Action Plan</a>
+                    <a href="${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/client/action-plans/${(plan as any).id}" style="display: inline-block; padding: 12px 24px; background-color: #4f46e5; color: white; text-decoration: none; border-radius: 6px; font-weight: bold;">Review Action Plan</a>
                     <br/><br/>
                     <hr style="border: 0; border-top: 1px solid #e5e7eb; margin: 20px 0;"/>
                     <p style="font-size: 12px; color: #6b7280;">If you have any questions, please reach out to your Account Manager.</p>
@@ -289,7 +307,7 @@ export async function submitForApproval(planId: string) {
         });
     }
 
-    await logActivity(`submitted content plan for ${plan.client.name} (${plan.month}) to client`, "ActionPlan", planId);
+    await logActivity(`submitted content plan for ${(plan as any).client.name} (${(plan as any).month}) to client`, "ActionPlan", planId);
 
     revalidatePath(`/am/action-plans/${planId}`);
     revalidatePath("/client/action-plans");
