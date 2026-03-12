@@ -26,7 +26,8 @@ export class MetaAPI {
      */
     async getAdAccounts() {
         return this.fetch('/me/adaccounts', {
-            fields: 'name,account_id,id,currency,account_status'
+            fields: 'name,account_id,id,currency,account_status',
+            limit: '100'
         });
     }
 

@@ -52,10 +52,10 @@ export function LiveMetrics() {
             isLive: !error && metaData,
             error: error,
             organicMetrics: [
-                { label: isRtl ? "المتابعون" : "Total Followers", value: '184,500', color: "text-blue-400", icon: <TrendingUp className="w-4 h-4" /> },
-                { label: isRtl ? "التفاعل" : "Engagement", value: '24,300', color: "text-rose-500", icon: <TrendingUp className="w-4 h-4" /> },
-                { label: isRtl ? "الوصول" : "Organic Reach", value: '1.2M', color: "text-emerald-500", icon: <Activity className="w-4 h-4" /> },
-                { label: isRtl ? "زيارات الصفحة" : "Page Views", value: '45,200', color: "text-purple-500", icon: <Eye className="w-4 h-4" /> },
+                { label: isRtl ? "المتابعون" : "Total Followers", value: metaData?.organicMetrics?.followers?.toLocaleString() || '0', color: "text-blue-400", icon: <TrendingUp className="w-4 h-4" /> },
+                { label: isRtl ? "التفاعل" : "Engagement", value: metaData?.organicMetrics?.engagement?.toLocaleString() || '0', color: "text-rose-500", icon: <TrendingUp className="w-4 h-4" /> },
+                { label: isRtl ? "الوصول" : "Organic Reach", value: metaData?.organicMetrics?.reach?.toLocaleString() || '0', color: "text-emerald-500", icon: <Activity className="w-4 h-4" /> },
+                { label: isRtl ? "زيارات الصفحة" : "Page Views", value: metaData?.organicMetrics?.pageViews?.toLocaleString() || '0', color: "text-purple-500", icon: <Eye className="w-4 h-4" /> },
             ],
             adMetrics: metaData ? [
                 { label: isRtl ? "الإنفاق (اليوم)" : "Spend (Today)", value: `SAR ${metaData.metrics.spend}`, color: "text-orange-500", icon: <DollarSign className="w-4 h-4" /> },

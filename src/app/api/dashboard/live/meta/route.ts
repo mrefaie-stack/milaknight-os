@@ -37,8 +37,45 @@ export async function GET() {
         const meta = new MetaAPI(clientConnection.accessToken);
 
         // 3. Fetch Insights for the specific Ad Account mapped to this client
-        const adInsights: any = await meta.getAdAccountInsights(clientConnection.platformAccountId);
+        let adInsights: any;
+        try {
+            adInsights = await meta.getAdAccountInsights(clientConnection.platformAccountId);
+        } catch(e) { console.error('Error fetching ad insights', e); }
         const insightData = adInsights?.data?.[0] || {};
+        
+        let organicData: any = null;
+        if (clientConnection.metadata) {
+            try {
+                const parsedMeta = JSON.parse(clientConnection.metadata);
+                if (parsedMeta?.pageId) {
+                    const pageId = parsedMeta.pageId;
+                    
+                    // Fetch page info for fan count (followers)
+                    let pageInfo: any = {};
+                    try { pageInfo = await meta.getPageInfo(pageId); } catch(e) { console.log('error fetching page info'); }
+                    
+                    // Fetch page insights for engagement and reach
+                    let pageInsights: any = {};
+                    try { pageInsights = await meta.getPageInsights(pageId); } catch(e) { console.log('error fetching page insights'); }
+                    
+                    let reach = 0;
+                    let engagement = 0;
+                    
+                    const insightsData = pageInsights?.data || [];
+                    for (const row of insightsData) {
+                        if (row.name === 'page_impressions_unique') reach = row.values?.[0]?.value || 0;
+                        if (row.name === 'page_post_engagements') engagement = row.values?.[0]?.value || 0;
+                    }
+
+                    organicData = {
+                        followers: pageInfo?.fan_count || 0,
+                        engagement: engagement,
+                        reach: reach,
+                        pageViews: 0 // Cannot reliably get page views without read_insights for pages
+                    };
+                }
+            } catch(e) { console.error('Error fetching organic stats', e); }
+        }
 
         return NextResponse.json({
             platform: 'META',
@@ -49,6 +86,7 @@ export async function GET() {
                 clicks: insightData.clicks || 0,
                 cpc: insightData.cpc || '0.00',
             },
+            organicMetrics: organicData,
             status: 'success'
         });
     } catch (error: any) {
