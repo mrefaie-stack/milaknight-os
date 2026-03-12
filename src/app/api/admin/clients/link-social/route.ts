@@ -11,7 +11,7 @@ export async function POST(req: Request) {
     }
 
     try {
-        const { clientId, platformAccountId, platformAccountName, platform } = await req.json();
+        const { clientId, platformAccountId, platformAccountName, platform, platformPageId, platformPageName } = await req.json();
 
         if (!clientId || !platformAccountId || !platform) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -46,7 +46,8 @@ export async function POST(req: Request) {
                 accessToken: masterConnection.accessToken,
                 refreshToken: masterConnection.refreshToken,
                 expiresAt: masterConnection.expiresAt,
-                isActive: true
+                isActive: true,
+                metadata: platformPageId ? JSON.stringify({ pageId: platformPageId, pageName: platformPageName }) : null
             },
             create: {
                 userId: session.user.id,
@@ -57,7 +58,8 @@ export async function POST(req: Request) {
                 accessToken: masterConnection.accessToken,
                 refreshToken: masterConnection.refreshToken,
                 expiresAt: masterConnection.expiresAt,
-                isActive: true
+                isActive: true,
+                metadata: platformPageId ? JSON.stringify({ pageId: platformPageId, pageName: platformPageName }) : null
             }
         });
 

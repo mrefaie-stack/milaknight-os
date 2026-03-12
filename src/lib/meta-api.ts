@@ -58,4 +58,14 @@ export class MetaAPI {
             fields: 'name,fan_count,username,picture'
         });
     }
+
+    /**
+     * Fetch all pages associated with the token
+     */
+    async getPages() {
+        return this.fetch('/me/accounts', {
+            fields: 'name,id,access_token,category,picture',
+            limit: '100'
+        });
+    }
 }
