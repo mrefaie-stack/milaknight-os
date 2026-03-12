@@ -21,6 +21,7 @@ export function LiveMetrics() {
             try {
                 const res = await fetch('/api/dashboard/live/meta');
                 const json = await res.json();
+                console.log('Live Metrics API Response:', json);
                 if (!res.ok) throw new Error(json.error || 'Failed to fetch');
                 setMetaData(json);
             } catch (err: any) {

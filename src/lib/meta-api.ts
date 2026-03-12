@@ -103,10 +103,10 @@ export class MetaAPI {
     }
 
     async getIgMediaInsights(igAccountId: string, pageToken: string) {
-        // Fetching the most recent media to sum views
+        // Fetching the most recent media to sum views and engagement
         return this.fetch(`/${igAccountId}/media`, {
-            fields: 'id,like_count,comments_count,media_type,video_views',
-            limit: '20',
+            fields: 'id,like_count,comments_count,media_type,media_product_type,video_views',
+            limit: '30',
             access_token: pageToken
         });
     }
