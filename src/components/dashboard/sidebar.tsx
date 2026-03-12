@@ -6,7 +6,7 @@ import { UserNav } from "@/components/dashboard/user-nav";
 import {
     LayoutDashboard, Users, FolderKanban, BarChart3,
     MessageSquare, ShieldCheck, Trash2, Bell, Search,
-    ChevronLeft, ChevronRight, Sparkles, Plus, CalendarDays
+    ChevronLeft, ChevronRight, Sparkles, Plus, CalendarDays, Link2
 } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
 import { LanguageToggle } from "@/components/ui/language-toggle";
@@ -42,6 +42,7 @@ export function DashboardSidebar({ role, user }: { role: string; user: any }) {
         { href: "/admin/requests", label: t("sidebar.service_requests"), icon: Sparkles },
         { href: "/admin/team", label: t("common.team"), icon: ShieldCheck },
         { href: "/admin/deletions", label: t("sidebar.deletions"), icon: Trash2 },
+        { href: "/admin/connections", label: isRtl ? "ربط المنصات" : "Connections", icon: Link2 },
         { href: "/messages", label: t("common.messages"), icon: MessageSquare },
     ];
 
@@ -52,6 +53,7 @@ export function DashboardSidebar({ role, user }: { role: string; user: any }) {
         { href: "/admin/requests", label: t("sidebar.service_requests"), icon: Sparkles },
         { href: "/am/action-plans", label: t("sidebar.action_plans"), icon: FolderKanban },
         { href: "/am/reports", label: t("sidebar.reports"), icon: BarChart3 },
+        { href: "/admin/connections", label: isRtl ? "ربط المنصات" : "Connections", icon: Link2 },
         { href: "/messages", label: t("common.messages"), icon: MessageSquare },
     ];
 
