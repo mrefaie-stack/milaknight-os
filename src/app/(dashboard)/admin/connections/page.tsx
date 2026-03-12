@@ -5,6 +5,7 @@ import { signIn, useSession } from 'next-auth/react';
 import { Facebook, CheckCircle, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { MetaMapping } from '@/components/admin/meta-mapping';
 
 export default function ConnectionsPage() {
     const { data: session } = useSession();
@@ -76,6 +77,8 @@ export default function ConnectionsPage() {
                     </CardContent>
                 </Card>
             </div>
+
+            <MetaMapping />
 
             <section className="mt-16 bg-card border rounded-2xl p-8">
                 <h3 className="text-lg font-semibold mb-4">Security & Privacy</h3>

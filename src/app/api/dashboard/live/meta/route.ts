@@ -12,37 +12,37 @@ export async function GET() {
     }
 
     try {
-        // 1. Get the Facebook connection for this user
-        // Using 'as any' to avoid stagnant local prisma types
-        const connection = await (prisma as any).socialConnection.findFirst({
+        // 1. Get the Client profile for the logged in user
+        const clientProfile = await prisma.client.findUnique({
+            where: { userId: session.user.id }
+        });
+
+        if (!clientProfile) {
+            return NextResponse.json({ error: 'Client profile not found' }, { status: 404 });
+        }
+
+        // 2. Find the SocialConnection explicitly mapped to this client
+        const clientConnection = await (prisma as any).socialConnection.findFirst({
             where: {
-                userId: session.user.id,
+                clientId: clientProfile.id,
                 platform: 'FACEBOOK',
                 isActive: true
             }
         });
 
-        if (!connection) {
-            return NextResponse.json({ error: 'No Meta connection found' }, { status: 404 });
+        if (!clientConnection || !clientConnection.platformAccountId) {
+            return NextResponse.json({ error: 'Meta account not linked for this client' }, { status: 404 });
         }
 
-        const meta = new MetaAPI(connection.accessToken);
+        const meta = new MetaAPI(clientConnection.accessToken);
 
-        // 2. Fetch Ad Accounts 
-        const adAccountsResponse: any = await meta.getAdAccounts();
-        const firstAccount = adAccountsResponse?.data?.[0];
-
-        let adInsights: any = null;
-        if (firstAccount?.id) {
-            adInsights = await meta.getAdAccountInsights(firstAccount.id);
-        }
-
+        // 3. Fetch Insights for the specific Ad Account mapped to this client
+        const adInsights: any = await meta.getAdAccountInsights(clientConnection.platformAccountId);
         const insightData = adInsights?.data?.[0] || {};
 
-        // 3. Construct the response
         return NextResponse.json({
             platform: 'META',
-            accountName: firstAccount?.name || 'Linked Account',
+            accountName: clientConnection.platformAccountName || 'Linked Account',
             metrics: {
                 spend: insightData.spend || '0.00',
                 impressions: insightData.impressions || 0,
