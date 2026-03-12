@@ -98,25 +98,37 @@ export async function GET() {
                     // Fetch IG insights
                     let igFollowers = 0;
                     let igReach = 0;
-                    let igImpressions = 0;
-                    let igMediaCount = 0;
+                    let igInteractions = 0;
+                    let igVideoViews = 0;
 
                     if (igAccount?.id && pageToken) {
                         igFollowers = igAccount.followers_count || 0;
-                        igMediaCount = igAccount.media_count || 0;
                         try {
+                            // 1. Fetch Reach (28 days)
                             const igReachData: any = await meta.getIgReach(igAccount.id, pageToken);
                             igReach = getMetricValue(igReachData?.data || [], 'reach');
                             
-                            const igImpressionsData: any = await meta.getIgImpressions(igAccount.id, pageToken);
-                            igImpressions = getMetricValue(igImpressionsData?.data || [], 'impressions');
+                            // 2. Fetch Media Insights for Video Views and Engagement
+                            const igMedia: any = await meta.getIgMediaInsights(igAccount.id, pageToken);
+                            const mediaList = igMedia?.data || [];
+                            
+                            let sumViews = 0;
+                            let sumEngagement = 0;
+                            
+                            mediaList.forEach((m: any) => {
+                                sumViews += (m.video_views || 0);
+                                sumEngagement += (m.like_count || 0) + (m.comments_count || 0);
+                            });
+                            
+                            igVideoViews = sumViews;
+                            igInteractions = sumEngagement;
 
-                            // FALLBACK: If reach > 0 but impressions is 0, Meta API is hiding it.
-                            // We can use 1.2x Reach as a very safe 'visual placeholder' for impressions 
-                            // because it can't be zero if reach exists.
-                            if (igImpressions === 0 && igReach > 0) {
-                                igImpressions = Math.floor(igReach * 1.18);
-                            }
+                            // 3. Try account-level interactions for a bigger number if available
+                            const igAccountInt: any = await meta.getIgAccountInteractions(igAccount.id, pageToken);
+                            const lastInt = getMetricValue(igAccountInt?.data || [], 'total_interactions');
+                            if (lastInt > igInteractions) igInteractions = lastInt;
+
+                            console.log('Organic IG Data:', { igReach, igVideoViews, igInteractions });
                         } catch(e) { console.error('error fetching ig insights', e); }
                     }
 
@@ -129,8 +141,8 @@ export async function GET() {
                         ig: {
                             followers: igFollowers,
                             reach: igReach,
-                            impressions: igImpressions,
-                            totalPosts: igMediaCount,
+                            videoViews: igVideoViews,
+                            interactions: igInteractions,
                             connected: !!igAccount?.id
                         }
                     };

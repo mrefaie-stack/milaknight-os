@@ -94,10 +94,19 @@ export class MetaAPI {
         });
     }
 
-    async getIgWebsiteClicks(igAccountId: string, pageToken: string) {
+    async getIgAccountInteractions(igAccountId: string, pageToken: string) {
         return this.fetch(`/${igAccountId}/insights`, {
-            metric: 'website_clicks',
+            metric: 'total_interactions',
             period: 'day',
+            access_token: pageToken
+        });
+    }
+
+    async getIgMediaInsights(igAccountId: string, pageToken: string) {
+        // Fetching the most recent media to sum views
+        return this.fetch(`/${igAccountId}/media`, {
+            fields: 'id,like_count,comments_count,media_type,video_views',
+            limit: '20',
             access_token: pageToken
         });
     }
