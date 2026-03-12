@@ -6,6 +6,7 @@ import { Bot, X, Send, Plus, Loader2, Trash2, MessageSquare, ChevronRight, Wrenc
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { getConversations, getConversationMessages, deleteConversation } from "@/app/actions/ai-chat";
+import { useLanguage } from "@/contexts/language-context";
 
 type Message = {
   id?: string;
@@ -36,6 +37,7 @@ export function AiChatWidget({ user }: { user: { name: string; role: string; id:
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeTool, setActiveTool] = useState<ToolEvent | null>(null);
   const [showWelcome, setShowWelcome] = useState(true);
+  const { isRtl } = useLanguage();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -226,7 +228,10 @@ export function AiChatWidget({ user }: { user: { name: string; role: string; id:
     <>
       {/* Floating Button and Welcome Bubble */}
       <motion.div
-        className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3"
+        className={cn(
+          "fixed bottom-6 z-50 flex flex-col gap-3",
+          isRtl ? "left-6 items-start" : "right-6 items-end"
+        )}
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
         transition={{ delay: 0.5, type: "spring" }}
@@ -234,13 +239,16 @@ export function AiChatWidget({ user }: { user: { name: string; role: string; id:
         <AnimatePresence>
           {showWelcome && !isOpen && (
             <motion.div
-              initial={{ opacity: 0, x: 20, scale: 0.8 }}
+              initial={{ opacity: 0, x: isRtl ? -20 : 20, scale: 0.8 }}
               animate={{ opacity: 1, x: 0, scale: 1 }}
-              exit={{ opacity: 0, x: 20, scale: 0.8 }}
+              exit={{ opacity: 0, x: isRtl ? -20 : 20, scale: 0.8 }}
               className="relative group"
             >
               <div 
-                className="bg-primary text-primary-foreground px-4 py-3 rounded-2xl rounded-br-none shadow-xl cursor-pointer hover:bg-primary/95 transition-colors max-w-[200px] text-right"
+                className={cn(
+                  "bg-primary text-primary-foreground px-4 py-3 rounded-2xl shadow-xl cursor-pointer hover:bg-primary/95 transition-colors max-w-[200px]",
+                  isRtl ? "rounded-bl-none text-right" : "rounded-br-none text-right"
+                )}
                 onClick={() => {
                   setIsOpen(true);
                   setShowWelcome(false);
@@ -253,7 +261,10 @@ export function AiChatWidget({ user }: { user: { name: string; role: string; id:
               <Button
                 variant="secondary"
                 size="icon-xs"
-                className="absolute -top-2 -left-2 size-5 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
+                className={cn(
+                  "absolute -top-2 size-5 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity",
+                  isRtl ? "-right-2" : "-left-2"
+                )}
                 onClick={(e) => {
                   e.stopPropagation();
                   setShowWelcome(false);
@@ -290,7 +301,10 @@ export function AiChatWidget({ user }: { user: { name: string; role: string; id:
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="fixed bottom-24 right-6 z-50 flex flex-col w-[400px] h-[550px] max-h-[70vh] rounded-2xl border bg-background/95 backdrop-blur-xl shadow-2xl overflow-hidden"
+            className={cn(
+              "fixed bottom-24 z-50 flex flex-col w-[400px] h-[550px] max-h-[70vh] rounded-2xl border bg-background/95 backdrop-blur-xl shadow-2xl overflow-hidden",
+              isRtl ? "left-6" : "right-6"
+            )}
           >
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b bg-muted/30">
