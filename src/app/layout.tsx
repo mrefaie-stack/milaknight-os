@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { Toaster } from "@/components/ui/sonner";
-
-import { LanguageProvider } from "@/contexts/language-context";
+import { Providers } from "@/components/providers";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -20,10 +18,6 @@ export const metadata: Metadata = {
   description: "Agency Operating System",
 };
 
-import { CommandPalette } from "@/components/dashboard/command-palette";
-
-import { ThemeProvider } from "@/components/theme-provider";
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -34,16 +28,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased selection:bg-primary/30 selection:text-primary-foreground`}
       >
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
-          <LanguageProvider>
-            <div className="mesh-background" aria-hidden="true" />
-            <CommandPalette />
-            <main className="relative z-10 min-h-screen">
-              {children}
-            </main>
-            <Toaster position="top-center" richColors />
-          </LanguageProvider>
-        </ThemeProvider>
+        <Providers>
+          {children}
+        </Providers>
       </body>
     </html>
   );
