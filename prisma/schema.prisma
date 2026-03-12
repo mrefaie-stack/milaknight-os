@@ -28,6 +28,7 @@ model User {
   deletionRequests DeletionRequest[]
   contentItemHistory ContentItemHistory[]
   aiConversations    AiConversation[]
+  socialConnections  SocialConnection[]
 }
 
 model Client {
@@ -75,9 +76,36 @@ model Client {
   meetingRequests MeetingRequest[]
   actionPlans    ActionPlan[]
   reports        Report[]
+  socialConnections SocialConnection[]
   
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
+}
+
+// ... rest of schema ...
+
+model SocialConnection {
+  id                String   @id @default(cuid())
+  clientId          String?
+  client            Client?  @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  platform          String   // "FACEBOOK", "TIKTOK", etc.
+  platformAccountId String?  // ID of the page/ad-account on the platform
+  platformAccountName String?
+  
+  accessToken       String
+  refreshToken      String?
+  expiresAt         DateTime?
+  
+  isActive          Boolean  @default(true)
+  metadata          String?  // JSON string for extra data (scopes, etc)
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@unique([userId, platform, platformAccountId])
 }
 
 model MeetingRequest {
