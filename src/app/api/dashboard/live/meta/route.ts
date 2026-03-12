@@ -13,6 +13,7 @@ export async function GET() {
 
     try {
         // 1. Get the Facebook connection for this user
+        // Using 'as any' to avoid stagnant local prisma types
         const connection = await (prisma as any).socialConnection.findFirst({
             where: {
                 userId: session.user.id,
@@ -27,25 +28,26 @@ export async function GET() {
 
         const meta = new MetaAPI(connection.accessToken);
 
-        // 2. Fetch Ad Accounts to pick the first one (for now)
-        // In a real app, you'd store the preferred adAccountId in the SocialConnection metadata
-        const adAccountsResponse = await meta.getAdAccounts();
-        const firstAccount = adAccountsResponse.data?.[0];
+        // 2. Fetch Ad Accounts 
+        const adAccountsResponse: any = await meta.getAdAccounts();
+        const firstAccount = adAccountsResponse?.data?.[0];
 
-        let adInsights = null;
-        if (firstAccount) {
+        let adInsights: any = null;
+        if (firstAccount?.id) {
             adInsights = await meta.getAdAccountInsights(firstAccount.id);
         }
+
+        const insightData = adInsights?.data?.[0] || {};
 
         // 3. Construct the response
         return NextResponse.json({
             platform: 'META',
             accountName: firstAccount?.name || 'Linked Account',
             metrics: {
-                spend: adInsights?.data?.[0]?.spend || '0.00',
-                impressions: adInsights?.data?.[0]?.impressions || 0,
-                clicks: adInsights?.data?.[0]?.clicks || 0,
-                cpc: adInsights?.data?.[0]?.cpc || '0.00',
+                spend: insightData.spend || '0.00',
+                impressions: insightData.impressions || 0,
+                clicks: insightData.clicks || 0,
+                cpc: insightData.cpc || '0.00',
             },
             status: 'success'
         });
