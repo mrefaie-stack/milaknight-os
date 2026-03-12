@@ -34,10 +34,21 @@ export class MetaAPI {
     /**
      * Fetch insights for a specific ad account
      */
-    async getAdAccountInsights(adAccountId: string, datePreset: string = 'today') {
+    async getAdAccountInsights(adAccountId: string, datePreset: string = 'last_30d') {
         return this.fetch(`/${adAccountId}/insights`, {
             fields: 'spend,impressions,clicks,cpc,ctr,reach',
             date_preset: datePreset
+        });
+    }
+
+    /**
+     * Fetch active ads for a specific ad account
+     */
+    async getActiveAds(adAccountId: string) {
+        return this.fetch(`/${adAccountId}/ads`, {
+            fields: 'name,status,insights.date_preset(last_30d){spend,impressions,clicks}',
+            filtering: '[{"field":"effective_status","operator":"IN","value":["ACTIVE"]}]',
+            limit: '5'
         });
     }
 

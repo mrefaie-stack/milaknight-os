@@ -43,6 +43,22 @@ export async function GET() {
         } catch(e) { console.error('Error fetching ad insights', e); }
         const insightData = adInsights?.data?.[0] || {};
         
+        let activeAdsList: any = [];
+        try {
+            const adsResponse: any = await meta.getActiveAds(clientConnection.platformAccountId);
+            const rawAds = adsResponse?.data || [];
+            activeAdsList = rawAds.map((ad: any) => {
+                const adInsights = ad.insights?.data?.[0] || {};
+                return {
+                    id: ad.id,
+                    name: ad.name,
+                    status: 'active',
+                    spend: `${adInsights.spend || '0.00'} SAR`,
+                    results: `${adInsights.impressions || '0'} Imp`
+                };
+            });
+        } catch(e) { console.error('Error fetching active ads', e); }
+        
         let organicData: any = null;
         if (clientConnection.metadata) {
             try {
@@ -87,6 +103,7 @@ export async function GET() {
                 cpc: insightData.cpc || '0.00',
             },
             organicMetrics: organicData,
+            activeAds: activeAdsList,
             status: 'success'
         });
     } catch (error: any) {
