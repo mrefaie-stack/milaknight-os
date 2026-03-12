@@ -3,6 +3,7 @@ import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { DashboardSidebar } from "@/components/dashboard/sidebar";
 import { MobileHeader } from "@/components/layout/mobile-header";
+import { AiChatWidget } from "@/components/ai-chat/chat-widget";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
     const session = await getServerSession(authOptions);
@@ -27,6 +28,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
                     </div>
                 </div>
             </main>
+
+            <AiChatWidget user={{ name: session.user.name || "User", role: session.user.role, id: session.user.id }} />
         </div>
     );
 }
