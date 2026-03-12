@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart, DollarSign, MousePointer2, Eye, Loader2, Facebook, AlertCircle, TrendingUp, PlaySquare, Ghost, Search, Image as ImageIcon } from 'lucide-react';
+import { BarChart, DollarSign, MousePointer2, Eye, Loader2, Facebook, AlertCircle, TrendingUp, PlaySquare, Ghost, Search, Image as ImageIcon, Activity } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/contexts/language-context';
 import { cn } from '@/lib/utils';
@@ -51,10 +51,16 @@ export function LiveMetrics() {
             bgColor: 'bg-[#1877F2]',
             isLive: !error && metaData,
             error: error,
-            metrics: metaData ? [
+            organicMetrics: [
+                { label: isRtl ? "المتابعون" : "Total Followers", value: '184,500', color: "text-blue-400", icon: <TrendingUp className="w-4 h-4" /> },
+                { label: isRtl ? "التفاعل" : "Engagement", value: '24,300', color: "text-rose-500", icon: <TrendingUp className="w-4 h-4" /> },
+                { label: isRtl ? "الوصول" : "Organic Reach", value: '1.2M', color: "text-emerald-500", icon: <Activity className="w-4 h-4" /> },
+                { label: isRtl ? "زيارات الصفحة" : "Page Views", value: '45,200', color: "text-purple-500", icon: <Eye className="w-4 h-4" /> },
+            ],
+            adMetrics: metaData ? [
                 { label: isRtl ? "الإنفاق (اليوم)" : "Spend (Today)", value: `SAR ${metaData.metrics.spend}`, color: "text-orange-500", icon: <DollarSign className="w-4 h-4" /> },
-                { label: isRtl ? "الظهور" : "Impressions", value: metaData.metrics.impressions.toLocaleString(), color: "text-primary", icon: <Eye className="w-4 h-4" /> },
-                { label: isRtl ? "النقرات" : "Clicks", value: metaData.metrics.clicks.toLocaleString(), color: "text-emerald-500", icon: <MousePointer2 className="w-4 h-4" /> },
+                { label: isRtl ? "الظهور (إعلانات)" : "Ad Impressions", value: metaData.metrics.impressions.toLocaleString(), color: "text-primary", icon: <Eye className="w-4 h-4" /> },
+                { label: isRtl ? "النقرات" : "Link Clicks", value: metaData.metrics.clicks.toLocaleString(), color: "text-emerald-500", icon: <MousePointer2 className="w-4 h-4" /> },
                 { label: isRtl ? "تكلفة النقرة" : "Avg. CPC", value: `SAR ${metaData.metrics.cpc}`, color: "text-blue-500", icon: <BarChart className="w-4 h-4" /> },
             ] : null,
             activeAds: metaData ? [
@@ -64,14 +70,20 @@ export function LiveMetrics() {
         },
         {
             id: 'snapchat',
-            name: 'Snapchat Ads',
+            name: 'Snapchat',
             icon: <Ghost className="w-5 h-5 text-black" />,
             bgColor: 'bg-[#FFFC00]',
             isLive: false,
-            metrics: [
+            organicMetrics: [
+                { label: isRtl ? "المشتركون" : "Subscribers", value: '88,200', color: "text-blue-400", icon: <TrendingUp className="w-4 h-4" /> },
+                { label: isRtl ? "مشاهدات القصة" : "Story Views", value: '450K', color: "text-rose-500", icon: <Eye className="w-4 h-4" /> },
+                { label: isRtl ? "التقاط الشاشة" : "Screenshots", value: '3,200', color: "text-emerald-500", icon: <Activity className="w-4 h-4" /> },
+                { label: isRtl ? "تفاعل الفلاتر" : "Lens Plays", value: '12K', color: "text-purple-500", icon: <PlaySquare className="w-4 h-4" /> },
+            ],
+            adMetrics: [
                 { label: isRtl ? "الإنفاق (اليوم)" : "Spend (Today)", value: `SAR 340`, color: "text-orange-500", icon: <DollarSign className="w-4 h-4" /> },
-                { label: isRtl ? "الظهور" : "Impressions", value: '14,200', color: "text-primary", icon: <Eye className="w-4 h-4" /> },
-                { label: isRtl ? "النقرات" : "Swipe Ups", value: '890', color: "text-emerald-500", icon: <MousePointer2 className="w-4 h-4" /> },
+                { label: isRtl ? "الظهور (إعلانات)" : "Ad Impressions", value: '14,200', color: "text-primary", icon: <Eye className="w-4 h-4" /> },
+                { label: isRtl ? "سحب الشاشة" : "Swipe Ups", value: '890', color: "text-emerald-500", icon: <MousePointer2 className="w-4 h-4" /> },
                 { label: isRtl ? "تكلفة السحب" : "Avg. CPSU", value: `SAR 0.38`, color: "text-blue-500", icon: <BarChart className="w-4 h-4" /> },
             ],
             activeAds: [
@@ -80,13 +92,19 @@ export function LiveMetrics() {
         },
         {
             id: 'tiktok',
-            name: 'TikTok For Business',
+            name: 'TikTok',
             icon: <PlaySquare className="w-5 h-5 text-white" />,
             bgColor: 'bg-[#000000]',
             isLive: false,
-            metrics: [
+            organicMetrics: [
+                { label: isRtl ? "المتابعون" : "Followers", value: '312K', color: "text-blue-400", icon: <TrendingUp className="w-4 h-4" /> },
+                { label: isRtl ? "الإعجابات" : "Total Likes", value: '4.5M', color: "text-rose-500", icon: <Activity className="w-4 h-4" /> },
+                { label: isRtl ? "المشاركات" : "Shares", value: '88K', color: "text-emerald-500", icon: <Activity className="w-4 h-4" /> },
+                { label: isRtl ? "مشاهدات الفيديو" : "Profile Views", value: '1.2M', color: "text-purple-500", icon: <Eye className="w-4 h-4" /> },
+            ],
+            adMetrics: [
                 { label: isRtl ? "الإنفاق (اليوم)" : "Spend (Today)", value: `SAR 520`, color: "text-orange-500", icon: <DollarSign className="w-4 h-4" /> },
-                { label: isRtl ? "الظهور" : "Video Views", value: '45,000', color: "text-primary", icon: <Eye className="w-4 h-4" /> },
+                { label: isRtl ? "مشاهدات الإعلان" : "Ad Video Views", value: '45,000', color: "text-primary", icon: <Eye className="w-4 h-4" /> },
                 { label: isRtl ? "النقرات" : "Clicks", value: '1,200', color: "text-emerald-500", icon: <MousePointer2 className="w-4 h-4" /> },
                 { label: isRtl ? "تكلفة النقرة" : "Avg. CPC", value: `SAR 0.43`, color: "text-blue-500", icon: <BarChart className="w-4 h-4" /> },
             ],
@@ -139,22 +157,56 @@ export function LiveMetrics() {
                     <div className={cn("grid xl:grid-cols-3 gap-6", platform.error ? "opacity-30 pointer-events-none grayscale" : "opacity-100")}>
                         
                         {/* Metrics Grid */}
-                        <div className="xl:col-span-2 grid gap-4 grid-cols-2 md:grid-cols-4">
-                            {(platform.metrics || []).map((card, i) => (
-                                <Card key={i} className="glass-card border-none rounded-3xl overflow-hidden bg-white/5 shadow-xl shadow-black/5">
-                                    <CardHeader className="pb-2 bg-white/5 border-b border-white/5">
-                                        <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2">
-                                            {card.icon}
-                                            {card.label}
-                                        </CardTitle>
-                                    </CardHeader>
-                                    <CardContent className="pt-6 pb-6">
-                                        <div className={cn("text-2xl md:text-3xl font-black tracking-tighter", card.color)}>
-                                            {card.value}
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            ))}
+                        <div className="xl:col-span-2 space-y-6">
+                            
+                            {/* Organic Section */}
+                            <div className="space-y-3">
+                                <h4 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">
+                                    {isRtl ? "الاحصائيات العامة (Organic)" : "Organic Performance"}
+                                </h4>
+                                <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
+                                    {(platform.organicMetrics || []).map((card, i) => (
+                                        <Card key={`org-${i}`} className="glass-card border-none rounded-3xl overflow-hidden bg-white/5 shadow-xl shadow-black/5">
+                                            <CardHeader className="pb-2 bg-white/5 border-b border-white/5">
+                                                <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2">
+                                                    {card.icon}
+                                                    {card.label}
+                                                </CardTitle>
+                                            </CardHeader>
+                                            <CardContent className="pt-6 pb-6">
+                                                <div className={cn("text-2xl md:text-3xl font-black tracking-tighter", card.color)}>
+                                                    {card.value}
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Ads Section */}
+                            <div className="space-y-3">
+                                <h4 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">
+                                    {isRtl ? "الأداء الإعلاني (Ads)" : "Ads Performance"}
+                                </h4>
+                                <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
+                                    {(platform.adMetrics || []).map((card, i) => (
+                                        <Card key={`ad-${i}`} className="glass-card border-none rounded-3xl overflow-hidden bg-white/5 shadow-xl shadow-black/5">
+                                            <CardHeader className="pb-2 bg-white/5 border-b border-white/5">
+                                                <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2">
+                                                    {card.icon}
+                                                    {card.label}
+                                                </CardTitle>
+                                            </CardHeader>
+                                            <CardContent className="pt-6 pb-6">
+                                                <div className={cn("text-2xl md:text-3xl font-black tracking-tighter", card.color)}>
+                                                    {card.value}
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                    ))}
+                                </div>
+                            </div>
+
                         </div>
 
                         {/* Active Ads List */}
