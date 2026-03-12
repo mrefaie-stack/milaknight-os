@@ -58,15 +58,12 @@ export function LiveMetrics() {
                 { label: isRtl ? "زيارات الصفحة" : "Page Views", value: metaData?.organicMetrics?.pageViews?.toLocaleString() || '0', color: "text-purple-500", icon: <Eye className="w-4 h-4" /> },
             ],
             adMetrics: metaData ? [
-                { label: isRtl ? "الإنفاق (اليوم)" : "Spend (Today)", value: `SAR ${metaData.metrics.spend}`, color: "text-orange-500", icon: <DollarSign className="w-4 h-4" /> },
-                { label: isRtl ? "الظهور (إعلانات)" : "Ad Impressions", value: metaData.metrics.impressions.toLocaleString(), color: "text-primary", icon: <Eye className="w-4 h-4" /> },
-                { label: isRtl ? "النقرات" : "Link Clicks", value: metaData.metrics.clicks.toLocaleString(), color: "text-emerald-500", icon: <MousePointer2 className="w-4 h-4" /> },
+                { label: isRtl ? "الإنفاق (30 يوم)" : "Spend (30d)", value: `SAR ${metaData.metrics.spend}`, color: "text-orange-500", icon: <DollarSign className="w-4 h-4" /> },
+                { label: isRtl ? "الظهور (إعلانات)" : "Ad Impressions", value: metaData.metrics.impressions?.toLocaleString() || '0', color: "text-primary", icon: <Eye className="w-4 h-4" /> },
+                { label: isRtl ? "النقرات" : "Link Clicks", value: metaData.metrics.clicks?.toLocaleString() || '0', color: "text-emerald-500", icon: <MousePointer2 className="w-4 h-4" /> },
                 { label: isRtl ? "تكلفة النقرة" : "Avg. CPC", value: `SAR ${metaData.metrics.cpc}`, color: "text-blue-500", icon: <BarChart className="w-4 h-4" /> },
             ] : null,
-            activeAds: metaData ? [
-                { id: '1', name: isRtl ? "إعلان فيديو تعريفي" : "Brand Awareness Video", status: 'active', spend: '150 SAR', results: '2,400 Imp' },
-                { id: '2', name: isRtl ? "حملة إعادة الاستهداف" : "Retargeting Campaign", status: 'active', spend: '85 SAR', results: '112 Clicks' },
-            ] : []
+            activeAds: metaData?.activeAds || []
         },
         {
             id: 'snapchat',
@@ -81,7 +78,7 @@ export function LiveMetrics() {
                 { label: isRtl ? "تفاعل الفلاتر" : "Lens Plays", value: '12K', color: "text-purple-500", icon: <PlaySquare className="w-4 h-4" /> },
             ],
             adMetrics: [
-                { label: isRtl ? "الإنفاق (اليوم)" : "Spend (Today)", value: `SAR 340`, color: "text-orange-500", icon: <DollarSign className="w-4 h-4" /> },
+                { label: isRtl ? "الإنفاق (30 يوم)" : "Spend (30d)", value: `SAR 340`, color: "text-orange-500", icon: <DollarSign className="w-4 h-4" /> },
                 { label: isRtl ? "الظهور (إعلانات)" : "Ad Impressions", value: '14,200', color: "text-primary", icon: <Eye className="w-4 h-4" /> },
                 { label: isRtl ? "سحب الشاشة" : "Swipe Ups", value: '890', color: "text-emerald-500", icon: <MousePointer2 className="w-4 h-4" /> },
                 { label: isRtl ? "تكلفة السحب" : "Avg. CPSU", value: `SAR 0.38`, color: "text-blue-500", icon: <BarChart className="w-4 h-4" /> },
@@ -103,7 +100,7 @@ export function LiveMetrics() {
                 { label: isRtl ? "مشاهدات الفيديو" : "Profile Views", value: '1.2M', color: "text-purple-500", icon: <Eye className="w-4 h-4" /> },
             ],
             adMetrics: [
-                { label: isRtl ? "الإنفاق (اليوم)" : "Spend (Today)", value: `SAR 520`, color: "text-orange-500", icon: <DollarSign className="w-4 h-4" /> },
+                { label: isRtl ? "الإنفاق (30 يوم)" : "Spend (30d)", value: `SAR 520`, color: "text-orange-500", icon: <DollarSign className="w-4 h-4" /> },
                 { label: isRtl ? "مشاهدات الإعلان" : "Ad Video Views", value: '45,000', color: "text-primary", icon: <Eye className="w-4 h-4" /> },
                 { label: isRtl ? "النقرات" : "Clicks", value: '1,200', color: "text-emerald-500", icon: <MousePointer2 className="w-4 h-4" /> },
                 { label: isRtl ? "تكلفة النقرة" : "Avg. CPC", value: `SAR 0.43`, color: "text-blue-500", icon: <BarChart className="w-4 h-4" /> },
