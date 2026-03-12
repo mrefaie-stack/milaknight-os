@@ -12,10 +12,13 @@ export async function getTeamMembers() {
     if (session?.user?.role !== "ADMIN") throw new Error("Unauthorized");
 
     return prisma.user.findMany({
-        where: { role: { in: ["AM", "MODERATOR"] } },
+        where: { role: { in: ["AM", "MODERATOR", "MARKETING_MANAGER"] } },
         include: {
             _count: {
-                select: { clients: true }
+                select: { 
+                    clients: true,
+                    mmClients: true
+                }
             }
         },
         orderBy: { createdAt: "desc" }
@@ -57,10 +60,12 @@ export async function deleteTeamMember(id: string) {
     const session = await getServerSession(authOptions);
     if (session?.user?.role !== "ADMIN") throw new Error("Unauthorized");
 
-    // Check if AM has assigned clients
-    const clientCount = await prisma.client.count({ where: { amId: id } });
-    if (clientCount > 0) {
-        throw new Error("Cannot delete Account Manager with assigned clients. Reassign them first.");
+    // Check if AM or MM has assigned clients
+    const amClientCount = await prisma.client.count({ where: { amId: id } });
+    const mmClientCount = await prisma.client.count({ where: { mmId: id } });
+    
+    if (amClientCount > 0 || mmClientCount > 0) {
+        throw new Error("Cannot delete user with assigned clients. Reassign them first.");
     }
 
     await prisma.user.delete({ where: { id } });
@@ -83,6 +88,7 @@ export async function updateTeamMember(userId: string, data: any) {
             firstName: data.firstName,
             lastName: data.lastName,
             email: data.email,
+            role: data.role,
         }
     });
 

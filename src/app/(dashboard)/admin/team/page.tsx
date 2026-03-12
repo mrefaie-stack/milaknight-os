@@ -4,6 +4,9 @@ import { EditTeamMemberDialog } from "@/components/admin/edit-am-dialog";
 import { AdminTeamHeader, ClientLoadLabel, NoTeamMembers, TeamStats, MessageButtonLabel, TeamMemberRoleBadge } from "@/components/admin/admin-team-ui";
 import { Badge } from "@/components/ui/badge";
 import { MessageSquare, Users2, Crown } from "lucide-react";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { TeamDeleteButton } from "@/components/admin/team-delete-button";
@@ -12,27 +15,33 @@ const ROLE_COLORS: Record<string, { color: string; bg: string }> = {
     ADMIN: { color: "text-purple-500", bg: "bg-purple-500/10 border-purple-500/20" },
     ACCOUNT_MANAGER: { color: "text-primary", bg: "bg-primary/10 border-primary/20" },
     AM: { color: "text-primary", bg: "bg-primary/10 border-primary/20" },
+    MARKETING_MANAGER: { color: "text-emerald-500", bg: "bg-emerald-500/10 border-emerald-500/20" },
     MODERATOR: { color: "text-orange-500", bg: "bg-orange-500/10 border-orange-500/20" },
-    CLIENT: { color: "text-emerald-500", bg: "bg-emerald-500/10 border-emerald-500/20" },
+    CLIENT: { color: "text-zinc-400", bg: "bg-zinc-500/10 border-zinc-500/20" },
 };
 
 export default async function AdminTeamPage() {
+    const session = await getServerSession(authOptions);
+    if (!session) redirect("/login");
+    const role = session.user.role;
+
     const team = await getTeamMembers();
-    const totalClients = (team as any[]).reduce((acc: number, m: any) => acc + (m._count?.clients || 0), 0);
-    const maxLoad = Math.max(...(team as any[]).map((m: any) => m._count?.clients || 0), 1);
+    const totalClients = (team as any[]).reduce((acc: number, m: any) => acc + (m._count?.clients || 0) + (m._count?.mmClients || 0), 0);
+    const maxLoad = Math.max(...(team as any[]).map((m: any) => (m._count?.clients || 0) + (m._count?.mmClients || 0)), 1);
 
     return (
         <div className="space-y-8">
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <AdminTeamHeader memberCount={(team as any[]).length} totalClients={totalClients} />
-                <AddTeamMemberDialog />
+                {role === "ADMIN" && <AddTeamMemberDialog />}
             </div>
 
             {/* Stats Row */}
             <TeamStats
                 totalMembers={(team as any[]).length}
                 amsCount={(team as any[]).filter((m: any) => m.role === "AM" || m.role === "ACCOUNT_MANAGER").length}
+                mmCount={(team as any[]).filter((m: any) => m.role === "MARKETING_MANAGER").length}
                 moderatorsCount={(team as any[]).filter((m: any) => m.role === "MODERATOR").length}
                 adminsCount={(team as any[]).filter((m: any) => m.role === "ADMIN").length}
                 totalClients={totalClients}
@@ -43,7 +52,7 @@ export default async function AdminTeamPage() {
                 <div className="grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
                     {(team as any[]).map((member: any) => {
                         const roleColors = ROLE_COLORS[member.role] || ROLE_COLORS.ACCOUNT_MANAGER;
-                        const load = member._count?.clients || 0;
+                        const load = (member._count?.clients || 0) + (member._count?.mmClients || 0);
                         const loadPct = Math.min((load / maxLoad) * 100, 100);
                         const loadColor = loadPct > 70 ? "bg-orange-500" : loadPct > 40 ? "bg-emerald-500" : "bg-primary";
                         const initials = `${member.firstName?.charAt(0) || ''}${member.lastName?.charAt(0) || ''}`.toUpperCase();
@@ -85,8 +94,12 @@ export default async function AdminTeamPage() {
                                             <MessageButtonLabel />
                                         </Button>
                                     </Link>
-                                    <EditTeamMemberDialog member={member} />
-                                    <TeamDeleteButton memberId={member.id} memberName={`${member.firstName} ${member.lastName}`} />
+                                    {role === "ADMIN" && (
+                                        <>
+                                            <EditTeamMemberDialog member={member} />
+                                            <TeamDeleteButton memberId={member.id} memberName={`${member.firstName} ${member.lastName}`} />
+                                        </>
+                                    )}
                                 </div>
                             </div>
                         );

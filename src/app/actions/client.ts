@@ -9,7 +9,15 @@ import { logActivity } from "./activity";
 
 export async function getAccountManagers() {
     return prisma.user.findMany({
-        where: { role: "AM" },
+        where: { OR: [{ role: "AM" }, { role: "ACCOUNT_MANAGER" }] },
+        select: { id: true, firstName: true, lastName: true },
+        orderBy: { firstName: "asc" }
+    });
+}
+
+export async function getMarketingManagers() {
+    return prisma.user.findMany({
+        where: { role: "MARKETING_MANAGER" },
         select: { id: true, firstName: true, lastName: true },
         orderBy: { firstName: "asc" }
     });
@@ -17,16 +25,27 @@ export async function getAccountManagers() {
 
 export async function getClients() {
     const session = await getServerSession(authOptions);
-    if (!session || (session.user.role !== "ADMIN" && session.user.role !== "AM" && session.user.role !== "MODERATOR")) {
+    if (!session || (session.user.role !== "ADMIN" && session.user.role !== "AM" && session.user.role !== "MODERATOR" && session.user.role !== "MARKETING_MANAGER")) {
         throw new Error("Unauthorized");
     }
 
-    const where = (session.user.role === "AM") ? { amId: session.user.id } : {};
+    const where = (session.user.role === "AM") 
+        ? { amId: session.user.id } 
+        : (session.user.role === "MARKETING_MANAGER")
+            ? { mmId: session.user.id }
+            : {};
 
     return prisma.client.findMany({
         where,
         include: {
             accountManager: {
+                select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                }
+            },
+            marketingManager: {
                 select: {
                     id: true,
                     firstName: true,
@@ -104,6 +123,7 @@ export async function createClient(data: FormData) {
     });
 
     const amId = data.get("amId") as string;
+    const mmId = data.get("mmId") as string;
     const servicesInput = data.get("services") as string; // comma separated globalServiceIds
 
     // Create the Client Record
@@ -111,7 +131,8 @@ export async function createClient(data: FormData) {
         data: {
             name,
             industry,
-            accountManager: amId ? { connect: { id: amId } } : undefined,
+            accountManager: amId && amId !== "none" ? { connect: { id: amId } } : undefined,
+            marketingManager: mmId && mmId !== "none" ? { connect: { id: mmId } } : undefined,
             user: { connect: { id: user.id } }, // Link the user
             package: clientPackage,
             activeServices: activeServices,
@@ -129,8 +150,8 @@ export async function createClient(data: FormData) {
             snapchat,
             youtube,
             website,
-            ...({ seoScore: Number(data.get("seoScore")) || 0 } as any),
-            ...({ monthlyFee: Number(data.get("monthlyFee")) || 0 } as any),
+            ...(Number(data.get("seoScore")) ? { seoScore: Number(data.get("seoScore")) } : {}),
+            ...(Number(data.get("monthlyFee")) ? { monthlyFee: Number(data.get("monthlyFee")) } : {}),
             services: {
                 create: servicesInput ? servicesInput.split(",").filter(id => id.trim()).map(id => ({
                     globalService: { connect: { id: id.trim() } }
@@ -156,6 +177,7 @@ export async function updateClient(clientId: string, data: any) {
             name: data.name,
             industry: data.industry,
             accountManager: data.amId && data.amId !== "none" ? { connect: { id: data.amId } } : { disconnect: true },
+            marketingManager: data.mmId && data.mmId !== "none" ? { connect: { id: data.mmId } } : { disconnect: true },
             package: data.package,
             activeServices: data.activeServices,
             briefAr: data.briefAr,

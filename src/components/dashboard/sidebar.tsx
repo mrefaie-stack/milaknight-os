@@ -6,7 +6,7 @@ import { UserNav } from "@/components/dashboard/user-nav";
 import {
     LayoutDashboard, Users, FolderKanban, BarChart3,
     MessageSquare, ShieldCheck, Trash2, Bell, Search,
-    ChevronLeft, ChevronRight, Sparkles, Plus, CalendarDays, Link2, Activity
+    ChevronLeft, ChevronRight, Sparkles, Plus, CalendarDays, Link2, Activity, ListTodo
 } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
 import { LanguageToggle } from "@/components/ui/language-toggle";
@@ -20,6 +20,7 @@ import { Button } from "../ui/button";
 const ROLE_LABELS: Record<string, { ar: string; en: string }> = {
     ADMIN: { ar: "مسؤول النظام", en: "Administrator" },
     AM: { ar: "مدير حساب", en: "Account Manager" },
+    MARKETING_MANAGER: { ar: "مدير تسويق", en: "Marketing Manager" },
     CLIENT: { ar: "عميل", en: "Client" },
     MODERATOR: { ar: "ناشر محتوى", en: "Moderator" },
 };
@@ -43,6 +44,7 @@ export function DashboardSidebar({ role, user }: { role: string; user: any }) {
         { href: "/admin/team", label: t("common.team"), icon: ShieldCheck },
         { href: "/admin/deletions", label: t("sidebar.deletions"), icon: Trash2 },
         { href: "/admin/connections", label: isRtl ? "ربط المنصات" : "Connections", icon: Link2 },
+        { href: "/tasks", label: isRtl ? "المهام الداخلية" : "Internal Tasks", icon: ListTodo },
         { href: "/messages", label: t("common.messages"), icon: MessageSquare },
     ];
 
@@ -54,6 +56,7 @@ export function DashboardSidebar({ role, user }: { role: string; user: any }) {
         { href: "/am/action-plans", label: t("sidebar.action_plans"), icon: FolderKanban },
         { href: "/am/reports", label: t("sidebar.reports"), icon: BarChart3 },
         { href: "/admin/connections", label: isRtl ? "ربط المنصات" : "Connections", icon: Link2 },
+        { href: "/tasks", label: isRtl ? "المهام الداخلية" : "Internal Tasks", icon: ListTodo },
         { href: "/messages", label: t("common.messages"), icon: MessageSquare },
     ];
 
@@ -74,7 +77,7 @@ export function DashboardSidebar({ role, user }: { role: string; user: any }) {
         { href: "/messages", label: t("common.messages"), icon: MessageSquare },
     ];
 
-    const links = role === "ADMIN" ? adminLinks : role === "AM" ? amLinks : role === "MODERATOR" ? moderatorLinks : clientLinks;
+    const links = (role === "ADMIN" || role === "MARKETING_MANAGER") ? adminLinks : role === "AM" ? amLinks : role === "MODERATOR" ? moderatorLinks : clientLinks;
 
     const isActive = (href: string) => {
         if (href === "/admin" || href === "/am" || href === "/client") {
@@ -85,7 +88,7 @@ export function DashboardSidebar({ role, user }: { role: string; user: any }) {
 
     const roleMeta = ROLE_LABELS[role] || ROLE_LABELS.CLIENT;
     const roleLabel = isRtl ? roleMeta.ar : roleMeta.en;
-    const roleColor = role === "ADMIN" ? "text-orange-400" : role === "AM" ? "text-blue-400" : "text-emerald-400";
+    const roleColor = role === "ADMIN" ? "text-orange-400" : (role === "AM" || role === "MARKETING_MANAGER") ? "text-blue-400" : "text-emerald-400";
 
     return (
         <aside className={cn(

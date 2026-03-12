@@ -35,7 +35,7 @@ const PLATFORMS = [
 
 const PACKAGES = ["BASIC", "PREMIUM", "ENTERPRISE", "CUSTOM"];
 
-export function AddClientButton({ ams, services }: { ams: any[]; services: any[] }) {
+export function AddClientButton({ ams, mms, services }: { ams: any[]; mms: any[]; services: any[] }) {
     const { isRtl } = useLanguage();
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -152,12 +152,13 @@ export function AddClientButton({ ams, services }: { ams: any[]; services: any[]
 
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <Label htmlFor="amId">{isRtl ? "تعيين مدير الحساب" : "Assign Account Manager"}</Label>
+                                <Label htmlFor="amId">{isRtl ? "مدير الحساب (AM)" : "Account Manager"}</Label>
                                 <Select name="amId">
                                     <SelectTrigger>
                                         <SelectValue placeholder={isRtl ? "اختر مدير حساب..." : "Select AM..."} />
                                     </SelectTrigger>
                                     <SelectContent>
+                                        <SelectItem value="none">{isRtl ? "بدون تحديد" : "None"}</SelectItem>
                                         {ams.map((am) => (
                                             <SelectItem key={am.id} value={am.id}>
                                                 {am.firstName} {am.lastName}
@@ -167,18 +168,35 @@ export function AddClientButton({ ams, services }: { ams: any[]; services: any[]
                                 </Select>
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="package">{isRtl ? "باقة العميل" : "Client Package"}</Label>
-                                <Select name="package" defaultValue="BASIC">
+                                <Label htmlFor="mmId">{isRtl ? "مدير التسويق (MM)" : "Marketing Manager"}</Label>
+                                <Select name="mmId">
                                     <SelectTrigger>
-                                        <SelectValue />
+                                        <SelectValue placeholder={isRtl ? "اختر مدير تسويق..." : "Select MM..."} />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {PACKAGES.map((pkg) => (
-                                            <SelectItem key={pkg} value={pkg}>{pkg}</SelectItem>
+                                        <SelectItem value="none">{isRtl ? "بدون تحديد" : "None"}</SelectItem>
+                                        {mms.map((mm) => (
+                                            <SelectItem key={mm.id} value={mm.id}>
+                                                {mm.firstName} {mm.lastName}
+                                            </SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>
                             </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="package">{isRtl ? "باقة العميل" : "Client Package"}</Label>
+                            <Select name="package" defaultValue="BASIC">
+                                <SelectTrigger>
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {PACKAGES.map((pkg) => (
+                                        <SelectItem key={pkg} value={pkg}>{pkg}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         </div>
 
                         <div className="space-y-3">

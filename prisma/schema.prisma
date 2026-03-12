@@ -11,7 +11,7 @@ model User {
   id             String    @id @default(cuid())
   email          String    @unique
   password       String
-  role           String    @default("CLIENT") // Enums fallback
+  role           String    @default("CLIENT") // ADMIN, AM, MARKETING_MANAGER, CLIENT
   firstName      String
   lastName       String
   createdAt      DateTime  @default(now())
@@ -19,6 +19,7 @@ model User {
   
   // Relations
   clients        Client[]  @relation("AccountManagerClients")
+  mmClients      Client[]  @relation("MarketingManagerClients")
   clientProfile  Client?   @relation("ClientUser")
   comments       Comment[]
   sentMessages   Message[]      @relation("SentMessages")
@@ -29,6 +30,8 @@ model User {
   contentItemHistory ContentItemHistory[]
   aiConversations    AiConversation[]
   socialConnections  SocialConnection[]
+  sentTasks          InternalTask[]    @relation("SentTasks")
+  receivedTasks      InternalTask[]    @relation("ReceivedTasks")
 }
 
 model Client {
@@ -63,6 +66,9 @@ model Client {
   amId           String?
   accountManager User?     @relation("AccountManagerClients", fields: [amId], references: [id])
   
+  mmId           String?
+  marketingManager User?   @relation("MarketingManagerClients", fields: [mmId], references: [id])
+
   userId         String?   @unique
   user           User?     @relation("ClientUser", fields: [userId], references: [id], onDelete: Cascade)
   
@@ -77,6 +83,7 @@ model Client {
   actionPlans    ActionPlan[]
   reports        Report[]
   socialConnections SocialConnection[]
+  internalTasks    InternalTask[]
   
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
@@ -166,6 +173,7 @@ model ActionPlan {
   client         Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
   month          String    // e.g., "2026-03"
   status         String    @default("DRAFT") // DRAFT, PENDING, APPROVED, REVISION_REQUESTED, SCHEDULED
+  mmStatus       String    @default("DRAFT") // DRAFT, PENDING, APPROVED, REJECTED
   
   items          ContentItem[]
   
@@ -250,6 +258,7 @@ model Report {
   // Stored as String for SQLite
   metrics        String      
   status         String    @default("DRAFT") // DRAFT, SENT, VIEWED
+  mmStatus       String    @default("DRAFT") // DRAFT, PENDING, APPROVED, REJECTED
   scheduledSendAt DateTime? // If set, auto-publish on this date
   clientFeedback  String?   // Client's feedback text
   clientFeedbackAt DateTime? // When the client submitted feedback
@@ -323,4 +332,30 @@ model AiMessage {
   content        String
   toolCalls      String?
   createdAt      DateTime       @default(now())
+}
+
+model InternalTask {
+  id          String   @id @default(cuid())
+  title       String
+  description String?  @db.Text
+  type        String   // NEW_TASK, NEED_APPROVAL, ANNOUNCEMENT
+  status      String   @default("PENDING") // PENDING, IN_PROGRESS, COMPLETED, NEED_FIX
+  
+  clientId    String
+  client      Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  
+  senderId    String
+  sender      User     @relation("SentTasks", fields: [senderId], references: [id])
+  
+  receiverId  String
+  receiver    User     @relation("ReceivedTasks", fields: [receiverId], references: [id])
+  
+  feedback    String?  @db.Text // For "Need Fix" comments
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([clientId])
+  @@index([senderId])
+  @@index([receiverId])
 }
