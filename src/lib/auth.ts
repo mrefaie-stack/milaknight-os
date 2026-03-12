@@ -57,14 +57,28 @@ export const authOptions: NextAuthOptions = {
     },
     callbacks: {
         async signIn({ user, account, profile }) {
-            if (account?.provider === "facebook" && account.access_token && user.email) {
-                // Find the existing user in our database by email
-                // This ensures we link the social account to the correct internal userId
-                const dbUser = await prisma.user.findUnique({
-                    where: { email: user.email }
+            if (account?.provider === "facebook" && account.access_token) {
+                const email = user.email?.toLowerCase();
+                
+                if (!email) {
+                    console.error("Facebook login failed: No email provided by Facebook.");
+                    return false;
+                }
+
+                console.log(`Attempting Facebook link for email: ${email}`);
+
+                // Find user case-insensitively
+                const dbUser = await (prisma as any).user.findFirst({
+                    where: { 
+                        email: {
+                            equals: email,
+                            mode: 'insensitive'
+                        }
+                    }
                 });
 
                 if (dbUser) {
+                    console.log(`User found: ${dbUser.id}. Linking account...`);
                     await (prisma as any).socialConnection.upsert({
                         where: {
                             userId_platform_platformAccountId: {
@@ -88,9 +102,10 @@ export const authOptions: NextAuthOptions = {
                         },
                     });
                 } else {
-                    // If no user exists with this email, we could potentially create one
-                    // or reject the login if registration is restricted.
-                    console.error("Facebook login failed: No matching user found for email", user.email);
+                    console.error(`Facebook login failed: No matching user found for email [${email}] in database.`);
+                    // To help debug, let's see if there are ANY users
+                    const userCount = await prisma.user.count();
+                    console.log(`Total users in DB: ${userCount}`);
                     return false;
                 }
             }
@@ -103,8 +118,13 @@ export const authOptions: NextAuthOptions = {
                 
                 // If this is an OAuth login, we need to ensure the ID is our DB ID, not the provider ID
                 if (account?.provider === 'facebook' && user.email) {
-                    const dbUser = await prisma.user.findUnique({
-                        where: { email: user.email }
+                    const dbUser = await (prisma as any).user.findFirst({
+                        where: { 
+                            email: {
+                                equals: user.email.toLowerCase(),
+                                mode: 'insensitive'
+                            }
+                        }
                     });
                     if (dbUser) {
                         token.id = dbUser.id;
