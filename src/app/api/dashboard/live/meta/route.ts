@@ -105,13 +105,17 @@ export async function GET() {
                     }
 
                     organicData = {
-                        followers: (pageInfo?.fan_count || 0) + igFollowers,
-                        engagement: fbEngagement, // Using FB engagement as general interaction proxy
-                        reach: fbReach + igReach,
-                        pageViews: igProfileViews, // Falling back to IG Profile views since FB page views endpoint takes diff permissions
-                        fb_followers: pageInfo?.fan_count || 0,
-                        ig_followers: igFollowers,
-                        ig_connected: !!igAccount?.id
+                        fb: {
+                            followers: pageInfo?.fan_count || 0,
+                            reach: fbReach,
+                            engagement: fbEngagement,
+                        },
+                        ig: {
+                            followers: igFollowers,
+                            reach: igReach,
+                            profileViews: igProfileViews,
+                            connected: !!igAccount?.id
+                        }
                     };
                 }
             } catch(e) { console.error('Error fetching organic stats', e); }
