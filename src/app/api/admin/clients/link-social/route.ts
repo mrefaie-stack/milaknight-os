@@ -30,7 +30,20 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: `Please connect your ${platform} account first` }, { status: 404 });
         }
 
-        // 2. Link the client to this platform account
+        // 2. Clear old mappings for this client so they don't have multiple pages attached
+        await (prisma as any).socialConnection.updateMany({
+            where: {
+                clientId: clientId,
+                platform: platform,
+                userId: session.user.id
+            },
+            data: {
+                clientId: null,
+                isActive: false
+            }
+        });
+
+        // 3. Link the client to this platform account
         // We create/update a SocialConnection specifically for this client
         const connection = await (prisma as any).socialConnection.upsert({
             where: {
