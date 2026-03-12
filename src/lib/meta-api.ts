@@ -74,7 +74,7 @@ export class MetaAPI {
      */
     async getPageInfo(pageId: string) {
         return this.fetch(`/${pageId}`, {
-            fields: 'name,fan_count,username,picture,access_token,instagram_business_account{id,username,followers_count,profile_picture_url}'
+            fields: 'name,fan_count,username,picture,access_token,instagram_business_account{id,username,followers_count,media_count,profile_picture_url}'
         });
     }
 
