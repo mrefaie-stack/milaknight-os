@@ -53,6 +53,15 @@ export async function updateReport(reportId: string, metricsData: any, month?: s
             scheduledSendAt: scheduledSendAt !== undefined ? scheduledSendAt : undefined
         }
     });
+    
+    // Reset plan approval if items are updated
+    await (prisma as any).report.update({
+        where: { id: reportId },
+        data: { 
+            mmStatus: "DRAFT",
+            status: "DRAFT"
+        }
+    });
 
     revalidatePath(`/am/reports/${reportId}`);
     return report;
