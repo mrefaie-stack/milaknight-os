@@ -19,7 +19,7 @@ export async function GET() {
                 logoUrl: true,
                 socialConnections: {
                     where: { platform: 'FACEBOOK', isActive: true },
-                    select: { platformAccountId: true, platformAccountName: true }
+                    select: { platformAccountId: true, platformAccountName: true, metadata: true }
                 }
             },
             orderBy: { name: 'asc' }
