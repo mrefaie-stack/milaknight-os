@@ -12,13 +12,19 @@ const STATUS_META = {
     PUBLISHED: { ar: "منشورة", en: "Published", color: "text-blue-500", bg: "bg-blue-500/10", border: "border-blue-500/20", icon: CheckCircle2 },
 } as const;
 
-export function AmActionPlansList({ plans }: { plans: any[] }) {
-    const { isRtl } = useLanguage();
+export function AmActionPlansList({ plans, role }: { plans: any[], role?: string }) {
+    const { isRtl, t } = useLanguage();
     const Chevron = isRtl ? ChevronLeft : ChevronRight;
 
     const totalPlans = plans.length;
     const approvedPlans = plans.filter((p) => p.status === "APPROVED").length;
     const pendingRevision = plans.filter((p) => p.status === "REVISION_REQUESTED").length;
+
+    const roleLabel = role === "MARKETING_MANAGER" 
+        ? (isRtl ? "مدير تسويق" : "Marketing Manager") 
+        : role === "ADMIN" 
+            ? (isRtl ? "مسؤول النظام" : "Administrator")
+            : (isRtl ? "مدير حساب" : "Account Manager");
 
     return (
         <div className="space-y-8" dir={isRtl ? "rtl" : "ltr"}>
@@ -26,7 +32,7 @@ export function AmActionPlansList({ plans }: { plans: any[] }) {
             <div className={`flex flex-col md:flex-row md:items-end justify-between gap-4 ${isRtl ? 'md:flex-row-reverse text-right' : ''}`}>
                 <div>
                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/60 mb-1">
-                        {isRtl ? "مدير الحساب" : "Account Manager"}
+                        {roleLabel}
                     </p>
                     <h1 className="text-4xl font-black tracking-tighter">
                         {isRtl ? "خطط المحتوى" : "Action Plans"}
@@ -35,12 +41,14 @@ export function AmActionPlansList({ plans }: { plans: any[] }) {
                         {isRtl ? "إدارة المحتوى الشهري للعملاء." : "Manage monthly content deliverables for your clients."}
                     </p>
                 </div>
-                <Link href="/am/action-plans/create">
-                    <Button className={`font-black uppercase tracking-widest rounded-full h-12 px-8 shadow-lg shadow-primary/20 hover:scale-105 transition-all ${isRtl ? 'flex-row-reverse' : ''}`}>
-                        <Plus className={`h-4 w-4 ${isRtl ? 'ml-2' : 'mr-2'}`} />
-                        {isRtl ? "خطة جديدة" : "New Action Plan"}
-                    </Button>
-                </Link>
+                {(role === "AM" || role === "ADMIN") && (
+                    <Link href="/am/action-plans/create">
+                        <Button className={`font-black uppercase tracking-widest rounded-full h-12 px-8 shadow-lg shadow-primary/20 hover:scale-105 transition-all ${isRtl ? 'flex-row-reverse' : ''}`}>
+                            <Plus className={`h-4 w-4 ${isRtl ? 'ml-2' : 'mr-2'}`} />
+                            {isRtl ? "خطة جديدة" : "New Action Plan"}
+                        </Button>
+                    </Link>
+                )}
             </div>
 
             {/* Stats row */}

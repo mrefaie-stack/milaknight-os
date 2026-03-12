@@ -404,7 +404,7 @@ export function ReportClientView({ report, metrics, role, previousMetrics }: { r
                         </Button>
                     )}
 
-                    {role === "MARKETING_MANAGER" && report.mmStatus === "PENDING" && (
+                    {(role === "MARKETING_MANAGER" || role === "ADMIN") && report.mmStatus === "PENDING" && (
                         <div className="flex gap-2">
                             <Button
                                 onClick={async () => {
