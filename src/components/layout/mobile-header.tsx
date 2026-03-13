@@ -6,7 +6,8 @@ import { LanguageToggle } from "@/components/ui/language-toggle";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import {
     LayoutDashboard, Users, FolderKanban, BarChart3,
-    MessageSquare, ShieldCheck, Trash2, Bell, Sparkles, MoreHorizontal, X, Plus, Calendar
+    MessageSquare, ShieldCheck, Trash2, Bell, Sparkles, MoreHorizontal, X, Plus, Calendar,
+    CheckSquare, Layers
 } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
 import Link from "next/link";
@@ -72,8 +73,21 @@ export function MobileHeader({ role, user }: { role: string, user: any }) {
         { href: "/messages", label: t("common.messages"), icon: MessageSquare },
     ];
 
-    const primaryLinks = role === "ADMIN" ? adminPrimary : role === "AM" ? amPrimary : role === "MODERATOR" ? moderatorPrimary : clientPrimary;
-    const moreLinks = role === "ADMIN" ? adminMore : role === "AM" ? amMore : role === "MODERATOR" ? [] : clientMore;
+    const mmPrimary = [
+        { href: "/admin", label: t("common.overview"), icon: LayoutDashboard },
+        { href: "/admin/clients", label: t("common.clients"), icon: Users },
+        { href: "/admin/approvals", label: isRtl ? "الموافقات" : "Approvals", icon: CheckSquare },
+        { href: "/messages", label: t("common.messages"), icon: MessageSquare },
+    ];
+    const mmMore = [
+        { href: "/am/action-plans", label: t("sidebar.action_plans"), icon: FolderKanban },
+        { href: "/am/reports", label: t("sidebar.reports"), icon: BarChart3 },
+        { href: "/admin/meetings", label: isRtl ? "الاجتماعات" : "Meetings", icon: Calendar },
+        { href: "/clickup", label: isRtl ? "كليك أب" : "ClickUp", icon: Layers },
+    ];
+
+    const primaryLinks = role === "ADMIN" ? adminPrimary : role === "AM" ? amPrimary : role === "MARKETING_MANAGER" ? mmPrimary : role === "MODERATOR" ? moderatorPrimary : clientPrimary;
+    const moreLinks = role === "ADMIN" ? adminMore : role === "AM" ? amMore : role === "MARKETING_MANAGER" ? mmMore : role === "MODERATOR" ? [] : clientMore;
 
     const isActive = (href: string) => {
         if (href === "/admin" || href === "/am" || href === "/client") return pathname === href;
