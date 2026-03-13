@@ -31,6 +31,12 @@ export function TeamMemberRoleBadge({ role }: { role: string }) {
         MARKETING_MANAGER: "مدير تسويق",
         MODERATOR: "موديريتور (ناشر)",
         CLIENT: "عميل",
+        CONTENT_TEAM: "كونتنت تيم",
+        CONTENT_LEADER: "كونتنت ليدر",
+        ART_TEAM: "آرت تيم",
+        ART_LEADER: "آرت ليدر",
+        SEO_TEAM: "سيو تيم",
+        SEO_LEAD: "سيو ليد",
     };
     const ROLE_META_EN: Record<string, string> = {
         ADMIN: "Admin",
@@ -39,6 +45,12 @@ export function TeamMemberRoleBadge({ role }: { role: string }) {
         MARKETING_MANAGER: "Marketing Manager",
         MODERATOR: "Moderator",
         CLIENT: "Client",
+        CONTENT_TEAM: "Content Team",
+        CONTENT_LEADER: "Content Leader",
+        ART_TEAM: "Art Team",
+        ART_LEADER: "Art Leader",
+        SEO_TEAM: "SEO Team",
+        SEO_LEAD: "SEO Lead",
     };
     return <>{isRtl ? (ROLE_META_AR[role] || role) : (ROLE_META_EN[role] || role)}</>;
 }

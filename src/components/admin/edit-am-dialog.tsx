@@ -105,6 +105,18 @@ export function EditTeamMemberDialog({ member }: { member: any }) {
                                 <option value="AM">{isRtl ? "مدير حساب" : "Account Manager"}</option>
                                 <option value="MARKETING_MANAGER">{isRtl ? "مدير تسويق" : "Marketing Manager"}</option>
                                 <option value="MODERATOR">{isRtl ? "موديريتور (ناشر)" : "Moderator"}</option>
+                                <optgroup label={isRtl ? "تيم الكونتنت" : "Content"}>
+                                    <option value="CONTENT_LEADER">{isRtl ? "كونتنت ليدر" : "Content Leader"}</option>
+                                    <option value="CONTENT_TEAM">{isRtl ? "كونتنت تيم" : "Content Team"}</option>
+                                </optgroup>
+                                <optgroup label={isRtl ? "تيم الآرت" : "Art"}>
+                                    <option value="ART_LEADER">{isRtl ? "آرت ليدر" : "Art Leader"}</option>
+                                    <option value="ART_TEAM">{isRtl ? "آرت تيم" : "Art Team"}</option>
+                                </optgroup>
+                                <optgroup label={isRtl ? "تيم السيو" : "SEO"}>
+                                    <option value="SEO_LEAD">{isRtl ? "سيو ليد" : "SEO Lead"}</option>
+                                    <option value="SEO_TEAM">{isRtl ? "سيو تيم" : "SEO Team"}</option>
+                                </optgroup>
                             </select>
                         </div>
                         <div className="grid gap-2">

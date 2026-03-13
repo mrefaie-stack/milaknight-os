@@ -278,12 +278,14 @@ export function OfficeView({ initialData, currentUserId, initialRoomId = null }:
                     <p className={cn("text-[10px] font-black uppercase tracking-[0.25em] text-primary/40", isRtl ? "text-right" : "")}>
                         {isRtl ? "خريطة المكتب — اضغط لدخول الغرفة" : "Office Floor Plan — click to join a room"}
                     </p>
-                    <FloorPlan
-                        roomMembers={roomMembers}
-                        currentUserId={currentUserId}
-                        onJoinRoom={handleJoinRoom}
-                        isRtl={isRtl}
-                    />
+                    <div className="overflow-x-auto md:overflow-x-visible -mx-2 px-2">
+                        <FloorPlan
+                            roomMembers={roomMembers}
+                            currentUserId={currentUserId}
+                            onJoinRoom={handleJoinRoom}
+                            isRtl={isRtl}
+                        />
+                    </div>
                     {joiningRoom && (
                         <p className="text-xs text-center text-muted-foreground animate-pulse">
                             {isRtl ? "جاري الدخول..." : "Joining room..."}
@@ -291,10 +293,12 @@ export function OfficeView({ initialData, currentUserId, initialRoomId = null }:
                     )}
                 </div>
 
+                {/* Desktop: side panel */}
                 <AnimatePresence mode="wait">
                     {activeRoom && (
                         <motion.div
                             key={activeRoom.id}
+                            className="hidden lg:block"
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: 20 }}
@@ -312,6 +316,29 @@ export function OfficeView({ initialData, currentUserId, initialRoomId = null }:
                     )}
                 </AnimatePresence>
             </div>
+
+            {/* Mobile: bottom sheet when in a room */}
+            <AnimatePresence>
+                {activeRoom && (
+                    <motion.div
+                        key={`mobile-${activeRoom.id}`}
+                        className="lg:hidden fixed bottom-16 left-0 right-0 z-40 px-2 pb-2"
+                        initial={{ opacity: 0, y: 80 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 80 }}
+                        transition={{ type: "spring", stiffness: 280, damping: 28 }}
+                    >
+                        <RoomSession
+                            room={activeRoom}
+                            currentUserId={currentUserId}
+                            initialMembers={activeRoomMembers}
+                            allTeamMembers={allTeamMembers}
+                            isRtl={isRtl}
+                            onLeave={handleLeaveRoom}
+                        />
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Offline Users */}
             {offlineUsers.length > 0 && (

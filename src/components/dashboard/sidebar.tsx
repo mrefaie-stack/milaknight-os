@@ -24,6 +24,12 @@ const ROLE_LABELS: Record<string, { ar: string; en: string }> = {
     MARKETING_MANAGER: { ar: "مدير تسويق", en: "Marketing Manager" },
     CLIENT: { ar: "عميل", en: "Client" },
     MODERATOR: { ar: "ناشر محتوى", en: "Moderator" },
+    CONTENT_TEAM: { ar: "كونتنت تيم", en: "Content Team" },
+    CONTENT_LEADER: { ar: "كونتنت ليدر", en: "Content Leader" },
+    ART_TEAM: { ar: "آرت تيم", en: "Art Team" },
+    ART_LEADER: { ar: "آرت ليدر", en: "Art Leader" },
+    SEO_TEAM: { ar: "سيو تيم", en: "SEO Team" },
+    SEO_LEAD: { ar: "سيو ليد", en: "SEO Lead" },
 };
 
 export function DashboardSidebar({ role, user }: { role: string; user: any }) {
@@ -35,7 +41,7 @@ export function DashboardSidebar({ role, user }: { role: string; user: any }) {
 
     useEffect(() => {
         getUnreadNotificationCount().then(setUnreadCount);
-        if (role === "AM" || role === "MARKETING_MANAGER") {
+        if (!["CLIENT"].includes(role)) {
             getClickupOverdueCount().then(setClickupOverdueCount).catch(() => {});
         }
     }, [role]);
@@ -47,12 +53,14 @@ export function DashboardSidebar({ role, user }: { role: string; user: any }) {
         { href: "/admin/services", label: t("sidebar.services"), icon: FolderKanban },
         { href: "/admin/requests", label: t("sidebar.service_requests"), icon: Sparkles },
         { href: "/admin/team", label: t("common.team"), icon: ShieldCheck },
+        { href: "/admin/hr", label: isRtl ? "الموارد البشرية" : "HR", icon: Users },
         { href: "/am/action-plans", label: t("sidebar.action_plans"), icon: FolderKanban },
         { href: "/am/reports", label: t("sidebar.reports"), icon: BarChart3 },
         { href: "/admin/deletions", label: t("sidebar.deletions"), icon: Trash2 },
         { href: "/admin/connections", label: isRtl ? "ربط المنصات" : "Connections", icon: Link2 },
         { href: "/office", label: isRtl ? "المكتب الافتراضي" : "Virtual Office", icon: Building2 },
         { href: "/tasks", label: isRtl ? "المهام الداخلية" : "Internal Tasks", icon: ListTodo },
+        { href: "/hr/leaves", label: isRtl ? "إجازاتي" : "My Leaves", icon: CalendarDays },
         { href: "/messages", label: t("common.messages"), icon: MessageSquare },
     ];
 
@@ -81,11 +89,13 @@ export function DashboardSidebar({ role, user }: { role: string; user: any }) {
     ];
 
     const moderatorLinks = [
-        { href: "/moderator", label: t("common.overview"), icon: LayoutDashboard },
-        { href: "/moderator/clients", label: t("common.clients"), icon: Users },
-        { href: "/moderator/action-plans", label: isRtl ? "خطط النشر" : "Publishing Plans", icon: FolderKanban },
-        { href: "/office",            label: isRtl ? "المكتب الافتراضي" : "Virtual Office", icon: Building2 },
-        { href: "/messages", label: t("common.messages"), icon: MessageSquare },
+        { href: "/moderator",              label: t("common.overview"),                            icon: LayoutDashboard },
+        { href: "/moderator/clients",      label: t("common.clients"),                             icon: Users },
+        { href: "/moderator/action-plans", label: isRtl ? "خطط النشر" : "Publishing Plans",       icon: FolderKanban },
+        { href: "/clickup",                label: isRtl ? "كليك أب" : "ClickUp",                  icon: Layers },
+        { href: "/office",                 label: isRtl ? "المكتب الافتراضي" : "Virtual Office",   icon: Building2 },
+        { href: "/hr/leaves",              label: isRtl ? "إجازاتي" : "My Leaves",                icon: CalendarDays },
+        { href: "/messages",               label: t("common.messages"),                            icon: MessageSquare },
     ];
 
     const mmLinks = [
@@ -93,15 +103,47 @@ export function DashboardSidebar({ role, user }: { role: string; user: any }) {
         { href: "/admin/clients",   label: t("common.clients"),                             icon: Users },
         { href: "/admin/meetings",  label: isRtl ? "الاجتماعات" : "Meetings",              icon: CalendarDays },
         { href: "/admin/approvals", label: isRtl ? "الموافقات" : "Approvals",              icon: CheckSquare },
+        { href: "/admin/hr",        label: isRtl ? "الموارد البشرية" : "HR",               icon: Users },
         { href: "/clickup",         label: isRtl ? "كليك أب" : "ClickUp",                 icon: Layers },
         { href: "/am/action-plans", label: t("sidebar.action_plans"),                       icon: FolderKanban },
         { href: "/am/reports",      label: t("sidebar.reports"),                            icon: BarChart3 },
         { href: "/office",          label: isRtl ? "المكتب الافتراضي" : "Virtual Office",  icon: Building2 },
         { href: "/tasks",           label: isRtl ? "المهام الداخلية" : "Internal Tasks",   icon: ListTodo },
+        { href: "/hr/leaves",       label: isRtl ? "إجازاتي" : "My Leaves",               icon: CalendarDays },
         { href: "/messages",        label: t("common.messages"),                            icon: MessageSquare },
     ];
 
-    const links = role === "ADMIN" ? adminLinks : role === "MARKETING_MANAGER" ? mmLinks : role === "AM" ? amLinks : role === "MODERATOR" ? moderatorLinks : clientLinks;
+    // Content, Art, SEO team members
+    const teamMemberLinks = [
+        { href: "/moderator",              label: t("common.overview"),                            icon: LayoutDashboard },
+        { href: "/moderator/action-plans", label: isRtl ? "خطط المحتوى" : "Content Plans",        icon: FolderKanban },
+        { href: "/clickup",                label: isRtl ? "كليك أب" : "ClickUp",                  icon: Layers },
+        { href: "/office",                 label: isRtl ? "المكتب الافتراضي" : "Virtual Office",   icon: Building2 },
+        { href: "/hr/leaves",              label: isRtl ? "إجازاتي" : "My Leaves",                icon: CalendarDays },
+        { href: "/messages",               label: t("common.messages"),                            icon: MessageSquare },
+    ];
+
+    // Content, Art, SEO leaders (slightly more access)
+    const teamLeaderLinks = [
+        { href: "/moderator",              label: t("common.overview"),                            icon: LayoutDashboard },
+        { href: "/moderator/clients",      label: t("common.clients"),                             icon: Users },
+        { href: "/moderator/action-plans", label: isRtl ? "خطط المحتوى" : "Content Plans",        icon: FolderKanban },
+        { href: "/clickup",                label: isRtl ? "كليك أب" : "ClickUp",                  icon: Layers },
+        { href: "/office",                 label: isRtl ? "المكتب الافتراضي" : "Virtual Office",   icon: Building2 },
+        { href: "/tasks",                  label: isRtl ? "المهام الداخلية" : "Internal Tasks",    icon: ListTodo },
+        { href: "/hr/leaves",              label: isRtl ? "إجازاتي" : "My Leaves",                icon: CalendarDays },
+        { href: "/messages",               label: t("common.messages"),                            icon: MessageSquare },
+    ];
+
+    const LEADER_ROLES = ["CONTENT_LEADER", "ART_LEADER", "SEO_LEAD"];
+    const TEAM_ROLES = ["CONTENT_TEAM", "ART_TEAM", "SEO_TEAM"];
+    const links = role === "ADMIN" ? adminLinks
+        : role === "MARKETING_MANAGER" ? mmLinks
+        : role === "AM" ? amLinks
+        : role === "MODERATOR" ? moderatorLinks
+        : LEADER_ROLES.includes(role) ? teamLeaderLinks
+        : TEAM_ROLES.includes(role) ? teamMemberLinks
+        : clientLinks;
 
     const isActive = (href: string) => {
         if (href === "/admin" || href === "/am" || href === "/client") {
@@ -112,7 +154,11 @@ export function DashboardSidebar({ role, user }: { role: string; user: any }) {
 
     const roleMeta = ROLE_LABELS[role] || ROLE_LABELS.CLIENT;
     const roleLabel = isRtl ? roleMeta.ar : roleMeta.en;
-    const roleColor = role === "ADMIN" ? "text-orange-400" : (role === "AM" || role === "MARKETING_MANAGER") ? "text-blue-400" : "text-emerald-400";
+    const roleColor = role === "ADMIN" ? "text-orange-400"
+        : (role === "AM" || role === "MARKETING_MANAGER") ? "text-blue-400"
+        : (role === "CONTENT_LEADER" || role === "ART_LEADER" || role === "SEO_LEAD") ? "text-purple-400"
+        : (role === "CONTENT_TEAM" || role === "ART_TEAM" || role === "SEO_TEAM") ? "text-teal-400"
+        : "text-emerald-400";
 
     return (
         <aside className={cn(

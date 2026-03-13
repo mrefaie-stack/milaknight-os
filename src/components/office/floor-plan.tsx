@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { ROOMS } from "@/lib/rooms";
 import type { RoomMember } from "@/lib/rooms";
@@ -13,13 +14,22 @@ type Props = {
 };
 
 export function FloorPlan({ roomMembers, currentUserId, onJoinRoom, isRtl }: Props) {
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        const check = () => setIsMobile(window.innerWidth < 768);
+        check();
+        window.addEventListener("resize", check);
+        return () => window.removeEventListener("resize", check);
+    }, []);
+
     return (
         <div
-            className="grid gap-2.5"
-            style={{
-                gridTemplateColumns: "repeat(5, 1fr)",
-                gridAutoRows: "minmax(120px, auto)",
-            }}
+            className="grid gap-2"
+            style={isMobile
+                ? { gridTemplateColumns: "repeat(2, 1fr)", gridAutoRows: "minmax(90px, auto)" }
+                : { gridTemplateColumns: "repeat(5, 1fr)", gridAutoRows: "minmax(100px, auto)" }
+            }
         >
             {ROOMS.map((room, i) => {
                 const members = roomMembers[room.id] || [];
@@ -31,15 +41,18 @@ export function FloorPlan({ roomMembers, currentUserId, onJoinRoom, isRtl }: Pro
                         initial={{ opacity: 0, scale: 0.92, y: 12 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         transition={{
-                            delay: i * 0.06,
+                            delay: i * 0.04,
                             type: "spring",
                             stiffness: 260,
                             damping: 24,
                         }}
-                        style={{
-                            gridColumn: `span ${room.colSpan}`,
-                            gridRow: `span ${room.rowSpan}`,
-                        }}
+                        style={isMobile
+                            ? {}
+                            : {
+                                gridColumn: `span ${room.colSpan}`,
+                                gridRow: `span ${room.rowSpan}`,
+                            }
+                        }
                     >
                         <RoomTile
                             room={room}
