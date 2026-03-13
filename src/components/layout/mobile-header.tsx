@@ -7,7 +7,7 @@ import { ThemeToggle } from "@/components/ui/theme-toggle";
 import {
     LayoutDashboard, Users, FolderKanban, BarChart3,
     MessageSquare, ShieldCheck, Trash2, Bell, Sparkles, MoreHorizontal, X, Plus, Calendar,
-    CheckSquare, Layers
+    CheckSquare, Layers, Building2
 } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
 import Link from "next/link";
@@ -42,6 +42,7 @@ export function MobileHeader({ role, user }: { role: string, user: any }) {
         { href: "/admin/team", label: t("common.team"), icon: ShieldCheck },
         { href: "/admin/requests", label: t("sidebar.service_requests"), icon: Sparkles },
         { href: "/admin/meetings", label: isRtl ? "الاجتماعات" : "Meetings", icon: Calendar },
+        { href: "/office", label: isRtl ? "المكتب الافتراضي" : "Virtual Office", icon: Building2 },
         { href: "/admin/deletions", label: t("sidebar.deletions"), icon: Trash2 },
     ];
 
@@ -53,6 +54,7 @@ export function MobileHeader({ role, user }: { role: string, user: any }) {
     ];
     const amMore = [
         { href: "/am/meetings", label: isRtl ? "الاجتماعات" : "Meetings", icon: Calendar },
+        { href: "/office", label: isRtl ? "المكتب الافتراضي" : "Virtual Office", icon: Building2 },
         { href: "/messages", label: t("common.messages"), icon: MessageSquare },
     ];
 

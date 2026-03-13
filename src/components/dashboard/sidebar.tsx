@@ -6,7 +6,7 @@ import { UserNav } from "@/components/dashboard/user-nav";
 import {
     LayoutDashboard, Users, FolderKanban, BarChart3,
     MessageSquare, ShieldCheck, Trash2, Bell, Search,
-    ChevronLeft, ChevronRight, Sparkles, Plus, CalendarDays, Link2, Activity, ListTodo, CheckSquare, Layers
+    ChevronLeft, ChevronRight, Sparkles, Plus, CalendarDays, Link2, Activity, ListTodo, CheckSquare, Layers, Building2
 } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
 import { LanguageToggle } from "@/components/ui/language-toggle";
@@ -51,6 +51,7 @@ export function DashboardSidebar({ role, user }: { role: string; user: any }) {
         { href: "/am/reports", label: t("sidebar.reports"), icon: BarChart3 },
         { href: "/admin/deletions", label: t("sidebar.deletions"), icon: Trash2 },
         { href: "/admin/connections", label: isRtl ? "ربط المنصات" : "Connections", icon: Link2 },
+        { href: "/office", label: isRtl ? "المكتب الافتراضي" : "Virtual Office", icon: Building2 },
         { href: "/tasks", label: isRtl ? "المهام الداخلية" : "Internal Tasks", icon: ListTodo },
         { href: "/messages", label: t("common.messages"), icon: MessageSquare },
     ];
@@ -64,6 +65,7 @@ export function DashboardSidebar({ role, user }: { role: string; user: any }) {
         { href: "/am/reports",       label: t("sidebar.reports"),                            icon: BarChart3 },
         { href: "/admin/connections",label: isRtl ? "ربط المنصات" : "Connections",          icon: Link2 },
         { href: "/clickup",          label: isRtl ? "كليك أب" : "ClickUp",                 icon: Layers },
+        { href: "/office",           label: isRtl ? "المكتب الافتراضي" : "Virtual Office",  icon: Building2 },
         { href: "/tasks",            label: isRtl ? "المهام الداخلية" : "Internal Tasks",   icon: ListTodo },
         { href: "/messages",         label: t("common.messages"),                            icon: MessageSquare },
     ];
@@ -82,6 +84,7 @@ export function DashboardSidebar({ role, user }: { role: string; user: any }) {
         { href: "/moderator", label: t("common.overview"), icon: LayoutDashboard },
         { href: "/moderator/clients", label: t("common.clients"), icon: Users },
         { href: "/moderator/action-plans", label: isRtl ? "خطط النشر" : "Publishing Plans", icon: FolderKanban },
+        { href: "/office",            label: isRtl ? "المكتب الافتراضي" : "Virtual Office", icon: Building2 },
         { href: "/messages", label: t("common.messages"), icon: MessageSquare },
     ];
 
@@ -93,6 +96,7 @@ export function DashboardSidebar({ role, user }: { role: string; user: any }) {
         { href: "/clickup",         label: isRtl ? "كليك أب" : "ClickUp",                 icon: Layers },
         { href: "/am/action-plans", label: t("sidebar.action_plans"),                       icon: FolderKanban },
         { href: "/am/reports",      label: t("sidebar.reports"),                            icon: BarChart3 },
+        { href: "/office",          label: isRtl ? "المكتب الافتراضي" : "Virtual Office",  icon: Building2 },
         { href: "/tasks",           label: isRtl ? "المهام الداخلية" : "Internal Tasks",   icon: ListTodo },
         { href: "/messages",        label: t("common.messages"),                            icon: MessageSquare },
     ];
