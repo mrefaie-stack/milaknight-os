@@ -6,13 +6,14 @@ import { UserNav } from "@/components/dashboard/user-nav";
 import {
     LayoutDashboard, Users, FolderKanban, BarChart3,
     MessageSquare, ShieldCheck, Trash2, Bell, Search,
-    ChevronLeft, ChevronRight, Sparkles, Plus, CalendarDays, Link2, Activity, ListTodo, CheckSquare
+    ChevronLeft, ChevronRight, Sparkles, Plus, CalendarDays, Link2, Activity, ListTodo, CheckSquare, Layers
 } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
 import { LanguageToggle } from "@/components/ui/language-toggle";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { useEffect, useState } from "react";
 import { getUnreadNotificationCount } from "@/app/actions/notification";
+import { getClickupOverdueCount } from "@/app/actions/clickup";
 import { cn } from "@/lib/utils";
 import { MeetingRequestModal } from "./meeting-request-modal";
 import { Button } from "../ui/button";
@@ -29,11 +30,15 @@ export function DashboardSidebar({ role, user }: { role: string; user: any }) {
     const { t, isRtl } = useLanguage();
     const pathname = usePathname();
     const [unreadCount, setUnreadCount] = useState(0);
+    const [clickupOverdueCount, setClickupOverdueCount] = useState(0);
     const [meetingModalOpen, setMeetingModalOpen] = useState(false);
 
     useEffect(() => {
         getUnreadNotificationCount().then(setUnreadCount);
-    }, []);
+        if (role === "AM" || role === "MARKETING_MANAGER") {
+            getClickupOverdueCount().then(setClickupOverdueCount).catch(() => {});
+        }
+    }, [role]);
 
     const adminLinks = [
         { href: "/admin", label: t("common.overview"), icon: LayoutDashboard },
@@ -51,15 +56,16 @@ export function DashboardSidebar({ role, user }: { role: string; user: any }) {
     ];
 
     const amLinks = [
-        { href: "/am", label: t("common.overview"), icon: LayoutDashboard },
-        { href: "/am/clients", label: t("sidebar.my_clients"), icon: Users },
-        { href: "/am/meetings", label: isRtl ? "الاجتماعات" : "Meetings", icon: CalendarDays },
-        { href: "/admin/requests", label: t("sidebar.service_requests"), icon: Sparkles },
-        { href: "/am/action-plans", label: t("sidebar.action_plans"), icon: FolderKanban },
-        { href: "/am/reports", label: t("sidebar.reports"), icon: BarChart3 },
-        { href: "/admin/connections", label: isRtl ? "ربط المنصات" : "Connections", icon: Link2 },
-        { href: "/tasks", label: isRtl ? "المهام الداخلية" : "Internal Tasks", icon: ListTodo },
-        { href: "/messages", label: t("common.messages"), icon: MessageSquare },
+        { href: "/am",               label: t("common.overview"),                            icon: LayoutDashboard },
+        { href: "/am/clients",       label: t("sidebar.my_clients"),                         icon: Users },
+        { href: "/am/meetings",      label: isRtl ? "الاجتماعات" : "Meetings",              icon: CalendarDays },
+        { href: "/admin/requests",   label: t("sidebar.service_requests"),                   icon: Sparkles },
+        { href: "/am/action-plans",  label: t("sidebar.action_plans"),                       icon: FolderKanban },
+        { href: "/am/reports",       label: t("sidebar.reports"),                            icon: BarChart3 },
+        { href: "/admin/connections",label: isRtl ? "ربط المنصات" : "Connections",          icon: Link2 },
+        { href: "/clickup",          label: isRtl ? "كليك أب" : "ClickUp",                 icon: Layers },
+        { href: "/tasks",            label: isRtl ? "المهام الداخلية" : "Internal Tasks",   icon: ListTodo },
+        { href: "/messages",         label: t("common.messages"),                            icon: MessageSquare },
     ];
 
     const clientLinks = [
@@ -84,6 +90,7 @@ export function DashboardSidebar({ role, user }: { role: string; user: any }) {
         { href: "/admin/clients",   label: t("common.clients"),                             icon: Users },
         { href: "/admin/meetings",  label: isRtl ? "الاجتماعات" : "Meetings",              icon: CalendarDays },
         { href: "/admin/approvals", label: isRtl ? "الموافقات" : "Approvals",              icon: CheckSquare },
+        { href: "/clickup",         label: isRtl ? "كليك أب" : "ClickUp",                 icon: Layers },
         { href: "/am/action-plans", label: t("sidebar.action_plans"),                       icon: FolderKanban },
         { href: "/am/reports",      label: t("sidebar.reports"),                            icon: BarChart3 },
         { href: "/tasks",           label: isRtl ? "المهام الداخلية" : "Internal Tasks",   icon: ListTodo },
@@ -186,6 +193,7 @@ export function DashboardSidebar({ role, user }: { role: string; user: any }) {
                     const Icon = link.icon;
                     const active = isActive(link.href);
                     const isNotifications = link.label === t("common.notifications");
+                    const isClickup = link.href === "/clickup";
 
                     return (
                         <Link
@@ -193,14 +201,13 @@ export function DashboardSidebar({ role, user }: { role: string; user: any }) {
                             href={link.href}
                             className={cn(
                                 "relative flex items-center px-4 py-3 rounded-2xl text-[13px] font-bold transition-all duration-200 group overflow-hidden",
-                                // RTL: entire row reversed so icon is on the right edge, text on the left side
                                 isRtl ? "flex-row-reverse" : "flex-row",
                                 active
                                     ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
                                     : "text-foreground/60 hover:bg-white/8 hover:text-foreground"
                             )}
                         >
-                            {/* Active/hover indicator bar — right side in RTL, left in LTR */}
+                            {/* Active/hover indicator bar */}
                             {!active && (
                                 <div className={cn(
                                     "absolute top-2 bottom-2 w-0.5 rounded-full bg-primary opacity-0 group-hover:opacity-60 transition-opacity",
@@ -208,17 +215,17 @@ export function DashboardSidebar({ role, user }: { role: string; user: any }) {
                                 )} />
                             )}
 
-                            {/* Icon — always the element closest to the edge */}
+                            {/* Icon */}
                             <Icon className={cn(
                                 "h-[18px] w-[18px] shrink-0 transition-all duration-200",
                                 active ? "scale-110" : "group-hover:scale-110",
                                 isRtl ? "ml-3" : "mr-3"
                             )} />
 
-                            {/* Label — grows to fill */}
+                            {/* Label */}
                             <span className="flex-1 tracking-tight">{link.label}</span>
 
-                            {/* Badge / chevron on the far opposite side */}
+                            {/* Notification badge */}
                             {isNotifications && unreadCount > 0 && (
                                 <span className={cn(
                                     "flex h-5 min-w-5 px-1 items-center justify-center rounded-full text-[9px] font-black",
@@ -228,7 +235,20 @@ export function DashboardSidebar({ role, user }: { role: string; user: any }) {
                                     {unreadCount > 9 ? "9+" : unreadCount}
                                 </span>
                             )}
-                            {!isNotifications && !active && (
+
+                            {/* ClickUp overdue badge */}
+                            {isClickup && clickupOverdueCount > 0 && (
+                                <span className={cn(
+                                    "flex h-5 min-w-5 px-1 items-center justify-center rounded-full text-[9px] font-black",
+                                    active ? "bg-white text-red-500" : "bg-red-500 text-white",
+                                    isRtl ? "mr-1" : "ml-1"
+                                )}>
+                                    {clickupOverdueCount > 9 ? "9+" : clickupOverdueCount}
+                                </span>
+                            )}
+
+                            {/* Chevron for non-badge links */}
+                            {!isNotifications && !(isClickup && clickupOverdueCount > 0) && !active && (
                                 isRtl
                                     ? <ChevronLeft className="h-3.5 w-3.5 opacity-0 group-hover:opacity-40 transition-all ml-1" />
                                     : <ChevronRight className="h-3.5 w-3.5 opacity-0 group-hover:opacity-40 transition-all mr-1" />
