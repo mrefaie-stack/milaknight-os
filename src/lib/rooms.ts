@@ -1,0 +1,118 @@
+import { Target, BarChart3, Users, MessageSquare, CheckSquare, Phone, Building2, Coffee } from "lucide-react";
+
+export const ROOMS = [
+    {
+        id: "Strategy Room",
+        nameAr: "غرفة الاستراتيجية",
+        nameEn: "Strategy Room",
+        icon: Target,
+        color: "text-blue-400",
+        bg: "bg-blue-500/8",
+        border: "border-blue-500/20",
+        activeBorder: "border-blue-400/60",
+        glow: "shadow-blue-500/15",
+        colSpan: 1,
+        rowSpan: 1,
+    },
+    {
+        id: "Analytics Hub",
+        nameAr: "مركز التحليلات",
+        nameEn: "Analytics Hub",
+        icon: BarChart3,
+        color: "text-emerald-400",
+        bg: "bg-emerald-500/8",
+        border: "border-emerald-500/20",
+        activeBorder: "border-emerald-400/60",
+        glow: "shadow-emerald-500/15",
+        colSpan: 1,
+        rowSpan: 1,
+    },
+    {
+        id: "Client Zone",
+        nameAr: "منطقة العملاء",
+        nameEn: "Client Zone",
+        icon: Users,
+        color: "text-orange-400",
+        bg: "bg-orange-500/8",
+        border: "border-orange-500/20",
+        activeBorder: "border-orange-400/60",
+        glow: "shadow-orange-500/15",
+        colSpan: 1,
+        rowSpan: 1,
+    },
+    {
+        id: "Meeting Room",
+        nameAr: "غرفة الاجتماعات",
+        nameEn: "Meeting Room",
+        icon: Phone,
+        color: "text-rose-400",
+        bg: "bg-rose-500/8",
+        border: "border-rose-500/20",
+        activeBorder: "border-rose-400/60",
+        glow: "shadow-rose-500/15",
+        colSpan: 2,
+        rowSpan: 1,
+    },
+    {
+        id: "Messaging",
+        nameAr: "المراسلات",
+        nameEn: "Messaging",
+        icon: MessageSquare,
+        color: "text-purple-400",
+        bg: "bg-purple-500/8",
+        border: "border-purple-500/20",
+        activeBorder: "border-purple-400/60",
+        glow: "shadow-purple-500/15",
+        colSpan: 1,
+        rowSpan: 1,
+    },
+    {
+        id: "Task Board",
+        nameAr: "لوحة المهام",
+        nameEn: "Task Board",
+        icon: CheckSquare,
+        color: "text-teal-400",
+        bg: "bg-teal-500/8",
+        border: "border-teal-500/20",
+        activeBorder: "border-teal-400/60",
+        glow: "shadow-teal-500/15",
+        colSpan: 1,
+        rowSpan: 1,
+    },
+    {
+        id: "Admin HQ",
+        nameAr: "المقر الإداري",
+        nameEn: "Admin HQ",
+        icon: Building2,
+        color: "text-yellow-400",
+        bg: "bg-yellow-500/8",
+        border: "border-yellow-500/20",
+        activeBorder: "border-yellow-400/60",
+        glow: "shadow-yellow-500/15",
+        colSpan: 1,
+        rowSpan: 1,
+    },
+    {
+        id: "Lounge",
+        nameAr: "الاستراحة",
+        nameEn: "Lounge",
+        icon: Coffee,
+        color: "text-muted-foreground",
+        bg: "bg-white/3",
+        border: "border-white/8",
+        activeBorder: "border-white/30",
+        glow: "",
+        colSpan: 3,
+        rowSpan: 1,
+    },
+] as const;
+
+export type RoomDef = typeof ROOMS[number];
+export type RoomId = typeof ROOMS[number]["id"];
+
+export type RoomMember = {
+    userId: string;
+    name: string;
+    role: string;
+    isCurrentUser: boolean;
+};
