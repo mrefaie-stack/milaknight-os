@@ -257,7 +257,7 @@ export function ClientDashboardView({ client, latestPlan, allReports, globalServ
                                         </CardTitle>
                                     </CardHeader>
                                     <CardContent className={isRtl ? 'text-right' : 'text-left'}>
-                                        <div className={`text-4xl md:text-5xl font-black tracking-tighter ${m.color}`}>
+                                        <div className={`text-3xl md:text-4xl lg:text-5xl font-black tracking-tighter ${m.color}`}>
                                             {m.format(m.value)}
                                         </div>
                                         <p className="text-[10px] text-muted-foreground font-bold mt-1 opacity-50">
@@ -349,34 +349,55 @@ export function ClientDashboardView({ client, latestPlan, allReports, globalServ
                 </TabsContent>
             </Tabs>
 
-            <motion.div variants={item} className="space-y-6 pt-10 border-t border-white/5">
-                <div className={`flex items-center justify-between ${isRtl ? 'flex-row-reverse' : ''}`}>
-                    <div className={isRtl ? 'text-right' : ''}>
-                        <h2 className="text-3xl font-black flex items-center gap-3">
-                            <Sparkles className="h-6 w-6 text-primary" />
-                            {isRtl ? "اكتشف خدماتنا الإضافية" : "Discover Our Premium Services"}
-                        </h2>
+            {globalServices.filter(gs => !client.services?.some((s: any) => s.globalServiceId === gs.id)).length > 0 && (
+                <motion.div variants={item} className="space-y-5 pt-10 border-t border-white/5">
+                    <div className={`flex items-center justify-between flex-wrap gap-3 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                        <div className={isRtl ? 'text-right' : ''}>
+                            <h2 className={`text-xl font-black tracking-tight flex items-center gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                                <Sparkles className="h-5 w-5 text-primary" />
+                                {isRtl ? "اكتشف خدماتنا الإضافية" : "Discover Our Premium Services"}
+                            </h2>
+                            <p className="text-xs text-muted-foreground mt-0.5 font-medium opacity-70">
+                                {isRtl ? "خدمات إضافية لتعزيز نمو علامتك التجارية" : "Add-on services to accelerate your brand growth"}
+                            </p>
+                        </div>
+                        <Link href="/client/services">
+                            <Button variant="ghost" size="sm" className={`text-[11px] font-black uppercase tracking-widest text-primary hover:text-primary flex items-center gap-1.5 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                                {isRtl ? "عرض الكل" : "View All"}
+                                <ArrowRight className="h-3.5 w-3.5" />
+                            </Button>
+                        </Link>
                     </div>
-                </div>
 
-                <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-6">
-                    {globalServices
-                        .filter(gs => !client.services?.some((s: any) => s.globalServiceId === gs.id))
-                        .slice(0, 3)
-                        .map((service) => (
-                            <Card key={service.id} className="glass-card border-none overflow-hidden rounded-3xl group hover:bg-white/5 transition-all">
-                                <CardContent className="p-8 space-y-4">
-                                    <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary mb-4 p-3">
-                                        <Sparkles className="h-full w-full" />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                        {globalServices
+                            .filter(gs => !client.services?.some((s: any) => s.globalServiceId === gs.id))
+                            .slice(0, 3)
+                            .map((service) => (
+                                <Link key={service.id} href="/client/services">
+                                    <div className="group p-5 rounded-2xl border border-white/8 bg-white/3 hover:bg-white/6 hover:border-primary/20 transition-all duration-300 cursor-pointer h-full flex flex-col gap-3">
+                                        <div className="h-10 w-10 rounded-xl bg-primary/10 border border-primary/15 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                                            <Sparkles className="h-5 w-5" />
+                                        </div>
+                                        <div className={`flex-1 ${isRtl ? 'text-right' : ''}`}>
+                                            <h3 className="font-black text-sm leading-tight">
+                                                {isRtl ? service.nameAr : service.nameEn}
+                                            </h3>
+                                            {(isRtl ? service.descriptionAr : service.descriptionEn) && (
+                                                <p className="text-xs text-muted-foreground mt-1 line-clamp-2 opacity-70 font-medium">
+                                                    {isRtl ? service.descriptionAr : service.descriptionEn}
+                                                </p>
+                                            )}
+                                        </div>
+                                        <span className={`text-[10px] font-black text-primary uppercase tracking-widest flex items-center gap-1 ${isRtl ? 'flex-row-reverse self-end' : 'self-end'}`}>
+                                            {isRtl ? "اطلب الآن" : "Request"} <ArrowRight className="h-3 w-3" />
+                                        </span>
                                     </div>
-                                    <h3 className={`text-xl font-black ${isRtl ? 'text-right' : ''}`}>
-                                        {isRtl ? service.nameAr : service.nameEn}
-                                    </h3>
-                                </CardContent>
-                            </Card>
-                        ))}
-                </div>
-            </motion.div>
+                                </Link>
+                            ))}
+                    </div>
+                </motion.div>
+            )}
         </motion.div>
     );
 }

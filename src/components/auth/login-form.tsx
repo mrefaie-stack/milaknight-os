@@ -2,15 +2,14 @@
 
 import { useState } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, Mail, Lock, ArrowRight } from "lucide-react";
 
 export function LoginForm() {
-    const router = useRouter();
     const searchParams = useSearchParams();
     const [isLoading, setIsLoading] = useState(false);
 
@@ -37,49 +36,61 @@ export function LoginForm() {
         }
 
         const from = searchParams.get("from");
-        const redirectUrl = from || "/";
-
-        // Use a hard redirect to prevent Next.js client router from freezing with the middleware cache
-        window.location.assign(redirectUrl);
+        window.location.assign(from || "/");
     }
 
     return (
-        <div className="grid gap-6">
-            <form onSubmit={onSubmit}>
-                <div className="grid gap-4">
-                    <div className="grid gap-2">
-                        <Label htmlFor="email">Email</Label>
-                        <Input
-                            id="email"
-                            name="email"
-                            placeholder="name@milaknight.com"
-                            type="email"
-                            autoCapitalize="none"
-                            autoComplete="email"
-                            autoCorrect="off"
-                            disabled={isLoading}
-                            required
-                        />
-                    </div>
-                    <div className="grid gap-2">
-                        <Label htmlFor="password">Password</Label>
-                        <Input
-                            id="password"
-                            name="password"
-                            type="password"
-                            autoComplete="current-password"
-                            disabled={isLoading}
-                            required
-                        />
-                    </div>
-                    <Button disabled={isLoading}>
-                        {isLoading && (
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        )}
-                        Sign In
-                    </Button>
+        <form onSubmit={onSubmit} className="space-y-5">
+            <div className="space-y-2">
+                <Label htmlFor="email" className="text-xs font-black uppercase tracking-widest text-muted-foreground">
+                    Email Address
+                </Label>
+                <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50 pointer-events-none" />
+                    <Input
+                        id="email"
+                        name="email"
+                        placeholder="name@milaknight.com"
+                        type="email"
+                        autoCapitalize="none"
+                        autoComplete="email"
+                        autoCorrect="off"
+                        disabled={isLoading}
+                        required
+                        className="pl-10 h-12 bg-white/5 border-white/10 rounded-xl focus-visible:border-primary/50 focus-visible:ring-primary/20 placeholder:text-muted-foreground/40"
+                    />
                 </div>
-            </form>
-        </div>
+            </div>
+
+            <div className="space-y-2">
+                <Label htmlFor="password" className="text-xs font-black uppercase tracking-widest text-muted-foreground">
+                    Password
+                </Label>
+                <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50 pointer-events-none" />
+                    <Input
+                        id="password"
+                        name="password"
+                        type="password"
+                        autoComplete="current-password"
+                        disabled={isLoading}
+                        required
+                        className="pl-10 h-12 bg-white/5 border-white/10 rounded-xl focus-visible:border-primary/50 focus-visible:ring-primary/20"
+                    />
+                </div>
+            </div>
+
+            <Button
+                disabled={isLoading}
+                className="w-full h-12 font-black uppercase tracking-widest rounded-xl shadow-xl shadow-primary/20 hover:scale-[1.01] transition-all"
+            >
+                {isLoading ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                    <ArrowRight className="mr-2 h-4 w-4" />
+                )}
+                {isLoading ? "Signing in..." : "Sign In"}
+            </Button>
+        </form>
     );
 }
