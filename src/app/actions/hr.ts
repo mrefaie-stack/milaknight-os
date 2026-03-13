@@ -156,7 +156,7 @@ export async function reviewLeave(id: string, status: "APPROVED" | "REJECTED", r
 
     const leave = await (prisma as any).leaveRequest.update({
         where: { id },
-        data: { status, reviewedById: session.user.id, reviewNote: reviewNote ?? null },
+        data: { status, reviewedById: session!.user.id, reviewNote: reviewNote ?? null },
         include: { user: { select: { id: true, firstName: true } } },
     });
 
