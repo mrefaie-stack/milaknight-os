@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { sendReminder } from "@/app/actions/notification";
 
-function requireAdmin() { throw new Error("Unauthorized"); }
+function requireAdmin(): never { throw new Error("Unauthorized"); }
 
 // ─── Employee Directory ───────────────────────────────────────────────────────
 
