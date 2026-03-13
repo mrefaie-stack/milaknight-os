@@ -88,8 +88,23 @@ export function MobileHeader({ role, user }: { role: string, user: any }) {
         { href: "/clickup", label: isRtl ? "كليك أب" : "ClickUp", icon: Layers },
     ];
 
-    const primaryLinks = role === "ADMIN" ? adminPrimary : role === "AM" ? amPrimary : role === "MARKETING_MANAGER" ? mmPrimary : role === "MODERATOR" ? moderatorPrimary : clientPrimary;
-    const moreLinks = role === "ADMIN" ? adminMore : role === "AM" ? amMore : role === "MARKETING_MANAGER" ? mmMore : role === "MODERATOR" ? [] : clientMore;
+    const LEADER_ROLES = ["CONTENT_LEADER", "ART_LEADER", "SEO_LEAD"];
+    const TEAM_ROLES = ["CONTENT_TEAM", "ART_TEAM", "SEO_TEAM"];
+    const isTeamRole = LEADER_ROLES.includes(role) || TEAM_ROLES.includes(role) || role === "MODERATOR";
+    const primaryLinks = role === "ADMIN" ? adminPrimary
+        : role === "AM" ? amPrimary
+        : role === "MARKETING_MANAGER" ? mmPrimary
+        : isTeamRole ? moderatorPrimary
+        : clientPrimary;
+    const moreLinks = role === "ADMIN" ? adminMore
+        : role === "AM" ? amMore
+        : role === "MARKETING_MANAGER" ? mmMore
+        : isTeamRole ? [
+            { href: "/clickup", label: isRtl ? "كليك أب" : "ClickUp", icon: Layers },
+            { href: "/hr/leaves", label: isRtl ? "إجازاتي" : "My Leaves", icon: Calendar },
+            { href: "/office", label: isRtl ? "المكتب الافتراضي" : "Virtual Office", icon: Building2 },
+        ]
+        : clientMore;
 
     const isActive = (href: string) => {
         if (href === "/admin" || href === "/am" || href === "/client") return pathname === href;

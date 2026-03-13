@@ -18,8 +18,16 @@ model User {
   updatedAt      DateTime  @updatedAt
 
   // ClickUp Integration
-  clickupToken   String?   // ClickUp personal API token
-  clickupTeamId  String?   // Primary ClickUp workspace/team ID
+  clickupToken   String?
+  clickupTeamId  String?
+
+  // HR Fields
+  hireDate       DateTime?
+  birthday       DateTime?
+  phone          String?
+  department     String?
+  contractType   String?   // FULL_TIME, PART_TIME, FREELANCE, INTERN
+  salary         Int?
 
   // Relations
   clients        Client[]  @relation("AccountManagerClients")
@@ -41,6 +49,15 @@ model User {
   roomMessages       RoomChatMessage[]
   sentSignals        WebRTCSignal[]    @relation("SentSignals")
   receivedSignals    WebRTCSignal[]    @relation("ReceivedSignals")
+
+  // HR relations
+  leaveRequests      LeaveRequest[]    @relation("EmployeeLeaves")
+  reviewedLeaves     LeaveRequest[]    @relation("ReviewedLeaves")
+  performanceReviews PerformanceReview[] @relation("EmployeeReviews")
+  authoredReviews    PerformanceReview[] @relation("AuthoredReviews")
+  hrNotes            HRNote[]          @relation("EmployeeNotes")
+  authoredHRNotes    HRNote[]          @relation("AuthoredHRNotes")
+  hrAnnouncements    HRAnnouncement[]
 }
 
 model RoomSession {
@@ -403,22 +420,83 @@ model InternalTask {
   description String?  @db.Text
   type        String   // NEW_TASK, NEED_APPROVAL, ANNOUNCEMENT
   status      String   @default("PENDING") // PENDING, IN_PROGRESS, COMPLETED, NEED_FIX
-  
+
   clientId    String
   client      Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  
+
   senderId    String
   sender      User     @relation("SentTasks", fields: [senderId], references: [id])
-  
+
   receiverId  String
   receiver    User     @relation("ReceivedTasks", fields: [receiverId], references: [id])
-  
-  feedback    String?  @db.Text // For "Need Fix" comments
-  
+
+  feedback    String?  @db.Text
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   @@index([clientId])
   @@index([senderId])
   @@index([receiverId])
+}
+
+// ─── HR System ────────────────────────────────────────────────────────────────
+
+model LeaveRequest {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation("EmployeeLeaves", fields: [userId], references: [id], onDelete: Cascade)
+  type         String   // VACATION, SICK, PERSONAL, EMERGENCY
+  startDate    DateTime
+  endDate      DateTime
+  days         Int
+  reason       String?
+  status       String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  reviewedById String?
+  reviewedBy   User?    @relation("ReviewedLeaves", fields: [reviewedById], references: [id])
+  reviewNote   String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
+}
+
+model PerformanceReview {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation("EmployeeReviews", fields: [userId], references: [id], onDelete: Cascade)
+  reviewerId   String
+  reviewer     User     @relation("AuthoredReviews", fields: [reviewerId], references: [id])
+  period       String   // e.g. "2024-Q4"
+  score        Int      // 1-5
+  strengths    String?  @db.Text
+  improvements String?  @db.Text
+  goals        String?  @db.Text
+  notes        String?  @db.Text
+  createdAt    DateTime @default(now())
+
+  @@index([userId])
+}
+
+model HRNote {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation("EmployeeNotes", fields: [userId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation("AuthoredHRNotes", fields: [authorId], references: [id])
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model HRAnnouncement {
+  id          String   @id @default(cuid())
+  title       String
+  content     String   @db.Text
+  authorId    String
+  author      User     @relation(fields: [authorId], references: [id])
+  targetRoles String   @default("ALL") // "ALL" or comma-sep roles
+  createdAt   DateTime @default(now())
 }

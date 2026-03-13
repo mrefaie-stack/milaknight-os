@@ -20,14 +20,31 @@ export async function leaveRoom() {
     const session = await getServerSession(authOptions);
     if (!session) return;
 
+    // Find which room user is in before deleting
+    const mySession = await (prisma as any).roomSession.findUnique({
+        where: { userId: session.user.id },
+        select: { roomId: true },
+    });
+
     await (prisma as any).roomSession.deleteMany({
         where: { userId: session.user.id },
     });
 
-    // Clean up unconsumed signals
     await (prisma as any).webRTCSignal.deleteMany({
         where: { fromUserId: session.user.id },
     });
+
+    // If this was the last person in the room, clear the chat history
+    if (mySession?.roomId) {
+        const remaining = await (prisma as any).roomSession.count({
+            where: { roomId: mySession.roomId },
+        });
+        if (remaining === 0) {
+            await (prisma as any).roomChatMessage.deleteMany({
+                where: { roomId: mySession.roomId },
+            });
+        }
+    }
 }
 
 export async function getRoomSessions(): Promise<Record<string, { userId: string; name: string; role: string }[]>> {
