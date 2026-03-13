@@ -5,6 +5,7 @@ import { DashboardSidebar } from "@/components/dashboard/sidebar";
 import { MobileHeader } from "@/components/layout/mobile-header";
 import { AiChatWidget } from "@/components/ai-chat/chat-widget";
 import { PresenceUpdater } from "@/components/office/presence-updater";
+import { NotificationToaster } from "@/components/notifications/notification-toaster";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
     const session = await getServerSession(authOptions);
@@ -31,6 +32,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
             </main>
 
             {session.user.role !== "CLIENT" && <PresenceUpdater />}
+            <NotificationToaster />
             <AiChatWidget user={{ name: session.user.name || "User", role: session.user.role, id: session.user.id }} />
         </div>
     );
