@@ -6,14 +6,15 @@ import { prisma } from "@/lib/prisma";
 // GET — list all members currently in the room
 export async function GET(
     _req: NextRequest,
-    { params }: { params: { room: string } }
+    { params }: { params: Promise<{ room: string }> }
 ) {
     const session = await getServerSession(authOptions);
     if (!session || session.user.role === "CLIENT") {
         return NextResponse.json([], { status: 401 });
     }
 
-    const roomId = decodeURIComponent(params.room);
+    const { room } = await params;
+    const roomId = decodeURIComponent(room);
 
     const sessions = await (prisma as any).roomSession.findMany({
         where: {
