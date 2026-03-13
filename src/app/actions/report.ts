@@ -95,7 +95,7 @@ export async function publishReport(reportId: string) {
                 title: "Annual/Monthly Report Review Required",
                 message: `The account manager has submitted a report for ${report.client.name} (${report.month}) for your review.`,
                 type: "SYSTEM",
-                link: `/tasks`
+                link: `/admin/approvals`
             }
         });
 
@@ -232,6 +232,7 @@ export async function approveReportByMM(reportId: string) {
     revalidatePath(`/am/reports/${reportId}`);
     revalidatePath("/client/reports");
     revalidatePath("/tasks");
+    revalidatePath("/admin/approvals");
     return { success: true };
 }
 
@@ -276,6 +277,7 @@ export async function rejectReportByMM(reportId: string, feedback: string) {
 
     revalidatePath(`/am/reports/${reportId}`);
     revalidatePath("/tasks");
+    revalidatePath("/admin/approvals");
     return { success: true };
 }
 
@@ -460,4 +462,22 @@ Next phase focus will be on ${metrics.seo?.score < 70 ? 'improving SEO' : 'incre
         summaryAr,
         summaryEn
     };
+}
+
+export async function getPendingReportsForMM() {
+    const session = await getServerSession(authOptions);
+    if (!session || session.user.role !== "MARKETING_MANAGER") {
+        throw new Error("Unauthorized");
+    }
+
+    return (prisma as any).report.findMany({
+        where: {
+            mmStatus: "PENDING",
+            client: { mmId: session.user.id },
+        },
+        include: {
+            client: true,
+        },
+        orderBy: { updatedAt: "desc" },
+    });
 }

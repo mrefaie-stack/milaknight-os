@@ -255,7 +255,7 @@ export async function submitForApproval(planId: string) {
                 title: "Action Plan Review Required",
                 message: `The account manager has submitted an action plan for ${(plan as any).client.name} (${(plan as any).month}) for your review.`,
                 type: "SYSTEM",
-                link: `/tasks` 
+                link: `/admin/approvals`
             }
         });
 
@@ -701,6 +701,7 @@ export async function approveActionPlanByMM(planId: string) {
     revalidatePath(`/am/action-plans/${planId}`);
     revalidatePath("/client/action-plans");
     revalidatePath("/tasks");
+    revalidatePath("/admin/approvals");
     return { success: true };
 }
 
@@ -745,6 +746,7 @@ export async function rejectActionPlanByMM(planId: string, feedback: string) {
 
     revalidatePath(`/am/action-plans/${planId}`);
     revalidatePath("/tasks");
+    revalidatePath("/admin/approvals");
     return { success: true };
 }
 export async function scheduleActionPlan(planId: string) {
@@ -816,4 +818,23 @@ export async function scheduleActionPlan(planId: string) {
     revalidatePath(`/admin/clients/${plan.clientId}/action-plans`);
 
     return { success: true };
+}
+
+export async function getPendingActionPlansForMM() {
+    const session = await getServerSession(authOptions);
+    if (!session || session.user.role !== "MARKETING_MANAGER") {
+        throw new Error("Unauthorized");
+    }
+
+    return (prisma as any).actionPlan.findMany({
+        where: {
+            mmStatus: "PENDING",
+            client: { mmId: session.user.id },
+        },
+        include: {
+            client: true,
+            items: true,
+        },
+        orderBy: { updatedAt: "desc" },
+    });
 }

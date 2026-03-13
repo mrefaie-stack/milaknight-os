@@ -6,7 +6,7 @@ import { UserNav } from "@/components/dashboard/user-nav";
 import {
     LayoutDashboard, Users, FolderKanban, BarChart3,
     MessageSquare, ShieldCheck, Trash2, Bell, Search,
-    ChevronLeft, ChevronRight, Sparkles, Plus, CalendarDays, Link2, Activity, ListTodo
+    ChevronLeft, ChevronRight, Sparkles, Plus, CalendarDays, Link2, Activity, ListTodo, CheckSquare
 } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
 import { LanguageToggle } from "@/components/ui/language-toggle";
@@ -80,15 +80,14 @@ export function DashboardSidebar({ role, user }: { role: string; user: any }) {
     ];
 
     const mmLinks = [
-        { href: "/admin", label: t("common.overview"), icon: LayoutDashboard },
-        { href: "/admin/clients", label: t("common.clients"), icon: Users },
-        { href: "/admin/meetings", label: isRtl ? "الاجتماعات" : "Meetings", icon: CalendarDays },
-        { href: "/admin/services", label: t("sidebar.services"), icon: FolderKanban },
-        { href: "/admin/requests", label: t("sidebar.service_requests"), icon: Sparkles },
-        { href: "/am/action-plans", label: t("sidebar.action_plans"), icon: FolderKanban },
-        { href: "/am/reports", label: t("sidebar.reports"), icon: BarChart3 },
-        { href: "/tasks", label: isRtl ? "المهام الداخلية" : "Internal Tasks", icon: ListTodo },
-        { href: "/messages", label: t("common.messages"), icon: MessageSquare },
+        { href: "/admin",           label: t("common.overview"),                            icon: LayoutDashboard },
+        { href: "/admin/clients",   label: t("common.clients"),                             icon: Users },
+        { href: "/admin/meetings",  label: isRtl ? "الاجتماعات" : "Meetings",              icon: CalendarDays },
+        { href: "/admin/approvals", label: isRtl ? "الموافقات" : "Approvals",              icon: CheckSquare },
+        { href: "/am/action-plans", label: t("sidebar.action_plans"),                       icon: FolderKanban },
+        { href: "/am/reports",      label: t("sidebar.reports"),                            icon: BarChart3 },
+        { href: "/tasks",           label: isRtl ? "المهام الداخلية" : "Internal Tasks",   icon: ListTodo },
+        { href: "/messages",        label: t("common.messages"),                            icon: MessageSquare },
     ];
 
     const links = role === "ADMIN" ? adminLinks : role === "MARKETING_MANAGER" ? mmLinks : role === "AM" ? amLinks : role === "MODERATOR" ? moderatorLinks : clientLinks;
