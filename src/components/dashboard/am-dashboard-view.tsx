@@ -6,6 +6,7 @@ import { ReminderButton } from "@/components/dashboard/reminder-button";
 import { Users, CheckCircle, Clock, TrendingUp } from "lucide-react";
 import Link from "next/link";
 import { DeadlineTicker } from "@/components/dashboard/deadline-ticker";
+import { ClickupDueTodayWidget } from "@/components/clickup/clickup-due-today-widget";
 import { useLanguage } from "@/contexts/language-context";
 import { motion, Variants } from "framer-motion";
 
@@ -147,6 +148,11 @@ export function ClientAMDashboard({ clients, userName }: { clients: any[], userN
                         </div>
                     </CardContent>
                 </Card>
+            </motion.div>
+
+            {/* ClickUp Due Today Widget */}
+            <motion.div variants={item}>
+                <ClickupDueTodayWidget />
             </motion.div>
         </motion.div>
     );

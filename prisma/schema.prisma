@@ -16,7 +16,11 @@ model User {
   lastName       String
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
-  
+
+  // ClickUp Integration
+  clickupToken   String?   // ClickUp personal API token
+  clickupTeamId  String?   // Primary ClickUp workspace/team ID
+
   // Relations
   clients        Client[]  @relation("AccountManagerClients")
   mmClients      Client[]  @relation("MarketingManagerClients")
@@ -219,7 +223,10 @@ model ContentItem {
   clientComment  String?
   amComment      String?
   feedbackResolved Boolean @default(false)
-  
+
+  // ClickUp Integration
+  clickupTaskUrl String?   // Optional link to a related ClickUp task
+
   comments       Comment[]
   history        ContentItemHistory[]
   

@@ -263,6 +263,19 @@ export function AddItemDialog({ planId }: { planId: string }) {
                         />
                     </div>
 
+                    {/* ClickUp Task Link (optional) */}
+                    <div className="grid gap-2 border-t pt-4 border-border/40">
+                        <Label className={`flex items-center gap-2 text-muted-foreground text-xs font-bold uppercase tracking-widest ${isRtl ? 'flex-row-reverse' : ''}`}>
+                            {isRtl ? 'رابط مهمة ClickUp (اختياري)' : 'ClickUp Task URL (Optional)'}
+                        </Label>
+                        <Input
+                            name="clickupTaskUrl"
+                            placeholder="https://app.clickup.com/t/..."
+                            className="text-sm"
+                            dir="ltr"
+                        />
+                    </div>
+
                     <DialogFooter className="mt-4">
                         <Button type="submit" disabled={isLoading}>
                             {isLoading && <Loader2 className={`h-4 w-4 animate-spin ${isRtl ? 'ml-2' : 'mr-2'}`} />}

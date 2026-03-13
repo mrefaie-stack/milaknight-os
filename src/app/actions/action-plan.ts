@@ -100,6 +100,7 @@ export async function addContentItem(planId: string, data: any) {
             emailDesign: data.emailDesign,
             platformCaptions: data.platformCaptions,
             amComment: data.amComment,
+            clickupTaskUrl: data.clickupTaskUrl || null,
             status: "DRAFT",
         }
     });

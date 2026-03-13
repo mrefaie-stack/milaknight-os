@@ -29,6 +29,7 @@ export async function updateContentItem(itemId: string, data: any) {
             videoUrl: data.videoUrl,
             platformCaptions: data.platformCaptions,
             amComment: data.amComment,
+            clickupTaskUrl: data.clickupTaskUrl ?? undefined,
             status: "DRAFT",
         }
     });

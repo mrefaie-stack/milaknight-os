@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLanguage } from "@/contexts/language-context";
 import { PlanApprovalHeader } from "@/components/action-plan/plan-approval-header";
 import { toast } from "sonner";
@@ -21,6 +21,7 @@ import {
     AlertCircle,
     Megaphone,
     Layers,
+    Loader2,
     Mail,
     ExternalLink,
     Linkedin,
@@ -34,6 +35,7 @@ import {
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { getContentItemHistory, batchApproveContentItems } from "@/app/actions/action-plan";
+import { getClickupTaskByUrl } from "@/app/actions/clickup";
 import {
     Dialog,
     DialogContent,
@@ -208,6 +210,48 @@ function HistoryDialog({ itemId, isRtl }: { itemId: string; isRtl: boolean }) {
     );
 }
 
+function ClickupTaskBadge({ taskUrl, isRtl }: { taskUrl: string; isRtl: boolean }) {
+    const [task, setTask] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        getClickupTaskByUrl(taskUrl)
+            .then(setTask)
+            .catch(() => setTask(null))
+            .finally(() => setLoading(false));
+    }, [taskUrl]);
+
+    if (loading) {
+        return (
+            <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                <span>ClickUp...</span>
+            </div>
+        );
+    }
+    if (!task) return null;
+    return (
+        <a
+            href={task.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#7B68EE]/10 border border-[#7B68EE]/20 hover:bg-[#7B68EE]/20 transition-all group/cu"
+        >
+            <Layers className="h-3.5 w-3.5 text-[#7B68EE] shrink-0" />
+            <span
+                className="text-[10px] font-black uppercase tracking-wide px-1.5 py-0.5 rounded-md"
+                style={{ color: task.status?.color || "#7B68EE", backgroundColor: `${task.status?.color || "#7B68EE"}20` }}
+            >
+                {task.status?.status || "—"}
+            </span>
+            <span className="text-xs font-medium flex-1 truncate text-foreground/70 group-hover/cu:text-foreground transition-colors">
+                {task.name}
+            </span>
+            <ExternalLink className="h-3 w-3 text-muted-foreground opacity-60 group-hover/cu:opacity-100 shrink-0" />
+        </a>
+    );
+}
+
 function ContentCard({ item, isRtl, onImageClick, isModerator }: { item: any; isRtl: boolean; onImageClick?: (url: string) => void, isModerator?: boolean }) {
     const typeMeta = TYPE_META_BI[item.type] || TYPE_META_BI.POST;
     const statusMeta = STATUS_META_BI[item.status] || STATUS_META_BI.PENDING;
@@ -306,6 +350,10 @@ function ContentCard({ item, isRtl, onImageClick, isModerator }: { item: any; is
                         <CalendarDays className="h-3.5 w-3.5" />
                         {new Date(item.scheduledDate).toISOString().split('T')[0]}
                     </div>
+                )}
+
+                {item.clickupTaskUrl && (
+                    <ClickupTaskBadge taskUrl={item.clickupTaskUrl} isRtl={isRtl} />
                 )}
 
                 {item.platformCaptions && (() => {

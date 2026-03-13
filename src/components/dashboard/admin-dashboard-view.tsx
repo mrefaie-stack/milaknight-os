@@ -7,6 +7,7 @@ import Link from "next/link";
 import { DeadlineTicker } from "@/components/dashboard/deadline-ticker";
 import { ReminderButton } from "@/components/dashboard/reminder-button";
 import { ActivityFeed } from "@/components/dashboard/activity-feed";
+import { ClickupDueTodayWidget } from "@/components/clickup/clickup-due-today-widget";
 import { useLanguage } from "@/contexts/language-context";
 import { motion, Variants } from "framer-motion";
 
@@ -250,6 +251,11 @@ export function AdminDashboardView({ clients, role }: { clients: any[], role?: s
                     </div>
                 </motion.div>
             </div>
+
+            {/* ClickUp Due Today Widget */}
+            <motion.div variants={item}>
+                <ClickupDueTodayWidget />
+            </motion.div>
         </motion.div>
     );
 }
