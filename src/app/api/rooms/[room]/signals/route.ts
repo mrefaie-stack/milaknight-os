@@ -6,14 +6,15 @@ import { prisma } from "@/lib/prisma";
 // GET — consume all pending signals for me in this room
 export async function GET(
     _req: NextRequest,
-    { params }: { params: { room: string } }
+    { params }: { params: Promise<{ room: string }> }
 ) {
     const session = await getServerSession(authOptions);
     if (!session || session.user.role === "CLIENT") {
         return NextResponse.json([], { status: 401 });
     }
 
-    const roomId = decodeURIComponent(params.room);
+    const { room } = await params;
+    const roomId = decodeURIComponent(room);
 
     // Atomically fetch + mark consumed
     const signals = await (prisma as any).$transaction(async (tx: any) => {
@@ -49,14 +50,15 @@ export async function GET(
 // POST — send a signal to another user
 export async function POST(
     req: NextRequest,
-    { params }: { params: { room: string } }
+    { params }: { params: Promise<{ room: string }> }
 ) {
     const session = await getServerSession(authOptions);
     if (!session || session.user.role === "CLIENT") {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const roomId = decodeURIComponent(params.room);
+    const { room } = await params;
+    const roomId = decodeURIComponent(room);
     const { toUserId, type, payload } = await req.json();
 
     if (!toUserId || !type || payload === undefined) {
