@@ -6,9 +6,17 @@ const STUN_CONFIG: RTCConfiguration = {
     iceServers: [
         { urls: "stun:stun.l.google.com:19302" },
         { urls: "stun:stun1.l.google.com:19302" },
-        { urls: "stun:stun2.l.google.com:19302" },
-        { urls: "stun:stun3.l.google.com:19302" },
+        // TURN relay — handles symmetric NAT (mobile networks, corporate firewalls)
+        {
+            urls: [
+                "turn:72.61.162.106:3478?transport=udp",
+                "turn:72.61.162.106:3478?transport=tcp",
+            ],
+            username: "milaknight",
+            credential: "mk_turn_2024",
+        },
     ],
+    iceCandidatePoolSize: 10,
 };
 const POLL_MS = 700;
 
