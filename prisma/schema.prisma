@@ -37,6 +37,49 @@ model User {
   sentTasks          InternalTask[]    @relation("SentTasks")
   receivedTasks      InternalTask[]    @relation("ReceivedTasks")
   presence           UserPresence?
+  roomSession        RoomSession?
+  roomMessages       RoomChatMessage[]
+  sentSignals        WebRTCSignal[]    @relation("SentSignals")
+  receivedSignals    WebRTCSignal[]    @relation("ReceivedSignals")
+}
+
+model RoomSession {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  roomId    String
+  joinedAt  DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([roomId])
+}
+
+model RoomChatMessage {
+  id        String   @id @default(cuid())
+  roomId    String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userName  String
+  text      String
+  createdAt DateTime @default(now())
+
+  @@index([roomId, createdAt])
+}
+
+model WebRTCSignal {
+  id          String   @id @default(cuid())
+  roomId      String
+  fromUserId  String
+  from        User     @relation("SentSignals", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUserId    String
+  to          User     @relation("ReceivedSignals", fields: [toUserId], references: [id], onDelete: Cascade)
+  type        String   // "offer" | "answer" | "ice-candidate"
+  payload     String
+  consumed    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([toUserId, consumed, createdAt])
+  @@index([roomId])
 }
 
 model UserPresence {
