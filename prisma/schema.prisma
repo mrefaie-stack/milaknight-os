@@ -36,6 +36,19 @@ model User {
   socialConnections  SocialConnection[]
   sentTasks          InternalTask[]    @relation("SentTasks")
   receivedTasks      InternalTask[]    @relation("ReceivedTasks")
+  presence           UserPresence?
+}
+
+model UserPresence {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status      String   @default("ONLINE") // ONLINE, AWAY, MEETING, DND, OFFLINE
+  activity    String?  // e.g., "Working on Action Plans"
+  activityUrl String?  // e.g., "/am/action-plans/xxx"
+  room        String?  @default("Lounge")
+  updatedAt   DateTime @updatedAt
+  createdAt   DateTime @default(now())
 }
 
 model Client {
