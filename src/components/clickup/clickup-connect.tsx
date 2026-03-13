@@ -1,33 +1,30 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { useLanguage } from "@/contexts/language-context";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Layers, ExternalLink, Loader2, Key } from "lucide-react";
-import { toast } from "sonner";
-import { connectClickup } from "@/app/actions/clickup";
+import { Layers, Loader2, AlertCircle } from "lucide-react";
+import { getClickupAuthUrl } from "@/app/actions/clickup";
+import { useSearchParams } from "next/navigation";
+
+const ERROR_MESSAGES: Record<string, { ar: string; en: string }> = {
+    denied: { ar: "تم رفض الإذن من ClickUp", en: "Authorization was denied by ClickUp" },
+    token: { ar: "فشل الحصول على رمز الوصول، حاول مرة أخرى", en: "Failed to get access token, please try again" },
+    team: { ar: "لم يتم العثور على workspace في حسابك", en: "No workspace found in your ClickUp account" },
+};
 
 export function ClickupConnect() {
     const { isRtl } = useLanguage();
-    const router = useRouter();
-    const [token, setToken] = useState("");
+    const searchParams = useSearchParams();
+    const errorCode = searchParams.get("error");
+    const errorMsg = errorCode ? ERROR_MESSAGES[errorCode] : null;
     const [loading, setLoading] = useState(false);
 
     async function handleConnect() {
-        if (!token.trim()) return;
         setLoading(true);
-        try {
-            await connectClickup(token.trim());
-            toast.success(isRtl ? "تم ربط ClickUp بنجاح!" : "ClickUp connected successfully!");
-            router.refresh();
-        } catch (err: any) {
-            toast.error(err.message || (isRtl ? "فشل الربط، تأكد من الـ Token" : "Connection failed. Check your token."));
-        } finally {
-            setLoading(false);
-        }
+        const url = await getClickupAuthUrl();
+        window.location.href = url;
     }
 
     return (
@@ -38,7 +35,7 @@ export function ClickupConnect() {
             <Card className="w-full max-w-md bg-card/50 border-white/5">
                 <CardContent className="p-8 space-y-6">
                     {/* Header */}
-                    <div className={`flex flex-col items-center gap-3 text-center`}>
+                    <div className="flex flex-col items-center gap-3 text-center">
                         <div className="p-4 rounded-2xl bg-primary/10 border border-primary/20">
                             <Layers className="h-8 w-8 text-primary" />
                         </div>
@@ -48,54 +45,41 @@ export function ClickupConnect() {
                             </h1>
                             <p className="text-sm text-muted-foreground mt-1">
                                 {isRtl
-                                    ? "أدخل الـ Personal API Token الخاص بك من ClickUp"
-                                    : "Enter your ClickUp personal API token"}
+                                    ? "اضغط لتسجيل الدخول عبر ClickUp مباشرةً"
+                                    : "Click to authorize your ClickUp account"}
                             </p>
                         </div>
                     </div>
 
-                    {/* Token Input */}
-                    <div className="space-y-2">
-                        <label className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                            <Key className="h-3.5 w-3.5" />
-                            {isRtl ? "API Token" : "API Token"}
-                        </label>
-                        <Input
-                            value={token}
-                            onChange={(e) => setToken(e.target.value)}
-                            placeholder="pk_..."
-                            className="bg-white/5 border-white/10 font-mono text-sm"
-                            dir="ltr"
-                            onKeyDown={(e) => e.key === "Enter" && handleConnect()}
-                        />
-                    </div>
+                    {/* Error message if OAuth failed */}
+                    {errorMsg && (
+                        <div className="flex items-center gap-2 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+                            <AlertCircle className="h-4 w-4 shrink-0" />
+                            <span>{isRtl ? errorMsg.ar : errorMsg.en}</span>
+                        </div>
+                    )}
 
-                    {/* Connect Button */}
+                    {/* OAuth Button */}
                     <Button
                         onClick={handleConnect}
-                        disabled={!token.trim() || loading}
-                        className="w-full h-11 font-black uppercase tracking-widest"
+                        disabled={loading}
+                        className="w-full h-12 font-black uppercase tracking-widest text-sm"
                     >
                         {loading ? (
-                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                            <Loader2 className={`h-4 w-4 animate-spin ${isRtl ? "ml-2" : "mr-2"}`} />
                         ) : (
                             <Layers className={`h-4 w-4 ${isRtl ? "ml-2" : "mr-2"}`} />
                         )}
-                        {isRtl ? "ربط الحساب" : "Connect Account"}
+                        {loading
+                            ? (isRtl ? "جارٍ التوجيه..." : "Redirecting...")
+                            : (isRtl ? "تسجيل الدخول عبر ClickUp" : "Login with ClickUp")}
                     </Button>
 
-                    {/* Help link */}
-                    <div className="text-center">
-                        <a
-                            href="https://app.clickup.com/settings/apps"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-xs text-primary hover:underline inline-flex items-center gap-1"
-                        >
-                            {isRtl ? "احصل على الـ Token من هنا" : "Get your token from ClickUp Settings"}
-                            <ExternalLink className="h-3 w-3" />
-                        </a>
-                    </div>
+                    <p className="text-center text-[11px] text-muted-foreground">
+                        {isRtl
+                            ? "سيتم توجيهك لـ ClickUp للموافقة، ثم ترجع هنا تلقائياً"
+                            : "You'll be redirected to ClickUp to authorize, then returned here automatically"}
+                    </p>
                 </CardContent>
             </Card>
         </div>

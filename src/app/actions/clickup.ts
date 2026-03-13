@@ -42,6 +42,13 @@ async function getStoredToken(): Promise<{ token: string; teamId: string; userId
 
 // ─── Connect / Disconnect ─────────────────────────────────────────────────────
 
+export async function getClickupAuthUrl(): Promise<string> {
+    const clientId = process.env.CLICKUP_CLIENT_ID;
+    const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
+    const redirectUri = encodeURIComponent(`${baseUrl}/api/clickup/callback`);
+    return `https://app.clickup.com/api?client_id=${clientId}&redirect_uri=${redirectUri}`;
+}
+
 export async function connectClickup(token: string) {
     const session = await getServerSession(authOptions);
     if (!session || (session.user.role !== "AM" && session.user.role !== "MARKETING_MANAGER")) {
