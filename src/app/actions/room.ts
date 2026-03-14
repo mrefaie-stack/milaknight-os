@@ -50,7 +50,7 @@ export async function leaveRoom() {
 export async function getRoomSessions(): Promise<Record<string, { userId: string; name: string; role: string }[]>> {
     const sessions = await (prisma as any).roomSession.findMany({
         where: {
-            updatedAt: { gte: new Date(Date.now() - 60 * 60 * 1000) }, // last 1 hour
+            updatedAt: { gte: new Date(Date.now() - 75 * 1000) }, // 75s — requires heartbeat every 30s
         },
         include: {
             user: { select: { id: true, firstName: true, lastName: true, role: true } },

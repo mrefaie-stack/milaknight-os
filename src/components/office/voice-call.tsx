@@ -308,6 +308,33 @@ export function VoiceCall({ roomId, currentUserId, members, enabled, onPeerState
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [roomId]);
 
+    // Wake from sleep / tab becomes visible again — reset everything
+    useEffect(() => {
+        const handleVisibility = () => {
+            if (document.visibilityState !== "visible") return;
+            if (!streamReady.current) return;
+
+            // Close old SSE (may be dead after sleep) and open a fresh one
+            esRef.current?.close();
+            const es = new EventSource(`/api/rooms/${encodedRoom}/signals`);
+            esRef.current = es;
+            es.onmessage = async (e) => {
+                try { await processSig(JSON.parse(e.data)); } catch {}
+            };
+
+            // Destroy all stale peers and reconnect
+            const peerIds = [...peersRef.current.keys()];
+            peerIds.forEach(id => destroyPeer(id));
+            iceBuf.current.clear();
+            offeringRef.current.clear();
+            setTimeout(() => connectToMembers(membersRef.current), 500);
+        };
+
+        document.addEventListener("visibilitychange", handleVisibility);
+        return () => document.removeEventListener("visibilitychange", handleVisibility);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [roomId]);
+
     // React to member list changes
     useEffect(() => {
         const live = new Set(members.filter(m => m.userId !== currentUserId).map(m => m.userId));

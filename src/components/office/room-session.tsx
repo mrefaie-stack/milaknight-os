@@ -84,9 +84,23 @@ export function RoomSession({ room, currentUserId, initialMembers, allTeamMember
         fetchChat();
         const chatPoll = setInterval(fetchChat, CHAT_POLL_MS);
         const memberPoll = setInterval(fetchMembers, MEMBERS_POLL_MS);
+
+        // Heartbeat — keeps room session alive every 30s
+        const heartbeat = () => fetch("/api/rooms/heartbeat", { method: "PUT" }).catch(() => {});
+        heartbeat(); // immediate on mount
+        const heartbeatInterval = setInterval(heartbeat, 30_000);
+
+        // Auto-leave when tab is closed or laptop lid is closed (pagehide is more reliable than beforeunload)
+        const handlePageHide = () => {
+            navigator.sendBeacon("/api/rooms/leave-beacon");
+        };
+        window.addEventListener("pagehide", handlePageHide);
+
         return () => {
             clearInterval(chatPoll);
             clearInterval(memberPoll);
+            clearInterval(heartbeatInterval);
+            window.removeEventListener("pagehide", handlePageHide);
         };
     }, [fetchChat, fetchMembers]);
 
