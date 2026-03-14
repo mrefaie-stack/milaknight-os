@@ -6,6 +6,7 @@ import { Mic, MicOff, MessageSquare, UserPlus, Send, LogOut, Volume2 } from "luc
 import { cn } from "@/lib/utils";
 import { leaveRoom, inviteToRoom } from "@/app/actions/room";
 import { VoiceCall } from "./voice-call";
+import type { PeerState } from "./voice-call";
 import type { RoomMember } from "@/lib/rooms";
 import type { RoomDef } from "@/lib/rooms";
 
@@ -34,6 +35,7 @@ const MEMBERS_POLL_MS = 2000;
 
 export function RoomSession({ room, currentUserId, initialMembers, allTeamMembers, isRtl, onLeave }: Props) {
     const [members, setMembers] = useState<RoomMember[]>(initialMembers);
+    const [peerStates, setPeerStates] = useState<Record<string, PeerState>>({});
     const [micOn, setMicOn] = useState(false);
     const [micError, setMicError] = useState(false);
     const [tab, setTab] = useState<"chat" | "invite">("chat");
@@ -198,6 +200,14 @@ export function RoomSession({ room, currentUserId, initialMembers, allTeamMember
                             {m.name.split(" ")[0]}
                             {m.isCurrentUser && (
                                 <span className="text-[9px] opacity-50">({isRtl ? "أنت" : "you"})</span>
+                            )}
+                            {!m.isCurrentUser && peerStates[m.userId] && (
+                                <span className={cn(
+                                    "inline-block w-1.5 h-1.5 rounded-full shrink-0",
+                                    peerStates[m.userId] === "connected" ? "bg-green-400" :
+                                    peerStates[m.userId] === "connecting" ? "bg-yellow-400 animate-pulse" :
+                                    "bg-red-400"
+                                )} />
                             )}
                         </motion.div>
                     ))}
@@ -421,6 +431,9 @@ export function RoomSession({ room, currentUserId, initialMembers, allTeamMember
                 currentUserId={currentUserId}
                 members={members}
                 enabled={micOn}
+                onPeerStateChange={(peerId, state) =>
+                    setPeerStates(prev => ({ ...prev, [peerId]: state }))
+                }
             />
         </div>
     );

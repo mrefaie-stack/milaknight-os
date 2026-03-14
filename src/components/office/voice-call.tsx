@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useCallback } from "react";
 
-const POLL_MS = 500; // faster polling for lower latency
 const FALLBACK_ICE: RTCConfiguration = {
     iceServers: [
         { urls: "stun:stun.l.google.com:19302" },
@@ -11,17 +10,20 @@ const FALLBACK_ICE: RTCConfiguration = {
     iceCandidatePoolSize: 10,
 };
 
+export type PeerState = "connecting" | "connected" | "failed";
+
 export type VoiceCallProps = {
     roomId: string;
     currentUserId: string;
     members: { userId: string }[];
     enabled: boolean;
+    onPeerStateChange?: (peerId: string, state: PeerState) => void;
 };
 
-export function VoiceCall({ roomId, currentUserId, members, enabled }: VoiceCallProps) {
+export function VoiceCall({ roomId, currentUserId, members, enabled, onPeerStateChange }: VoiceCallProps) {
     const peersRef      = useRef<Map<string, RTCPeerConnection>>(new Map());
     const streamRef     = useRef<MediaStream | null>(null);
-    const pollRef       = useRef<ReturnType<typeof setInterval> | null>(null);
+    const esRef         = useRef<EventSource | null>(null);
     const enabledRef    = useRef(enabled);
     const iceBuf        = useRef<Map<string, RTCIceCandidateInit[]>>(new Map());
     const offeringRef   = useRef<Set<string>>(new Set());
@@ -29,8 +31,10 @@ export function VoiceCall({ roomId, currentUserId, members, enabled }: VoiceCall
     const iceConfigRef  = useRef<RTCConfiguration>(FALLBACK_ICE);
     const encodedRoom   = encodeURIComponent(roomId);
     const membersRef    = useRef(members);
+    const onStateRef    = useRef(onPeerStateChange);
     membersRef.current  = members;
     enabledRef.current  = enabled;
+    onStateRef.current  = onPeerStateChange;
 
     // Retry paused peer audio on any user interaction (handles browser autoplay policy)
     useEffect(() => {
@@ -141,24 +145,32 @@ export function VoiceCall({ roomId, currentUserId, members, enabled }: VoiceCall
 
         pc.onconnectionstatechange = () => {
             const state = pc.connectionState;
-            if (state === "failed" || state === "closed") {
-                destroyPeer(remoteId);
-                // Both sides retry — offerer immediately, answerer after brief delay
-                // to avoid both sending offers simultaneously
-                const delay = currentUserId > remoteId ? 1500 : 3000;
+
+            if (state === "connected") {
+                onStateRef.current?.(remoteId, "connected");
+            } else if (state === "connecting" || state === "new") {
+                onStateRef.current?.(remoteId, "connecting");
+            } else if (state === "failed" || state === "closed") {
+                onStateRef.current?.(remoteId, "failed");
+                destroyPeer(remoteId); // clears offeringRef for remoteId
+
+                // Both sides retry — offerer sooner, answerer after giving offerer time
+                const isOfferer = currentUserId > remoteId;
+                const delay = isOfferer ? 1500 : 3500;
                 setTimeout(() => {
-                    if (membersRef.current.some(m => m.userId === remoteId)) {
-                        if (currentUserId > remoteId) {
+                    // Guard: peer must still be in the room and not already reconnecting
+                    if (!offeringRef.current.has(remoteId) &&
+                        membersRef.current.some(m => m.userId === remoteId)) {
+                        if (isOfferer) {
                             initiateOffer(remoteId);
-                        }
-                        // Answerer: if no new offer arrives within 5s, also try offering
-                        else {
+                        } else {
+                            // Answerer: wait a bit more in case offerer already sent a new offer
                             setTimeout(() => {
                                 if (!peersRef.current.has(remoteId) &&
                                     membersRef.current.some(m => m.userId === remoteId)) {
                                     initiateOffer(remoteId);
                                 }
-                            }, 5000);
+                            }, 3000);
                         }
                     }
                 }, delay);
@@ -172,6 +184,7 @@ export function VoiceCall({ roomId, currentUserId, members, enabled }: VoiceCall
     const initiateOffer = useCallback(async (remoteId: string) => {
         if (offeringRef.current.has(remoteId)) return;
         offeringRef.current.add(remoteId);
+        onStateRef.current?.(remoteId, "connecting");
         try {
             const pc = createPeer(remoteId);
             const offer = await pc.createOffer({ offerToReceiveAudio: true });
@@ -185,6 +198,7 @@ export function VoiceCall({ roomId, currentUserId, members, enabled }: VoiceCall
         const { fromUserId, type, payload } = sig;
 
         if (type === "offer") {
+            onStateRef.current?.(fromUserId, "connecting");
             const pc = createPeer(fromUserId);
             await pc.setRemoteDescription(new RTCSessionDescription(payload));
             await flushIce(fromUserId, pc);
@@ -234,10 +248,7 @@ export function VoiceCall({ roomId, currentUserId, members, enabled }: VoiceCall
                 if (res.ok) {
                     const data = await res.json();
                     if (data.iceServers) {
-                        iceConfigRef.current = {
-                            iceServers: data.iceServers,
-                            iceCandidatePoolSize: 10,
-                        };
+                        iceConfigRef.current = { iceServers: data.iceServers, iceCandidatePoolSize: 10 };
                     }
                 }
             } catch {}
@@ -247,19 +258,14 @@ export function VoiceCall({ roomId, currentUserId, members, enabled }: VoiceCall
             // Acquire mic
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({
-                    audio: {
-                        echoCancellation: true,
-                        noiseSuppression: true,
-                        autoGainControl: true,
-                        sampleRate: 48000,
-                    },
+                    audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, sampleRate: 48000 },
                     video: false,
                 });
                 if (!alive) { stream.getTracks().forEach(t => t.stop()); return; }
                 stream.getAudioTracks().forEach(t => { t.enabled = enabledRef.current; });
                 streamRef.current = stream;
             } catch {
-                // Mic unavailable — can still receive audio
+                // Mic unavailable — can still receive audio from others
             }
 
             if (!alive) return;
@@ -267,16 +273,21 @@ export function VoiceCall({ roomId, currentUserId, members, enabled }: VoiceCall
 
             connectToMembers(membersRef.current);
 
-            // Poll for WebRTC signals
-            pollRef.current = setInterval(async () => {
+            // SSE stream for real-time signal delivery
+            const es = new EventSource(`/api/rooms/${encodedRoom}/signals`);
+            esRef.current = es;
+
+            es.onmessage = async (e) => {
                 if (!alive) return;
                 try {
-                    const res = await fetch(`/api/rooms/${encodedRoom}/signals`);
-                    if (!res.ok) return;
-                    const sigs = await res.json();
-                    for (const sig of sigs) await processSig(sig);
+                    const sig = JSON.parse(e.data);
+                    await processSig(sig);
                 } catch {}
-            }, POLL_MS);
+            };
+
+            es.onerror = () => {
+                // EventSource auto-reconnects on error — no manual retry needed
+            };
         }
 
         init();
@@ -284,7 +295,8 @@ export function VoiceCall({ roomId, currentUserId, members, enabled }: VoiceCall
         return () => {
             alive = false;
             streamReady.current = false;
-            if (pollRef.current) clearInterval(pollRef.current);
+            esRef.current?.close();
+            esRef.current = null;
             peersRef.current.forEach(pc => pc.close());
             peersRef.current.clear();
             iceBuf.current.clear();
