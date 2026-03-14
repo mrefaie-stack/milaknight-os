@@ -1,0 +1,119 @@
+"use client";
+
+import { useLanguage } from "@/contexts/language-context";
+import { motion } from "framer-motion";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { RefreshCw, TrendingUp } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
+
+interface TrendingItem {
+    topicEn: string;
+    topicAr: string;
+    hashtag: string;
+    descEn: string;
+    descAr: string;
+    volume: string;
+    growth: string;
+    platform: string;
+}
+
+const PLATFORM_STYLES: Record<string, string> = {
+    Instagram: "bg-pink-500/10 text-pink-400 border-pink-500/20",
+    TikTok: "bg-purple-500/10 text-purple-400 border-purple-500/20",
+    Twitter: "bg-sky-500/10 text-sky-400 border-sky-500/20",
+    LinkedIn: "bg-blue-600/10 text-blue-400 border-blue-600/20",
+    YouTube: "bg-red-500/10 text-red-400 border-red-500/20",
+    Facebook: "bg-blue-500/10 text-blue-400 border-blue-500/20",
+};
+
+export function TrendingView({ items, updatedAt }: { items: TrendingItem[]; updatedAt: Date | null }) {
+    const { isRtl } = useLanguage();
+
+    return (
+        <div className="space-y-8 max-w-5xl mx-auto" dir={isRtl ? "rtl" : "ltr"}>
+            {/* Header */}
+            <div className={`flex flex-col md:flex-row md:items-end justify-between gap-4 ${isRtl ? 'text-right' : ''}`}>
+                <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+                        <TrendingUp className="h-6 w-6" />
+                    </div>
+                    <div>
+                        <h1 className="text-4xl font-black tracking-tighter premium-gradient-text uppercase">
+                            {isRtl ? "المواضيع الرائجة" : "Trending Topics"}
+                        </h1>
+                        <p className="text-sm text-muted-foreground font-medium opacity-70">
+                            {isRtl ? "هاشتاقات وكلمات مفتاحية مخصصة لك" : "Hashtags & keywords tailored to your brand"}
+                        </p>
+                    </div>
+                </div>
+                {updatedAt && (
+                    <div className={`flex items-center gap-2 text-[11px] text-muted-foreground font-bold opacity-50 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                        <RefreshCw className="h-3 w-3" />
+                        <span>
+                            {isRtl ? "آخر تحديث" : "Updated"} {formatDistanceToNow(new Date(updatedAt), { addSuffix: true })}
+                            {" · "}
+                            {isRtl ? "يتجدد كل 12 ساعة" : "Refreshes every 12h"}
+                        </span>
+                    </div>
+                )}
+            </div>
+
+            {/* Grid */}
+            <div className="grid gap-4 md:grid-cols-2">
+                {items.map((item, i) => (
+                    <motion.div
+                        key={i}
+                        initial={{ opacity: 0, y: 16 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.05, duration: 0.4 }}
+                    >
+                        <Card className="glass-card border-none rounded-3xl overflow-hidden group hover:bg-white/5 transition-all duration-300">
+                            <CardContent className="p-6 space-y-3">
+                                {/* Hashtag + Platform */}
+                                <div className={`flex items-start justify-between gap-3 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                                    <span className="text-xl font-black text-primary tracking-tight">
+                                        {item.hashtag}
+                                    </span>
+                                    <Badge
+                                        variant="outline"
+                                        className={`text-[9px] font-black uppercase tracking-widest rounded-full shrink-0 ${PLATFORM_STYLES[item.platform] || "bg-white/5 text-muted-foreground border-white/10"}`}
+                                    >
+                                        {item.platform}
+                                    </Badge>
+                                </div>
+
+                                {/* Topic name */}
+                                <h3 className={`font-black text-base leading-tight ${isRtl ? 'text-right' : ''}`}>
+                                    {isRtl ? item.topicAr : item.topicEn}
+                                </h3>
+
+                                {/* Description */}
+                                <p className={`text-sm text-muted-foreground leading-relaxed font-medium opacity-70 ${isRtl ? 'text-right' : ''}`}>
+                                    {isRtl ? item.descAr : item.descEn}
+                                </p>
+
+                                {/* Stats */}
+                                <div className={`flex items-center gap-3 pt-2 border-t border-white/5 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                                    <div className={`flex flex-col ${isRtl ? 'items-end' : ''}`}>
+                                        <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-50">
+                                            {isRtl ? "الحجم" : "Volume"}
+                                        </span>
+                                        <span className="text-sm font-black text-primary">{item.volume}</span>
+                                    </div>
+                                    <div className="w-px h-6 bg-white/5" />
+                                    <div className={`flex flex-col ${isRtl ? 'items-end' : ''}`}>
+                                        <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-50">
+                                            {isRtl ? "النمو" : "Growth"}
+                                        </span>
+                                        <span className="text-sm font-black text-emerald-400">{item.growth}</span>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </motion.div>
+                ))}
+            </div>
+        </div>
+    );
+}
