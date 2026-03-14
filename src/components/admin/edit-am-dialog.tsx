@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { updateUserCredentials } from "@/app/actions/user";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,6 +21,7 @@ import { useLanguage } from "@/contexts/language-context";
 
 export function EditTeamMemberDialog({ member }: { member: any }) {
     const { t, isRtl } = useLanguage();
+    const router = useRouter();
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
@@ -38,6 +40,7 @@ export function EditTeamMemberDialog({ member }: { member: any }) {
             await updateUserCredentials(member.id, formData);
             toast.success(t("dashboard.update_success"));
             setOpen(false);
+            router.refresh();
         } catch (error: any) {
             toast.error(error.message || "Failed to update team member");
         } finally {
