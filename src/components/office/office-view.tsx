@@ -170,6 +170,14 @@ export function OfficeView({ initialData, currentUserId, initialRoomId = null }:
     const handleJoinRoom = async (roomId: string) => {
         if (joiningRoom || activeRoomId === roomId) return;
         setJoiningRoom(roomId);
+
+        // Pre-unlock AudioContext while we're inside a user gesture click.
+        // This allows HTMLAudioElement.play() to work later without user interaction.
+        try {
+            const Ctx = (window as any).AudioContext || (window as any).webkitAudioContext;
+            if (Ctx) { const ctx = new Ctx(); ctx.resume().catch(() => {}); }
+        } catch {}
+
         try {
             await joinRoom(roomId);
             setActiveRoomId(roomId);
