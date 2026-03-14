@@ -35,6 +35,7 @@ const MEMBERS_POLL_MS = 5000;
 export function RoomSession({ room, currentUserId, initialMembers, allTeamMembers, isRtl, onLeave }: Props) {
     const [members, setMembers] = useState<RoomMember[]>(initialMembers);
     const [micOn, setMicOn] = useState(false);
+    const [micError, setMicError] = useState(false);
     const [tab, setTab] = useState<"chat" | "invite">("chat");
     const [messages, setMessages] = useState<ChatMsg[]>([]);
     const [draft, setDraft] = useState("");
@@ -207,16 +208,37 @@ export function RoomSession({ room, currentUserId, initialMembers, allTeamMember
             <div className="flex items-center gap-2 px-3 py-2.5 border-b border-white/5">
                 <motion.button
                     whileTap={{ scale: 0.92 }}
-                    onClick={() => setMicOn(v => !v)}
+                    onClick={async () => {
+                        if (!micOn) {
+                            try {
+                                await navigator.mediaDevices.getUserMedia({ audio: true });
+                                setMicError(false);
+                                setMicOn(true);
+                                // Unlock AudioContext on iOS/Safari
+                                const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+                                ctx.resume().catch(() => {});
+                            } catch {
+                                setMicError(true);
+                            }
+                        } else {
+                            setMicOn(false);
+                        }
+                    }}
                     className={cn(
                         "flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold transition-all border",
-                        micOn
+                        micError
+                            ? "bg-red-500/15 text-red-400 border-red-500/30"
+                            : micOn
                             ? "bg-green-500/15 text-green-400 border-green-500/30 shadow-lg shadow-green-500/10"
                             : "bg-white/5 text-muted-foreground border-white/10 hover:bg-white/10"
                     )}
                 >
                     {micOn ? <Mic className="h-3.5 w-3.5" /> : <MicOff className="h-3.5 w-3.5" />}
-                    {micOn ? (isRtl ? "مايك مفتوح" : "Mic On") : (isRtl ? "مكتوم" : "Muted")}
+                    {micError
+                        ? (isRtl ? "لا يوجد إذن للمايك" : "Mic denied")
+                        : micOn
+                        ? (isRtl ? "مايك مفتوح" : "Mic On")
+                        : (isRtl ? "مكتوم" : "Muted")}
                 </motion.button>
 
                 {/* Animated waveform when mic is live */}

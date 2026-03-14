@@ -42,9 +42,9 @@ const LEAVE_TYPE_AR: Record<string, string> = {
     VACATION: "إجازة سنوية", SICK: "إجازة مرضية", PERSONAL: "إجازة شخصية", EMERGENCY: "إجازة طارئة",
 };
 
-type Props = { employees: Employee[]; initialStats: Stats };
+type Props = { employees: Employee[]; initialStats: Stats; employeeBasePath?: string };
 
-export function HROverview({ employees, initialStats }: Props) {
+export function HROverview({ employees, initialStats, employeeBasePath = "/admin/hr" }: Props) {
     const { isRtl } = useLanguage();
     const router = useRouter();
     const [pendingLeaves, setPendingLeaves] = useState<Leave[]>([]);
@@ -161,7 +161,7 @@ export function HROverview({ employees, initialStats }: Props) {
                                     transition={{ delay: i * 0.04 }}
                                     whileHover={{ scale: 1.02 }}
                                     whileTap={{ scale: 0.98 }}
-                                    onClick={() => router.push(`/admin/hr/${emp.id}`)}
+                                    onClick={() => router.push(`${employeeBasePath}/${emp.id}`)}
                                     className="text-left p-4 rounded-2xl border border-white/8 bg-white/2 hover:bg-white/5 hover:border-white/15 transition-all group"
                                 >
                                     <div className={cn("flex items-start gap-3", isRtl ? "flex-row-reverse text-right" : "")}>

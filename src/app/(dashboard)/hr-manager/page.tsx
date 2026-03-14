@@ -4,15 +4,10 @@ import { redirect } from "next/navigation";
 import { getEmployees, getHRStats } from "@/app/actions/hr";
 import { HROverview } from "@/components/hr/hr-overview";
 
-export default async function HRPage() {
+export default async function HRManagerPage() {
     const session = await getServerSession(authOptions);
-    if (!session || !["ADMIN", "MARKETING_MANAGER", "HR_MANAGER"].includes(session.user.role)) {
+    if (!session || session.user.role !== "HR_MANAGER") {
         redirect("/login");
-    }
-
-    // HR_MANAGER has their own dedicated route
-    if (session.user.role === "HR_MANAGER") {
-        redirect("/hr-manager");
     }
 
     const [employees, stats] = await Promise.all([
@@ -20,5 +15,11 @@ export default async function HRPage() {
         getHRStats(),
     ]);
 
-    return <HROverview employees={employees as any} initialStats={stats} />;
+    return (
+        <HROverview
+            employees={employees as any}
+            initialStats={stats}
+            employeeBasePath="/hr-manager/employee"
+        />
+    );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { signIn } from "next-auth/react";
+import { signIn, getSession } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,7 +36,26 @@ export function LoginForm() {
         }
 
         const from = searchParams.get("from");
-        window.location.assign(from || "/");
+        if (from) {
+            window.location.assign(from);
+            return;
+        }
+
+        // Get session to redirect based on role directly
+        const session = await getSession();
+        const role = session?.user?.role?.toUpperCase();
+        if (role === "ADMIN" || role === "MARKETING_MANAGER") {
+            window.location.assign("/admin");
+        } else if (role === "AM" || role === "ACCOUNT_MANAGER") {
+            window.location.assign("/am");
+        } else if (role === "CLIENT") {
+            window.location.assign("/client");
+        } else if (role === "HR_MANAGER") {
+            window.location.assign("/hr-manager");
+        } else {
+            // MODERATOR, CONTENT_TEAM, ART_TEAM, SEO_*, etc.
+            window.location.assign("/moderator");
+        }
     }
 
     return (

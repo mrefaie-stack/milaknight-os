@@ -11,6 +11,7 @@ type Props = {
     isCurrentUserHere: boolean;
     onClick: () => void;
     isRtl: boolean;
+    isMobile?: boolean;
 };
 
 // Deterministic positions for floating avatar dots per slot index
@@ -30,7 +31,7 @@ const ROLE_COLORS: Record<string, string> = {
     MODERATOR:         "bg-teal-500",
 };
 
-export function RoomTile({ room, members, isCurrentUserHere, onClick, isRtl }: Props) {
+export function RoomTile({ room, members, isCurrentUserHere, onClick, isRtl, isMobile = false }: Props) {
     const Icon = room.icon;
     const hasMembers = members.length > 0;
     const label = isRtl ? room.nameAr : room.nameEn;
@@ -83,7 +84,7 @@ export function RoomTile({ room, members, isCurrentUserHere, onClick, isRtl }: P
             {/* Floating avatars in room (spatial) */}
             {hasMembers && (
                 <div className="absolute inset-0 pointer-events-none">
-                    {members.slice(0, 6).map((m, i) => {
+                    {members.slice(0, isMobile ? 3 : 6).map((m, i) => {
                         const pos = FLOAT_POSITIONS[i % FLOAT_POSITIONS.length];
                         const roleColor = ROLE_COLORS[m.role] || "bg-white/20";
                         return (

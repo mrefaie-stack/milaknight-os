@@ -6,13 +6,14 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { sendReminder } from "@/app/actions/notification";
 
+const HR_ROLES = ["ADMIN", "MARKETING_MANAGER", "HR_MANAGER"];
 function requireAdmin(): never { throw new Error("Unauthorized"); }
 
 // ─── Employee Directory ───────────────────────────────────────────────────────
 
 export async function getEmployees() {
     const session = await getServerSession(authOptions);
-    if (!session || !["ADMIN", "MARKETING_MANAGER"].includes(session.user.role)) requireAdmin();
+    if (!session || !HR_ROLES.includes(session.user.role)) requireAdmin();
 
     return prisma.user.findMany({
         where: { role: { not: "CLIENT" } },
@@ -37,7 +38,7 @@ export async function getEmployees() {
 
 export async function getEmployee(userId: string) {
     const session = await getServerSession(authOptions);
-    if (!session || !["ADMIN", "MARKETING_MANAGER"].includes(session.user.role)) requireAdmin();
+    if (!session || !HR_ROLES.includes(session.user.role)) requireAdmin();
 
     return prisma.user.findUnique({
         where: { id: userId },
@@ -71,7 +72,7 @@ export async function updateEmployeeProfile(userId: string, data: {
     salary?: number | null;
 }) {
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== "ADMIN") requireAdmin();
+    if (!session || !HR_ROLES.includes(session.user.role)) requireAdmin();
 
     await prisma.user.update({
         where: { id: userId },
@@ -103,7 +104,7 @@ export async function getMyLeaves() {
 
 export async function getAllLeaves(status?: string) {
     const session = await getServerSession(authOptions);
-    if (!session || !["ADMIN", "MARKETING_MANAGER"].includes(session.user.role)) requireAdmin();
+    if (!session || !HR_ROLES.includes(session.user.role)) requireAdmin();
 
     return (prisma as any).leaveRequest.findMany({
         where: status ? { status } : {},
@@ -140,7 +141,7 @@ export async function createLeaveRequest(data: {
     });
 
     // Notify admins
-    const admins = await prisma.user.findMany({ where: { role: "ADMIN" }, select: { id: true } });
+    const admins = await prisma.user.findMany({ where: { role: { in: ["ADMIN", "HR_MANAGER"] } }, select: { id: true } });
     const name = session.user.name || "A team member";
     for (const admin of admins) {
         await sendReminder(admin.id, `📅 طلب إجازة جديد`, `${name} طلب إجازة من ${data.startDate} إلى ${data.endDate}`, "/admin/hr");
@@ -152,7 +153,7 @@ export async function createLeaveRequest(data: {
 
 export async function reviewLeave(id: string, status: "APPROVED" | "REJECTED", reviewNote?: string) {
     const session = await getServerSession(authOptions);
-    if (!session || !["ADMIN", "MARKETING_MANAGER"].includes(session.user.role)) requireAdmin();
+    if (!session || !HR_ROLES.includes(session.user.role)) requireAdmin();
 
     const leave = await (prisma as any).leaveRequest.update({
         where: { id },
@@ -184,7 +185,7 @@ export async function addPerformanceReview(userId: string, data: {
     notes?: string;
 }) {
     const session = await getServerSession(authOptions);
-    if (!session || !["ADMIN", "MARKETING_MANAGER"].includes(session.user.role)) requireAdmin();
+    if (!session || !HR_ROLES.includes(session.user.role)) requireAdmin();
 
     const review = await (prisma as any).performanceReview.create({
         data: {
@@ -214,7 +215,7 @@ export async function addPerformanceReview(userId: string, data: {
 
 export async function addHRNote(userId: string, content: string) {
     const session = await getServerSession(authOptions);
-    if (!session || !["ADMIN", "MARKETING_MANAGER"].includes(session.user.role)) requireAdmin();
+    if (!session || !HR_ROLES.includes(session.user.role)) requireAdmin();
 
     await (prisma as any).hrNote.create({
         data: { userId, authorId: session.user.id, content },
@@ -231,7 +232,7 @@ export async function createAnnouncement(data: {
     targetRoles?: string;
 }) {
     const session = await getServerSession(authOptions);
-    if (!session || !["ADMIN", "MARKETING_MANAGER"].includes(session.user.role)) requireAdmin();
+    if (!session || !HR_ROLES.includes(session.user.role)) requireAdmin();
 
     const ann = await (prisma as any).hRAnnouncement.create({
         data: {
@@ -267,7 +268,7 @@ export async function getAnnouncements() {
 
 export async function getHRStats() {
     const session = await getServerSession(authOptions);
-    if (!session || !["ADMIN", "MARKETING_MANAGER"].includes(session.user.role)) requireAdmin();
+    if (!session || !HR_ROLES.includes(session.user.role)) requireAdmin();
 
     const [totalEmployees, pendingLeaves, approvedThisMonth, avgScore] = await Promise.all([
         prisma.user.count({ where: { role: { not: "CLIENT" } } }),

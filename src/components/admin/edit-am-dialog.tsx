@@ -104,6 +104,7 @@ export function EditTeamMemberDialog({ member }: { member: any }) {
                             >
                                 <option value="AM">{isRtl ? "مدير حساب" : "Account Manager"}</option>
                                 <option value="MARKETING_MANAGER">{isRtl ? "مدير تسويق" : "Marketing Manager"}</option>
+                                <option value="HR_MANAGER">{isRtl ? "مدير الموارد البشرية" : "HR Manager"}</option>
                                 <option value="MODERATOR">{isRtl ? "موديريتور (ناشر)" : "Moderator"}</option>
                                 <optgroup label={isRtl ? "تيم الكونتنت" : "Content"}>
                                     <option value="CONTENT_LEADER">{isRtl ? "كونتنت ليدر" : "Content Leader"}</option>

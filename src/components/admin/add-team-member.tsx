@@ -77,6 +77,7 @@ export function AddTeamMemberDialog() {
                             <select name="role" className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
                                 <option value="AM">{isRtl ? "مدير حساب" : "Account Manager"}</option>
                                 <option value="MARKETING_MANAGER">{isRtl ? "مدير تسويق" : "Marketing Manager"}</option>
+                                <option value="HR_MANAGER">{isRtl ? "مدير الموارد البشرية" : "HR Manager"}</option>
                                 <option value="MODERATOR">{isRtl ? "موديريتور (ناشر)" : "Moderator"}</option>
                                 <optgroup label={isRtl ? "تيم الكونتنت" : "Content"}>
                                     <option value="CONTENT_LEADER">{isRtl ? "كونتنت ليدر" : "Content Leader"}</option>
