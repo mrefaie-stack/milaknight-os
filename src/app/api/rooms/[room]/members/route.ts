@@ -19,7 +19,7 @@ export async function GET(
     const sessions = await (prisma as any).roomSession.findMany({
         where: {
             roomId,
-            updatedAt: { gte: new Date(Date.now() - 60 * 60 * 1000) },
+            updatedAt: { gte: new Date(Date.now() - 75 * 1000) }, // 75s — requires heartbeat every 30s
         },
         include: {
             user: { select: { id: true, firstName: true, lastName: true, role: true } },
