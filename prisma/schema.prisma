@@ -161,6 +161,7 @@ model Client {
   reports        Report[]
   socialConnections SocialConnection[]
   internalTasks    InternalTask[]
+  ratings        ClientRating[]
   
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
@@ -499,4 +500,16 @@ model HRAnnouncement {
   author      User     @relation(fields: [authorId], references: [id])
   targetRoles String   @default("ALL") // "ALL" or comma-sep roles
   createdAt   DateTime @default(now())
+}
+
+model ClientRating {
+  id        String   @id @default(cuid())
+  clientId  String
+  client    Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  month     String   // e.g. "2026-03" — one rating per client per month
+  stars     Int      // 1-5
+  feedback  String?  @db.Text
+  createdAt DateTime @default(now())
+
+  @@unique([clientId, month])
 }

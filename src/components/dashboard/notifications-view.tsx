@@ -1,12 +1,13 @@
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
-import { Bell, BellOff, ExternalLink, CheckCircle } from "lucide-react";
+import { Bell, BellOff, ExternalLink, CheckCircle, CheckCheck } from "lucide-react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { useLanguage } from "@/contexts/language-context";
-import { markAsRead } from "@/app/actions/notification";
+import { markAsRead, markAllAsRead } from "@/app/actions/notification";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
 
 export function NotificationsView({ initialNotifications }: { initialNotifications: any[] }) {
     const { t, isRtl } = useLanguage();
@@ -17,15 +18,34 @@ export function NotificationsView({ initialNotifications }: { initialNotificatio
         router.refresh();
     }
 
+    async function handleMarkAll() {
+        await markAllAsRead();
+        router.refresh();
+    }
+
+    const unreadCount = initialNotifications.filter(n => !n.isRead).length;
+
     return (
         <div className="space-y-6" dir={isRtl ? "rtl" : "ltr"}>
-            <div className={isRtl ? 'text-right' : 'text-left'}>
-                <h1 className="text-4xl font-black tracking-tighter premium-gradient-text uppercase">
-                    {t("common.notifications")}
-                </h1>
-                <p className="text-muted-foreground font-medium opacity-70">
-                    {t("notifications.subtitle") || "Stay updated on alerts, messages, and system activities."}
-                </p>
+            <div className={`flex items-start justify-between gap-4 flex-wrap ${isRtl ? 'flex-row-reverse' : ''}`}>
+                <div className={isRtl ? 'text-right' : 'text-left'}>
+                    <h1 className="text-4xl font-black tracking-tighter premium-gradient-text uppercase">
+                        {t("common.notifications")}
+                    </h1>
+                    <p className="text-muted-foreground font-medium opacity-70">
+                        {t("notifications.subtitle") || "Stay updated on alerts, messages, and system activities."}
+                    </p>
+                </div>
+                {unreadCount > 0 && (
+                    <Button
+                        variant="ghost"
+                        onClick={handleMarkAll}
+                        className="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-xl h-10 px-4"
+                    >
+                        <CheckCheck className="h-4 w-4" />
+                        {isRtl ? "قراءة الكل" : "Mark All as Read"}
+                    </Button>
+                )}
             </div>
 
             <Card className="glass-card border-none overflow-hidden rounded-3xl">

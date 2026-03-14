@@ -30,6 +30,63 @@ export function ClientServiceCatalog({ client, globalServices, requests }: { cli
     const isSubscribed = (serviceId: string) => client.services?.some((s: any) => s.globalServiceId === serviceId);
     const getRequestStatus = (serviceId: string) => requests.find(r => r.globalServiceId === serviceId && r.status === "PENDING") ? "PENDING" : null;
 
+    const subscribedServices = globalServices.filter(s => isSubscribed(s.id));
+    const availableServices = globalServices.filter(s => !isSubscribed(s.id));
+
+    const ServiceCard = ({ service }: { service: any }) => {
+        const subscribed = isSubscribed(service.id);
+        const pending = getRequestStatus(service.id);
+        return (
+            <motion.div
+                key={service.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4 }}
+            >
+                <Card className={`glass-card border-none overflow-hidden rounded-3xl h-full flex flex-col group transition-all duration-500 ${subscribed ? 'bg-emerald-500/5 border border-emerald-500/10' : 'hover:bg-white/5'}`}>
+                    <CardContent className="p-8 flex-1 flex flex-col space-y-4">
+                        <div className={`h-14 w-14 rounded-2xl flex items-center justify-center mb-2 transition-transform group-hover:scale-110 duration-500 ${subscribed ? 'bg-emerald-500/10 text-emerald-500' : 'bg-primary/10 text-primary'}`}>
+                            <Sparkles className="h-7 w-7" />
+                        </div>
+
+                        <div className="space-y-2 flex-1">
+                            <div className={`flex items-center gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                                <h3 className="text-2xl font-black tracking-tight">
+                                    {isRtl ? service.nameAr : service.nameEn}
+                                </h3>
+                                {subscribed && <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0" />}
+                            </div>
+                            <p className={`text-sm text-muted-foreground font-medium leading-relaxed opacity-70 ${isRtl ? 'text-right' : ''}`}>
+                                {isRtl ? service.descriptionAr : service.descriptionEn}
+                            </p>
+                        </div>
+
+                        <div className={`pt-6 border-t border-white/5 mt-auto ${isRtl ? 'text-right' : ''}`}>
+                            {subscribed ? (
+                                <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 px-4 py-2 rounded-xl font-black uppercase tracking-widest text-[10px] w-full justify-center">
+                                    {isRtl ? "خدمة نشطة" : "Active Service"}
+                                </Badge>
+                            ) : pending ? (
+                                <Button disabled className="w-full rounded-full font-black uppercase tracking-widest text-[10px] h-12 bg-orange-500/10 text-orange-500 border-orange-500/20 hover:bg-orange-500/10">
+                                    <Clock className={`h-4 w-4 ${isRtl ? 'ml-2' : 'mr-2'}`} />
+                                    {isRtl ? "قيد المراجعة" : "Pending Approval"}
+                                </Button>
+                            ) : (
+                                <Button
+                                    onClick={() => handleRequest(service.id)}
+                                    disabled={loading === service.id}
+                                    className="w-full rounded-full font-black uppercase tracking-widest text-[10px] h-12 shadow-xl shadow-primary/20 hover:scale-[1.02] transition-all"
+                                >
+                                    {loading === service.id ? (isRtl ? "جاري الإرسال..." : "Sending...") : (isRtl ? "طلب هذه الخدمة" : "Request This Service")}
+                                </Button>
+                            )}
+                        </div>
+                    </CardContent>
+                </Card>
+            </motion.div>
+        );
+    };
+
     return (
         <div className="space-y-10 max-w-6xl mx-auto" dir={isRtl ? "rtl" : "ltr"}>
             {/* Header */}
@@ -44,67 +101,38 @@ export function ClientServiceCatalog({ client, globalServices, requests }: { cli
                 </div>
             </div>
 
-            <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-                {globalServices.map((service) => {
-                    const subscribed = isSubscribed(service.id);
-                    const pending = getRequestStatus(service.id);
+            {/* Subscribed Services */}
+            {subscribedServices.length > 0 && (
+                <div className="space-y-6">
+                    <div className={`flex items-center gap-3 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                        <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                        <h2 className="text-2xl font-black uppercase tracking-tight text-emerald-500">
+                            {isRtl ? "الخدمات المشترك بها" : "Subscribed Services"}
+                        </h2>
+                        <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 rounded-full font-black text-[10px] uppercase tracking-widest">
+                            {subscribedServices.length}
+                        </Badge>
+                    </div>
+                    <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+                        {subscribedServices.map(s => <ServiceCard key={s.id} service={s} />)}
+                    </div>
+                </div>
+            )}
 
-                    return (
-                        <motion.div
-                            key={service.id}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.4 }}
-                        >
-                            <Card className={`glass-card border-none overflow-hidden rounded-3xl h-full flex flex-col group transition-all duration-500 ${subscribed ? 'bg-emerald-500/5' : 'hover:bg-white/5'}`}>
-                                <CardContent className="p-8 flex-1 flex flex-col space-y-4">
-                                    <div className={`h-14 w-14 rounded-2xl flex items-center justify-center mb-2 transition-transform group-hover:scale-110 duration-500 ${subscribed ? 'bg-emerald-500/10 text-emerald-500' : 'bg-primary/10 text-primary'}`}>
-                                        {service.icon ? (
-                                            // Placeholder for icon mapping if implemented
-                                            <Sparkles className="h-7 w-7" />
-                                        ) : (
-                                            <Sparkles className="h-7 w-7" />
-                                        )}
-                                    </div>
-
-                                    <div className="space-y-2 flex-1">
-                                        <div className={`flex items-center gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
-                                            <h3 className="text-2xl font-black tracking-tight">
-                                                {isRtl ? service.nameAr : service.nameEn}
-                                            </h3>
-                                            {subscribed && <CheckCircle2 className="h-5 w-5 text-emerald-500" />}
-                                        </div>
-                                        <p className={`text-sm text-muted-foreground font-medium leading-relaxed opacity-70 ${isRtl ? 'text-right' : ''}`}>
-                                            {isRtl ? service.descriptionAr : service.descriptionEn}
-                                        </p>
-                                    </div>
-
-                                    <div className={`pt-6 border-t border-white/5 mt-auto ${isRtl ? 'text-right' : ''}`}>
-                                        {subscribed ? (
-                                            <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 px-4 py-2 rounded-xl font-black uppercase tracking-widest text-[10px] w-full justify-center">
-                                                {isRtl ? "خدمة نشطة" : "Active Service"}
-                                            </Badge>
-                                        ) : pending ? (
-                                            <Button disabled className="w-full rounded-full font-black uppercase tracking-widest text-[10px] h-12 bg-orange-500/10 text-orange-500 border-orange-500/20 hover:bg-orange-500/10">
-                                                <Clock className={`h-4 w-4 ${isRtl ? 'ml-2' : 'mr-2'}`} />
-                                                {isRtl ? "قيد المراجعة" : "Pending Approval"}
-                                            </Button>
-                                        ) : (
-                                            <Button
-                                                onClick={() => handleRequest(service.id)}
-                                                disabled={loading === service.id}
-                                                className="w-full rounded-full font-black uppercase tracking-widest text-[10px] h-12 shadow-xl shadow-primary/20 hover:scale-[1.02] transition-all"
-                                            >
-                                                {loading === service.id ? (isRtl ? "جاري الإرسال..." : "Sending...") : (isRtl ? "طلب هذه الخدمة" : "Request This Service")}
-                                            </Button>
-                                        )}
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        </motion.div>
-                    );
-                })}
-            </div>
+            {/* Available Services */}
+            {availableServices.length > 0 && (
+                <div className="space-y-6">
+                    <div className={`flex items-center gap-3 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                        <Sparkles className="h-5 w-5 text-primary" />
+                        <h2 className="text-2xl font-black uppercase tracking-tight">
+                            {isRtl ? "الخدمات المتاحة" : "Available Services"}
+                        </h2>
+                    </div>
+                    <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+                        {availableServices.map(s => <ServiceCard key={s.id} service={s} />)}
+                    </div>
+                </div>
+            )}
 
             {/* Request History Section */}
             {requests.length > 0 && (
