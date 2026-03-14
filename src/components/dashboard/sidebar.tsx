@@ -6,7 +6,7 @@ import { UserNav } from "@/components/dashboard/user-nav";
 import {
     LayoutDashboard, Users, FolderKanban, BarChart3,
     MessageSquare, ShieldCheck, Trash2, Bell, Search,
-    ChevronLeft, ChevronRight, Sparkles, Plus, CalendarDays, Link2, Activity, ListTodo, CheckSquare, Layers, Building2
+    ChevronLeft, ChevronRight, Sparkles, Plus, CalendarDays, Link2, Activity, ListTodo, CheckSquare, Layers, Building2, Newspaper, TrendingUp, Target
 } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
 import { LanguageToggle } from "@/components/ui/language-toggle";
@@ -86,6 +86,9 @@ export function DashboardSidebar({ role, user }: { role: string; user: any }) {
         { href: "/client/meetings", label: isRtl ? "الاجتماعات" : "Meetings", icon: CalendarDays },
         { href: "/client/action-plans", label: t("sidebar.action_plans"), icon: FolderKanban },
         { href: "/client/reports", label: t("sidebar.performance"), icon: BarChart3 },
+        { href: "/client/industry", label: isRtl ? "أخبار الصناعة" : "Industry Updates", icon: Newspaper },
+        { href: "/client/trending", label: isRtl ? "المواضيع الرائجة" : "Trending Topics", icon: TrendingUp },
+        { href: "/client/competitors", label: isRtl ? "المنافسون" : "Competitors", icon: Target },
         { href: "/messages", label: t("common.messages"), icon: MessageSquare },
     ];
 

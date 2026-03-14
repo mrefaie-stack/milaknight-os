@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { FileText, CheckCircle2, MessageSquare, BarChart, Calendar, DollarSign, TrendingUp, Mail, Globe } from "lucide-react";
+import { FileText, CheckCircle2, MessageSquare, BarChart, Calendar, DollarSign, TrendingUp, Mail, Globe, Info } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/language-context";
@@ -11,6 +11,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { LiveMetrics } from "./live-metrics";
 import { Badge } from "@/components/ui/badge";
 import { Sparkles, ArrowRight } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 const container: Variants = {
     hidden: { opacity: 0 },
@@ -132,6 +133,7 @@ export function ClientDashboardView({ client, latestPlan, allReports, globalServ
     const statCards = [
         {
             label: t("reports.impressions"),
+            tooltip: isRtl ? "عدد المرات التي ظهر فيها محتواك أمام المستخدمين عبر جميع المنصات" : "Number of times your content was displayed to users across all platforms",
             value: Object.values(metrics.platforms).reduce((acc: number, p: any) => acc + (p.impressions || 0), 0),
             color: "text-primary",
             accent: "bg-primary/5",
@@ -140,6 +142,7 @@ export function ClientDashboardView({ client, latestPlan, allReports, globalServ
         },
         {
             label: t("reports.engagements"),
+            tooltip: isRtl ? "إجمالي التفاعلات (إعجابات، تعليقات، مشاركات، حفظ) مع محتواك" : "Total interactions (likes, comments, shares, saves) with your content",
             value: Object.values(metrics.platforms).reduce((acc: number, p: any) => acc + (p.engagement || 0), 0),
             color: "text-emerald-500",
             accent: "bg-emerald-500/5",
@@ -148,6 +151,7 @@ export function ClientDashboardView({ client, latestPlan, allReports, globalServ
         },
         {
             label: t("reports.growth"),
+            tooltip: isRtl ? "عدد المتابعين الجدد المكتسبين عبر جميع المنصات خلال هذه الفترة" : "New followers gained across all platforms during this period",
             value: Object.values(metrics.platforms).reduce((acc: number, p: any) => acc + (p.followers || 0), 0),
             color: "text-blue-500",
             accent: "bg-blue-500/5",
@@ -156,6 +160,7 @@ export function ClientDashboardView({ client, latestPlan, allReports, globalServ
         },
         {
             label: isRtl ? "الإنفاق الإعلاني" : "Ad Spend",
+            tooltip: isRtl ? "إجمالي المبالغ المنفقة على الحملات الإعلانية المدفوعة" : "Total amount spent on paid advertising campaigns",
             value: Object.values(metrics.platforms).reduce((acc: number, p: any) => acc + (p.spend || 0), 0),
             color: "text-orange-500",
             accent: "bg-orange-500/5",
@@ -164,6 +169,7 @@ export function ClientDashboardView({ client, latestPlan, allReports, globalServ
         },
         {
             label: t("reports.completed_actions"),
+            tooltip: isRtl ? "نتائج الحملات المدفوعة (تحويلات، عملاء محتملون، نقرات)" : "Results from paid campaigns (conversions, leads, clicks)",
             value: Object.values(metrics.platforms).reduce((acc: number, p: any) => acc + (p.conversions || 0), 0),
             color: "text-rose-500",
             accent: "bg-rose-500/5",
@@ -172,6 +178,7 @@ export function ClientDashboardView({ client, latestPlan, allReports, globalServ
         },
         ...(metrics.emailMarketing.emailsSent > 0 ? [{
             label: isRtl ? "رسائل البريد" : "Emails Dispatched",
+            tooltip: isRtl ? "إجمالي رسائل البريد الإلكتروني الترويجية المُرسلة لمشتركيك" : "Total promotional emails sent to your subscribers",
             value: metrics.emailMarketing.emailsSent,
             color: "text-rose-500",
             accent: "bg-rose-500/5",
@@ -180,6 +187,7 @@ export function ClientDashboardView({ client, latestPlan, allReports, globalServ
         }] : []),
         {
             label: isRtl ? "سكور SEO" : "SEO Score",
+            tooltip: isRtl ? "مؤشر أداء موقعك على محركات البحث (من 0 إلى 100%)" : "Your website's search engine optimization performance score (0–100%)",
             value: metrics?.seoScore || 0,
             color: "text-purple-500",
             accent: "bg-purple-500/5",
@@ -222,8 +230,11 @@ export function ClientDashboardView({ client, latestPlan, allReports, globalServ
                         <TabsTrigger value="overview" className="rounded-full px-8 text-xs font-black uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-primary-foreground h-full transition-all">
                             {isRtl ? "نظرة عامة" : "OVERVIEW"}
                         </TabsTrigger>
-                        <TabsTrigger value="live" className="rounded-full px-8 text-xs font-black uppercase tracking-widest data-[state=active]:bg-rose-500 data-[state=active]:text-white h-full transition-all flex items-center gap-2 group">
-                            <span className="w-2 h-2 bg-current rounded-full animate-pulse group-data-[state=active]:bg-white" />
+                        <TabsTrigger value="live" className="rounded-full px-8 text-xs font-black uppercase tracking-widest data-[state=active]:bg-rose-500 data-[state=active]:text-white h-full transition-all flex items-center gap-2">
+                            <span className="relative flex h-2 w-2 shrink-0">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                            </span>
                             {isRtl ? "البيانات الحية" : "LIVE ANALYTICS"}
                         </TabsTrigger>
                     </TabsList>
@@ -251,9 +262,21 @@ export function ClientDashboardView({ client, latestPlan, allReports, globalServ
                             <motion.div key={m.label} variants={item}>
                                 <Card className={`glass-card hover-lift border-none overflow-hidden rounded-2xl ${m.accent}`}>
                                     <CardHeader className={`pb-1 ${isRtl ? 'text-right' : 'text-left'}`}>
-                                        <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground opacity-60 flex items-center gap-2">
+                                        <CardTitle className={`text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground opacity-60 flex items-center gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
                                             {(m as any).icon}
-                                            {m.label}
+                                            <span className="flex-1">{m.label}</span>
+                                            {(m as any).tooltip && (
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <button className="opacity-40 hover:opacity-80 transition-opacity shrink-0">
+                                                            <Info className="h-3 w-3" />
+                                                        </button>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent side="top" className="max-w-[200px] text-center leading-relaxed">
+                                                        {(m as any).tooltip}
+                                                    </TooltipContent>
+                                                </Tooltip>
+                                            )}
                                         </CardTitle>
                                     </CardHeader>
                                     <CardContent className={isRtl ? 'text-right' : 'text-left'}>

@@ -77,3 +77,14 @@ export async function getUnreadNotificationCount() {
         where: { userId: session.user.id, isRead: false }
     });
 }
+
+export async function markAllAsRead() {
+    const session = await getServerSession(authOptions);
+    if (!session) throw new Error("Unauthorized");
+
+    await prisma.notification.updateMany({
+        where: { userId: session.user.id, isRead: false },
+        data: { isRead: true },
+    });
+    revalidatePath("/notifications");
+}

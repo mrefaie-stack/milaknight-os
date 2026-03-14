@@ -7,7 +7,7 @@ import { ThemeToggle } from "@/components/ui/theme-toggle";
 import {
     LayoutDashboard, Users, FolderKanban, BarChart3,
     MessageSquare, ShieldCheck, Trash2, Bell, Sparkles, MoreHorizontal, X, Plus, Calendar,
-    CheckSquare, Layers, Building2, UserCog
+    CheckSquare, Layers, Building2, UserCog, Newspaper, TrendingUp, Target, Activity
 } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
 import Link from "next/link";
@@ -62,9 +62,14 @@ export function MobileHeader({ role, user }: { role: string, user: any }) {
         { href: "/client", label: t("common.overview"), icon: LayoutDashboard },
         { href: "/client/action-plans", label: t("sidebar.action_plans"), icon: FolderKanban },
         { href: "/client/reports", label: t("sidebar.performance"), icon: BarChart3 },
+        { href: "/client/live", label: isRtl ? "الاحصائيات الحية" : "Live", icon: Activity },
     ];
     const clientMore = [
+        { href: "/client/services", label: t("sidebar.services"), icon: Sparkles },
         { href: "/client/meetings", label: isRtl ? "الاجتماعات" : "Meetings", icon: Calendar },
+        { href: "/client/industry", label: isRtl ? "أخبار الصناعة" : "Industry Updates", icon: Newspaper },
+        { href: "/client/trending", label: isRtl ? "المواضيع الرائجة" : "Trending Topics", icon: TrendingUp },
+        { href: "/client/competitors", label: isRtl ? "المنافسون" : "Competitors", icon: Target },
         { href: "/messages", label: t("common.messages"), icon: MessageSquare },
     ];
 
