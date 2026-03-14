@@ -28,10 +28,10 @@ type PresenceData = {
 };
 
 const STATUSES = [
-    { value: "ONLINE",  labelEn: "Online",       labelAr: "متصل",        color: "bg-emerald-500" },
-    { value: "AWAY",    labelEn: "Away",          labelAr: "بعيد",        color: "bg-yellow-400" },
-    { value: "MEETING", labelEn: "In a Meeting",  labelAr: "في اجتماع",   color: "bg-rose-500" },
-    { value: "DND",     labelEn: "Focus Mode",    labelAr: "وضع التركيز", color: "bg-purple-500" },
+    { value: "ONLINE", labelEn: "Online", labelAr: "متصل", color: "bg-emerald-500" },
+    { value: "AWAY", labelEn: "Away", labelAr: "بعيد", color: "bg-yellow-400" },
+    { value: "MEETING", labelEn: "In a Meeting", labelAr: "في اجتماع", color: "bg-rose-500" },
+    { value: "DND", labelEn: "Focus Mode", labelAr: "وضع التركيز", color: "bg-purple-500" },
 ];
 
 function statusMeta(status: string) {
@@ -156,7 +156,7 @@ export function OfficeView({ initialData, currentUserId, initialRoomId = null }:
             if (!res.ok) return;
             const data: Record<string, RoomMember[]> = await res.json();
             setRoomMembers(data);
-        } catch {}
+        } catch { }
     }, []);
 
     useEffect(() => {

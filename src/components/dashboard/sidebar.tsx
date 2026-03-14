@@ -30,6 +30,7 @@ const ROLE_LABELS: Record<string, { ar: string; en: string }> = {
     ART_LEADER: { ar: "آرت ليدر", en: "Art Leader" },
     SEO_TEAM: { ar: "سيو تيم", en: "SEO Team" },
     SEO_LEAD: { ar: "سيو ليد", en: "SEO Lead" },
+    HR_MANAGER: { ar: "مدير الموارد البشرية", en: "HR Manager" },
 };
 
 export function DashboardSidebar({ role, user }: { role: string; user: any }) {
@@ -113,6 +114,15 @@ export function DashboardSidebar({ role, user }: { role: string; user: any }) {
         { href: "/messages",        label: t("common.messages"),                            icon: MessageSquare },
     ];
 
+    const hrManagerLinks = [
+        { href: "/hr-manager",              label: isRtl ? "لوحة الموارد البشرية" : "HR Dashboard",    icon: LayoutDashboard },
+        { href: "/hr-manager/employees",    label: isRtl ? "دليل الموظفين" : "Employees",              icon: Users },
+        { href: "/hr-manager/leaves",       label: isRtl ? "طلبات الإجازات" : "Leave Requests",        icon: CalendarDays },
+        { href: "/office",                  label: isRtl ? "المكتب الافتراضي" : "Virtual Office",       icon: Building2 },
+        { href: "/hr/leaves",               label: isRtl ? "إجازاتي" : "My Leaves",                    icon: CalendarDays },
+        { href: "/messages",                label: t("common.messages"),                                 icon: MessageSquare },
+    ];
+
     // Content, Art, SEO team members
     const teamMemberLinks = [
         { href: "/moderator",              label: t("common.overview"),                            icon: LayoutDashboard },
@@ -140,13 +150,14 @@ export function DashboardSidebar({ role, user }: { role: string; user: any }) {
     const links = role === "ADMIN" ? adminLinks
         : role === "MARKETING_MANAGER" ? mmLinks
         : role === "AM" ? amLinks
+        : role === "HR_MANAGER" ? hrManagerLinks
         : role === "MODERATOR" ? moderatorLinks
         : LEADER_ROLES.includes(role) ? teamLeaderLinks
         : TEAM_ROLES.includes(role) ? teamMemberLinks
         : clientLinks;
 
     const isActive = (href: string) => {
-        if (href === "/admin" || href === "/am" || href === "/client") {
+        if (href === "/admin" || href === "/am" || href === "/client" || href === "/hr-manager") {
             return pathname === href;
         }
         return pathname.startsWith(href);
@@ -156,6 +167,7 @@ export function DashboardSidebar({ role, user }: { role: string; user: any }) {
     const roleLabel = isRtl ? roleMeta.ar : roleMeta.en;
     const roleColor = role === "ADMIN" ? "text-orange-400"
         : (role === "AM" || role === "MARKETING_MANAGER") ? "text-blue-400"
+        : role === "HR_MANAGER" ? "text-rose-400"
         : (role === "CONTENT_LEADER" || role === "ART_LEADER" || role === "SEO_LEAD") ? "text-purple-400"
         : (role === "CONTENT_TEAM" || role === "ART_TEAM" || role === "SEO_TEAM") ? "text-teal-400"
         : "text-emerald-400";

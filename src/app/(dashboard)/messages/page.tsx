@@ -10,7 +10,7 @@ export default async function MessagesPage({ searchParams }: { searchParams: Pro
     const { userId: initialUserId } = await searchParams;
 
     return (
-        <div className="h-[calc(100vh-12rem)] flex flex-col space-y-4">
+        <div className="h-[calc(100vh-16rem)] md:h-[calc(100vh-12rem)] flex flex-col space-y-4">
             <MessagesHeader />
             <div className="flex-1 bg-card border rounded-xl overflow-hidden flex">
                 <ChatInterface

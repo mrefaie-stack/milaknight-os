@@ -60,6 +60,7 @@ export function FloorPlan({ roomMembers, currentUserId, onJoinRoom, isRtl }: Pro
                             isCurrentUserHere={isCurrentUserHere}
                             onClick={() => onJoinRoom(room.id)}
                             isRtl={isRtl}
+                            isMobile={isMobile}
                         />
                     </motion.div>
                 );

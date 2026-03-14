@@ -13,15 +13,26 @@ export default async function RootPage() {
 
   if (role === "ADMIN") {
     redirect("/admin");
-  } else if (role === "AM" || role === "ACCOUNT_MANAGER") {
-    redirect("/am");
-  } else if (role === "MODERATOR") {
-    redirect("/moderator");
-  } else if (role === "CLIENT") {
-    redirect("/client");
   } else if (role === "MARKETING_MANAGER") {
     redirect("/admin");
+  } else if (role === "AM" || role === "ACCOUNT_MANAGER") {
+    redirect("/am");
+  } else if (role === "CLIENT") {
+    redirect("/client");
+  } else if (role === "HR_MANAGER") {
+    redirect("/hr-manager");
+  } else if (
+    role === "MODERATOR" ||
+    role === "CONTENT_TEAM" ||
+    role === "CONTENT_LEADER" ||
+    role === "ART_TEAM" ||
+    role === "ART_LEADER" ||
+    role === "SEO_TEAM" ||
+    role === "SEO_LEAD"
+  ) {
+    redirect("/moderator");
   }
 
-  redirect("/login");
+  // Fallback: any unknown role goes to moderator view (not login, to avoid redirect loops)
+  redirect("/moderator");
 }

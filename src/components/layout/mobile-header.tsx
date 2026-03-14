@@ -7,7 +7,7 @@ import { ThemeToggle } from "@/components/ui/theme-toggle";
 import {
     LayoutDashboard, Users, FolderKanban, BarChart3,
     MessageSquare, ShieldCheck, Trash2, Bell, Sparkles, MoreHorizontal, X, Plus, Calendar,
-    CheckSquare, Layers, Building2
+    CheckSquare, Layers, Building2, UserCog
 } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
 import Link from "next/link";
@@ -88,17 +88,30 @@ export function MobileHeader({ role, user }: { role: string, user: any }) {
         { href: "/clickup", label: isRtl ? "كليك أب" : "ClickUp", icon: Layers },
     ];
 
+    const hrManagerPrimary = [
+        { href: "/hr-manager",          label: isRtl ? "الرئيسية" : "HR Home",          icon: LayoutDashboard },
+        { href: "/hr-manager/employees",label: isRtl ? "الموظفون" : "Employees",         icon: Users },
+        { href: "/hr-manager/leaves",   label: isRtl ? "الإجازات" : "Leaves",            icon: Calendar },
+        { href: "/messages",            label: isRtl ? "الرسائل" : "Messages",            icon: MessageSquare },
+    ];
+    const hrManagerMore = [
+        { href: "/office",    label: isRtl ? "المكتب الافتراضي" : "Virtual Office", icon: Building2 },
+        { href: "/hr/leaves", label: isRtl ? "إجازاتي" : "My Leaves",              icon: UserCog },
+    ];
+
     const LEADER_ROLES = ["CONTENT_LEADER", "ART_LEADER", "SEO_LEAD"];
     const TEAM_ROLES = ["CONTENT_TEAM", "ART_TEAM", "SEO_TEAM"];
     const isTeamRole = LEADER_ROLES.includes(role) || TEAM_ROLES.includes(role) || role === "MODERATOR";
     const primaryLinks = role === "ADMIN" ? adminPrimary
         : role === "AM" ? amPrimary
         : role === "MARKETING_MANAGER" ? mmPrimary
+        : role === "HR_MANAGER" ? hrManagerPrimary
         : isTeamRole ? moderatorPrimary
         : clientPrimary;
     const moreLinks = role === "ADMIN" ? adminMore
         : role === "AM" ? amMore
         : role === "MARKETING_MANAGER" ? mmMore
+        : role === "HR_MANAGER" ? hrManagerMore
         : isTeamRole ? [
             { href: "/clickup", label: isRtl ? "كليك أب" : "ClickUp", icon: Layers },
             { href: "/hr/leaves", label: isRtl ? "إجازاتي" : "My Leaves", icon: Calendar },
@@ -107,7 +120,7 @@ export function MobileHeader({ role, user }: { role: string, user: any }) {
         : clientMore;
 
     const isActive = (href: string) => {
-        if (href === "/admin" || href === "/am" || href === "/client") return pathname === href;
+        if (href === "/admin" || href === "/am" || href === "/client" || href === "/hr-manager") return pathname === href;
         return pathname.startsWith(href);
     };
 
