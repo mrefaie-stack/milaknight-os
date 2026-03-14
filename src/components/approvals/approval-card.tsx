@@ -77,6 +77,10 @@ export function ApprovalCard({ approval, userRole, userId, isRtl }: {
     const [expanded, setExpanded] = useState(false);
     const [rejectOpen, setRejectOpen] = useState<"leader" | "mm" | null>(null);
     const [rejectComment, setRejectComment] = useState("");
+
+    // Reset comment whenever the reject panel changes
+    const openReject = (mode: "leader" | "mm") => { setRejectOpen(mode); setRejectComment(""); };
+    const closeReject = () => { setRejectOpen(null); setRejectComment(""); };
     const [loading, setLoading] = useState(false);
 
     const status = approval.status;
@@ -101,7 +105,7 @@ export function ApprovalCard({ approval, userRole, userId, isRtl }: {
             toast.success(action === "APPROVED"
                 ? (isRtl ? "تمت الموافقة" : "Approved")
                 : (isRtl ? "تم الرفض" : "Rejected"));
-            setRejectOpen(null);
+            closeReject();
             router.refresh();
         } catch {
             toast.error(isRtl ? "حدث خطأ" : "Something went wrong");
@@ -117,7 +121,7 @@ export function ApprovalCard({ approval, userRole, userId, isRtl }: {
             toast.success(action === "APPROVED"
                 ? (isRtl ? "تم الاعتماد النهائي" : "Final Approval Done")
                 : (isRtl ? "تم الرفض" : "Rejected"));
-            setRejectOpen(null);
+            closeReject();
             router.refresh();
         } catch {
             toast.error(isRtl ? "حدث خطأ" : "Something went wrong");
@@ -275,7 +279,7 @@ export function ApprovalCard({ approval, userRole, userId, isRtl }: {
                                     {isRtl ? "موافقة" : "Approve"}
                                 </Button>
                                 <Button
-                                    onClick={() => { setRejectOpen("leader"); setRejectComment(""); }}
+                                    onClick={() => openReject("leader")}
                                     variant="outline"
                                     className="h-9 border-rose-500/30 text-rose-400 hover:bg-rose-500/10 font-black text-xs rounded-xl gap-1.5"
                                 >
@@ -303,7 +307,7 @@ export function ApprovalCard({ approval, userRole, userId, isRtl }: {
                                     >
                                         {isRtl ? "تأكيد الرفض" : "Confirm Reject"}
                                     </Button>
-                                    <Button onClick={() => setRejectOpen(null)} variant="ghost" className="h-9 text-xs rounded-xl">
+                                    <Button onClick={closeReject} variant="ghost" className="h-9 text-xs rounded-xl">
                                         {isRtl ? "إلغاء" : "Cancel"}
                                     </Button>
                                 </div>
@@ -322,7 +326,7 @@ export function ApprovalCard({ approval, userRole, userId, isRtl }: {
                                     {isRtl ? "اعتماد نهائي" : "Final Approve"}
                                 </Button>
                                 <Button
-                                    onClick={() => { setRejectOpen("mm"); setRejectComment(""); }}
+                                    onClick={() => openReject("mm")}
                                     variant="outline"
                                     className="h-9 border-rose-500/30 text-rose-400 hover:bg-rose-500/10 font-black text-xs rounded-xl gap-1.5"
                                 >
@@ -350,7 +354,7 @@ export function ApprovalCard({ approval, userRole, userId, isRtl }: {
                                     >
                                         {isRtl ? "تأكيد الرفض" : "Confirm Reject"}
                                     </Button>
-                                    <Button onClick={() => setRejectOpen(null)} variant="ghost" className="h-9 text-xs rounded-xl">
+                                    <Button onClick={closeReject} variant="ghost" className="h-9 text-xs rounded-xl">
                                         {isRtl ? "إلغاء" : "Cancel"}
                                     </Button>
                                 </div>

@@ -19,7 +19,7 @@ export async function createInternalTask(data: {
 
     const client = await prisma.client.findUnique({
         where: { id: data.clientId },
-        include: { marketingManager: true }
+        select: { id: true, name: true, mmId: true },
     });
 
     if (!client) throw new Error("Client not found");
