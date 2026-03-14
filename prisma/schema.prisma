@@ -570,4 +570,6 @@ model ApprovalRequest {
   @@index([creatorId])
   @@index([mmId])
   @@index([status])
+  @@index([mmId, status])
+  @@index([creatorRole, status])
 }

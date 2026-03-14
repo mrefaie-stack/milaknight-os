@@ -38,7 +38,9 @@ export function CreateApprovalDialog({ open, onClose }: { open: boolean; onClose
         }
     }, [open]);
 
-    const isValid = title.trim().length > 0 && clickupLink.trim().length > 0 && clientId.length > 0;
+    const selectedClient = clients.find((c) => c.id === clientId);
+    const selectedClientHasNoMM = selectedClient && !selectedClient.mmId;
+    const isValid = title.trim().length > 0 && clickupLink.trim().length > 0 && clientId.length > 0 && !selectedClientHasNoMM;
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
@@ -105,7 +107,7 @@ export function CreateApprovalDialog({ open, onClose }: { open: boolean; onClose
                             {isRtl ? "العميل *" : "Client *"}
                         </Label>
                         <Select value={clientId} onValueChange={setClientId} required>
-                            <SelectTrigger className="bg-white/5 border-white/10 rounded-xl">
+                            <SelectTrigger className={cn("bg-white/5 border-white/10 rounded-xl", selectedClientHasNoMM && "border-rose-500/40")}>
                                 <SelectValue placeholder={isRtl ? "اختر العميل" : "Select client"} />
                             </SelectTrigger>
                             <SelectContent className="glass-card border border-white/10 rounded-2xl">
@@ -119,6 +121,12 @@ export function CreateApprovalDialog({ open, onClose }: { open: boolean; onClose
                                 ))}
                             </SelectContent>
                         </Select>
+                        {selectedClientHasNoMM && (
+                            <p className={cn("text-[10px] text-rose-400 font-black flex items-center gap-1 mt-1", isRtl ? "flex-row-reverse" : "")}>
+                                <AlertCircle className="h-3 w-3 shrink-0" />
+                                {isRtl ? "هذا العميل ليس لديه مدير تسويق — لا يمكن إرسال الطلب" : "This client has no Marketing Manager assigned"}
+                            </p>
+                        )}
                     </div>
 
                     {/* ClickUp Link — required */}
