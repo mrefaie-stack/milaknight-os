@@ -302,8 +302,9 @@ export function AiChatWidget({ user }: { user: { name: string; role: string; id:
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.2 }}
             className={cn(
-              "fixed bottom-24 z-50 flex flex-col w-[400px] h-[550px] max-h-[70vh] rounded-2xl border bg-background/95 backdrop-blur-xl shadow-2xl overflow-hidden",
-              isRtl ? "left-6" : "right-6"
+              "fixed bottom-24 z-50 flex flex-col rounded-2xl border bg-background/95 backdrop-blur-xl shadow-2xl overflow-hidden",
+              "inset-x-3 h-[75vh] sm:inset-x-auto sm:h-[550px] sm:max-h-[70vh] sm:w-[400px]",
+              isRtl ? "sm:left-6" : "sm:right-6"
             )}
           >
             {/* Header */}
