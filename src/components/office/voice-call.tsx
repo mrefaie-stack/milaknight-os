@@ -2,23 +2,14 @@
 
 import { useEffect, useRef, useCallback } from "react";
 
-const STUN_CONFIG: RTCConfiguration = {
+const POLL_MS = 500; // faster polling for lower latency
+const FALLBACK_ICE: RTCConfiguration = {
     iceServers: [
         { urls: "stun:stun.l.google.com:19302" },
         { urls: "stun:stun1.l.google.com:19302" },
-        // TURN relay — handles symmetric NAT (mobile networks, corporate firewalls)
-        {
-            urls: [
-                "turn:72.61.162.106:3478?transport=udp",
-                "turn:72.61.162.106:3478?transport=tcp",
-            ],
-            username: "milaknight",
-            credential: "mk_turn_2024",
-        },
     ],
     iceCandidatePoolSize: 10,
 };
-const POLL_MS = 700;
 
 export type VoiceCallProps = {
     roomId: string;
@@ -33,8 +24,9 @@ export function VoiceCall({ roomId, currentUserId, members, enabled }: VoiceCall
     const pollRef       = useRef<ReturnType<typeof setInterval> | null>(null);
     const enabledRef    = useRef(enabled);
     const iceBuf        = useRef<Map<string, RTCIceCandidateInit[]>>(new Map());
-    const offeringRef   = useRef<Set<string>>(new Set()); // guard against double-offers
+    const offeringRef   = useRef<Set<string>>(new Set());
     const streamReady   = useRef(false);
+    const iceConfigRef  = useRef<RTCConfiguration>(FALLBACK_ICE);
     const encodedRoom   = encodeURIComponent(roomId);
     const membersRef    = useRef(members);
     membersRef.current  = members;
@@ -63,13 +55,11 @@ export function VoiceCall({ roomId, currentUserId, members, enabled }: VoiceCall
         }
 
         if (streamRef.current) {
-            // Already have stream — just unmute
             streamRef.current.getAudioTracks().forEach(t => { t.enabled = true; });
             return;
         }
 
-        // enabled=true but streamRef is null (getUserMedia failed/dismissed on mount).
-        // The user just clicked the mic button so permission should be granted now.
+        // enabled=true but streamRef is null — user just clicked mic, permission likely granted now
         navigator.mediaDevices.getUserMedia({
             audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, sampleRate: 48000 },
             video: false,
@@ -77,14 +67,12 @@ export function VoiceCall({ roomId, currentUserId, members, enabled }: VoiceCall
             if (!enabledRef.current) { stream.getTracks().forEach(t => t.stop()); return; }
             streamRef.current = stream;
             if (!streamReady.current) return;
-            // Reconnect all peers so they pick up the new local track
-            // Collect IDs first — destroyPeer mutates the Map
             const peerIds = [...peersRef.current.keys()];
             peerIds.forEach(id => destroyPeer(id));
             iceBuf.current.clear();
             offeringRef.current.clear();
             connectToMembers(membersRef.current);
-        }).catch(() => { /* permission still denied */ });
+        }).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [enabled]);
 
@@ -102,7 +90,7 @@ export function VoiceCall({ roomId, currentUserId, members, enabled }: VoiceCall
             el = document.createElement("audio");
             el.setAttribute("data-voicepeer", peerId);
             el.autoplay = true;
-            (el as any).playsInline = true;
+            (el as HTMLAudioElement & { playsInline: boolean }).playsInline = true;
             el.muted = false;
             el.volume = 1.0;
             el.style.cssText = "position:fixed;width:0;height:0;opacity:0;pointer-events:none";
@@ -128,16 +116,14 @@ export function VoiceCall({ roomId, currentUserId, members, enabled }: VoiceCall
     };
 
     const createPeer = useCallback((remoteId: string): RTCPeerConnection => {
-        // Always destroy stale peer first
         const existing = peersRef.current.get(remoteId);
         if (existing) { existing.close(); }
         iceBuf.current.delete(remoteId);
         offeringRef.current.delete(remoteId);
 
-        const pc = new RTCPeerConnection(STUN_CONFIG);
+        const pc = new RTCPeerConnection(iceConfigRef.current);
         peersRef.current.set(remoteId, pc);
 
-        // Add local tracks if stream is available
         if (streamRef.current) {
             streamRef.current.getTracks().forEach(t => pc.addTrack(t, streamRef.current!));
         }
@@ -150,27 +136,32 @@ export function VoiceCall({ roomId, currentUserId, members, enabled }: VoiceCall
             const stream = e.streams?.[0] ?? new MediaStream([e.track]);
             const audio = getAudioEl(remoteId);
             audio.srcObject = stream;
-            // Play — if blocked by autoplay policy, the document-level
-            // listener below will retry on the next user click/touch
             audio.play().catch(() => {});
         };
 
         pc.onconnectionstatechange = () => {
             const state = pc.connectionState;
-            // "disconnected" is transient — WebRTC may self-recover; only act on "failed"
-            if (state === "failed") {
-                if (currentUserId > remoteId) {
-                    // Offerer retries after a short delay
-                    destroyPeer(remoteId);
-                    setTimeout(() => {
-                        if (membersRef.current.some(m => m.userId === remoteId)) {
+            if (state === "failed" || state === "closed") {
+                destroyPeer(remoteId);
+                // Both sides retry — offerer immediately, answerer after brief delay
+                // to avoid both sending offers simultaneously
+                const delay = currentUserId > remoteId ? 1500 : 3000;
+                setTimeout(() => {
+                    if (membersRef.current.some(m => m.userId === remoteId)) {
+                        if (currentUserId > remoteId) {
                             initiateOffer(remoteId);
                         }
-                    }, 2500);
-                } else {
-                    // Answerer just cleans up; offerer will send a new offer
-                    destroyPeer(remoteId);
-                }
+                        // Answerer: if no new offer arrives within 5s, also try offering
+                        else {
+                            setTimeout(() => {
+                                if (!peersRef.current.has(remoteId) &&
+                                    membersRef.current.some(m => m.userId === remoteId)) {
+                                    initiateOffer(remoteId);
+                                }
+                            }, 5000);
+                        }
+                    }
+                }, delay);
             }
         };
 
@@ -178,10 +169,8 @@ export function VoiceCall({ roomId, currentUserId, members, enabled }: VoiceCall
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [sendSig, destroyPeer, currentUserId]);
 
-    // Only the peer with the higher userId lexicographically sends the offer.
-    // This eliminates "glare" — the race condition where both peers offer simultaneously.
     const initiateOffer = useCallback(async (remoteId: string) => {
-        if (offeringRef.current.has(remoteId)) return; // already in progress
+        if (offeringRef.current.has(remoteId)) return;
         offeringRef.current.add(remoteId);
         try {
             const pc = createPeer(remoteId);
@@ -192,11 +181,10 @@ export function VoiceCall({ roomId, currentUserId, members, enabled }: VoiceCall
         offeringRef.current.delete(remoteId);
     }, [createPeer, sendSig]);
 
-    const processSig = useCallback(async (sig: { fromUserId: string; type: string; payload: any }) => {
+    const processSig = useCallback(async (sig: { fromUserId: string; type: string; payload: RTCSessionDescriptionInit & RTCIceCandidateInit }) => {
         const { fromUserId, type, payload } = sig;
 
         if (type === "offer") {
-            // We received an offer → create a fresh peer, answer
             const pc = createPeer(fromUserId);
             await pc.setRemoteDescription(new RTCSessionDescription(payload));
             await flushIce(fromUserId, pc);
@@ -222,18 +210,16 @@ export function VoiceCall({ roomId, currentUserId, members, enabled }: VoiceCall
                 iceBuf.current.set(fromUserId, q);
             }
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [createPeer, sendSig]);
 
-    // Connect to all room members where we're the "caller" (higher userId)
     const connectToMembers = useCallback((mems: { userId: string }[]) => {
         for (const m of mems) {
             if (m.userId === currentUserId) continue;
             if (peersRef.current.has(m.userId)) continue;
-            // Only the higher-ID side initiates — avoids glare completely
             if (currentUserId > m.userId) {
                 initiateOffer(m.userId);
             }
-            // The lower-ID peer waits to receive an offer
         }
     }, [currentUserId, initiateOffer]);
 
@@ -242,7 +228,23 @@ export function VoiceCall({ roomId, currentUserId, members, enabled }: VoiceCall
         let alive = true;
 
         async function init() {
-            // Acquire mic first, then connect
+            // Fetch ICE config from server (keeps TURN credentials out of client bundle)
+            try {
+                const res = await fetch("/api/turn-credentials");
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.iceServers) {
+                        iceConfigRef.current = {
+                            iceServers: data.iceServers,
+                            iceCandidatePoolSize: 10,
+                        };
+                    }
+                }
+            } catch {}
+
+            if (!alive) return;
+
+            // Acquire mic
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({
                     audio: {
@@ -257,13 +259,12 @@ export function VoiceCall({ roomId, currentUserId, members, enabled }: VoiceCall
                 stream.getAudioTracks().forEach(t => { t.enabled = enabledRef.current; });
                 streamRef.current = stream;
             } catch {
-                // Mic unavailable — we can still receive audio from others
+                // Mic unavailable — can still receive audio
             }
 
             if (!alive) return;
             streamReady.current = true;
 
-            // Connect to current members
             connectToMembers(membersRef.current);
 
             // Poll for WebRTC signals
@@ -297,11 +298,9 @@ export function VoiceCall({ roomId, currentUserId, members, enabled }: VoiceCall
 
     // React to member list changes
     useEffect(() => {
-        // Remove peers for members who left
         const live = new Set(members.filter(m => m.userId !== currentUserId).map(m => m.userId));
         peersRef.current.forEach((_, id) => { if (!live.has(id)) destroyPeer(id); });
 
-        // Connect to newly arrived members (only after stream is ready)
         if (streamReady.current) {
             connectToMembers(members);
         }
