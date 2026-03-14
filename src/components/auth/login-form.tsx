@@ -52,8 +52,21 @@ export function LoginForm() {
             window.location.assign("/client");
         } else if (role === "HR_MANAGER") {
             window.location.assign("/hr-manager");
+        } else if (role === "MODERATOR") {
+            window.location.assign("/moderator");
+        } else if (role === "ART_TEAM") {
+            window.location.assign("/art-team");
+        } else if (role === "ART_LEADER") {
+            window.location.assign("/art-leader");
+        } else if (role === "CONTENT_TEAM") {
+            window.location.assign("/content-team");
+        } else if (role === "CONTENT_LEADER") {
+            window.location.assign("/content-leader");
+        } else if (role === "SEO_TEAM") {
+            window.location.assign("/seo-team");
+        } else if (role === "SEO_LEAD") {
+            window.location.assign("/seo-lead");
         } else {
-            // MODERATOR, CONTENT_TEAM, ART_TEAM, SEO_*, etc.
             window.location.assign("/moderator");
         }
     }

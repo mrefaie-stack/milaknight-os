@@ -21,18 +21,22 @@ export default async function RootPage() {
     redirect("/client");
   } else if (role === "HR_MANAGER") {
     redirect("/hr-manager");
-  } else if (
-    role === "MODERATOR" ||
-    role === "CONTENT_TEAM" ||
-    role === "CONTENT_LEADER" ||
-    role === "ART_TEAM" ||
-    role === "ART_LEADER" ||
-    role === "SEO_TEAM" ||
-    role === "SEO_LEAD"
-  ) {
+  } else if (role === "MODERATOR") {
     redirect("/moderator");
+  } else if (role === "ART_TEAM") {
+    redirect("/art-team");
+  } else if (role === "ART_LEADER") {
+    redirect("/art-leader");
+  } else if (role === "CONTENT_TEAM") {
+    redirect("/content-team");
+  } else if (role === "CONTENT_LEADER") {
+    redirect("/content-leader");
+  } else if (role === "SEO_TEAM") {
+    redirect("/seo-team");
+  } else if (role === "SEO_LEAD") {
+    redirect("/seo-lead");
   }
 
-  // Fallback: any unknown role goes to moderator view (not login, to avoid redirect loops)
+  // Fallback: unknown role → moderator (prevents redirect loops)
   redirect("/moderator");
 }
