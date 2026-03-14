@@ -30,7 +30,7 @@ type Props = {
 };
 
 const CHAT_POLL_MS = 2000;
-const MEMBERS_POLL_MS = 5000;
+const MEMBERS_POLL_MS = 2000;
 
 export function RoomSession({ room, currentUserId, initialMembers, allTeamMembers, isRtl, onLeave }: Props) {
     const [members, setMembers] = useState<RoomMember[]>(initialMembers);
