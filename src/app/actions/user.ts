@@ -7,15 +7,21 @@ import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
 import { logActivity } from "./activity";
 
+const ALL_TEAM_ROLES = [
+    "AM", "ACCOUNT_MANAGER", "MODERATOR", "MARKETING_MANAGER",
+    "HR_MANAGER", "CONTENT_TEAM", "CONTENT_LEADER",
+    "ART_TEAM", "ART_LEADER", "SEO_TEAM", "SEO_LEAD",
+];
+
 export async function getTeamMembers() {
     const session = await getServerSession(authOptions);
     if (session?.user?.role !== "ADMIN") throw new Error("Unauthorized");
 
     return prisma.user.findMany({
-        where: { role: { in: ["AM", "MODERATOR", "MARKETING_MANAGER"] } },
+        where: { role: { in: ALL_TEAM_ROLES } },
         include: {
             _count: {
-                select: { 
+                select: {
                     clients: true,
                     mmClients: true
                 }
@@ -29,7 +35,7 @@ export async function createTeamMember(data: FormData) {
     const session = await getServerSession(authOptions);
     if (session?.user?.role !== "ADMIN") throw new Error("Unauthorized");
 
-    const email = data.get("email") as string;
+    const email = (data.get("email") as string).toLowerCase().trim();
     const password = data.get("password") as string;
     const firstName = data.get("firstName") as string;
     const lastName = data.get("lastName") as string;
@@ -103,7 +109,7 @@ export async function updateUserCredentials(userId: string, data: { email?: stri
     if (session?.user?.role !== "ADMIN") throw new Error("Unauthorized");
 
     const updateData: any = {};
-    if (data.email) updateData.email = data.email;
+    if (data.email) updateData.email = data.email.toLowerCase().trim();
     if (data.firstName) updateData.firstName = data.firstName;
     if (data.lastName) updateData.lastName = data.lastName;
     if (data.role) updateData.role = data.role;

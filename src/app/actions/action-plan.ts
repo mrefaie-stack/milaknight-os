@@ -28,7 +28,7 @@ export async function getActionPlans(clientId?: string) {
         } else {
             return []; // No client linked
         }
-    } else if (session.user.role === "MODERATOR") {
+    } else if (["MODERATOR", "CONTENT_TEAM", "CONTENT_LEADER", "ART_TEAM", "ART_LEADER", "SEO_TEAM", "SEO_LEAD"].includes(session.user.role)) {
         where = { status: { in: ["APPROVED", "SCHEDULED"] } };
     }
 
