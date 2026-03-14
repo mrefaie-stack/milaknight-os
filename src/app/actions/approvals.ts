@@ -57,6 +57,7 @@ export async function createApprovalRequest(data: {
         select: { id: true, name: true, mmId: true },
     });
     if (!client) throw new Error("Client not found");
+    if (!client.mmId) throw new Error("هذا العميل ليس لديه مدير تسويق معيّن — لا يمكن إرسال طلب الموافقة");
 
     const status = isLeader ? "PENDING_MM" : "PENDING_LEADER";
 

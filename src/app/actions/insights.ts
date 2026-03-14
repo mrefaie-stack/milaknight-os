@@ -134,10 +134,22 @@ export async function getClientInsight(type: InsightType): Promise<{ items: any[
     let parsed: any[];
     try {
         parsed = JSON.parse(cleaned);
-        if (!Array.isArray(parsed)) throw new Error("Not an array");
+        if (!Array.isArray(parsed) || parsed.length === 0) throw new Error("Not a valid array");
     } catch {
         throw new Error("AI returned invalid JSON");
     }
+
+    // Basic structure validation per type
+    const requiredKeys: Record<InsightType, string[]> = {
+        INDUSTRY: ["titleAr", "titleEn", "summaryAr"],
+        TRENDING: ["topicEn", "topicAr", "hashtag"],
+        COMPETITORS: ["name", "descEn", "strengths"],
+    };
+    const required = requiredKeys[type];
+    const isValid = parsed.every((item) =>
+        typeof item === "object" && item !== null && required.every((k) => k in item)
+    );
+    if (!isValid) throw new Error("AI returned unexpected data structure");
 
     // Create new record (keeps history)
     const record = await prisma.clientInsight.create({
