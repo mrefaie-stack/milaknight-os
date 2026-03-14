@@ -40,6 +40,21 @@ export function VoiceCall({ roomId, currentUserId, members, enabled }: VoiceCall
     membersRef.current  = members;
     enabledRef.current  = enabled;
 
+    // Retry paused peer audio on any user interaction (handles browser autoplay policy)
+    useEffect(() => {
+        const unlock = () => {
+            document.querySelectorAll<HTMLAudioElement>("audio[data-voicepeer]").forEach(el => {
+                if (el.paused && el.srcObject) el.play().catch(() => {});
+            });
+        };
+        document.addEventListener("click", unlock);
+        document.addEventListener("touchstart", unlock);
+        return () => {
+            document.removeEventListener("click", unlock);
+            document.removeEventListener("touchstart", unlock);
+        };
+    }, []);
+
     // Mute / unmute track live, and acquire mic if needed when first enabled
     useEffect(() => {
         if (!enabled) {
@@ -63,7 +78,9 @@ export function VoiceCall({ roomId, currentUserId, members, enabled }: VoiceCall
             streamRef.current = stream;
             if (!streamReady.current) return;
             // Reconnect all peers so they pick up the new local track
-            peersRef.current.forEach((_, id) => destroyPeer(id));
+            // Collect IDs first — destroyPeer mutates the Map
+            const peerIds = [...peersRef.current.keys()];
+            peerIds.forEach(id => destroyPeer(id));
             iceBuf.current.clear();
             offeringRef.current.clear();
             connectToMembers(membersRef.current);
@@ -133,14 +150,17 @@ export function VoiceCall({ roomId, currentUserId, members, enabled }: VoiceCall
             const stream = e.streams?.[0] ?? new MediaStream([e.track]);
             const audio = getAudioEl(remoteId);
             audio.srcObject = stream;
+            // Play — if blocked by autoplay policy, the document-level
+            // listener below will retry on the next user click/touch
             audio.play().catch(() => {});
         };
 
         pc.onconnectionstatechange = () => {
             const state = pc.connectionState;
-            if (state === "failed" || state === "disconnected") {
-                // Only the offerer side retries to avoid glare
+            // "disconnected" is transient — WebRTC may self-recover; only act on "failed"
+            if (state === "failed") {
                 if (currentUserId > remoteId) {
+                    // Offerer retries after a short delay
                     destroyPeer(remoteId);
                     setTimeout(() => {
                         if (membersRef.current.some(m => m.userId === remoteId)) {
@@ -148,6 +168,7 @@ export function VoiceCall({ roomId, currentUserId, members, enabled }: VoiceCall
                         }
                     }, 2500);
                 } else {
+                    // Answerer just cleans up; offerer will send a new offer
                     destroyPeer(remoteId);
                 }
             }
