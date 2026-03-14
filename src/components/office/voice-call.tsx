@@ -40,9 +40,35 @@ export function VoiceCall({ roomId, currentUserId, members, enabled }: VoiceCall
     membersRef.current  = members;
     enabledRef.current  = enabled;
 
-    // Mute / unmute track live
+    // Mute / unmute track live, and acquire mic if needed when first enabled
     useEffect(() => {
-        streamRef.current?.getAudioTracks().forEach(t => { t.enabled = enabled; });
+        if (!enabled) {
+            streamRef.current?.getAudioTracks().forEach(t => { t.enabled = false; });
+            return;
+        }
+
+        if (streamRef.current) {
+            // Already have stream — just unmute
+            streamRef.current.getAudioTracks().forEach(t => { t.enabled = true; });
+            return;
+        }
+
+        // enabled=true but streamRef is null (getUserMedia failed/dismissed on mount).
+        // The user just clicked the mic button so permission should be granted now.
+        navigator.mediaDevices.getUserMedia({
+            audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, sampleRate: 48000 },
+            video: false,
+        }).then(stream => {
+            if (!enabledRef.current) { stream.getTracks().forEach(t => t.stop()); return; }
+            streamRef.current = stream;
+            if (!streamReady.current) return;
+            // Reconnect all peers so they pick up the new local track
+            peersRef.current.forEach((_, id) => destroyPeer(id));
+            iceBuf.current.clear();
+            offeringRef.current.clear();
+            connectToMembers(membersRef.current);
+        }).catch(() => { /* permission still denied */ });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [enabled]);
 
     const sendSig = useCallback(async (toUserId: string, type: string, payload: unknown) => {

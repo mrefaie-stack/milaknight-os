@@ -217,6 +217,10 @@ export function RoomSession({ room, currentUserId, initialMembers, allTeamMember
                                 // Unlock AudioContext on iOS/Safari
                                 const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
                                 ctx.resume().catch(() => {});
+                                // Resume any peer audio blocked by browser autoplay policy
+                                document.querySelectorAll<HTMLAudioElement>("audio[data-voicepeer]").forEach(el => {
+                                    if (el.paused) el.play().catch(() => {});
+                                });
                             } catch {
                                 setMicError(true);
                             }
