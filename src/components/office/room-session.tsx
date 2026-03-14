@@ -36,6 +36,7 @@ const MEMBERS_POLL_MS = 2000;
 export function RoomSession({ room, currentUserId, initialMembers, allTeamMembers, isRtl, onLeave }: Props) {
     const [members, setMembers] = useState<RoomMember[]>(initialMembers);
     const [peerStates, setPeerStates] = useState<Record<string, PeerState>>({});
+    const [audioBlocked, setAudioBlocked] = useState(false);
     const [micOn, setMicOn] = useState(false);
     const [micError, setMicError] = useState(false);
     const [tab, setTab] = useState<"chat" | "invite">("chat");
@@ -90,6 +91,13 @@ export function RoomSession({ room, currentUserId, initialMembers, allTeamMember
         heartbeat(); // immediate on mount
         const heartbeatInterval = setInterval(heartbeat, 30_000);
 
+        // Detect paused peer audio (autoplay-blocked) and show "tap to hear" badge
+        const audioCheck = setInterval(() => {
+            const blocked = [...document.querySelectorAll<HTMLAudioElement>("audio[data-voicepeer]")]
+                .some(el => el.paused && el.srcObject);
+            setAudioBlocked(blocked);
+        }, 2000);
+
         // Auto-leave when tab is closed or laptop lid is closed (pagehide is more reliable than beforeunload)
         const handlePageHide = () => {
             navigator.sendBeacon("/api/rooms/leave-beacon");
@@ -100,6 +108,7 @@ export function RoomSession({ room, currentUserId, initialMembers, allTeamMember
             clearInterval(chatPoll);
             clearInterval(memberPoll);
             clearInterval(heartbeatInterval);
+            clearInterval(audioCheck);
             window.removeEventListener("pagehide", handlePageHide);
         };
     }, [fetchChat, fetchMembers]);
@@ -291,7 +300,22 @@ export function RoomSession({ room, currentUserId, initialMembers, allTeamMember
                     )}
                 </AnimatePresence>
 
-                {!micOn && (
+                {audioBlocked && (
+                    <button
+                        onClick={() => {
+                            setAudioBlocked(false);
+                            document.querySelectorAll<HTMLAudioElement>("audio[data-voicepeer]").forEach(el => {
+                                el.muted = true;
+                                el.play().then(() => { el.muted = false; }).catch(() => {});
+                            });
+                        }}
+                        className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-amber-500/15 text-amber-400 border border-amber-500/30 text-[11px] font-black animate-pulse"
+                    >
+                        <Volume2 className="h-3 w-3" />
+                        {isRtl ? "اضغط لتشغيل الصوت" : "Tap to hear audio"}
+                    </button>
+                )}
+                {!micOn && !audioBlocked && (
                     <span className={cn("text-[10px] text-muted-foreground/40 flex items-center gap-1", isRtl ? "flex-row-reverse" : "")}>
                         <Volume2 className="h-3 w-3" />
                         {isRtl ? "صوت الآخرين نشط" : "Receiving audio"}

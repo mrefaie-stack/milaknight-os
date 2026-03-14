@@ -140,7 +140,22 @@ export function VoiceCall({ roomId, currentUserId, members, enabled, onPeerState
             const stream = e.streams?.[0] ?? new MediaStream([e.track]);
             const audio = getAudioEl(remoteId);
             audio.srcObject = stream;
-            audio.play().catch(() => {});
+            // Play muted first (browsers allow muted autoplay), then unmute.
+            // This reliably bypasses autoplay restrictions on Chrome, Firefox, Safari.
+            audio.muted = true;
+            audio.play()
+                .then(() => { audio.muted = false; })
+                .catch(() => {
+                    // Even muted play failed — wait for next user interaction
+                    const unlock = () => {
+                        audio.muted = true;
+                        audio.play().then(() => { audio.muted = false; }).catch(() => {});
+                        document.removeEventListener("click", unlock);
+                        document.removeEventListener("touchstart", unlock);
+                    };
+                    document.addEventListener("click", unlock, { once: true });
+                    document.addEventListener("touchstart", unlock, { once: true });
+                });
         };
 
         pc.onconnectionstatechange = () => {
