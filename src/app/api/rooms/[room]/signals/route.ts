@@ -37,6 +37,12 @@ export async function GET(
         return pending;
     });
 
+    // Clean up old consumed signals (older than 5 minutes) to prevent DB bloat
+    const cutoff = new Date(Date.now() - 5 * 60 * 1000);
+    (prisma as any).webRTCSignal.deleteMany({
+        where: { consumed: true, createdAt: { lt: cutoff } },
+    }).catch(() => {});
+
     return NextResponse.json(
         signals.map((s: any) => ({
             id: s.id,
