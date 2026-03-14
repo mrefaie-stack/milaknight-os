@@ -229,7 +229,7 @@ export function AiChatWidget({ user }: { user: { name: string; role: string; id:
       {/* Floating Button and Welcome Bubble */}
       <motion.div
         className={cn(
-          "fixed bottom-6 z-50 flex flex-col gap-3",
+          "fixed bottom-20 md:bottom-6 z-[55] flex flex-col gap-3",
           isRtl ? "left-6 items-start" : "right-6 items-end"
         )}
         initial={{ scale: 0 }}
@@ -302,8 +302,8 @@ export function AiChatWidget({ user }: { user: { name: string; role: string; id:
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.2 }}
             className={cn(
-              "fixed bottom-24 z-50 flex flex-col rounded-2xl border bg-background/95 backdrop-blur-xl shadow-2xl overflow-hidden",
-              "inset-x-3 h-[75vh] sm:inset-x-auto sm:h-[550px] sm:max-h-[70vh] sm:w-[400px]",
+              "fixed bottom-36 md:bottom-24 z-[55] flex flex-col rounded-2xl border bg-background/95 backdrop-blur-xl shadow-2xl overflow-hidden",
+              "inset-x-3 h-[70vh] sm:inset-x-auto sm:h-[550px] sm:max-h-[70vh] sm:w-[400px]",
               isRtl ? "sm:left-6" : "sm:right-6"
             )}
           >
