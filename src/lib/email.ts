@@ -18,7 +18,7 @@ export async function sendEmail({ to, subject, html }: SendEmailParams) {
                 pass: process.env.GMAIL_APP_PASSWORD,
             },
             tls: {
-                rejectUnauthorized: false
+                rejectUnauthorized: process.env.NODE_ENV === "production"
             }
         });
     } else if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {

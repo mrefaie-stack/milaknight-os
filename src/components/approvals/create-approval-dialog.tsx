@@ -32,11 +32,10 @@ export function CreateApprovalDialog({ open, onClose }: { open: boolean; onClose
     const [clickupLink, setClickupLink] = useState("");
     const [clientId, setClientId] = useState("");
 
+    // Load clients once on mount, not every time dialog opens
     useEffect(() => {
-        if (open) {
-            getClientsForApproval().then(setClients);
-        }
-    }, [open]);
+        getClientsForApproval().then(setClients);
+    }, []);
 
     const selectedClient = clients.find((c) => c.id === clientId);
     const selectedClientHasNoMM = selectedClient && !selectedClient.mmId;
