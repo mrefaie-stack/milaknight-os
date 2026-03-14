@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { deleteTeamMember } from "@/app/actions/user";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,6 +20,7 @@ import { useLanguage } from "@/contexts/language-context";
 
 export function TeamDeleteButton({ memberId, memberName }: { memberId: string, memberName: string }) {
     const { t, isRtl } = useLanguage();
+    const router = useRouter();
     const [loading, setLoading] = useState(false);
 
     async function handleDelete() {
@@ -26,6 +28,7 @@ export function TeamDeleteButton({ memberId, memberName }: { memberId: string, m
         try {
             await deleteTeamMember(memberId);
             toast.success(isRtl ? "تم حذف العضو بنجاح" : "Team member deleted successfully");
+            router.refresh();
         } catch (error: any) {
             toast.error(error.message || "Failed to delete team member");
         } finally {

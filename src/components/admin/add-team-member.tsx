@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { createTeamMember } from "@/app/actions/user";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,6 +21,7 @@ import { useLanguage } from "@/contexts/language-context";
 
 export function AddTeamMemberDialog() {
     const { isRtl } = useLanguage();
+    const router = useRouter();
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
 
@@ -32,6 +34,7 @@ export function AddTeamMemberDialog() {
             await createTeamMember(formData);
             toast.success(isRtl ? "تمت إضافة عضو الفريق بنجاح!" : "Team member added successfully!");
             setOpen(false);
+            router.refresh();
         } catch (error: any) {
             toast.error(isRtl ? (error.message || "فشل إضافة عضو الفريق") : (error.message || "Failed to add team member"));
         } finally {
