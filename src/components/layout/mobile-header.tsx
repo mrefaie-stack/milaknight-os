@@ -67,7 +67,7 @@ export function MobileHeader({ role, user }: { role: string, user: any }) {
     const clientMore = [
         { href: "/client/services", label: t("sidebar.services"), icon: Sparkles },
         { href: "/client/meetings", label: isRtl ? "الاجتماعات" : "Meetings", icon: Calendar },
-        { href: "/client/industry", label: isRtl ? "أخبار الصناعة" : "Industry Updates", icon: Newspaper },
+        { href: "/client/industry", label: isRtl ? "رؤى السوق" : "Market Insights", icon: Newspaper },
         { href: "/client/trending", label: isRtl ? "المواضيع الرائجة" : "Trending Topics", icon: TrendingUp },
         { href: "/client/competitors", label: isRtl ? "المنافسون" : "Competitors", icon: Target },
         { href: "/messages", label: t("common.messages"), icon: MessageSquare },
