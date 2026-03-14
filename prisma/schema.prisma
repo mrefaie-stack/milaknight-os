@@ -58,6 +58,11 @@ model User {
   hrNotes            HRNote[]          @relation("EmployeeNotes")
   authoredHRNotes    HRNote[]          @relation("AuthoredHRNotes")
   hrAnnouncements    HRAnnouncement[]
+
+  // Approval relations
+  createdApprovals   ApprovalRequest[] @relation("ApprovalCreator")
+  leaderApprovals    ApprovalRequest[] @relation("ApprovalLeader")
+  mmApprovals        ApprovalRequest[] @relation("ApprovalMM")
 }
 
 model RoomSession {
@@ -163,6 +168,7 @@ model Client {
   internalTasks    InternalTask[]
   ratings        ClientRating[]
   insights       ClientInsight[]
+  approvals      ApprovalRequest[]
 
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
@@ -524,4 +530,44 @@ model ClientInsight {
   createdAt DateTime @default(now())
 
   @@index([clientId, type, createdAt])
+}
+
+model ApprovalRequest {
+  id          String   @id @default(cuid())
+  title       String
+  description String?  @db.Text
+  clickupLink String
+
+  status      String   @default("PENDING_LEADER")
+  // PENDING_LEADER | PENDING_MM | APPROVED | REJECTED
+
+  creatorId   String
+  creator     User     @relation("ApprovalCreator", fields: [creatorId], references: [id])
+  creatorRole String
+
+  clientId    String
+  client      Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  mmId        String?
+  mm          User?    @relation("ApprovalMM", fields: [mmId], references: [id])
+
+  leaderId      String?
+  leader        User?    @relation("ApprovalLeader", fields: [leaderId], references: [id])
+  leaderAction  String?
+  leaderComment String?  @db.Text
+  leaderActedAt DateTime?
+
+  mmAction    String?
+  mmComment   String?  @db.Text
+  mmActedAt   DateTime?
+
+  rejectedBy  String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([clientId])
+  @@index([creatorId])
+  @@index([mmId])
+  @@index([status])
 }

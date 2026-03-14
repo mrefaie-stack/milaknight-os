@@ -6,7 +6,7 @@ import { LanguageToggle } from "@/components/ui/language-toggle";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import {
     LayoutDashboard, Users, FolderKanban, BarChart3,
-    MessageSquare, ShieldCheck, Trash2, Bell, Sparkles, MoreHorizontal, X, Plus, Calendar,
+    MessageSquare, ShieldCheck, Trash2, Bell, Sparkles, MoreHorizontal, X, Calendar,
     CheckSquare, Layers, Building2, UserCog, Newspaper, TrendingUp, Target, Activity
 } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
@@ -15,7 +15,6 @@ import { usePathname } from "next/navigation";
 import { getUnreadNotificationCount } from "@/app/actions/notification";
 import { cn } from "@/lib/utils";
 import { MeetingRequestModal } from "@/components/dashboard/meeting-request-modal";
-import { Button } from "@/components/ui/button";
 
 export function MobileHeader({ role, user }: { role: string, user: any }) {
     const { t, isRtl } = useLanguage();
@@ -83,14 +82,15 @@ export function MobileHeader({ role, user }: { role: string, user: any }) {
     const mmPrimary = [
         { href: "/admin", label: t("common.overview"), icon: LayoutDashboard },
         { href: "/admin/clients", label: t("common.clients"), icon: Users },
-        { href: "/admin/approvals", label: isRtl ? "الموافقات" : "Approvals", icon: CheckSquare },
+        { href: "/admin/approvals", label: isRtl ? "موافقات المحتوى" : "Content Approvals", icon: CheckSquare },
         { href: "/messages", label: t("common.messages"), icon: MessageSquare },
     ];
     const mmMore = [
-        { href: "/am/action-plans", label: t("sidebar.action_plans"), icon: FolderKanban },
-        { href: "/am/reports", label: t("sidebar.reports"), icon: BarChart3 },
-        { href: "/admin/meetings", label: isRtl ? "الاجتماعات" : "Meetings", icon: Calendar },
-        { href: "/clickup", label: isRtl ? "كليك أب" : "ClickUp", icon: Layers },
+        { href: "/approvals",       label: isRtl ? "الموافقات" : "Approvals",              icon: CheckSquare },
+        { href: "/am/action-plans", label: t("sidebar.action_plans"),                        icon: FolderKanban },
+        { href: "/am/reports",      label: t("sidebar.reports"),                             icon: BarChart3 },
+        { href: "/admin/meetings",  label: isRtl ? "الاجتماعات" : "Meetings",              icon: Calendar },
+        { href: "/clickup",         label: isRtl ? "كليك أب" : "ClickUp",                  icon: Layers },
     ];
 
     const hrManagerPrimary = [
@@ -110,10 +110,11 @@ export function MobileHeader({ role, user }: { role: string, user: any }) {
         { href: `/${base}/action-plans`, label: isRtl ? "خطط المحتوى" : "Plans",         icon: FolderKanban },
         { href: "/messages",             label: isRtl ? "الرسائل" : "Messages",          icon: MessageSquare },
     ];
-    const makeTeamMore = (base: string) => [
-        { href: "/clickup",  label: isRtl ? "كليك أب" : "ClickUp",           icon: Layers },
-        { href: "/hr/leaves",label: isRtl ? "إجازاتي" : "My Leaves",         icon: Calendar },
-        { href: "/office",   label: isRtl ? "المكتب الافتراضي" : "Virtual Office", icon: Building2 },
+    const makeTeamMore = (_base: string) => [
+        { href: "/approvals", label: isRtl ? "الموافقات" : "Approvals",              icon: CheckSquare },
+        { href: "/clickup",   label: isRtl ? "كليك أب" : "ClickUp",                  icon: Layers },
+        { href: "/hr/leaves", label: isRtl ? "إجازاتي" : "My Leaves",                icon: Calendar },
+        { href: "/office",    label: isRtl ? "المكتب الافتراضي" : "Virtual Office",  icon: Building2 },
     ];
     const makeLeaderPrimary = (base: string) => [
         { href: `/${base}`,              label: t("common.overview"),                     icon: LayoutDashboard },
@@ -121,10 +122,11 @@ export function MobileHeader({ role, user }: { role: string, user: any }) {
         { href: `/${base}/action-plans`, label: isRtl ? "خطط المحتوى" : "Plans",         icon: FolderKanban },
         { href: "/messages",             label: isRtl ? "الرسائل" : "Messages",          icon: MessageSquare },
     ];
-    const makeLeaderMore = (base: string) => [
-        { href: "/clickup",  label: isRtl ? "كليك أب" : "ClickUp",           icon: Layers },
-        { href: "/hr/leaves",label: isRtl ? "إجازاتي" : "My Leaves",         icon: Calendar },
-        { href: "/office",   label: isRtl ? "المكتب الافتراضي" : "Virtual Office", icon: Building2 },
+    const makeLeaderMore = (_base: string) => [
+        { href: "/approvals", label: isRtl ? "الموافقات" : "Approvals",              icon: CheckSquare },
+        { href: "/clickup",   label: isRtl ? "كليك أب" : "ClickUp",                  icon: Layers },
+        { href: "/hr/leaves", label: isRtl ? "إجازاتي" : "My Leaves",                icon: Calendar },
+        { href: "/office",    label: isRtl ? "المكتب الافتراضي" : "Virtual Office",  icon: Building2 },
     ];
 
     const ROLE_PRIMARY: Record<string, typeof moderatorPrimary> = {
