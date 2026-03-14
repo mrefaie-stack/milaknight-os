@@ -99,28 +99,63 @@ export function MobileHeader({ role, user }: { role: string, user: any }) {
         { href: "/hr/leaves", label: isRtl ? "إجازاتي" : "My Leaves",              icon: UserCog },
     ];
 
-    const LEADER_ROLES = ["CONTENT_LEADER", "ART_LEADER", "SEO_LEAD"];
-    const TEAM_ROLES = ["CONTENT_TEAM", "ART_TEAM", "SEO_TEAM"];
-    const isTeamRole = LEADER_ROLES.includes(role) || TEAM_ROLES.includes(role) || role === "MODERATOR";
+    // Build per-role mobile nav
+    const makeTeamPrimary = (base: string) => [
+        { href: `/${base}`,              label: t("common.overview"),                     icon: LayoutDashboard },
+        { href: `/${base}/action-plans`, label: isRtl ? "خطط المحتوى" : "Plans",         icon: FolderKanban },
+        { href: "/messages",             label: isRtl ? "الرسائل" : "Messages",          icon: MessageSquare },
+    ];
+    const makeTeamMore = (base: string) => [
+        { href: "/clickup",  label: isRtl ? "كليك أب" : "ClickUp",           icon: Layers },
+        { href: "/hr/leaves",label: isRtl ? "إجازاتي" : "My Leaves",         icon: Calendar },
+        { href: "/office",   label: isRtl ? "المكتب الافتراضي" : "Virtual Office", icon: Building2 },
+    ];
+    const makeLeaderPrimary = (base: string) => [
+        { href: `/${base}`,              label: t("common.overview"),                     icon: LayoutDashboard },
+        { href: `/${base}/clients`,      label: t("common.clients"),                      icon: Users },
+        { href: `/${base}/action-plans`, label: isRtl ? "خطط المحتوى" : "Plans",         icon: FolderKanban },
+        { href: "/messages",             label: isRtl ? "الرسائل" : "Messages",          icon: MessageSquare },
+    ];
+    const makeLeaderMore = (base: string) => [
+        { href: "/clickup",  label: isRtl ? "كليك أب" : "ClickUp",           icon: Layers },
+        { href: "/hr/leaves",label: isRtl ? "إجازاتي" : "My Leaves",         icon: Calendar },
+        { href: "/office",   label: isRtl ? "المكتب الافتراضي" : "Virtual Office", icon: Building2 },
+    ];
+
+    const ROLE_PRIMARY: Record<string, typeof moderatorPrimary> = {
+        MODERATOR:       moderatorPrimary,
+        ART_TEAM:        makeTeamPrimary("art-team"),
+        ART_LEADER:      makeLeaderPrimary("art-leader"),
+        CONTENT_TEAM:    makeTeamPrimary("content-team"),
+        CONTENT_LEADER:  makeLeaderPrimary("content-leader"),
+        SEO_TEAM:        makeTeamPrimary("seo-team"),
+        SEO_LEAD:        makeLeaderPrimary("seo-lead"),
+    };
+    const ROLE_MORE: Record<string, typeof adminMore> = {
+        MODERATOR:       [{ href: "/clickup", label: isRtl ? "كليك أب" : "ClickUp", icon: Layers }, { href: "/hr/leaves", label: isRtl ? "إجازاتي" : "My Leaves", icon: Calendar }, { href: "/office", label: isRtl ? "المكتب الافتراضي" : "Virtual Office", icon: Building2 }],
+        ART_TEAM:        makeTeamMore("art-team"),
+        ART_LEADER:      makeLeaderMore("art-leader"),
+        CONTENT_TEAM:    makeTeamMore("content-team"),
+        CONTENT_LEADER:  makeLeaderMore("content-leader"),
+        SEO_TEAM:        makeTeamMore("seo-team"),
+        SEO_LEAD:        makeLeaderMore("seo-lead"),
+    };
+
     const primaryLinks = role === "ADMIN" ? adminPrimary
         : role === "AM" ? amPrimary
         : role === "MARKETING_MANAGER" ? mmPrimary
         : role === "HR_MANAGER" ? hrManagerPrimary
-        : isTeamRole ? moderatorPrimary
-        : clientPrimary;
+        : ROLE_PRIMARY[role] ?? clientPrimary;
     const moreLinks = role === "ADMIN" ? adminMore
         : role === "AM" ? amMore
         : role === "MARKETING_MANAGER" ? mmMore
         : role === "HR_MANAGER" ? hrManagerMore
-        : isTeamRole ? [
-            { href: "/clickup", label: isRtl ? "كليك أب" : "ClickUp", icon: Layers },
-            { href: "/hr/leaves", label: isRtl ? "إجازاتي" : "My Leaves", icon: Calendar },
-            { href: "/office", label: isRtl ? "المكتب الافتراضي" : "Virtual Office", icon: Building2 },
-        ]
-        : clientMore;
+        : ROLE_MORE[role] ?? clientMore;
 
+    const EXACT_ROOTS = ["/admin", "/am", "/client", "/hr-manager",
+        "/art-team", "/art-leader", "/content-team", "/content-leader", "/seo-team", "/seo-lead"];
     const isActive = (href: string) => {
-        if (href === "/admin" || href === "/am" || href === "/client" || href === "/hr-manager") return pathname === href;
+        if (EXACT_ROOTS.includes(href)) return pathname === href;
         return pathname.startsWith(href);
     };
 

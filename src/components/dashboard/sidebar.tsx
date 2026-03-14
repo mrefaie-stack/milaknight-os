@@ -123,43 +123,46 @@ export function DashboardSidebar({ role, user }: { role: string; user: any }) {
         { href: "/messages",                label: t("common.messages"),                                 icon: MessageSquare },
     ];
 
-    // Content, Art, SEO team members
-    const teamMemberLinks = [
-        { href: "/moderator",              label: t("common.overview"),                            icon: LayoutDashboard },
-        { href: "/moderator/action-plans", label: isRtl ? "خطط المحتوى" : "Content Plans",        icon: FolderKanban },
-        { href: "/clickup",                label: isRtl ? "كليك أب" : "ClickUp",                  icon: Layers },
-        { href: "/office",                 label: isRtl ? "المكتب الافتراضي" : "Virtual Office",   icon: Building2 },
-        { href: "/hr/leaves",              label: isRtl ? "إجازاتي" : "My Leaves",                icon: CalendarDays },
-        { href: "/messages",               label: t("common.messages"),                            icon: MessageSquare },
+    // Per-role dedicated sidebar links
+    const makeTeamLinks = (base: string) => [
+        { href: `/${base}`,              label: t("common.overview"),                          icon: LayoutDashboard },
+        { href: `/${base}/action-plans`, label: isRtl ? "خطط المحتوى" : "Content Plans",      icon: FolderKanban },
+        { href: "/clickup",              label: isRtl ? "كليك أب" : "ClickUp",                icon: Layers },
+        { href: "/office",               label: isRtl ? "المكتب الافتراضي" : "Virtual Office", icon: Building2 },
+        { href: "/hr/leaves",            label: isRtl ? "إجازاتي" : "My Leaves",              icon: CalendarDays },
+        { href: "/messages",             label: t("common.messages"),                           icon: MessageSquare },
+    ];
+    const makeLeaderLinks = (base: string) => [
+        { href: `/${base}`,              label: t("common.overview"),                          icon: LayoutDashboard },
+        { href: `/${base}/clients`,      label: t("common.clients"),                           icon: Users },
+        { href: `/${base}/action-plans`, label: isRtl ? "خطط المحتوى" : "Content Plans",      icon: FolderKanban },
+        { href: "/clickup",              label: isRtl ? "كليك أب" : "ClickUp",                icon: Layers },
+        { href: "/office",               label: isRtl ? "المكتب الافتراضي" : "Virtual Office", icon: Building2 },
+        { href: "/tasks",                label: isRtl ? "المهام الداخلية" : "Internal Tasks",  icon: ListTodo },
+        { href: "/hr/leaves",            label: isRtl ? "إجازاتي" : "My Leaves",              icon: CalendarDays },
+        { href: "/messages",             label: t("common.messages"),                           icon: MessageSquare },
     ];
 
-    // Content, Art, SEO leaders (slightly more access)
-    const teamLeaderLinks = [
-        { href: "/moderator",              label: t("common.overview"),                            icon: LayoutDashboard },
-        { href: "/moderator/clients",      label: t("common.clients"),                             icon: Users },
-        { href: "/moderator/action-plans", label: isRtl ? "خطط المحتوى" : "Content Plans",        icon: FolderKanban },
-        { href: "/clickup",                label: isRtl ? "كليك أب" : "ClickUp",                  icon: Layers },
-        { href: "/office",                 label: isRtl ? "المكتب الافتراضي" : "Virtual Office",   icon: Building2 },
-        { href: "/tasks",                  label: isRtl ? "المهام الداخلية" : "Internal Tasks",    icon: ListTodo },
-        { href: "/hr/leaves",              label: isRtl ? "إجازاتي" : "My Leaves",                icon: CalendarDays },
-        { href: "/messages",               label: t("common.messages"),                            icon: MessageSquare },
-    ];
+    const ROLE_LINKS: Record<string, typeof moderatorLinks> = {
+        ART_TEAM:       makeTeamLinks("art-team"),
+        ART_LEADER:     makeLeaderLinks("art-leader"),
+        CONTENT_TEAM:   makeTeamLinks("content-team"),
+        CONTENT_LEADER: makeLeaderLinks("content-leader"),
+        SEO_TEAM:       makeTeamLinks("seo-team"),
+        SEO_LEAD:       makeLeaderLinks("seo-lead"),
+    };
 
-    const LEADER_ROLES = ["CONTENT_LEADER", "ART_LEADER", "SEO_LEAD"];
-    const TEAM_ROLES = ["CONTENT_TEAM", "ART_TEAM", "SEO_TEAM"];
     const links = role === "ADMIN" ? adminLinks
         : role === "MARKETING_MANAGER" ? mmLinks
         : role === "AM" ? amLinks
         : role === "HR_MANAGER" ? hrManagerLinks
         : role === "MODERATOR" ? moderatorLinks
-        : LEADER_ROLES.includes(role) ? teamLeaderLinks
-        : TEAM_ROLES.includes(role) ? teamMemberLinks
-        : clientLinks;
+        : ROLE_LINKS[role] ?? clientLinks;
 
+    const EXACT_ROOTS = ["/admin", "/am", "/client", "/hr-manager",
+        "/art-team", "/art-leader", "/content-team", "/content-leader", "/seo-team", "/seo-lead"];
     const isActive = (href: string) => {
-        if (href === "/admin" || href === "/am" || href === "/client" || href === "/hr-manager") {
-            return pathname === href;
-        }
+        if (EXACT_ROOTS.includes(href)) return pathname === href;
         return pathname.startsWith(href);
     };
 
