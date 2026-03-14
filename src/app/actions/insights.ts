@@ -8,7 +8,7 @@ import Anthropic from "@anthropic-ai/sdk";
 const anthropic = new Anthropic();
 const CACHE_HOURS = 12;
 
-type InsightType = "INDUSTRY" | "TRENDING" | "COMPETITORS";
+export type InsightType = "INDUSTRY" | "TRENDING" | "COMPETITORS";
 
 function buildPrompt(type: InsightType, client: any): string {
     const name = client.name || "this client";
@@ -28,81 +28,99 @@ Services/Deliverables: ${deliverables}
     if (type === "INDUSTRY") {
         return `${context}
 
-Based on this client's profile, generate 8 relevant industry news and market updates for their sector.
+Based on this client's profile, generate 8 relevant industry news and market insights for their sector.
 Each item must be a JSON object with these exact keys:
-{ "titleAr": "العنوان بالعربي", "titleEn": "Title in English", "summaryAr": "ملخص قصير بالعربي", "summaryEn": "Short summary in English", "tag": "Category tag", "impact": "HIGH", "emoji": "📈" }
+{ "titleAr": "العنوان بالعربي", "titleEn": "Title in English", "summaryAr": "ملخص قصير بالعربي (2-3 جمل واضحة)", "summaryEn": "Short summary in English (2-3 clear sentences)", "tag": "Category tag", "impact": "HIGH", "emoji": "📈" }
 
 impact must be exactly: HIGH, MEDIUM, or LOW
 emoji should be a relevant emoji (📈 📊 🚀 💡 🌐 📱 🏆 💰 🔥 ⚡)
+Arabic text must be grammatically correct Modern Standard Arabic, clear and professional.
 Respond with ONLY a valid JSON array. No markdown, no explanation.`;
     }
 
     if (type === "TRENDING") {
         return `${context}
 
-Based on this client's profile and industry, generate 10 trending topics, hashtags, and keywords they should know about for their social media and marketing strategy.
+Based on this client's profile and industry, generate 10 trending topics, hashtags, and keywords they should leverage in their social media and marketing strategy.
 Each item must be a JSON object with these exact keys:
-{ "topicEn": "Topic Name", "topicAr": "اسم الموضوع", "hashtag": "#HashtagName", "descEn": "Brief description", "descAr": "وصف مختصر", "volume": "1.2M", "growth": "+38%", "platform": "Instagram" }
+{ "topicEn": "Topic Name", "topicAr": "اسم الموضوع بالعربي", "hashtag": "#HashtagName", "descEn": "Brief description", "descAr": "وصف مختصر بالعربي", "volume": "1.2M", "growth": "+38%", "platform": "Instagram" }
 
 platform must be one of: Instagram, TikTok, Twitter, LinkedIn, YouTube, Facebook
-volume and growth should be realistic estimates
+volume and growth should be realistic estimates for the region/industry
+Arabic text must be grammatically correct Modern Standard Arabic.
 Respond with ONLY a valid JSON array. No markdown, no explanation.`;
     }
 
-    // COMPETITORS
+    // COMPETITORS — enhanced prompt
     return `${context}
 
-Based on this client's profile, identify 6 realistic competitors in their market and provide a brief competitive analysis.
+Based on this client's profile, identify 6 real or realistic competitors in their specific market and provide a detailed competitive analysis.
 Each item must be a JSON object with these exact keys:
-{ "name": "Competitor Name", "descEn": "Brief description in English", "descAr": "وصف مختصر بالعربي", "strengths": ["strength 1", "strength 2"], "weaknesses": ["weakness 1", "weakness 2"], "socialPresence": "HIGH", "threat": "MEDIUM" }
+{
+  "name": "Competitor Name",
+  "descEn": "Detailed 2-sentence description in English",
+  "descAr": "وصف مفصل بجملتين بالعربي الفصيح الواضح",
+  "strengths": ["نقطة قوة 1", "نقطة قوة 2", "نقطة قوة 3", "نقطة قوة 4"],
+  "weaknesses": ["نقطة ضعف 1", "نقطة ضعف 2", "نقطة ضعف 3", "نقطة ضعف 4"],
+  "socialMedia": {
+    "instagram": "@handle or null",
+    "twitter": "@handle or null",
+    "linkedin": "linkedin.com/company/handle or null",
+    "tiktok": "@handle or null",
+    "estimatedFollowers": "25K",
+    "activity": "HIGH"
+  },
+  "socialPresence": "HIGH",
+  "threat": "MEDIUM"
+}
 
-socialPresence and threat must be exactly: HIGH, MEDIUM, or LOW
+socialPresence, threat, and socialMedia.activity must be exactly: HIGH, MEDIUM, or LOW
+strengths and weaknesses arrays must have 4 items each, written in Arabic (فصيح وواضح).
+socialMedia handles should be realistic for the competitor's name/market.
+estimatedFollowers should be a realistic estimate.
 Respond with ONLY a valid JSON array. No markdown, no explanation.`;
 }
 
-export async function getClientInsight(type: InsightType): Promise<any[]> {
+async function getClientProfile() {
     const session = await getServerSession(authOptions);
     if (!session || session.user.role !== "CLIENT") throw new Error("Unauthorized");
 
-    // Get client profile
     const client = await prisma.client.findUnique({
         where: { userId: session.user.id },
         select: {
-            id: true,
-            name: true,
-            industry: true,
-            country: true,
-            briefAr: true,
-            briefEn: true,
-            brief: true,
-            deliverablesAr: true,
-            deliverablesEn: true,
-            deliverables: true,
+            id: true, name: true, industry: true, country: true,
+            briefAr: true, briefEn: true, brief: true,
+            deliverablesAr: true, deliverablesEn: true, deliverables: true,
         },
     });
     if (!client) throw new Error("Client not found");
+    return client;
+}
 
-    // Check cache
-    const cached = await prisma.clientInsight.findUnique({
-        where: { clientId_type: { clientId: client.id, type } },
+export async function getClientInsight(type: InsightType): Promise<{ items: any[]; createdAt: Date }> {
+    const client = await getClientProfile();
+
+    // Check if latest record is within cache window
+    const latest = await prisma.clientInsight.findFirst({
+        where: { clientId: client.id, type },
+        orderBy: { createdAt: "desc" },
     });
 
     const cacheExpiry = new Date(Date.now() - CACHE_HOURS * 60 * 60 * 1000);
-    if (cached && cached.updatedAt > cacheExpiry) {
+    if (latest && latest.createdAt > cacheExpiry) {
         try {
-            return JSON.parse(cached.content);
+            return { items: JSON.parse(latest.content), createdAt: latest.createdAt };
         } catch {
-            // corrupted cache — fall through to regenerate
+            // corrupted — fall through to regenerate
         }
     }
 
-    // Generate with Claude
+    // Generate new with Claude
     const prompt = buildPrompt(type, client);
-
     const response = await anthropic.messages.create({
         model: "claude-sonnet-4-6",
         max_tokens: 4096,
-        system: "You are a business intelligence analyst. You generate structured JSON content based on client profiles. Always respond with ONLY a valid JSON array. No markdown code blocks, no explanation, no preamble.",
+        system: "You are a business intelligence analyst for a digital marketing agency in the Arab world. Generate structured JSON content based on client profiles. Always use grammatically correct Modern Standard Arabic (فصحى). Always respond with ONLY a valid JSON array. No markdown code blocks, no explanation, no preamble.",
         messages: [{ role: "user", content: prompt }],
     });
 
@@ -111,7 +129,6 @@ export async function getClientInsight(type: InsightType): Promise<any[]> {
         .map((b) => (b as any).text)
         .join("");
 
-    // Strip any accidental markdown fences
     const cleaned = rawText.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
 
     let parsed: any[];
@@ -122,30 +139,37 @@ export async function getClientInsight(type: InsightType): Promise<any[]> {
         throw new Error("AI returned invalid JSON");
     }
 
-    // Upsert into DB (replace, not append)
-    await prisma.clientInsight.upsert({
-        where: { clientId_type: { clientId: client.id, type } },
-        create: { clientId: client.id, type, content: JSON.stringify(parsed) },
-        update: { content: JSON.stringify(parsed) },
+    // Create new record (keeps history)
+    const record = await prisma.clientInsight.create({
+        data: { clientId: client.id, type, content: JSON.stringify(parsed) },
     });
 
-    return parsed;
+    return { items: parsed, createdAt: record.createdAt };
 }
 
-export async function getInsightLastUpdated(type: InsightType): Promise<Date | null> {
+export async function getClientInsightHistory(type: InsightType): Promise<{ id: string; items: any[]; createdAt: Date }[]> {
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== "CLIENT") return null;
+    if (!session || session.user.role !== "CLIENT") return [];
 
     const client = await prisma.client.findUnique({
         where: { userId: session.user.id },
         select: { id: true },
     });
-    if (!client) return null;
+    if (!client) return [];
 
-    const insight = await prisma.clientInsight.findUnique({
-        where: { clientId_type: { clientId: client.id, type } },
-        select: { updatedAt: true },
+    // All records except the most recent (skip=1)
+    const records = await prisma.clientInsight.findMany({
+        where: { clientId: client.id, type },
+        orderBy: { createdAt: "desc" },
+        skip: 1,
+        take: 20,
     });
 
-    return insight?.updatedAt ?? null;
+    return records.map((r) => {
+        try {
+            return { id: r.id, items: JSON.parse(r.content), createdAt: r.createdAt };
+        } catch {
+            return { id: r.id, items: [], createdAt: r.createdAt };
+        }
+    });
 }
