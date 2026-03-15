@@ -7,6 +7,7 @@ import {
     useParticipants,
     useLocalParticipant,
     useConnectionState,
+    useRoomContext,
 } from "@livekit/components-react";
 import { ConnectionState } from "livekit-client";
 
@@ -31,11 +32,13 @@ function LiveKitBridge({
     const participants = useParticipants();
     const { localParticipant } = useLocalParticipant();
     const connectionState = useConnectionState();
+    const room = useRoomContext();
+
     // Mic toggle: enable/disable local audio track without disconnecting from the room.
     // Also call room.startAudio() to unlock browser autoplay policy (user gesture context).
     useEffect(() => {
         localParticipant.setMicrophoneEnabled(enabled).catch(() => {});
-        if (enabled) localParticipant.room.startAudio().catch(() => {});
+        if (enabled) room.startAudio().catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [enabled, localParticipant]);
 
