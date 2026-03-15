@@ -26,7 +26,9 @@ export default async function AMMeetingsPage() {
                 <p className="text-muted-foreground font-medium">Manage meeting requests from your assigned clients.</p>
             </div>
 
-            <MeetingRequestsUI requests={requests} userRole={session?.user?.role || "AM"} />
+            <MeetingRequestsUI requests={requests} userRole={session?.user?.role || "AM"}
+                hasGoogleToken={!!session?.user?.googleAccessToken}
+            />
         </div>
     );
 }

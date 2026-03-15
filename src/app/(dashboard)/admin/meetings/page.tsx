@@ -26,7 +26,11 @@ export default async function AdminMeetingsPage() {
                 <p className="text-muted-foreground font-medium">Oversee all client meeting requests across the platform.</p>
             </div>
 
-            <MeetingRequestsUI requests={requests} userRole={session?.user?.role || "ADMIN"} />
+            <MeetingRequestsUI
+                requests={requests}
+                userRole={session?.user?.role || "ADMIN"}
+                hasGoogleToken={!!session?.user?.googleAccessToken}
+            />
         </div>
     );
 }
