@@ -5,6 +5,7 @@ declare module "next-auth" {
         user: {
             id: string
             role: string
+            googleAccessToken?: string
         } & DefaultSession["user"]
     }
 
@@ -18,5 +19,8 @@ declare module "next-auth/jwt" {
     interface JWT {
         id: string
         role: string
+        googleAccessToken?: string
+        googleRefreshToken?: string
+        googleTokenExpiry?: number
     }
 }
