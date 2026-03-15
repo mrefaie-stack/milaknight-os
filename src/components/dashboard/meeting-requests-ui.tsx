@@ -305,7 +305,7 @@ export function MeetingRequestsUI({
     hasGoogleToken,
 }: {
     requests: any[];
-    teamMeetings?: TeamMeeting[];
+    teamMeetings?: any[];
     staffUsers?: StaffUser[];
     userRole: string;
     currentUserId?: string;
