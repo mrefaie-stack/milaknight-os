@@ -30,10 +30,6 @@ export async function leaveRoom() {
         where: { userId: session.user.id },
     });
 
-    await (prisma as any).webRTCSignal.deleteMany({
-        where: { fromUserId: session.user.id },
-    });
-
     // If this was the last person in the room, clear the chat history
     if (mySession?.roomId) {
         const remaining = await (prisma as any).roomSession.count({
