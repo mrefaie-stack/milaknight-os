@@ -187,8 +187,11 @@ model MeetingRequest {
   client          Client         @relation(fields: [clientId], references: [id], onDelete: Cascade)
   reason          String
   teams           String         // Comma separated list of required teams
-  status          String         @default("PENDING") // PENDING, COMPLETED, CANCELLED
-  
+  status          String         @default("PENDING") // PENDING, SCHEDULED, COMPLETED, CANCELLED
+  scheduledAt     DateTime?
+  meetLink        String?
+  googleEventId   String?
+
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
 }

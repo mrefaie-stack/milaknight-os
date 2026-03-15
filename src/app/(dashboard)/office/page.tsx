@@ -20,7 +20,6 @@ export default async function OfficePage() {
         <OfficeView
             initialData={dataWithCurrentUser}
             currentUserId={session.user.id}
-            hasGoogleToken={!!session.user.googleAccessToken}
         />
     );
 }

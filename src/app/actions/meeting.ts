@@ -112,3 +112,116 @@ export async function updateMeetingStatus(id: string, status: string) {
     revalidatePath("/admin");
     return meeting;
 }
+
+export async function scheduleMeeting(id: string, scheduledAt: string) {
+    const session = await getServerSession(authOptions);
+    if (!session || (session.user.role !== "AM" && session.user.role !== "ADMIN")) throw new Error("Unauthorized");
+
+    const existing = await prisma.meetingRequest.findUnique({
+        where: { id },
+        include: { client: { include: { accountManager: true } } }
+    });
+    if (!existing) throw new Error("Meeting not found");
+
+    let meetLink: string | null = null;
+    let googleEventId: string | null = null;
+
+    if (session.user.googleAccessToken) {
+        try {
+            const start = new Date(scheduledAt);
+            const end = new Date(start.getTime() + 60 * 60 * 1000);
+            const res = await fetch(
+                "https://www.googleapis.com/calendar/v3/calendars/primary/events?conferenceDataVersion=1",
+                {
+                    method: "POST",
+                    headers: {
+                        Authorization: `Bearer ${session.user.googleAccessToken}`,
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        summary: `Meeting: ${existing.client.name} — ${existing.reason}`,
+                        description: `Teams: ${existing.teams}\nRequested via MilaKnight OS`,
+                        start: { dateTime: start.toISOString() },
+                        end: { dateTime: end.toISOString() },
+                        conferenceData: {
+                            createRequest: {
+                                requestId: id,
+                                conferenceSolutionKey: { type: "hangoutsMeet" },
+                            },
+                        },
+                    }),
+                }
+            );
+            if (res.ok) {
+                const event = await res.json();
+                meetLink = event.hangoutLink ||
+                    event.conferenceData?.entryPoints?.find((ep: any) => ep.entryPointType === "video")?.uri || null;
+                googleEventId = event.id || null;
+            }
+        } catch {}
+    }
+
+    await prisma.meetingRequest.update({
+        where: { id },
+        data: { status: "SCHEDULED", scheduledAt: new Date(scheduledAt), meetLink, googleEventId },
+    });
+
+    const dateStr = new Date(scheduledAt).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" });
+
+    if (existing.client.userId) {
+        await prisma.notification.create({
+            data: {
+                userId: existing.client.userId,
+                title: "Meeting Scheduled",
+                message: `Your meeting has been scheduled for ${dateStr}${meetLink ? " — Google Meet link is ready" : ""}`,
+                type: "SYSTEM",
+                link: "/client/meetings",
+            },
+        });
+    }
+
+    const notifyUsers = await prisma.user.findMany({
+        where: { role: { in: ["MARKETING_MANAGER", "ADMIN"] } },
+    });
+    for (const u of notifyUsers) {
+        if (u.id === session.user.id) continue;
+        await prisma.notification.create({
+            data: {
+                userId: u.id,
+                title: "Meeting Scheduled",
+                message: `Meeting with ${existing.client.name} on ${dateStr}${meetLink ? " — Meet link ready" : ""}`,
+                type: "SYSTEM",
+                link: "/admin/meetings",
+            },
+        });
+        if (meetLink) {
+            await sendEmail({
+                to: u.email,
+                subject: `Meeting Scheduled: ${existing.client.name} — ${dateStr}`,
+                html: `<div style="font-family:sans-serif;padding:20px;">
+                    <h2>Meeting Scheduled</h2>
+                    <p><strong>Client:</strong> ${existing.client.name}</p>
+                    <p><strong>Reason:</strong> ${existing.reason}</p>
+                    <p><strong>Date:</strong> ${dateStr}</p>
+                    <p><strong>Google Meet:</strong> <a href="${meetLink}">${meetLink}</a></p>
+                </div>`,
+            });
+        }
+    }
+
+    if (session.user.role === "ADMIN" && existing.client.amId && existing.client.amId !== session.user.id) {
+        await prisma.notification.create({
+            data: {
+                userId: existing.client.amId,
+                title: "Meeting Scheduled",
+                message: `Meeting with ${existing.client.name} on ${dateStr}`,
+                type: "SYSTEM",
+                link: "/am/meetings",
+            },
+        });
+    }
+
+    revalidatePath("/am");
+    revalidatePath("/admin");
+    revalidatePath("/client");
+}
