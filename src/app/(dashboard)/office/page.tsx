@@ -2,7 +2,6 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { getOfficePresence } from "@/app/actions/presence";
-import { getMyRoomSession } from "@/app/actions/room";
 import { OfficeView } from "@/components/office/office-view";
 
 export default async function OfficePage() {
@@ -10,12 +9,9 @@ export default async function OfficePage() {
     if (!session) redirect("/login");
     if (session.user.role === "CLIENT") redirect("/client");
 
-    const [initialData, initialRoomId] = await Promise.all([
-        getOfficePresence(),
-        getMyRoomSession(),
-    ]);
+    const initialData = await getOfficePresence();
 
-    const dataWithCurrentUser = (initialData ?? []).map((p) => ({
+    const dataWithCurrentUser = (initialData ?? []).map((p: any) => ({
         ...p,
         isCurrentUser: p.userId === session.user.id,
     }));
@@ -24,7 +20,7 @@ export default async function OfficePage() {
         <OfficeView
             initialData={dataWithCurrentUser}
             currentUserId={session.user.id}
-            initialRoomId={initialRoomId}
+            hasGoogleToken={!!session.user.googleAccessToken}
         />
     );
 }
