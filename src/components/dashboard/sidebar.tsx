@@ -94,6 +94,7 @@ export function DashboardSidebar({ role, user }: { role: string; user: any }) {
         { href: "/moderator",              label: t("common.overview"),                            icon: LayoutDashboard },
         { href: "/moderator/clients",      label: t("common.clients"),                             icon: Users },
         { href: "/moderator/action-plans", label: isRtl ? "خطط النشر" : "Publishing Plans",       icon: FolderKanban },
+        { href: "/admin/meetings",         label: isRtl ? "الاجتماعات" : "Meetings",              icon: CalendarDays },
         { href: "/clickup",                label: isRtl ? "كليك أب" : "ClickUp",                  icon: Layers },
         { href: "/hr/leaves",              label: isRtl ? "إجازاتي" : "My Leaves",                icon: CalendarDays },
         { href: "/messages",               label: t("common.messages"),                            icon: MessageSquare },
@@ -117,6 +118,7 @@ export function DashboardSidebar({ role, user }: { role: string; user: any }) {
         { href: "/hr-manager",              label: isRtl ? "لوحة الموارد البشرية" : "HR Dashboard",    icon: LayoutDashboard },
         { href: "/hr-manager/employees",    label: isRtl ? "دليل الموظفين" : "Employees",              icon: Users },
         { href: "/hr-manager/leaves",       label: isRtl ? "طلبات الإجازات" : "Leave Requests",        icon: CalendarDays },
+        { href: "/admin/meetings",          label: isRtl ? "الاجتماعات" : "Meetings",                  icon: CalendarDays },
         { href: "/hr/leaves",               label: isRtl ? "إجازاتي" : "My Leaves",                    icon: CalendarDays },
         { href: "/messages",                label: t("common.messages"),                                 icon: MessageSquare },
     ];
@@ -125,6 +127,7 @@ export function DashboardSidebar({ role, user }: { role: string; user: any }) {
     const makeTeamLinks = (base: string) => [
         { href: `/${base}`,              label: t("common.overview"),                          icon: LayoutDashboard },
         { href: `/${base}/action-plans`, label: isRtl ? "خطط المحتوى" : "Content Plans",      icon: FolderKanban },
+        { href: "/admin/meetings",       label: isRtl ? "الاجتماعات" : "Meetings",            icon: CalendarDays },
         { href: "/clickup",              label: isRtl ? "كليك أب" : "ClickUp",                icon: Layers },
         { href: "/approvals",            label: isRtl ? "الموافقات" : "Approvals",            icon: CheckSquare },
         { href: "/hr/leaves",            label: isRtl ? "إجازاتي" : "My Leaves",              icon: CalendarDays },
@@ -134,6 +137,7 @@ export function DashboardSidebar({ role, user }: { role: string; user: any }) {
         { href: `/${base}`,              label: t("common.overview"),                          icon: LayoutDashboard },
         { href: `/${base}/clients`,      label: t("common.clients"),                           icon: Users },
         { href: `/${base}/action-plans`, label: isRtl ? "خطط المحتوى" : "Content Plans",      icon: FolderKanban },
+        { href: "/admin/meetings",       label: isRtl ? "الاجتماعات" : "Meetings",            icon: CalendarDays },
         { href: "/clickup",              label: isRtl ? "كليك أب" : "ClickUp",                icon: Layers },
         { href: "/approvals",            label: isRtl ? "الموافقات" : "Approvals",            icon: CheckSquare },
         { href: "/hr/leaves",            label: isRtl ? "إجازاتي" : "My Leaves",              icon: CalendarDays },
