@@ -60,6 +60,36 @@ model User {
   createdApprovals   ApprovalRequest[] @relation("ApprovalCreator")
   leaderApprovals    ApprovalRequest[] @relation("ApprovalLeader")
   mmApprovals        ApprovalRequest[] @relation("ApprovalMM")
+
+  // Team Meetings
+  organizedMeetings  TeamMeeting[]           @relation("MeetingOrganizer")
+  meetingAttendances TeamMeetingAttendee[]   @relation("MeetingAttendee")
+}
+
+model TeamMeeting {
+  id            String   @id @default(cuid())
+  title         String
+  description   String?
+  scheduledAt   DateTime
+  meetLink      String?
+  googleEventId String?
+  organizerId   String
+  organizer     User     @relation("MeetingOrganizer", fields: [organizerId], references: [id], onDelete: Cascade)
+  attendees     TeamMeetingAttendee[]
+  createdAt     DateTime @default(now())
+
+  @@index([organizerId])
+  @@index([scheduledAt])
+}
+
+model TeamMeetingAttendee {
+  id        String      @id @default(cuid())
+  meetingId String
+  meeting   TeamMeeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User        @relation("MeetingAttendee", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([meetingId, userId])
 }
 
 model RoomSession {
