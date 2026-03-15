@@ -118,6 +118,14 @@ export async function createTeamMeeting(data: {
                 create: attendeeIds.map((userId) => ({ userId })),
             },
         },
+        include: {
+            organizer: { select: { id: true, firstName: true, lastName: true, role: true } },
+            attendees: {
+                include: {
+                    user: { select: { id: true, firstName: true, lastName: true, role: true } },
+                },
+            },
+        },
     });
 
     // Send notifications to attendees
