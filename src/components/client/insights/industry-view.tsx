@@ -81,8 +81,31 @@ export function IndustryView({
 
     return (
         <div className="space-y-8 max-w-5xl mx-auto" dir={isRtl ? "rtl" : "ltr"}>
-            {/* Header omitted for brevity in chunk but it stays */}
-            ...
+            {/* Header */}
+            <div className={`flex flex-col md:flex-row md:items-end justify-between gap-4 ${isRtl ? 'text-right' : ''}`}>
+                <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+                        <Lightbulb className="h-6 w-6" />
+                    </div>
+                    <div>
+                        <h1 className="text-4xl font-black tracking-tighter premium-gradient-text uppercase">
+                            {isRtl ? "رؤى السوق" : "Market Insights"}
+                        </h1>
+                        <p className="text-sm text-muted-foreground font-medium opacity-70">
+                            {isRtl ? "آخر المستجدات والتحليلات في قطاعك" : "Latest market updates tailored to your sector"}
+                        </p>
+                    </div>
+                </div>
+                <div className={`flex items-center gap-2 text-[11px] text-muted-foreground font-bold opacity-50 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                    <RefreshCw className="h-3 w-3" />
+                    <span>
+                        {isRtl ? "آخر تحديث" : "Updated"} {formatDistanceToNow(new Date(current.createdAt), { addSuffix: true })}
+                        {" · "}
+                        {isRtl ? "يتجدد كل 12 ساعة" : "Refreshes every 12h"}
+                    </span>
+                </div>
+            </div>
+
             {/* Latest */}
             <ItemsGrid items={current.items} isRtl={isRtl} animated={animated} />
 
