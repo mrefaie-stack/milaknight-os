@@ -315,6 +315,26 @@ export async function submitForApproval(planId: string) {
     return { success: true, toClient: true };
 }
 
+export async function deleteActionPlan(planId: string) {
+    const session = await getServerSession(authOptions);
+    if (!session || (session.user.role !== "AM" && session.user.role !== "ADMIN")) {
+        throw new Error("Unauthorized");
+    }
+
+    const plan = await prisma.actionPlan.findUnique({ where: { id: planId }, include: { client: true } });
+    if (!plan) throw new Error("Plan not found");
+    if (session.user.role === "AM" && plan.client.amId !== session.user.id) {
+        throw new Error("Unauthorized Access");
+    }
+
+    await prisma.actionPlan.delete({ where: { id: planId } });
+    await logActivity(`deleted action plan for ${plan.client.name} (${plan.month})`, "ActionPlan", planId);
+
+    revalidatePath("/am/action-plans");
+    revalidatePath(`/client/action-plans`);
+    return { success: true };
+}
+
 export async function requestActionPlanDeletion(planId: string) {
     const session = await getServerSession(authOptions);
     if (!session || session.user.role !== "AM") throw new Error("Only AMs can request deletions");

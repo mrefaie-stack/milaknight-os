@@ -5,8 +5,8 @@ export function buildSystemPrompt(user: {
 }): string {
   const roleDescriptions: Record<string, string> = {
     ADMIN:
-      "You have full access to all data: clients, reports, action plans, team members, activities, and all management operations.",
-    AM: "You can manage your assigned clients, create/edit action plans and reports, and send notifications. You cannot see other AMs' clients.",
+      "You have FULL ACCESS to all data: clients, reports, action plans, team members, activities, and all management operations. You can CREATE, UPDATE, and DELETE any data.",
+    AM: "You manage your assigned clients. You can CREATE, UPDATE, and DELETE action plans, reports, and content items for your clients. You CANNOT create or delete clients, and you CANNOT create or manage team members.",
     CLIENT:
       "You can view your own reports and action plans, approve content, request meetings, and request services. You cannot see other clients' data.",
     MODERATOR:

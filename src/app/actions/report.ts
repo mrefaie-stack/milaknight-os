@@ -374,6 +374,26 @@ export async function submitReportFeedback(reportId: string, feedback: string) {
     return updated;
 }
 
+export async function deleteReport(reportId: string) {
+    const session = await getServerSession(authOptions);
+    if (!session || (session.user.role !== "AM" && session.user.role !== "ADMIN")) {
+        throw new Error("Unauthorized");
+    }
+
+    const report = await prisma.report.findUnique({ where: { id: reportId }, include: { client: true } });
+    if (!report) throw new Error("Report not found");
+    if (session.user.role === "AM" && report.client.amId !== session.user.id) {
+        throw new Error("Unauthorized Access");
+    }
+
+    await prisma.report.delete({ where: { id: reportId } });
+    await logActivity(`deleted performance report for ${report.client.name} (${report.month})`, "Report", reportId);
+
+    revalidatePath("/am/reports");
+    revalidatePath(`/client/reports`);
+    return { success: true };
+}
+
 export async function requestReportDeletion(reportId: string) {
     const session = await getServerSession(authOptions);
     if (!session || session.user.role !== "AM") throw new Error("Only AMs can request deletions");
