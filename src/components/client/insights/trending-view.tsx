@@ -112,9 +112,9 @@ export function TrendingView({
                 </div>
             </div>
 
-            <ItemsGrid items={current.items} isRtl={isRtl} />
+            <ItemsGrid items={current.items} isRtl={isRtl} animated={animated} />
 
-            <InsightHistory history={history} renderItems={(items) => <ItemsGrid items={items} isRtl={isRtl} />} />
+            <InsightHistory history={history} renderItems={(items) => <ItemsGrid items={items} isRtl={isRtl} animated={false} />} />
         </div>
     );
 }
