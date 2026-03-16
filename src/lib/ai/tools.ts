@@ -90,7 +90,7 @@ export const aiTools: AiTool[] = [
         required: [],
       },
     },
-    roles: ["ADMIN"],
+    roles: ["ADMIN", "AM"],
   },
   {
     definition: {
@@ -102,7 +102,7 @@ export const aiTools: AiTool[] = [
         required: [],
       },
     },
-    roles: ["ADMIN"],
+    roles: ["ADMIN", "AM"],
   },
   {
     definition: {
@@ -147,6 +147,163 @@ export const aiTools: AiTool[] = [
   },
 
   // ==================== WRITE TOOLS ====================
+  {
+    definition: {
+      name: "create_client",
+      description: "Create a new client profile. Admin/AM only.",
+      input_schema: {
+        type: "object" as const,
+        properties: {
+          name: { type: "string" },
+          industry: { type: "string" },
+          email: { type: "string", description: "Login email for the client" },
+          password: { type: "string", description: "Login password for the client" },
+          package: { type: "string", enum: ["BASIC", "PREMIUM", "ENTERPRISE"] },
+          activeServices: { type: "string", description: "Comma separated list of active platforms" },
+          briefAr: { type: "string" },
+          briefEn: { type: "string" },
+          amId: { type: "string", description: "Account Manager ID" },
+          mmId: { type: "string", description: "Marketing Manager ID" }
+        },
+        required: ["name", "email", "password"],
+      },
+    },
+    roles: ["ADMIN"],
+  },
+  {
+    definition: {
+      name: "update_client",
+      description: "Update an existing client profile. Admin/AM only.",
+      input_schema: {
+        type: "object" as const,
+        properties: {
+          clientId: { type: "string" },
+          name: { type: "string" },
+          industry: { type: "string" },
+          package: { type: "string", enum: ["BASIC", "PREMIUM", "ENTERPRISE"] },
+          activeServices: { type: "string" },
+          briefAr: { type: "string" },
+          briefEn: { type: "string" },
+          seoScore: { type: "number" },
+          monthlyFee: { type: "number" }
+        },
+        required: ["clientId"],
+      },
+    },
+    roles: ["ADMIN"],
+  },
+  {
+    definition: {
+      name: "delete_client",
+      description: "Delete a client profile. This is a destructive action! Admin/AM only.",
+      input_schema: {
+        type: "object" as const,
+        properties: {
+          clientId: { type: "string" }
+        },
+        required: ["clientId"],
+      },
+    },
+    roles: ["ADMIN"],
+  },
+  {
+    definition: {
+      name: "create_team_member",
+      description: "Create a new team member. Admin/AM only.",
+      input_schema: {
+        type: "object" as const,
+        properties: {
+          email: { type: "string" },
+          password: { type: "string" },
+          firstName: { type: "string" },
+          lastName: { type: "string" },
+          role: { type: "string", enum: ["AM", "MODERATOR", "MARKETING_MANAGER", "CONTENT_TEAM", "CONTENT_LEADER", "ART_TEAM", "ART_LEADER", "SEO_TEAM", "SEO_LEAD", "HR_MANAGER"] }
+        },
+        required: ["email", "password", "firstName", "lastName", "role"],
+      },
+    },
+    roles: ["ADMIN"],
+  },
+  {
+    definition: {
+      name: "update_team_member",
+      description: "Update a team member's details. Admin/AM only.",
+      input_schema: {
+        type: "object" as const,
+        properties: {
+          userId: { type: "string" },
+          email: { type: "string" },
+          firstName: { type: "string" },
+          lastName: { type: "string" },
+          role: { type: "string" }
+        },
+        required: ["userId"],
+      },
+    },
+    roles: ["ADMIN"],
+  },
+  {
+    definition: {
+      name: "delete_team_member",
+      description: "Delete a team member. Fails if they have assigned clients. Admin/AM only.",
+      input_schema: {
+        type: "object" as const,
+        properties: {
+          userId: { type: "string" }
+        },
+        required: ["userId"],
+      },
+    },
+    roles: ["ADMIN"],
+  },
+  {
+    definition: {
+      name: "delete_action_plan",
+      description: "Delete an entire action plan. Destructive! Admin/AM only.",
+      input_schema: {
+        type: "object" as const,
+        properties: {
+          planId: { type: "string" }
+        },
+        required: ["planId"],
+      },
+    },
+    roles: ["ADMIN", "AM"],
+  },
+  {
+    definition: {
+      name: "delete_report",
+      description: "Delete a performance report. Destructive! Admin/AM only.",
+      input_schema: {
+        type: "object" as const,
+        properties: {
+          reportId: { type: "string" }
+        },
+        required: ["reportId"],
+      },
+    },
+    roles: ["ADMIN", "AM"],
+  },
+  {
+    definition: {
+      name: "update_content_item",
+      description: "Update an existing content item in an action plan. Admin/AM only.",
+      input_schema: {
+        type: "object" as const,
+        properties: {
+          itemId: { type: "string" },
+          planId: { type: "string" },
+          type: { type: "string" },
+          platform: { type: "string" },
+          captionAr: { type: "string" },
+          captionEn: { type: "string" },
+          scheduledDate: { type: "string" },
+        },
+        required: ["itemId", "planId"],
+      },
+    },
+    roles: ["ADMIN", "AM"],
+  },
   {
     definition: {
       name: "create_action_plan",

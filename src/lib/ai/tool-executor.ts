@@ -1,9 +1,9 @@
 import { prisma } from "@/lib/prisma";
-import { getActionPlans, createActionPlan, addContentItem, submitForApproval, approveActionPlan, approveContentItem, scheduleActionPlan } from "@/app/actions/action-plan";
-import { getReports, getReportById, publishReport } from "@/app/actions/report";
-import { getClients } from "@/app/actions/client";
+import { getActionPlans, createActionPlan, addContentItem, submitForApproval, approveActionPlan, approveContentItem, scheduleActionPlan, deleteActionPlan, updateContentItem } from "@/app/actions/action-plan";
+import { getReports, getReportById, publishReport, deleteReport } from "@/app/actions/report";
+import { getClients, createClient, updateClient, deleteClient } from "@/app/actions/client";
 import { getNotifications, sendReminder } from "@/app/actions/notification";
-import { getTeamMembers } from "@/app/actions/user";
+import { getTeamMembers, createTeamMember, updateTeamMember, deleteTeamMember } from "@/app/actions/user";
 import { getRecentActivities } from "@/app/actions/activity";
 import { getMeetingRequests, requestMeeting } from "@/app/actions/meeting";
 
@@ -113,6 +113,66 @@ export async function executeTool(
       }
 
       // ==================== WRITE TOOLS ====================
+      case "create_client": {
+        const formData = new FormData();
+        Object.entries(input).forEach(([key, value]) => {
+            if (value !== undefined && value !== null) {
+                formData.append(key, String(value));
+            }
+        });
+        await createClient(formData);
+        return JSON.stringify({ success: true, message: "Client created successfully" });
+      }
+
+      case "update_client": {
+        const { clientId, ...data } = input;
+        await updateClient(clientId as string, data);
+        return JSON.stringify({ success: true, message: "Client updated successfully" });
+      }
+
+      case "delete_client": {
+        await deleteClient(input.clientId as string);
+        return JSON.stringify({ success: true, message: "Client deleted successfully" });
+      }
+
+      case "create_team_member": {
+        const formData = new FormData();
+        Object.entries(input).forEach(([key, value]) => {
+            if (value !== undefined && value !== null) {
+                formData.append(key, String(value));
+            }
+        });
+        const res = await createTeamMember(formData);
+        return JSON.stringify({ success: true, message: `Team member created with ID: ${res.user.id}` });
+      }
+
+      case "update_team_member": {
+        const { userId, ...data } = input;
+        await updateTeamMember(userId as string, data);
+        return JSON.stringify({ success: true, message: "Team member updated successfully" });
+      }
+
+      case "delete_team_member": {
+        await deleteTeamMember(input.userId as string);
+        return JSON.stringify({ success: true, message: "Team member deleted successfully" });
+      }
+
+      case "delete_action_plan": {
+        await deleteActionPlan(input.planId as string);
+        return JSON.stringify({ success: true, message: "Action plan deleted successfully" });
+      }
+
+      case "delete_report": {
+        await deleteReport(input.reportId as string);
+        return JSON.stringify({ success: true, message: "Report deleted successfully" });
+      }
+
+      case "update_content_item": {
+        const { itemId, planId, ...data } = input;
+        await updateContentItem(itemId as string, planId as string, data);
+        return JSON.stringify({ success: true, message: "Content item updated successfully" });
+      }
+
       case "create_action_plan": {
         const plan = await createActionPlan(
           input.clientId as string,
