@@ -28,7 +28,7 @@ const IMPACT_STYLES = {
 const IMPACT_AR = { HIGH: "تأثير عالٍ", MEDIUM: "تأثير متوسط", LOW: "تأثير منخفض" };
 const IMPACT_EN = { HIGH: "High Impact", MEDIUM: "Medium Impact", LOW: "Low Impact" };
 
-function ItemsGrid({ items, isRtl, animated = true }: { items: IndustryItem[]; isRtl: boolean; animated?: boolean }) {
+function ItemsGrid({ items, isRtl, animated = true, isHistory = false }: { items: IndustryItem[]; isRtl: boolean; animated?: boolean; isHistory?: boolean }) {
     return (
         <div className="grid gap-5 md:grid-cols-2">
             {items.map((item, i) => {
@@ -40,7 +40,7 @@ function ItemsGrid({ items, isRtl, animated = true }: { items: IndustryItem[]; i
                         animate={animated ? { opacity: 1, y: 0 } : undefined} 
                         transition={animated ? { delay: i * 0.05, duration: 0.35 } : undefined}
                     >
-                        <Card className="glass-card border-none rounded-3xl overflow-hidden group hover:bg-white/5 transition-all duration-300">
+                        <Card className={`${isHistory ? 'bg-white/5 border border-white/5' : 'glass-card border-none'} rounded-3xl overflow-hidden group hover:bg-white/5 transition-all duration-300`}>
                             <CardContent className="p-6 space-y-4">
                                 <div className={`flex items-start justify-between gap-3 ${isRtl ? 'flex-row-reverse' : ''}`}>
                                     <span className="text-3xl">{item.emoji || "💡"}</span>
@@ -112,7 +112,7 @@ export function IndustryView({
             {/* History */}
             <InsightHistory
                 history={history}
-                renderItems={(items) => <ItemsGrid items={items} isRtl={isRtl} animated={false} />}
+                renderItems={(items) => <ItemsGrid items={items} isRtl={isRtl} animated={false} isHistory={true} />}
             />
         </div>
     );

@@ -60,7 +60,7 @@ function TikTokIcon({ className }: { className?: string }) {
     );
 }
 
-function ItemsGrid({ items, isRtl, animated = true }: { items: CompetitorItem[]; isRtl: boolean; animated?: boolean }) {
+function ItemsGrid({ items, isRtl, animated = true, isHistory = false }: { items: CompetitorItem[]; isRtl: boolean; animated?: boolean; isHistory?: boolean }) {
     return (
         <div className="grid gap-6 md:grid-cols-2">
             {items.map((comp, i) => {
@@ -73,7 +73,7 @@ function ItemsGrid({ items, isRtl, animated = true }: { items: CompetitorItem[];
                         transition={animated ? { delay: i * 0.07, duration: 0.4 } : undefined}
                         className="h-full"
                     >
-                        <Card className="glass-card border-none rounded-3xl overflow-hidden h-full">
+                        <Card className={`${isHistory ? 'bg-white/5 border border-white/5' : 'glass-card border-none'} rounded-3xl overflow-hidden h-full`}>
                             <CardContent className="p-6 space-y-5 flex flex-col h-full">
                                 {/* Name */}
                                 <div className={`flex items-start gap-3 ${isRtl ? "flex-row-reverse" : ""}`}>
@@ -210,7 +210,7 @@ export function CompetitorsView({
                 </div>
             </div>
             <ItemsGrid items={current.items} isRtl={isRtl} animated={animated} />
-            <InsightHistory history={history} renderItems={(items) => <ItemsGrid items={items} isRtl={isRtl} animated={false} />} />
+            <InsightHistory history={history} renderItems={(items) => <ItemsGrid items={items} isRtl={isRtl} animated={false} isHistory={true} />} />
         </div>
     );
 }
