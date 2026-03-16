@@ -30,40 +30,48 @@ const PLATFORM_STYLES: Record<string, string> = {
     Facebook: "bg-blue-500/10 text-blue-400 border-blue-500/20",
 };
 
-function ItemsGrid({ items, isRtl }: { items: TrendingItem[]; isRtl: boolean }) {
+function ItemsGrid({ items, isRtl, animated = true }: { items: TrendingItem[]; isRtl: boolean; animated?: boolean }) {
     return (
         <div className="grid gap-4 md:grid-cols-2">
-            {items.map((item, i) => (
-                <motion.div key={i} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04, duration: 0.35 }}>
-                    <Card className="glass-card border-none rounded-3xl overflow-hidden group hover:bg-white/5 transition-all duration-300">
-                        <CardContent className="p-6 space-y-3">
-                            <div className={`flex items-start justify-between gap-3 ${isRtl ? 'flex-row-reverse' : ''}`}>
-                                <span className="text-xl font-black text-primary tracking-tight">{item.hashtag}</span>
-                                <Badge variant="outline" className={`text-[9px] font-black uppercase tracking-widest rounded-full shrink-0 ${PLATFORM_STYLES[item.platform] || "bg-white/5 text-muted-foreground border-white/10"}`}>
-                                    {item.platform}
-                                </Badge>
-                            </div>
-                            <h3 className={`font-black text-base leading-tight ${isRtl ? 'text-right' : ''}`}>
-                                {isRtl ? item.topicAr : item.topicEn}
-                            </h3>
-                            <p className={`text-sm text-muted-foreground leading-relaxed font-medium opacity-70 ${isRtl ? 'text-right' : ''}`}>
-                                {isRtl ? item.descAr : item.descEn}
-                            </p>
-                            <div className={`flex items-center gap-3 pt-2 border-t border-white/5 ${isRtl ? 'flex-row-reverse' : ''}`}>
-                                <div className={`flex flex-col ${isRtl ? 'items-end' : ''}`}>
-                                    <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-50">{isRtl ? "الحجم" : "Volume"}</span>
-                                    <span className="text-sm font-black text-primary">{item.volume}</span>
+            {items.map((item, i) => {
+                const MotionWrapper = animated ? motion.div : "div";
+                return (
+                    <MotionWrapper 
+                        key={i} 
+                        initial={animated ? { opacity: 0, y: 12 } : undefined} 
+                        animate={animated ? { opacity: 1, y: 0 } : undefined} 
+                        transition={animated ? { delay: i * 0.04, duration: 0.35 } : undefined}
+                    >
+                        <Card className="glass-card border-none rounded-3xl overflow-hidden group hover:bg-white/5 transition-all duration-300">
+                            <CardContent className="p-6 space-y-3">
+                                <div className={`flex items-start justify-between gap-3 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                                    <span className="text-xl font-black text-primary tracking-tight">{item.hashtag}</span>
+                                    <Badge variant="outline" className={`text-[9px] font-black uppercase tracking-widest rounded-full shrink-0 ${PLATFORM_STYLES[item.platform] || "bg-white/5 text-muted-foreground border-white/10"}`}>
+                                        {item.platform}
+                                    </Badge>
                                 </div>
-                                <div className="w-px h-6 bg-white/5" />
-                                <div className={`flex flex-col ${isRtl ? 'items-end' : ''}`}>
-                                    <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-50">{isRtl ? "النمو" : "Growth"}</span>
-                                    <span className="text-sm font-black text-emerald-400">{item.growth}</span>
+                                <h3 className={`font-black text-base leading-tight ${isRtl ? 'text-right' : ''}`}>
+                                    {isRtl ? item.topicAr : item.topicEn}
+                                </h3>
+                                <p className={`text-sm text-muted-foreground leading-relaxed font-medium opacity-70 ${isRtl ? 'text-right' : ''}`}>
+                                    {isRtl ? item.descAr : item.descEn}
+                                </p>
+                                <div className={`flex items-center gap-3 pt-2 border-t border-white/5 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                                    <div className={`flex flex-col ${isRtl ? 'items-end' : ''}`}>
+                                        <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-50">{isRtl ? "الحجم" : "Volume"}</span>
+                                        <span className="text-sm font-black text-primary">{item.volume}</span>
+                                    </div>
+                                    <div className="w-px h-6 bg-white/5" />
+                                    <div className={`flex flex-col ${isRtl ? 'items-end' : ''}`}>
+                                        <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-50">{isRtl ? "النمو" : "Growth"}</span>
+                                        <span className="text-sm font-black text-emerald-400">{item.growth}</span>
+                                    </div>
                                 </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </motion.div>
-            ))}
+                            </CardContent>
+                        </Card>
+                    </MotionWrapper>
+                );
+            })}
         </div>
     );
 }
@@ -71,9 +79,11 @@ function ItemsGrid({ items, isRtl }: { items: TrendingItem[]; isRtl: boolean }) 
 export function TrendingView({
     current,
     history,
+    animated = true,
 }: {
     current: { items: TrendingItem[]; createdAt: Date };
     history: HistoryEntry[];
+    animated?: boolean;
 }) {
     const { isRtl } = useLanguage();
 

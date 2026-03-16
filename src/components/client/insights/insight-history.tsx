@@ -25,7 +25,7 @@ export function InsightHistory({ history, renderItems }: InsightHistoryProps) {
 
     return (
         <div className="space-y-4 pt-8 border-t border-white/5" dir={isRtl ? "rtl" : "ltr"}>
-            <div className={`flex items-center gap-2 text-muted-foreground opacity-50 ${isRtl ? 'flex-row-reverse' : ''}`}>
+            <div className={`flex items-center gap-2 text-muted-foreground opacity-50 ${isRtl ? 'flex-row-reverse space-x-reverse' : ''}`}>
                 <History className="h-4 w-4" />
                 <span className="text-xs font-black uppercase tracking-widest">
                     {isRtl ? `السجل السابق (${history.length})` : `Previous Snapshots (${history.length})`}
@@ -40,7 +40,7 @@ export function InsightHistory({ history, renderItems }: InsightHistoryProps) {
                             onClick={() => setExpandedId(expandedId === entry.id ? null : entry.id)}
                             className={`w-full flex items-center justify-between px-5 py-4 bg-white/3 hover:bg-white/6 transition-all ${isRtl ? 'flex-row-reverse' : ''}`}
                         >
-                            <div className={`flex items-center gap-3 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                            <div className={`flex items-center gap-3 ${isRtl ? 'flex-row-reverse space-x-reverse' : ''}`}>
                                 <span className="text-xs font-black uppercase tracking-widest text-muted-foreground opacity-60">
                                     {format(new Date(entry.createdAt), "dd MMM yyyy · HH:mm")}
                                 </span>
@@ -59,12 +59,12 @@ export function InsightHistory({ history, renderItems }: InsightHistoryProps) {
                         {/* Expanded content */}
                         <AnimatePresence>
                             {expandedId === entry.id && (
-                                <motion.div
+                                    <motion.div
                                     initial={{ height: 0, opacity: 0 }}
                                     animate={{ height: "auto", opacity: 1 }}
                                     exit={{ height: 0, opacity: 0 }}
-                                    transition={{ duration: 0.3 }}
-                                    className="overflow-hidden"
+                                    transition={{ duration: 0.4, ease: [0.04, 0.62, 0.23, 0.98] }}
+                                    className="overflow-visible"
                                 >
                                     <div className="p-5 bg-white/2 border-t border-white/5">
                                         {renderItems(entry.items)}
