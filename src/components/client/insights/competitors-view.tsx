@@ -60,108 +60,117 @@ function TikTokIcon({ className }: { className?: string }) {
     );
 }
 
-function ItemsGrid({ items, isRtl }: { items: CompetitorItem[]; isRtl: boolean }) {
+function ItemsGrid({ items, isRtl, animated = true }: { items: CompetitorItem[]; isRtl: boolean; animated?: boolean }) {
     return (
         <div className="grid gap-6 md:grid-cols-2">
-            {items.map((comp, i) => (
-                <motion.div key={i} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07, duration: 0.4 }}>
-                    <Card className="glass-card border-none rounded-3xl overflow-hidden h-full">
-                        <CardContent className="p-6 space-y-5 flex flex-col h-full">
-                            {/* Name */}
-                            <div className={`flex items-start gap-3 ${isRtl ? "flex-row-reverse" : ""}`}>
-                                <div className="w-11 h-11 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center font-black text-lg text-primary shrink-0">
-                                    {comp.name.charAt(0).toUpperCase()}
-                                </div>
-                                <div className={`flex-1 ${isRtl ? "text-right" : ""}`}>
-                                    <h3 className="font-black text-xl leading-tight">{comp.name}</h3>
-                                    <p className="text-xs text-muted-foreground font-medium opacity-60 mt-1 leading-relaxed">
-                                        {isRtl ? comp.descAr : comp.descEn}
-                                    </p>
-                                </div>
-                            </div>
-
-                            {/* Badges */}
-                            <div className={`flex items-center gap-2 flex-wrap ${isRtl ? "flex-row-reverse" : ""}`}>
-                                <Badge variant="outline" className={`text-[9px] font-black uppercase tracking-widest rounded-full gap-1 ${LEVEL[comp.threat] || LEVEL.MEDIUM}`}>
-                                    <AlertTriangle className="h-2.5 w-2.5" />
-                                    {isRtl ? T_AR[comp.threat] : T_EN[comp.threat]}
-                                </Badge>
-                                <Badge variant="outline" className={`text-[9px] font-black uppercase tracking-widest rounded-full ${LEVEL[comp.socialPresence] || LEVEL.MEDIUM}`}>
-                                    {isRtl ? S_AR[comp.socialPresence] : S_EN[comp.socialPresence]}
-                                </Badge>
-                            </div>
-
-                            {/* Social Media row */}
-                            {comp.socialMedia && (
-                                <div className={`flex items-center gap-2 flex-wrap p-3 rounded-2xl bg-white/3 border border-white/5 ${isRtl ? "flex-row-reverse" : ""}`}>
-                                    {ok(comp.socialMedia.instagram) && (
-                                        <span className="inline-flex items-center gap-1 text-[10px] font-black rounded-full px-2 py-0.5 bg-pink-500/10 text-pink-400">
-                                            <Instagram className="h-2.5 w-2.5" />{comp.socialMedia.instagram}
-                                        </span>
-                                    )}
-                                    {ok(comp.socialMedia.twitter) && (
-                                        <span className="inline-flex items-center gap-1 text-[10px] font-black rounded-full px-2 py-0.5 bg-sky-500/10 text-sky-400">
-                                            <XIcon className="h-2.5 w-2.5" />{comp.socialMedia.twitter}
-                                        </span>
-                                    )}
-                                    {ok(comp.socialMedia.tiktok) && (
-                                        <span className="inline-flex items-center gap-1 text-[10px] font-black rounded-full px-2 py-0.5 bg-purple-500/10 text-purple-400">
-                                            <TikTokIcon className="h-2.5 w-2.5" />{comp.socialMedia.tiktok}
-                                        </span>
-                                    )}
-                                    {ok(comp.socialMedia.linkedin) && (
-                                        <span className="inline-flex items-center gap-1 text-[10px] font-black rounded-full px-2 py-0.5 bg-blue-600/10 text-blue-400">
-                                            <Linkedin className="h-2.5 w-2.5" />LinkedIn
-                                        </span>
-                                    )}
-                                    {comp.socialMedia.estimatedFollowers && (
-                                        <span className="text-[10px] font-black text-muted-foreground opacity-40 ms-auto">
-                                            ~{comp.socialMedia.estimatedFollowers}
-                                            {comp.socialMedia.activity && (
-                                                <span className={comp.socialMedia.activity === "HIGH" ? " text-emerald-400" : comp.socialMedia.activity === "MEDIUM" ? " text-orange-400" : " text-rose-400"}>
-                                                    {" · "}{isRtl ? A_AR[comp.socialMedia.activity] : A_EN[comp.socialMedia.activity]}
-                                                </span>
-                                            )}
-                                        </span>
-                                    )}
-                                </div>
-                            )}
-
-                            {/* Strengths / Weaknesses */}
-                            <div className="flex-1 grid grid-cols-2 gap-4">
-                                <div className={`space-y-2 ${isRtl ? "text-right" : ""}`}>
-                                    <div className={`flex items-center gap-1.5 text-emerald-400 ${isRtl ? "flex-row-reverse" : ""}`}>
-                                        <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
-                                        <span className="text-[10px] font-black uppercase tracking-widest">{isRtl ? "نقاط قوة" : "Strengths"}</span>
+            {items.map((comp, i) => {
+                const MotionWrapper = animated ? motion.div : "div";
+                return (
+                    <MotionWrapper 
+                        key={i} 
+                        initial={animated ? { opacity: 0, y: 16 } : undefined} 
+                        animate={animated ? { opacity: 1, y: 0 } : undefined} 
+                        transition={animated ? { delay: i * 0.07, duration: 0.4 } : undefined}
+                        className="h-full"
+                    >
+                        <Card className="glass-card border-none rounded-3xl overflow-hidden h-full">
+                            <CardContent className="p-6 space-y-5 flex flex-col h-full">
+                                {/* Name */}
+                                <div className={`flex items-start gap-3 ${isRtl ? "flex-row-reverse" : ""}`}>
+                                    <div className="w-11 h-11 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center font-black text-lg text-primary shrink-0">
+                                        {comp.name.charAt(0).toUpperCase()}
                                     </div>
-                                    <ul className="space-y-1.5">
-                                        {(comp.strengths || []).slice(0, 4).map((s, j) => (
-                                            <li key={j} className={`text-xs text-muted-foreground font-medium opacity-70 flex items-start gap-1.5 ${isRtl ? "flex-row-reverse" : ""}`}>
-                                                <span className="text-emerald-400 shrink-0 mt-0.5">+</span>
-                                                <span>{s}</span>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-                                <div className={`space-y-2 ${isRtl ? "text-right" : ""}`}>
-                                    <div className={`flex items-center gap-1.5 text-rose-400 ${isRtl ? "flex-row-reverse" : ""}`}>
-                                        <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
-                                        <span className="text-[10px] font-black uppercase tracking-widest">{isRtl ? "نقاط ضعف" : "Weaknesses"}</span>
+                                    <div className={`flex-1 ${isRtl ? "text-right" : ""}`}>
+                                        <h3 className="font-black text-xl leading-tight">{comp.name}</h3>
+                                        <p className="text-xs text-muted-foreground font-medium opacity-60 mt-1 leading-relaxed">
+                                            {isRtl ? comp.descAr : comp.descEn}
+                                        </p>
                                     </div>
-                                    <ul className="space-y-1.5">
-                                        {(comp.weaknesses || []).slice(0, 4).map((w, j) => (
-                                            <li key={j} className={`text-xs text-muted-foreground font-medium opacity-70 flex items-start gap-1.5 ${isRtl ? "flex-row-reverse" : ""}`}>
-                                                <span className="text-rose-400 shrink-0 mt-0.5">−</span>
-                                                <span>{w}</span>
-                                            </li>
-                                        ))}
-                                    </ul>
                                 </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </motion.div>
-            ))}
+
+                                {/* Badges */}
+                                <div className={`flex items-center gap-2 flex-wrap ${isRtl ? "flex-row-reverse" : ""}`}>
+                                    <Badge variant="outline" className={`text-[9px] font-black uppercase tracking-widest rounded-full gap-1 ${LEVEL[comp.threat] || LEVEL.MEDIUM}`}>
+                                        <AlertTriangle className="h-2.5 w-2.5" />
+                                        {isRtl ? T_AR[comp.threat] : T_EN[comp.threat]}
+                                    </Badge>
+                                    <Badge variant="outline" className={`text-[9px] font-black uppercase tracking-widest rounded-full ${LEVEL[comp.socialPresence] || LEVEL.MEDIUM}`}>
+                                        {isRtl ? S_AR[comp.socialPresence] : S_EN[comp.socialPresence]}
+                                    </Badge>
+                                </div>
+
+                                {/* Social Media row */}
+                                {comp.socialMedia && (
+                                    <div className={`flex items-center gap-2 flex-wrap p-3 rounded-2xl bg-white/3 border border-white/5 ${isRtl ? "flex-row-reverse" : ""}`}>
+                                        {ok(comp.socialMedia.instagram) && (
+                                            <span className="inline-flex items-center gap-1 text-[10px] font-black rounded-full px-2 py-0.5 bg-pink-500/10 text-pink-400">
+                                                <Instagram className="h-2.5 w-2.5" />{comp.socialMedia.instagram}
+                                            </span>
+                                        )}
+                                        {ok(comp.socialMedia.twitter) && (
+                                            <span className="inline-flex items-center gap-1 text-[10px] font-black rounded-full px-2 py-0.5 bg-sky-500/10 text-sky-400">
+                                                <XIcon className="h-2.5 w-2.5" />{comp.socialMedia.twitter}
+                                            </span>
+                                        )}
+                                        {ok(comp.socialMedia.tiktok) && (
+                                            <span className="inline-flex items-center gap-1 text-[10px] font-black rounded-full px-2 py-0.5 bg-purple-500/10 text-purple-400">
+                                                <TikTokIcon className="h-2.5 w-2.5" />{comp.socialMedia.tiktok}
+                                            </span>
+                                        )}
+                                        {ok(comp.socialMedia.linkedin) && (
+                                            <span className="inline-flex items-center gap-1 text-[10px] font-black rounded-full px-2 py-0.5 bg-blue-600/10 text-blue-400">
+                                                <Linkedin className="h-2.5 w-2.5" />LinkedIn
+                                            </span>
+                                        )}
+                                        {comp.socialMedia.estimatedFollowers && (
+                                            <span className="text-[10px] font-black text-muted-foreground opacity-40 ms-auto">
+                                                ~{comp.socialMedia.estimatedFollowers}
+                                                {comp.socialMedia.activity && (
+                                                    <span className={comp.socialMedia.activity === "HIGH" ? " text-emerald-400" : comp.socialMedia.activity === "MEDIUM" ? " text-orange-400" : " text-rose-400"}>
+                                                        {" · "}{isRtl ? A_AR[comp.socialMedia.activity] : A_EN[comp.socialMedia.activity]}
+                                                    </span>
+                                                )}
+                                            </span>
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* Strengths / Weaknesses */}
+                                <div className="flex-1 grid grid-cols-2 gap-4">
+                                    <div className={`space-y-2 ${isRtl ? "text-right" : ""}`}>
+                                        <div className={`flex items-center gap-1.5 text-emerald-400 ${isRtl ? "flex-row-reverse" : ""}`}>
+                                            <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
+                                            <span className="text-[10px] font-black uppercase tracking-widest">{isRtl ? "نقاط قوة" : "Strengths"}</span>
+                                        </div>
+                                        <ul className="space-y-1.5">
+                                            {(comp.strengths || []).slice(0, 4).map((s, j) => (
+                                                <li key={j} className={`text-xs text-muted-foreground font-medium opacity-70 flex items-start gap-1.5 ${isRtl ? "flex-row-reverse" : ""}`}>
+                                                    <span className="text-emerald-400 shrink-0 mt-0.5">+</span>
+                                                    <span>{s}</span>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                    <div className={`space-y-2 ${isRtl ? "text-right" : ""}`}>
+                                        <div className={`flex items-center gap-1.5 text-rose-400 ${isRtl ? "flex-row-reverse" : ""}`}>
+                                            <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                                            <span className="text-[10px] font-black uppercase tracking-widest">{isRtl ? "نقاط ضعف" : "Weaknesses"}</span>
+                                        </div>
+                                        <ul className="space-y-1.5">
+                                            {(comp.weaknesses || []).slice(0, 4).map((w, j) => (
+                                                <li key={j} className={`text-xs text-muted-foreground font-medium opacity-70 flex items-start gap-1.5 ${isRtl ? "flex-row-reverse" : ""}`}>
+                                                    <span className="text-rose-400 shrink-0 mt-0.5">−</span>
+                                                    <span>{w}</span>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </MotionWrapper>
+                );
+            })}
         </div>
     );
 }
@@ -169,9 +178,11 @@ function ItemsGrid({ items, isRtl }: { items: CompetitorItem[]; isRtl: boolean }
 export function CompetitorsView({
     current,
     history,
+    animated = true,
 }: {
     current: { items: CompetitorItem[]; createdAt: Date };
     history: HistoryEntry[];
+    animated?: boolean;
 }) {
     const { isRtl } = useLanguage();
     return (
@@ -198,8 +209,8 @@ export function CompetitorsView({
                     </span>
                 </div>
             </div>
-            <ItemsGrid items={current.items} isRtl={isRtl} />
-            <InsightHistory history={history} renderItems={(items) => <ItemsGrid items={items} isRtl={isRtl} />} />
+            <ItemsGrid items={current.items} isRtl={isRtl} animated={animated} />
+            <InsightHistory history={history} renderItems={(items) => <ItemsGrid items={items} isRtl={isRtl} animated={false} />} />
         </div>
     );
 }
