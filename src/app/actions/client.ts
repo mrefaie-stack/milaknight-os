@@ -25,7 +25,7 @@ export async function getMarketingManagers() {
 
 export async function getClients() {
     const session = await getServerSession(authOptions);
-    const ALLOWED = ["ADMIN", "AM", "MODERATOR", "MARKETING_MANAGER", "ART_LEADER", "CONTENT_LEADER", "SEO_LEAD"];
+    const ALLOWED = ["ADMIN", "AM", "MODERATOR", "MARKETING_MANAGER", "ART_LEADER", "CONTENT_LEADER", "SEO_LEAD", "CONTENT_TEAM", "ART_TEAM", "SEO_TEAM"];
     if (!session || !ALLOWED.includes(session.user.role)) {
         throw new Error("Unauthorized");
     }

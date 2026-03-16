@@ -109,6 +109,7 @@ export function DashboardSidebar({ role, user }: { role: string; user: any }) {
         { href: "/clickup",         label: isRtl ? "كليك أب" : "ClickUp",                 icon: Layers },
         { href: "/am/action-plans", label: t("sidebar.action_plans"),                       icon: FolderKanban },
         { href: "/am/reports",      label: t("sidebar.reports"),                            icon: BarChart3 },
+        { href: "/insights",        label: isRtl ? "استخبارات العملاء" : "Client Insights",   icon: Sparkles },
         { href: "/approvals",       label: isRtl ? "الموافقات" : "Approvals",              icon: CheckSquare },
         { href: "/hr/leaves",       label: isRtl ? "إجازاتي" : "My Leaves",               icon: CalendarDays },
         { href: "/messages",        label: t("common.messages"),                            icon: MessageSquare },
@@ -130,6 +131,7 @@ export function DashboardSidebar({ role, user }: { role: string; user: any }) {
         { href: "/admin/meetings",       label: isRtl ? "الاجتماعات" : "Meetings",            icon: CalendarDays },
         { href: "/clickup",              label: isRtl ? "كليك أب" : "ClickUp",                icon: Layers },
         { href: "/approvals",            label: isRtl ? "الموافقات" : "Approvals",            icon: CheckSquare },
+        { href: "/insights",             label: isRtl ? "استخبارات العملاء" : "Client Insights",   icon: Sparkles },
         { href: "/hr/leaves",            label: isRtl ? "إجازاتي" : "My Leaves",              icon: CalendarDays },
         { href: "/messages",             label: t("common.messages"),                           icon: MessageSquare },
     ];
@@ -140,6 +142,7 @@ export function DashboardSidebar({ role, user }: { role: string; user: any }) {
         { href: "/admin/meetings",       label: isRtl ? "الاجتماعات" : "Meetings",            icon: CalendarDays },
         { href: "/clickup",              label: isRtl ? "كليك أب" : "ClickUp",                icon: Layers },
         { href: "/approvals",            label: isRtl ? "الموافقات" : "Approvals",            icon: CheckSquare },
+        { href: "/insights",             label: isRtl ? "استخبارات العملاء" : "Client Insights",   icon: Sparkles },
         { href: "/hr/leaves",            label: isRtl ? "إجازاتي" : "My Leaves",              icon: CalendarDays },
         { href: "/messages",             label: t("common.messages"),                           icon: MessageSquare },
     ];

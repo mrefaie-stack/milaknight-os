@@ -193,3 +193,29 @@ export async function getClientInsightHistory(type: InsightType): Promise<{ id: 
         }
     });
 }
+
+export async function getTeamClientInsight(clientId: string, type: InsightType): Promise<{ items: any[]; createdAt: Date | null }> {
+    const session = await getServerSession(authOptions);
+    if (!session) throw new Error("Unauthorized");
+    
+    // Only allow non-client/non-moderator roles (Admins, AMs, Marketing Managers, Leaders, Teams)
+    const allowedRoles = ["ADMIN", "AM", "MARKETING_MANAGER", "CONTENT_LEADER", "CONTENT_TEAM", "ART_LEADER", "ART_TEAM", "SEO_LEAD", "SEO_TEAM"];
+    if (!allowedRoles.includes(session.user.role)) {
+        throw new Error("Forbidden: Insufficient permissions to view client insights");
+    }
+
+    const latest = await prisma.clientInsight.findFirst({
+        where: { clientId, type },
+        orderBy: { createdAt: "desc" },
+    });
+
+    if (latest) {
+        try {
+            return { items: JSON.parse(latest.content), createdAt: latest.createdAt };
+        } catch {
+            return { items: [], createdAt: null };
+        }
+    }
+
+    return { items: [], createdAt: null };
+}
