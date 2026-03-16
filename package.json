@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "prisma generate && next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "cron:insights": "node scripts/cron-insights.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.78.0",
@@ -35,6 +36,7 @@
     "next-auth": "^4.24.13",
     "next-themes": "^0.4.6",
     "nodemailer": "^7.0.13",
+    "p-limit": "^7.3.0",
     "radix-ui": "^1.4.3",
     "react": "19.2.3",
     "react-dom": "19.2.3",
