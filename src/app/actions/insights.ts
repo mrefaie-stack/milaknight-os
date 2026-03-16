@@ -100,25 +100,33 @@ async function getClientProfile() {
 export async function getClientInsight(type: InsightType): Promise<{ items: any[]; createdAt: Date }> {
     const client = await getClientProfile();
 
-    // Check if latest record is within cache window
     const latest = await prisma.clientInsight.findFirst({
         where: { clientId: client.id, type },
         orderBy: { createdAt: "desc" },
     });
 
-    const cacheExpiry = new Date(Date.now() - CACHE_HOURS * 60 * 60 * 1000);
-    if (latest && latest.createdAt > cacheExpiry) {
+    if (latest) {
         try {
             return { items: JSON.parse(latest.content), createdAt: latest.createdAt };
         } catch {
-            // corrupted — fall through to regenerate
+            return { items: [], createdAt: new Date() };
         }
     }
 
-    // Generate new with Claude
+    return { items: [], createdAt: new Date() };
+}
+
+// Internal function to be used by the cron job
+export async function generateAndSaveClientInsight(clientId: string, type: InsightType) {
+    const client = await prisma.client.findUnique({
+        where: { id: clientId }
+    });
+    
+    if (!client) throw new Error("Client not found");
+
     const prompt = buildPrompt(type, client);
     const response = await anthropic.messages.create({
-        model: "claude-sonnet-4-6",
+        model: "claude-3-5-sonnet-latest",
         max_tokens: 4096,
         system: "You are a business intelligence analyst for a digital marketing agency in the Arab world. Generate structured JSON content based on client profiles. Always use grammatically correct Modern Standard Arabic (فصحى). Always respond with ONLY a valid JSON array. No markdown code blocks, no explanation, no preamble.",
         messages: [{ role: "user", content: prompt }],
@@ -139,24 +147,24 @@ export async function getClientInsight(type: InsightType): Promise<{ items: any[
         throw new Error("AI returned invalid JSON");
     }
 
-    // Basic structure validation per type
     const requiredKeys: Record<InsightType, string[]> = {
         INDUSTRY: ["titleAr", "titleEn", "summaryAr"],
         TRENDING: ["topicEn", "topicAr", "hashtag"],
         COMPETITORS: ["name", "descEn", "strengths"],
     };
+    
     const required = requiredKeys[type];
     const isValid = parsed.every((item) =>
         typeof item === "object" && item !== null && required.every((k) => k in item)
     );
+    
     if (!isValid) throw new Error("AI returned unexpected data structure");
 
-    // Create new record (keeps history)
     const record = await prisma.clientInsight.create({
         data: { clientId: client.id, type, content: JSON.stringify(parsed) },
     });
 
-    return { items: parsed, createdAt: record.createdAt };
+    return record;
 }
 
 export async function getClientInsightHistory(type: InsightType): Promise<{ id: string; items: any[]; createdAt: Date }[]> {
