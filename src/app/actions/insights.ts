@@ -219,3 +219,27 @@ export async function getTeamClientInsight(clientId: string, type: InsightType):
 
     return { items: [], createdAt: null };
 }
+
+export async function getTeamClientInsightHistory(clientId: string, type: InsightType): Promise<{ id: string; items: any[]; createdAt: Date }[]> {
+    const session = await getServerSession(authOptions);
+    if (!session) return [];
+
+    const allowedRoles = ["ADMIN", "AM", "MARKETING_MANAGER", "CONTENT_LEADER", "CONTENT_TEAM", "ART_LEADER", "ART_TEAM", "SEO_LEAD", "SEO_TEAM"];
+    if (!allowedRoles.includes(session.user.role)) return [];
+
+    // All records except the most recent (skip=1)
+    const records = await prisma.clientInsight.findMany({
+        where: { clientId, type },
+        orderBy: { createdAt: "desc" },
+        skip: 1,
+        take: 20,
+    });
+
+    return records.map((r) => {
+        try {
+            return { id: r.id, items: JSON.parse(r.content), createdAt: r.createdAt };
+        } catch {
+            return { id: r.id, items: [], createdAt: r.createdAt };
+        }
+    });
+}
