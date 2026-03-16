@@ -12,7 +12,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Sparkles, Users, Newspaper, TrendingUp, Target, Loader2 } from "lucide-react";
-import { getTeamClientInsight } from "@/app/actions/insights";
+import { getTeamClientInsight, getTeamClientInsightHistory } from "@/app/actions/insights";
 import { IndustryView } from "@/components/client/insights/industry-view";
 import { TrendingView } from "@/components/client/insights/trending-view";
 import { CompetitorsView } from "@/components/client/insights/competitors-view";
@@ -28,28 +28,35 @@ export function TeamInsightsView({ clients }: { clients: Client[] }) {
     const [activeTab, setActiveTab] = useState<string>("industry");
     const [loading, setLoading] = useState(false);
     const [data, setData] = useState<{
-        industry: { items: any[]; createdAt: Date | null };
-        trending: { items: any[]; createdAt: Date | null };
-        competitors: { items: any[]; createdAt: Date | null };
+        industry: { items: any[]; createdAt: Date | null; history: any[] };
+        trending: { items: any[]; createdAt: Date | null; history: any[] };
+        competitors: { items: any[]; createdAt: Date | null; history: any[] };
     }>({
-        industry: { items: [], createdAt: null },
-        trending: { items: [], createdAt: null },
-        competitors: { items: [], createdAt: null },
+        industry: { items: [], createdAt: null, history: [] },
+        trending: { items: [], createdAt: null, history: [] },
+        competitors: { items: [], createdAt: null, history: [] },
     });
 
     const fetchAllInsights = async (clientId: string) => {
         if (!clientId) return;
         setLoading(true);
         try {
-            const [ind, trd, comp] = await Promise.all([
+            const [
+                ind, indHist,
+                trd, trdHist,
+                comp, compHist
+            ] = await Promise.all([
                 getTeamClientInsight(clientId, "INDUSTRY"),
+                getTeamClientInsightHistory(clientId, "INDUSTRY"),
                 getTeamClientInsight(clientId, "TRENDING"),
+                getTeamClientInsightHistory(clientId, "TRENDING"),
                 getTeamClientInsight(clientId, "COMPETITORS"),
+                getTeamClientInsightHistory(clientId, "COMPETITORS"),
             ]);
             setData({
-                industry: { items: ind.items, createdAt: ind.createdAt },
-                trending: { items: trd.items, createdAt: trd.createdAt },
-                competitors: { items: comp.items, createdAt: comp.createdAt },
+                industry: { items: ind.items, createdAt: ind.createdAt, history: indHist },
+                trending: { items: trd.items, createdAt: trd.createdAt, history: trdHist },
+                competitors: { items: comp.items, createdAt: comp.createdAt, history: compHist },
             });
         } catch (error) {
             console.error("Failed to fetch team insights:", error);
@@ -149,7 +156,7 @@ export function TeamInsightsView({ clients }: { clients: Client[] }) {
                             {data.industry.items.length > 0 ? (
                                 <IndustryView 
                                     current={{ items: data.industry.items, createdAt: data.industry.createdAt || new Date() }}
-                                    history={[]}
+                                    history={data.industry.history}
                                 />
                             ) : (
                                 <EmptyState type="INDUSTRY" isRtl={isRtl} />
@@ -159,7 +166,7 @@ export function TeamInsightsView({ clients }: { clients: Client[] }) {
                             {data.trending.items.length > 0 ? (
                                 <TrendingView 
                                     current={{ items: data.trending.items, createdAt: data.trending.createdAt || new Date() }}
-                                    history={[]}
+                                    history={data.trending.history}
                                 />
                             ) : (
                                 <EmptyState type="TRENDING" isRtl={isRtl} />
@@ -169,7 +176,7 @@ export function TeamInsightsView({ clients }: { clients: Client[] }) {
                             {data.competitors.items.length > 0 ? (
                                 <CompetitorsView 
                                     current={{ items: data.competitors.items, createdAt: data.competitors.createdAt || new Date() }}
-                                    history={[]}
+                                    history={data.competitors.history}
                                 />
                             ) : (
                                 <EmptyState type="COMPETITORS" isRtl={isRtl} />
