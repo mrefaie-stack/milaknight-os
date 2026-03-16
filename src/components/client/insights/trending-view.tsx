@@ -30,7 +30,7 @@ const PLATFORM_STYLES: Record<string, string> = {
     Facebook: "bg-blue-500/10 text-blue-400 border-blue-500/20",
 };
 
-function ItemsGrid({ items, isRtl, animated = true }: { items: TrendingItem[]; isRtl: boolean; animated?: boolean }) {
+function ItemsGrid({ items, isRtl, animated = true, isHistory = false }: { items: TrendingItem[]; isRtl: boolean; animated?: boolean; isHistory?: boolean }) {
     return (
         <div className="grid gap-4 md:grid-cols-2">
             {items.map((item, i) => {
@@ -42,7 +42,7 @@ function ItemsGrid({ items, isRtl, animated = true }: { items: TrendingItem[]; i
                         animate={animated ? { opacity: 1, y: 0 } : undefined} 
                         transition={animated ? { delay: i * 0.04, duration: 0.35 } : undefined}
                     >
-                        <Card className="glass-card border-none rounded-3xl overflow-hidden group hover:bg-white/5 transition-all duration-300">
+                        <Card className={`${isHistory ? 'bg-white/5 border border-white/5' : 'glass-card border-none'} rounded-3xl overflow-hidden group hover:bg-white/5 transition-all duration-300`}>
                             <CardContent className="p-6 space-y-3">
                                 <div className={`flex items-start justify-between gap-3 ${isRtl ? 'flex-row-reverse' : ''}`}>
                                     <span className="text-xl font-black text-primary tracking-tight">{item.hashtag}</span>
@@ -114,7 +114,7 @@ export function TrendingView({
 
             <ItemsGrid items={current.items} isRtl={isRtl} animated={animated} />
 
-            <InsightHistory history={history} renderItems={(items) => <ItemsGrid items={items} isRtl={isRtl} animated={false} />} />
+            <InsightHistory history={history} renderItems={(items) => <ItemsGrid items={items} isRtl={isRtl} animated={false} isHistory={true} />} />
         </div>
     );
 }

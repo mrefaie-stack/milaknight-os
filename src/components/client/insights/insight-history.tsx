@@ -57,21 +57,24 @@ export function InsightHistory({ history, renderItems }: InsightHistoryProps) {
                         </button>
 
                         {/* Expanded content */}
-                        <AnimatePresence>
-                            {expandedId === entry.id && (
-                                    <motion.div
-                                    initial={{ height: 0, opacity: 0 }}
-                                    animate={{ height: "auto", opacity: 1 }}
-                                    exit={{ height: 0, opacity: 0 }}
-                                    transition={{ duration: 0.4, ease: [0.04, 0.62, 0.23, 0.98] }}
-                                    className="overflow-hidden"
-                                >
-                                    <div className="p-5 bg-white/2 border-t border-white/5">
-                                        {renderItems(entry.items)}
-                                    </div>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
+                        <div className="overflow-hidden">
+                            <motion.div
+                                initial={false}
+                                animate={{ 
+                                    height: expandedId === entry.id ? "auto" : 0,
+                                    opacity: expandedId === entry.id ? 1 : 0,
+                                }}
+                                transition={{ 
+                                    duration: 0.3, 
+                                    ease: [0.04, 0.62, 0.23, 0.98] 
+                                }}
+                                className="overflow-hidden"
+                            >
+                                <div className="p-5 bg-white/2 border-t border-white/5">
+                                    {renderItems(entry.items)}
+                                </div>
+                            </motion.div>
+                        </div>
                     </div>
                 ))}
             </div>
