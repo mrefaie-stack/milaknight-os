@@ -9,7 +9,7 @@ import {
     MessageSquare, ShieldCheck, Trash2, Bell, Sparkles,
     X, Calendar, CheckSquare, Layers, Building2, UserCog,
     Newspaper, TrendingUp, Target, Activity, MoreHorizontal,
-    ChevronUp,
+    ChevronUp, Bot,
 } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
 import Link from "next/link";
@@ -20,7 +20,12 @@ import { MeetingRequestModal } from "@/components/dashboard/meeting-request-moda
 
 type NavLink = { href: string; label: string; icon: React.ElementType };
 
-export function MobileHeader({ role, user }: { role: string; user: any }) {
+export function MobileHeader({ role, user, mobileAiOpen, onAiToggle }: {
+    role: string;
+    user: any;
+    mobileAiOpen?: boolean;
+    onAiToggle?: () => void;
+}) {
     const { t, isRtl } = useLanguage();
     const [isMoreOpen, setIsMoreOpen] = useState(false);
     const pathname = usePathname();
@@ -345,6 +350,33 @@ export function MobileHeader({ role, user }: { role: string; user: any }) {
                         </Link>
                     );
                 })}
+
+                {/* AI tab */}
+                {onAiToggle && (
+                    <button
+                        onClick={() => { onAiToggle(); setIsMoreOpen(false); }}
+                        className={cn(
+                            "flex-1 flex flex-col items-center justify-center gap-1 relative transition-colors duration-150",
+                            mobileAiOpen ? "text-primary" : "text-muted-foreground",
+                        )}
+                    >
+                        {mobileAiOpen && (
+                            <span className="absolute top-0 left-1/2 -translate-x-1/2 h-[2px] w-8 rounded-b-full bg-primary" />
+                        )}
+                        <div className={cn(
+                            "flex items-center justify-center w-8 h-8 rounded-xl transition-all",
+                            mobileAiOpen ? "bg-primary/10" : "",
+                        )}>
+                            <Bot className="h-[18px] w-[18px]" />
+                        </div>
+                        <span className={cn(
+                            "text-[9px] font-semibold leading-none tracking-wide",
+                            mobileAiOpen ? "text-primary" : "text-muted-foreground",
+                        )}>
+                            AI
+                        </span>
+                    </button>
+                )}
 
                 {/* More tab */}
                 <button

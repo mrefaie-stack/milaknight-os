@@ -27,8 +27,18 @@ type ToolEvent = {
   status: "running" | "done";
 };
 
-export function AiChatWidget({ user }: { user: { name: string; role: string; id: string } }) {
+export function AiChatWidget({ user, mobileOpen, onMobileClose }: {
+  user: { name: string; role: string; id: string };
+  mobileOpen?: boolean;
+  onMobileClose?: () => void;
+}) {
   const [isOpen, setIsOpen] = useState(false);
+  const effectiveOpen = mobileOpen ?? isOpen;
+
+  const handleClose = () => {
+    setIsOpen(false);
+    onMobileClose?.();
+  };
   const [showHistory, setShowHistory] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -226,10 +236,10 @@ export function AiChatWidget({ user }: { user: { name: string; role: string; id:
 
   return (
     <>
-      {/* Floating Button and Welcome Bubble */}
+      {/* Floating Button and Welcome Bubble — desktop only */}
       <motion.div
         className={cn(
-          "fixed bottom-20 md:bottom-6 z-[55] flex flex-col gap-3",
+          "fixed bottom-6 z-[55] hidden md:flex flex-col gap-3",
           isRtl ? "left-6 items-start" : "right-6 items-end"
         )}
         initial={{ scale: 0 }}
@@ -237,7 +247,7 @@ export function AiChatWidget({ user }: { user: { name: string; role: string; id:
         transition={{ delay: 0.5, type: "spring" }}
       >
         <AnimatePresence>
-          {showWelcome && !isOpen && (
+          {showWelcome && !effectiveOpen && (
             <motion.div
               initial={{ opacity: 0, x: isRtl ? -20 : 20, scale: 0.8 }}
               animate={{ opacity: 1, x: 0, scale: 1 }}
@@ -253,6 +263,7 @@ export function AiChatWidget({ user }: { user: { name: string; role: string; id:
                   setIsOpen(true);
                   setShowWelcome(false);
                 }}
+
               >
                 <p className="text-sm font-medium leading-relaxed">
                   أنا مساعدك الذكي، كيف يمكنني مساعدتك اليوم؟
@@ -278,33 +289,36 @@ export function AiChatWidget({ user }: { user: { name: string; role: string; id:
 
         <Button
           onClick={() => {
-            setIsOpen(!isOpen);
-            if (!isOpen) setShowWelcome(false);
+            setIsOpen(!effectiveOpen);
+            if (!effectiveOpen) setShowWelcome(false);
           }}
           size="icon-lg"
           className={cn(
             "rounded-full shadow-lg size-14 transition-all",
-            isOpen
+            effectiveOpen
               ? "bg-muted text-muted-foreground hover:bg-muted/80"
               : "bg-primary text-primary-foreground hover:bg-primary/90"
           )}
         >
-          {isOpen ? <X className="size-6" /> : <Bot className="size-6" />}
+          {effectiveOpen ? <X className="size-6" /> : <Bot className="size-6" />}
         </Button>
       </motion.div>
 
       {/* Chat Panel */}
       <AnimatePresence>
-        {isOpen && (
+        {effectiveOpen && (
           <motion.div
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.2 }}
             className={cn(
-              "fixed bottom-36 md:bottom-24 z-[55] flex flex-col rounded-xl border border-border bg-card shadow-lg overflow-hidden",
-              "inset-x-3 h-[70vh] sm:inset-x-auto sm:h-[550px] sm:max-h-[70vh] sm:w-[400px]",
-              isRtl ? "sm:left-6" : "sm:right-6"
+              "fixed z-[55] flex flex-col border border-border bg-card shadow-lg overflow-hidden",
+              // Mobile: bottom sheet sitting above the tab bar
+              "bottom-16 left-0 right-0 h-[calc(100dvh-4rem)] rounded-t-2xl",
+              // Desktop: floating panel
+              "md:bottom-24 md:left-auto md:right-auto md:rounded-xl md:h-[550px] md:max-h-[70vh] md:w-[400px]",
+              isRtl ? "md:left-6" : "md:right-6"
             )}
           >
             {/* Header */}
@@ -334,6 +348,14 @@ export function AiChatWidget({ user }: { user: { name: string; role: string; id:
                   title="New chat"
                 >
                   <Plus className="size-3.5" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
+                  onClick={handleClose}
+                  title="Close"
+                >
+                  <X className="size-3.5" />
                 </Button>
               </div>
             </div>
