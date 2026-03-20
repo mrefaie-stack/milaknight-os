@@ -167,25 +167,31 @@ export async function generateAndSaveClientInsight(clientId: string, type: Insig
     return record;
 }
 
-export async function requestInsightRefresh(type: InsightType): Promise<{ ok: boolean; remainingMs?: number }> {
-    const client = await getClientProfile();
+export async function requestInsightRefresh(type: InsightType): Promise<{ ok: boolean; remainingMs?: number; error?: string }> {
+    try {
+        const client = await getClientProfile();
 
-    const latest = await prisma.clientInsight.findFirst({
-        where: { clientId: client.id, type },
-        orderBy: { createdAt: "desc" },
-        select: { createdAt: true },
-    });
+        const latest = await prisma.clientInsight.findFirst({
+            where: { clientId: client.id, type },
+            orderBy: { createdAt: "desc" },
+            select: { createdAt: true },
+        });
 
-    if (latest) {
-        const ageMs = Date.now() - latest.createdAt.getTime();
-        const cacheLimitMs = CACHE_HOURS * 60 * 60 * 1000;
-        if (ageMs < cacheLimitMs) {
-            return { ok: false, remainingMs: cacheLimitMs - ageMs };
+        if (latest) {
+            const ageMs = Date.now() - latest.createdAt.getTime();
+            const cacheLimitMs = CACHE_HOURS * 60 * 60 * 1000;
+            if (ageMs < cacheLimitMs) {
+                return { ok: false, remainingMs: cacheLimitMs - ageMs };
+            }
         }
-    }
 
-    await generateAndSaveClientInsight(client.id, type);
-    return { ok: true };
+        await generateAndSaveClientInsight(client.id, type);
+        return { ok: true };
+    } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        console.error("[requestInsightRefresh]", type, msg);
+        return { ok: false, error: msg };
+    }
 }
 
 export async function getClientInsightHistory(type: InsightType): Promise<{ id: string; items: any[]; createdAt: Date }[]> {
