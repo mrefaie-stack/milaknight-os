@@ -4,9 +4,9 @@ import { useLanguage } from "@/contexts/language-context";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { RefreshCw, TrendingUp } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+import { TrendingUp } from "lucide-react";
 import { InsightHistory } from "./insight-history";
+import { RefreshInsightButton } from "./refresh-button";
 
 interface TrendingItem {
     topicEn: string;
@@ -103,13 +103,7 @@ export function TrendingView({
                         </p>
                     </div>
                 </div>
-                <div className={`flex items-center gap-2 text-[11px] text-muted-foreground font-bold opacity-50 ${isRtl ? 'flex-row-reverse' : ''}`}>
-                    <RefreshCw className="h-3 w-3" />
-                    <span>
-                        {isRtl ? "آخر تحديث" : "Updated"} {formatDistanceToNow(new Date(current.createdAt), { addSuffix: true })}
-                        {" · "}{isRtl ? "يتجدد كل 12 ساعة" : "Refreshes every 12h"}
-                    </span>
-                </div>
+                <RefreshInsightButton type="TRENDING" createdAt={new Date(current.createdAt)} isRtl={isRtl} />
             </div>
 
             <ItemsGrid items={current.items} isRtl={isRtl} animated={animated} />
