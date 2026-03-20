@@ -61,9 +61,11 @@ export function RefreshInsightButton({ type, createdAt, isRtl }: Props) {
                 router.refresh();
             } else if (result.remainingMs) {
                 setRemainingMs(result.remainingMs);
+            } else if (result.error) {
+                setError(result.error);
             }
-        } catch {
-            setError(isRtl ? "حدث خطأ، حاول مجدداً" : "Something went wrong");
+        } catch (e) {
+            setError(e instanceof Error ? e.message : String(e));
         } finally {
             setLoading(false);
         }
