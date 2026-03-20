@@ -4,9 +4,9 @@ import { useLanguage } from "@/contexts/language-context";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { RefreshCw, Target, ShieldCheck, AlertTriangle, Instagram, Linkedin } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+import { Target, ShieldCheck, AlertTriangle, Instagram, Linkedin } from "lucide-react";
 import { InsightHistory } from "./insight-history";
+import { RefreshInsightButton } from "./refresh-button";
 
 interface SocialMedia {
     instagram?: string | null;
@@ -201,13 +201,7 @@ export function CompetitorsView({
                         </p>
                     </div>
                 </div>
-                <div className={`flex items-center gap-2 text-[11px] text-muted-foreground font-bold opacity-50 ${isRtl ? "flex-row-reverse" : ""}`}>
-                    <RefreshCw className="h-3 w-3" />
-                    <span>
-                        {isRtl ? "آخر تحديث" : "Updated"} {formatDistanceToNow(new Date(current.createdAt), { addSuffix: true })}
-                        {" · "}{isRtl ? "يتجدد كل 12 ساعة" : "Refreshes every 12h"}
-                    </span>
-                </div>
+                <RefreshInsightButton type="COMPETITORS" createdAt={new Date(current.createdAt)} isRtl={isRtl} />
             </div>
             <ItemsGrid items={current.items} isRtl={isRtl} animated={animated} />
             <InsightHistory history={history} renderItems={(items) => <ItemsGrid items={items} isRtl={isRtl} animated={false} isHistory={true} />} />
