@@ -64,9 +64,9 @@ export function AdminServicesUI({ services }: { services: any[] }) {
 
     return (
         <div className="space-y-8">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 bg-card/30 p-8 rounded-3xl border border-white/10 backdrop-blur-xl shadow-2xl">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 bg-card/30 p-8 rounded-xl border border-border shadow-lg">
                 <div>
-                    <h1 className="text-4xl font-black tracking-tight">Global Services</h1>
+                    <h1 className="text-2xl font-bold tracking-tight">Global Services</h1>
                     <p className="text-muted-foreground font-medium mt-1 text-lg">Manage the catalog of services you offer to clients.</p>
                 </div>
 
@@ -76,36 +76,36 @@ export function AdminServicesUI({ services }: { services: any[] }) {
                             <Plus className="mr-2 h-4 w-4" /> Add New Service
                         </Button>
                     </DialogTrigger>
-                    <DialogContent className="max-w-2xl bg-card/95 backdrop-blur-xl border-white/10">
+                    <DialogContent className="max-w-2xl bg-card border-border">
                         <DialogHeader>
-                            <DialogTitle className="text-2xl font-black">Create Global Service</DialogTitle>
+                            <DialogTitle className="text-2xl font-bold">Create Global Service</DialogTitle>
                             <DialogDescription className="font-medium">Define a new service for the catalog.</DialogDescription>
                         </DialogHeader>
                         <form onSubmit={handleAdd} className="space-y-6 mt-4">
                             <div className="grid grid-cols-2 gap-6">
                                 <div className="space-y-2">
-                                    <Label className="flex items-center gap-2 text-xs font-black uppercase text-muted-foreground"><Type className="h-3 w-3" /> Name (Arabic)</Label>
-                                    <Input name="nameAr" required className="bg-background/50 border-white/5 h-11" placeholder="مثلاً: إدارة السوشيال ميديا" dir="rtl" />
+                                    <Label className="flex items-center gap-2 text-xs font-medium section-label text-muted-foreground"><Type className="h-3 w-3" /> Name (Arabic)</Label>
+                                    <Input name="nameAr" required className="bg-background/50 border-border h-11" placeholder="مثلاً: إدارة السوشيال ميديا" dir="rtl" />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label className="flex items-center gap-2 text-xs font-black uppercase text-muted-foreground"><Type className="h-3 w-3" /> Name (English)</Label>
-                                    <Input name="nameEn" required className="bg-background/50 border-white/5 h-11" placeholder="e.g. Social Media Management" />
+                                    <Label className="flex items-center gap-2 text-xs font-medium section-label text-muted-foreground"><Type className="h-3 w-3" /> Name (English)</Label>
+                                    <Input name="nameEn" required className="bg-background/50 border-border h-11" placeholder="e.g. Social Media Management" />
                                 </div>
                             </div>
 
                             <div className="space-y-2">
-                                <Label className="flex items-center gap-2 text-xs font-black uppercase text-muted-foreground"><AlignLeft className="h-3 w-3" /> Description (Arabic)</Label>
-                                <textarea name="descriptionAr" className="flex min-h-[100px] w-full rounded-xl border border-white/5 bg-background/50 px-4 py-3 text-sm font-medium shadow-inner outline-none focus:ring-1 focus:ring-primary transition-all" dir="rtl" />
+                                <Label className="flex items-center gap-2 text-xs font-medium section-label text-muted-foreground"><AlignLeft className="h-3 w-3" /> Description (Arabic)</Label>
+                                <textarea name="descriptionAr" className="flex min-h-[100px] w-full rounded-xl border border-border bg-background/50 px-4 py-3 text-sm font-medium shadow-inner outline-none focus:ring-1 focus:ring-primary transition-all" dir="rtl" />
                             </div>
 
                             <div className="space-y-2">
-                                <Label className="flex items-center gap-2 text-xs font-black uppercase text-muted-foreground"><AlignLeft className="h-3 w-3" /> Description (English)</Label>
-                                <textarea name="descriptionEn" className="flex min-h-[100px] w-full rounded-xl border border-white/5 bg-background/50 px-4 py-3 text-sm font-medium shadow-inner outline-none focus:ring-1 focus:ring-primary transition-all" />
+                                <Label className="flex items-center gap-2 text-xs font-medium section-label text-muted-foreground"><AlignLeft className="h-3 w-3" /> Description (English)</Label>
+                                <textarea name="descriptionEn" className="flex min-h-[100px] w-full rounded-xl border border-border bg-background/50 px-4 py-3 text-sm font-medium shadow-inner outline-none focus:ring-1 focus:ring-primary transition-all" />
                             </div>
 
                             <div className="space-y-2">
-                                <Label className="flex items-center gap-2 text-xs font-black uppercase text-muted-foreground"><Zap className="h-3 w-3" /> Icon Identifier (Lucide)</Label>
-                                <Input name="icon" defaultValue="Zap" className="bg-background/50 border-white/5 h-11" />
+                                <Label className="flex items-center gap-2 text-xs font-medium section-label text-muted-foreground"><Zap className="h-3 w-3" /> Icon Identifier (Lucide)</Label>
+                                <Input name="icon" defaultValue="Zap" className="bg-background/50 border-border h-11" />
                             </div>
 
                             <DialogFooter>
@@ -120,9 +120,9 @@ export function AdminServicesUI({ services }: { services: any[] }) {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {services.map((service) => (
-                    <Card key={service.id} className="group overflow-hidden border-white/5 bg-card/50 backdrop-blur-md hover:bg-card/80 transition-all duration-300">
+                    <Card key={service.id} className="group overflow-hidden border-border bg-card/50 hover:bg-card/80 transition-all duration-300">
                         <CardHeader className="flex flex-row items-center justify-between">
-                            <div className="p-3 bg-primary/10 rounded-2xl text-primary group-hover:scale-110 transition-transform">
+                            <div className="p-3 bg-primary/10 rounded-lg text-primary group-hover:scale-110 transition-transform">
                                 <LayoutGrid className="h-6 w-6" />
                             </div>
                             <div className="flex gap-2">
@@ -135,7 +135,7 @@ export function AdminServicesUI({ services }: { services: any[] }) {
                             </div>
                         </CardHeader>
                         <CardContent className="space-y-2">
-                            <CardTitle className="text-xl font-black">{service.nameEn}</CardTitle>
+                            <CardTitle className="text-xl font-semibold">{service.nameEn}</CardTitle>
                             <CardTitle className="text-lg font-bold text-muted-foreground" dir="rtl">{service.nameAr}</CardTitle>
                             <CardDescription className="line-clamp-3 mt-4 text-sm font-medium italic">
                                 {service.descriptionEn}
@@ -147,33 +147,33 @@ export function AdminServicesUI({ services }: { services: any[] }) {
 
             {/* Edit Dialog */}
             <Dialog open={!!editingService} onOpenChange={(open) => !open && setEditingService(null)}>
-                <DialogContent className="max-w-2xl bg-card/95 backdrop-blur-xl border-white/10">
+                <DialogContent className="max-w-2xl bg-card border-border">
                     <DialogHeader>
-                        <DialogTitle className="text-2xl font-black">Edit Global Service</DialogTitle>
+                        <DialogTitle className="text-2xl font-bold">Edit Global Service</DialogTitle>
                     </DialogHeader>
                     {editingService && (
                         <form onSubmit={handleUpdate} className="space-y-6 mt-4">
                             <div className="grid grid-cols-2 gap-6">
                                 <div className="space-y-2">
-                                    <Label className="flex items-center gap-2 text-xs font-black uppercase text-muted-foreground">Name (Arabic)</Label>
-                                    <Input name="nameAr" defaultValue={editingService.nameAr} required className="bg-background/50 border-white/5 h-11" dir="rtl" />
+                                    <Label className="flex items-center gap-2 text-xs font-medium section-label text-muted-foreground">Name (Arabic)</Label>
+                                    <Input name="nameAr" defaultValue={editingService.nameAr} required className="bg-background/50 border-border h-11" dir="rtl" />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label className="flex items-center gap-2 text-xs font-black uppercase text-muted-foreground">Name (English)</Label>
-                                    <Input name="nameEn" defaultValue={editingService.nameEn} required className="bg-background/50 border-white/5 h-11" />
+                                    <Label className="flex items-center gap-2 text-xs font-medium section-label text-muted-foreground">Name (English)</Label>
+                                    <Input name="nameEn" defaultValue={editingService.nameEn} required className="bg-background/50 border-border h-11" />
                                 </div>
                             </div>
                             <div className="space-y-2">
-                                <Label className="flex items-center gap-2 text-xs font-black uppercase text-muted-foreground">Description (Arabic)</Label>
-                                <textarea name="descriptionAr" defaultValue={editingService.descriptionAr} className="flex min-h-[100px] w-full rounded-xl border border-white/5 bg-background/50 px-4 py-3 text-sm font-medium shadow-inner outline-none focus:ring-1 focus:ring-primary transition-all" dir="rtl" />
+                                <Label className="flex items-center gap-2 text-xs font-medium section-label text-muted-foreground">Description (Arabic)</Label>
+                                <textarea name="descriptionAr" defaultValue={editingService.descriptionAr} className="flex min-h-[100px] w-full rounded-xl border border-border bg-background/50 px-4 py-3 text-sm font-medium shadow-inner outline-none focus:ring-1 focus:ring-primary transition-all" dir="rtl" />
                             </div>
                             <div className="space-y-2">
-                                <Label className="flex items-center gap-2 text-xs font-black uppercase text-muted-foreground">Description (English)</Label>
-                                <textarea name="descriptionEn" defaultValue={editingService.descriptionEn} className="flex min-h-[100px] w-full rounded-xl border border-white/5 bg-background/50 px-4 py-3 text-sm font-medium shadow-inner outline-none focus:ring-1 focus:ring-primary transition-all" />
+                                <Label className="flex items-center gap-2 text-xs font-medium section-label text-muted-foreground">Description (English)</Label>
+                                <textarea name="descriptionEn" defaultValue={editingService.descriptionEn} className="flex min-h-[100px] w-full rounded-xl border border-border bg-background/50 px-4 py-3 text-sm font-medium shadow-inner outline-none focus:ring-1 focus:ring-primary transition-all" />
                             </div>
                             <div className="space-y-2">
-                                <Label className="flex items-center gap-2 text-xs font-black uppercase text-muted-foreground">Icon</Label>
-                                <Input name="icon" defaultValue={editingService.icon} className="bg-background/50 border-white/5 h-11" />
+                                <Label className="flex items-center gap-2 text-xs font-medium section-label text-muted-foreground">Icon</Label>
+                                <Input name="icon" defaultValue={editingService.icon} className="bg-background/50 border-border h-11" />
                             </div>
                             <DialogFooter>
                                 <Button type="submit" disabled={loading} className="w-full h-12 rounded-xl font-bold">

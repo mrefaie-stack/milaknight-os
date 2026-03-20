@@ -68,7 +68,7 @@ export function HRLeavesManager({ leaves: initialLeaves }: Props) {
             {/* Header */}
             <div className={cn("flex flex-col md:flex-row md:items-center justify-between gap-4", isRtl ? "text-right" : "")}>
                 <div>
-                    <h1 className="text-3xl md:text-4xl font-black tracking-tighter premium-gradient-text uppercase">
+                    <h1 className="text-2xl font-bold tracking-tight">
                         {isRtl ? "طلبات الإجازات" : "Leave Requests"}
                     </h1>
                     <p className="text-sm text-muted-foreground mt-1">
@@ -86,10 +86,10 @@ export function HRLeavesManager({ leaves: initialLeaves }: Props) {
                             key={s}
                             onClick={() => setFilter(s)}
                             className={cn(
-                                "px-3 py-1.5 rounded-xl text-[11px] font-black uppercase tracking-wider border transition-all",
+                                "px-3 py-1.5 rounded-md text-xs font-medium border transition-colors",
                                 filter === s
-                                    ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20"
-                                    : "border-white/10 text-muted-foreground hover:border-white/20 hover:text-foreground"
+                                    ? "bg-primary text-primary-foreground border-primary"
+                                    : "border-border text-muted-foreground hover:border-border/80 hover:text-foreground hover:bg-muted"
                             )}
                         >
                             {s === "ALL"
@@ -124,21 +124,21 @@ export function HRLeavesManager({ leaves: initialLeaves }: Props) {
                                 exit={{ opacity: 0, x: -10 }}
                                 transition={{ delay: i * 0.04 }}
                                 className={cn(
-                                    "p-5 rounded-2xl border space-y-4",
-                                    STATUS_COLORS[leave.status] ?? "border-white/10 bg-white/2"
+                                    "p-4 rounded-lg border space-y-3",
+                                    STATUS_COLORS[leave.status] ?? "border-border bg-card"
                                 )}
                             >
                                 <div className={cn("flex items-start justify-between gap-4", isRtl ? "flex-row-reverse" : "")}>
                                     <div className={cn("space-y-1", isRtl ? "text-right" : "")}>
                                         <div className={cn("flex items-center gap-2", isRtl ? "flex-row-reverse" : "")}>
-                                            <p className="text-sm font-black">
+                                            <p className="text-sm font-medium">
                                                 {leave.user.firstName} {leave.user.lastName}
                                             </p>
-                                            <span className="text-[10px] bg-white/10 px-2 py-0.5 rounded-full font-bold text-muted-foreground">
+                                            <span className="text-[10px] bg-muted px-2 py-0.5 rounded-full font-medium text-muted-foreground">
                                                 {leave.user.department ?? leave.user.role}
                                             </span>
                                         </div>
-                                        <p className="text-[12px] font-bold text-muted-foreground">
+                                        <p className="text-[12px] text-muted-foreground">
                                             {isRtl ? (LEAVE_TYPE_AR[leave.type] ?? leave.type) : leave.type}
                                             {" · "}{leave.days} {isRtl ? "يوم" : "days"}
                                         </p>
@@ -152,7 +152,7 @@ export function HRLeavesManager({ leaves: initialLeaves }: Props) {
 
                                     {/* Status badge */}
                                     <div className={cn(
-                                        "flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider border shrink-0",
+                                        "flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-medium border shrink-0",
                                         STATUS_COLORS[leave.status]
                                     )}>
                                         {leave.status === "PENDING" && <Clock className="h-3 w-3" />}
@@ -170,14 +170,14 @@ export function HRLeavesManager({ leaves: initialLeaves }: Props) {
                                             onChange={e => setReviewNote(prev => ({ ...prev, [leave.id]: e.target.value }))}
                                             placeholder={isRtl ? "ملاحظة (اختياري)..." : "Review note (optional)..."}
                                             dir={isRtl ? "rtl" : "ltr"}
-                                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-[12px] outline-none focus:border-primary/40 placeholder:text-muted-foreground/40"
+                                            className="w-full bg-background border border-border rounded-lg px-3 py-2 text-[12px] outline-none focus:border-primary focus:ring-3 focus:ring-primary/15 placeholder:text-muted-foreground/40"
                                         />
                                         <div className={cn("flex gap-2", isRtl ? "flex-row-reverse" : "")}>
                                             <motion.button
                                                 whileTap={{ scale: 0.95 }}
                                                 onClick={() => handleReview(leave.id, "APPROVED")}
                                                 disabled={reviewingId === leave.id}
-                                                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-green-500/15 text-green-400 border border-green-500/30 text-[12px] font-bold hover:bg-green-500/25 transition-colors disabled:opacity-50"
+                                                className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 text-xs font-medium hover:bg-emerald-500/15 transition-colors disabled:opacity-50"
                                             >
                                                 {reviewingId === leave.id
                                                     ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -188,7 +188,7 @@ export function HRLeavesManager({ leaves: initialLeaves }: Props) {
                                                 whileTap={{ scale: 0.95 }}
                                                 onClick={() => handleReview(leave.id, "REJECTED")}
                                                 disabled={reviewingId === leave.id}
-                                                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-red-500/15 text-red-400 border border-red-500/30 text-[12px] font-bold hover:bg-red-500/25 transition-colors disabled:opacity-50"
+                                                className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md bg-destructive/10 text-destructive border border-destructive/20 text-xs font-medium hover:bg-destructive/15 transition-colors disabled:opacity-50"
                                             >
                                                 <XCircle className="h-3.5 w-3.5" />
                                                 {isRtl ? "رفض" : "Reject"}

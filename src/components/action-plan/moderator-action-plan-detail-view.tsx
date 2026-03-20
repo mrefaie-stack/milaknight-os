@@ -43,13 +43,13 @@ export function ModeratorActionPlanDetailView({ plan, items }: { plan: any; item
 
     return (
         <div className="space-y-8">
-            <div className={`p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4 ${isRtl ? 'md:flex-row-reverse' : ''}`}>
+            <div className={`p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl flex flex-col md:flex-row items-center justify-between gap-4 ${isRtl ? 'md:flex-row-reverse' : ''}`}>
                 <div className={`flex items-center gap-3 ${isRtl ? 'flex-row-reverse' : ''}`}>
                     <div className="p-2 rounded-xl bg-emerald-500 text-white">
                         <CheckCircle2 className="h-4 w-4" />
                     </div>
                     <div className={isRtl ? 'text-right' : 'text-left'}>
-                        <p className="text-xs font-black uppercase tracking-widest text-emerald-600">
+                        <p className="section-label text-emerald-600">
                             {isRtl ? "عرض الناشر - محتوى معتمد فقط" : "MODERATOR VIEW - APPROVED CONTENT ONLY"}
                         </p>
                         <p className="text-[10px] font-bold text-emerald-600/70">
@@ -63,7 +63,7 @@ export function ModeratorActionPlanDetailView({ plan, items }: { plan: any; item
                     <Button
                         onClick={handleSchedule}
                         disabled={isScheduling}
-                        className="rounded-xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-emerald-500/20 bg-emerald-600 hover:bg-emerald-700 h-10 px-6"
+                        className="rounded-lg font-semibold text-xs shadow-sm bg-emerald-600 hover:bg-emerald-700 h-10 px-6"
                     >
                         <CalendarDays className={`h-4 w-4 ${isRtl ? 'ml-2' : 'mr-2'}`} />
                         {isRtl ? "تأكيد جدولة الخطة بالكامل" : "CONFIRM FULL PLAN SCHEDULED"}
@@ -73,7 +73,7 @@ export function ModeratorActionPlanDetailView({ plan, items }: { plan: any; item
                 {plan.status === "SCHEDULED" && (
                     <div className={`flex items-center gap-2 px-4 py-2 bg-emerald-500/20 rounded-xl border border-emerald-500/30 ${isRtl ? 'flex-row-reverse' : ''}`}>
                         <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                        <span className="text-[10px] font-black uppercase text-emerald-700 tracking-widest">
+                        <span className="text-[10px] font-medium text-emerald-700">
                             {isRtl ? "تمت الجدولة" : "SCHEDULED"}
                         </span>
                     </div>

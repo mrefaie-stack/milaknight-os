@@ -23,10 +23,10 @@ export function ClientActionPlansList({ plans }: { plans: any[] }) {
         <div className="space-y-8" dir={isRtl ? "rtl" : "ltr"}>
             {/* Header */}
             <div className={`space-y-1 ${isRtl ? 'text-right' : 'text-left'}`}>
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/60">
+                <p className="section-label text-primary/60">
                     {isRtl ? "خطط المحتوى" : "Content Plans"}
                 </p>
-                <h1 className="text-4xl font-black tracking-tighter">
+                <h1 className="text-2xl font-bold tracking-tight">
                     {isRtl ? "خطط المحتوى الخاصة بي" : "My Action Plans"}
                 </h1>
                 <p className="text-muted-foreground font-medium">
@@ -42,9 +42,9 @@ export function ClientActionPlansList({ plans }: { plans: any[] }) {
                         { label: isRtl ? "معتمدة" : "Approved", value: approved, color: "text-emerald-500" },
                         { label: isRtl ? "تحتاج مراجعة" : "Need Review", value: needsAction, color: "text-orange-500" },
                     ].map(stat => (
-                        <div key={stat.label} className={`p-4 rounded-2xl bg-card/40 border border-white/5 text-center`}>
-                            <div className={`text-3xl font-black ${stat.color}`}>{stat.value}</div>
-                            <div className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mt-0.5">{stat.label}</div>
+                        <div key={stat.label} className={`p-4 rounded-xl bg-card border border-border text-center`}>
+                            <div className={`text-3xl font-bold ${stat.color}`}>{stat.value}</div>
+                            <div className="section-label text-muted-foreground mt-0.5">{stat.label}</div>
                         </div>
                     ))}
                 </div>
@@ -63,8 +63,8 @@ export function ClientActionPlansList({ plans }: { plans: any[] }) {
 
                     return (
                         <Link key={plan.id} href={`/client/action-plans/${plan.id}`} className="group block">
-                            <div className={`relative p-5 rounded-2xl bg-card/50 backdrop-blur-sm border transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5 overflow-hidden ${plan.status === "REVISION_REQUESTED" ? "border-red-500/30 shadow-red-500/5" :
-                                    hasIssue ? "border-orange-500/20" : "border-white/8 hover:border-primary/20"
+                            <div className={`relative p-5 rounded-xl bg-card border transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 overflow-hidden ${plan.status === "REVISION_REQUESTED" ? "border-red-500/30 shadow-red-500/5" :
+                                    hasIssue ? "border-orange-500/20" : "border-border hover:border-primary/20"
                                 }`}>
                                 <div className={`absolute top-0 inset-x-0 h-1 ${plan.status === "APPROVED" ? "bg-emerald-500" :
                                         plan.status === "REVISION_REQUESTED" ? "bg-red-500" :
@@ -73,12 +73,12 @@ export function ClientActionPlansList({ plans }: { plans: any[] }) {
 
                                 <div className={`flex items-start justify-between mt-1 mb-4 ${isRtl ? 'flex-row-reverse' : ''}`}>
                                     <div className={isRtl ? 'text-right' : 'text-left'}>
-                                        <h3 className="text-2xl font-black tracking-tight">{plan.month}</h3>
-                                        <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mt-0.5">
+                                        <h3 className="text-2xl font-bold tracking-tight">{plan.month}</h3>
+                                        <p className="section-label text-muted-foreground mt-0.5">
                                             {isRtl ? "خطة المحتوى الشهرية" : "Monthly Content Plan"}
                                         </p>
                                     </div>
-                                    <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-black ${sm.bg} ${sm.color} border ${sm.border}`}>
+                                    <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-medium ${sm.bg} ${sm.color} border ${sm.border}`}>
                                         <StatusIcon className="h-3 w-3" />
                                         {(isRtl ? sm.ar : sm.en).toUpperCase()}
                                     </div>
@@ -87,24 +87,24 @@ export function ClientActionPlansList({ plans }: { plans: any[] }) {
                                 {pendingItems > 0 && plan.status !== "APPROVED" && (
                                     <div className={`mb-3 px-3 py-2 bg-orange-500/10 border border-orange-500/20 rounded-xl flex items-center gap-2 ${isRtl ? 'flex-row-reverse text-right' : ''}`}>
                                         <AlertCircle className="h-3.5 w-3.5 text-orange-500 shrink-0" />
-                                        <span className="text-[10px] font-black text-orange-500">
+                                        <span className="text-[10px] font-medium text-orange-500">
                                             {isRtl ? `${pendingItems} عنصر في انتظار مراجعتك` : `${pendingItems} items awaiting your review`}
                                         </span>
                                     </div>
                                 )}
 
                                 <div className="space-y-1.5">
-                                    <div className={`flex justify-between text-[9px] font-black text-muted-foreground ${isRtl ? 'flex-row-reverse' : ''}`}>
+                                    <div className={`flex justify-between text-[9px] font-medium text-muted-foreground ${isRtl ? 'flex-row-reverse' : ''}`}>
                                         <span>{isRtl ? `${approvedItems} من ${totalItems} تمت الموافقة عليهم` : `${approvedItems} of ${totalItems} items approved`}</span>
                                         <span>{pct}%</span>
                                     </div>
-                                    <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                                    <div className="h-2 bg-muted/30 rounded-full overflow-hidden">
                                         <div className={`h-full rounded-full transition-all duration-700 ${pct === 100 ? "bg-emerald-500" : "bg-primary"}`} style={{ width: `${pct}%` }} />
                                     </div>
                                 </div>
 
                                 <div className={`mt-4 flex items-center justify-between ${isRtl ? 'flex-row-reverse' : ''}`}>
-                                    <span className="text-[10px] font-black text-primary group-hover:text-primary/80">
+                                    <span className="text-[10px] font-medium text-primary group-hover:text-primary/80">
                                         {plan.status === "APPROVED"
                                             ? (isRtl ? "← عرض الخطة" : "View plan →")
                                             : (isRtl ? "← مراجعة الآن" : "Review now →")}
@@ -117,7 +117,7 @@ export function ClientActionPlansList({ plans }: { plans: any[] }) {
                 })}
 
                 {plans.length === 0 && (
-                    <div className="col-span-full py-24 rounded-3xl border-2 border-dashed border-white/10 text-center">
+                    <div className="col-span-full py-24 rounded-xl border-2 border-dashed border-border text-center">
                         <FolderKanban className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-20" />
                         <p className="text-muted-foreground font-bold">
                             {isRtl ? "لا توجد خطط محتوى بعد." : "No action plans available yet."}

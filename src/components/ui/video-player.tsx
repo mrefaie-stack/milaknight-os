@@ -79,7 +79,7 @@ export function VideoPlayer({ url, isRtl, showExternalLink = true }: VideoPlayer
                         href={url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className={`absolute bottom-3 ${isRtl ? 'left-3' : 'right-3'} p-2 rounded-lg bg-black/60 backdrop-blur-md border border-white/20 text-white/80 hover:text-white hover:bg-black/80 transition-all opacity-0 group-hover:opacity-100 z-10 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest`}
+                        className={`absolute bottom-3 ${isRtl ? 'left-3' : 'right-3'} p-2 rounded-lg bg-black/60 backdrop-blur-md border border-white/20 text-white/80 hover:text-white hover:bg-black/80 transition-all opacity-0 group-hover:opacity-100 z-10 flex items-center gap-2 text-[10px] font-medium`}
                     >
                         <ExternalLink className="h-3 w-3" />
                         {isRtl ? 'فتح الرابط' : 'Open Link'}
@@ -102,7 +102,7 @@ export function VideoPlayer({ url, isRtl, showExternalLink = true }: VideoPlayer
                         href={url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className={`absolute bottom-10 ${isRtl ? 'left-3' : 'right-3'} p-2 rounded-lg bg-black/60 backdrop-blur-md border border-white/20 text-white/80 hover:text-white hover:bg-black/80 transition-all opacity-0 group-hover:opacity-100 z-10 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest`}
+                        className={`absolute bottom-10 ${isRtl ? 'left-3' : 'right-3'} p-2 rounded-lg bg-black/60 backdrop-blur-md border border-white/20 text-white/80 hover:text-white hover:bg-black/80 transition-all opacity-0 group-hover:opacity-100 z-10 flex items-center gap-2 text-[10px] font-medium`}
                     >
                         <ExternalLink className="h-3 w-3" />
                         {isRtl ? 'فتح الرابط' : 'Open Link'}
@@ -121,7 +121,7 @@ export function VideoPlayer({ url, isRtl, showExternalLink = true }: VideoPlayer
                     <Video className="h-10 w-10 text-primary" />
                 </div>
                 <div className="text-center">
-                    <span className="block text-sm font-black tracking-tight uppercase">{isRtl ? 'مشاهدة الفيديو' : 'View External Video'}</span>
+                    <span className="block text-sm font-semibold">{isRtl ? 'مشاهدة الفيديو' : 'View External Video'}</span>
                     <span className="block text-[10px] opacity-50 font-bold mt-1 max-w-[180px] truncate">{url}</span>
                 </div>
             </a>

@@ -82,8 +82,8 @@ export function TaskList({ tasks, role }: { tasks: any[], role: string }) {
 
     if (tasks.length === 0) {
         return (
-            <div className="text-center py-20 bg-card/20 rounded-3xl border border-dashed border-white/10">
-                <p className="text-muted-foreground font-bold">
+            <div className="text-center py-16 rounded-lg border border-dashed border-border">
+                <p className="text-sm text-muted-foreground">
                     {isRtl ? "لا توجد مهام حالياً" : "No tasks found"}
                 </p>
             </div>
@@ -91,30 +91,30 @@ export function TaskList({ tasks, role }: { tasks: any[], role: string }) {
     }
 
     return (
-        <div className="space-y-4">
+        <div className="space-y-3">
             {tasks.map((task) => (
-                <Card key={task.id} className="p-6 bg-card/40 backdrop-blur-md border-white/5 hover:border-primary/20 transition-all group relative overflow-hidden">
-                    <div className={`flex flex-col md:flex-row gap-6 ${isRtl ? 'md:flex-row-reverse' : ''}`}>
+                <Card key={task.id} className="p-4 hover:bg-muted/30 transition-colors group">
+                    <div className={`flex flex-col md:flex-row gap-4 ${isRtl ? 'md:flex-row-reverse' : ''}`}>
                         {/* Status Icon */}
-                        <div className="hidden md:flex flex-col items-center justify-center p-3 rounded-2xl bg-white/5 border border-white/10 shrink-0 h-fit">
-                            {task.status === "COMPLETED" ? <CheckCircle2 className="h-6 w-6 text-emerald-500" /> :
-                             task.status === "NEED_FIX" ? <AlertCircle className="h-6 w-6 text-red-500" /> :
-                             <Clock className="h-6 w-6 text-orange-500 animate-pulse" />}
+                        <div className="hidden md:flex flex-col items-center justify-center p-2.5 rounded-lg bg-muted shrink-0 h-fit">
+                            {task.status === "COMPLETED" ? <CheckCircle2 className="h-5 w-5 text-emerald-500" /> :
+                             task.status === "NEED_FIX" ? <AlertCircle className="h-5 w-5 text-destructive" /> :
+                             <Clock className="h-5 w-5 text-orange-500" />}
                         </div>
 
-                        <div className={`flex-1 space-y-3 ${isRtl ? 'text-right' : 'text-left'}`}>
+                        <div className={`flex-1 space-y-2.5 ${isRtl ? 'text-right' : 'text-left'}`}>
                             {/* Header */}
                             <div className="flex items-start justify-between gap-4">
                                 <div className="space-y-1">
                                     <div className={`flex items-center gap-2 flex-wrap ${isRtl ? 'flex-row-reverse' : ''}`}>
-                                        <Badge className={`text-[10px] font-black uppercase tracking-wider ${STATUS_COLORS[task.status]}`}>
+                                        <Badge className={`text-[10px] ${STATUS_COLORS[task.status]}`}>
                                             {isRtl ? STATUS_LABELS[task.status].ar : STATUS_LABELS[task.status].en}
                                         </Badge>
-                                        <Badge variant="outline" className="text-[10px] font-black uppercase tracking-wider opacity-60">
+                                        <Badge variant="outline" className="text-[10px] opacity-60">
                                             {isRtl ? TYPE_LABELS[task.type].ar : TYPE_LABELS[task.type].en}
                                         </Badge>
                                     </div>
-                                    <h3 className="text-lg font-black tracking-tight group-hover:text-primary transition-colors">
+                                    <h3 className="text-sm font-semibold group-hover:text-primary transition-colors">
                                         {task.title}
                                     </h3>
                                 </div>
@@ -151,23 +151,23 @@ export function TaskList({ tasks, role }: { tasks: any[], role: string }) {
 
                             {/* Feedback if need fix */}
                             {task.status === "NEED_FIX" && task.feedback && (
-                                <div className={`p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-bold flex items-start gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                                <div className={`p-3 rounded-md bg-destructive/10 border border-destructive/20 text-destructive text-xs flex items-start gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
                                     <MessageSquare className="h-4 w-4 shrink-0 mt-0.5" />
                                     <span>{task.feedback}</span>
                                 </div>
                             )}
 
                             {/* Footer Info */}
-                            <div className={`flex flex-wrap items-center gap-x-6 gap-y-2 pt-2 border-t border-white/5 ${isRtl ? 'flex-row-reverse' : ''}`}>
-                                <div className="flex items-center gap-2 text-[11px] font-bold text-muted-foreground">
+                            <div className={`flex flex-wrap items-center gap-x-5 gap-y-1.5 pt-2 border-t border-border ${isRtl ? 'flex-row-reverse' : ''}`}>
+                                <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
                                     <Building2 className="h-3.5 w-3.5" />
                                     <span>{task.client.name}</span>
                                 </div>
-                                <div className="flex items-center gap-2 text-[11px] font-bold text-muted-foreground">
+                                <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
                                     <User className="h-3.5 w-3.5" />
                                     <span>{isRtl ? "من:" : "From:"} {task.sender.firstName}</span>
                                 </div>
-                                <div className="flex items-center gap-2 text-[11px] font-bold text-muted-foreground ml-auto">
+                                <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground ml-auto">
                                     <span>{new Date(task.createdAt).toLocaleDateString(isRtl ? 'ar-SA' : 'en-US', { day: 'numeric', month: 'short' })}</span>
                                 </div>
                             </div>

@@ -43,15 +43,15 @@ export function ClientServiceCatalog({ client, globalServices, requests }: { cli
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4 }}
             >
-                <Card className={`glass-card border-none overflow-hidden rounded-3xl h-full flex flex-col group transition-all duration-500 ${subscribed ? 'bg-emerald-500/5 border border-emerald-500/10' : 'hover:bg-white/5'}`}>
+                <Card className={`overflow-hidden rounded-xl h-full flex flex-col group transition-all duration-500 ${subscribed ? 'bg-emerald-500/5 border border-emerald-500/10' : 'hover:bg-muted/30'}`}>
                     <CardContent className="p-8 flex-1 flex flex-col space-y-4">
-                        <div className={`h-14 w-14 rounded-2xl flex items-center justify-center mb-2 transition-transform group-hover:scale-110 duration-500 ${subscribed ? 'bg-emerald-500/10 text-emerald-500' : 'bg-primary/10 text-primary'}`}>
+                        <div className={`h-14 w-14 rounded-xl flex items-center justify-center mb-2 transition-transform group-hover:scale-110 duration-500 ${subscribed ? 'bg-emerald-500/10 text-emerald-500' : 'bg-primary/10 text-primary'}`}>
                             <Sparkles className="h-7 w-7" />
                         </div>
 
                         <div className="space-y-2 flex-1">
                             <div className={`flex items-center gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
-                                <h3 className="text-2xl font-black tracking-tight">
+                                <h3 className="text-2xl font-bold tracking-tight">
                                     {isRtl ? service.nameAr : service.nameEn}
                                 </h3>
                                 {subscribed && <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0" />}
@@ -61,13 +61,13 @@ export function ClientServiceCatalog({ client, globalServices, requests }: { cli
                             </p>
                         </div>
 
-                        <div className={`pt-6 border-t border-white/5 mt-auto ${isRtl ? 'text-right' : ''}`}>
+                        <div className={`pt-6 border-t border-border mt-auto ${isRtl ? 'text-right' : ''}`}>
                             {subscribed ? (
-                                <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 px-4 py-2 rounded-xl font-black uppercase tracking-widest text-[10px] w-full justify-center">
+                                <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 px-4 py-2 rounded-xl font-semibold section-label w-full justify-center">
                                     {isRtl ? "خدمة نشطة" : "Active Service"}
                                 </Badge>
                             ) : pending ? (
-                                <Button disabled className="w-full rounded-full font-black uppercase tracking-widest text-[10px] h-12 bg-orange-500/10 text-orange-500 border-orange-500/20 hover:bg-orange-500/10">
+                                <Button disabled className="w-full rounded-full font-semibold section-label h-12 bg-orange-500/10 text-orange-500 border-orange-500/20 hover:bg-orange-500/10">
                                     <Clock className={`h-4 w-4 ${isRtl ? 'ml-2' : 'mr-2'}`} />
                                     {isRtl ? "قيد المراجعة" : "Pending Approval"}
                                 </Button>
@@ -75,7 +75,7 @@ export function ClientServiceCatalog({ client, globalServices, requests }: { cli
                                 <Button
                                     onClick={() => handleRequest(service.id)}
                                     disabled={loading === service.id}
-                                    className="w-full rounded-full font-black uppercase tracking-widest text-[10px] h-12 shadow-xl shadow-primary/20 hover:scale-[1.02] transition-all"
+                                    className="w-full rounded-full font-semibold section-label h-12 shadow-lg shadow-primary/20 transition-all"
                                 >
                                     {loading === service.id ? (isRtl ? "جاري الإرسال..." : "Sending...") : (isRtl ? "طلب هذه الخدمة" : "Request This Service")}
                                 </Button>
@@ -92,7 +92,7 @@ export function ClientServiceCatalog({ client, globalServices, requests }: { cli
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div className={`space-y-2 ${isRtl ? 'text-right' : ''}`}>
-                    <h1 className="text-5xl font-black tracking-tighter premium-gradient-text uppercase">
+                    <h1 className="text-2xl font-bold tracking-tight">
                         {isRtl ? "مكتبة الخدمات" : "Service Catalog"}
                     </h1>
                     <p className="text-muted-foreground font-medium text-lg opacity-80">
@@ -106,10 +106,10 @@ export function ClientServiceCatalog({ client, globalServices, requests }: { cli
                 <div className="space-y-6">
                     <div className={`flex items-center gap-3 ${isRtl ? 'flex-row-reverse' : ''}`}>
                         <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-                        <h2 className="text-2xl font-black uppercase tracking-tight text-emerald-500">
+                        <h2 className="text-2xl font-bold tracking-tight text-emerald-500">
                             {isRtl ? "الخدمات المشترك بها" : "Subscribed Services"}
                         </h2>
-                        <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 rounded-full font-black text-[10px] uppercase tracking-widest">
+                        <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 rounded-full font-semibold section-label">
                             {subscribedServices.length}
                         </Badge>
                     </div>
@@ -124,7 +124,7 @@ export function ClientServiceCatalog({ client, globalServices, requests }: { cli
                 <div className="space-y-6">
                     <div className={`flex items-center gap-3 ${isRtl ? 'flex-row-reverse' : ''}`}>
                         <Sparkles className="h-5 w-5 text-primary" />
-                        <h2 className="text-2xl font-black uppercase tracking-tight">
+                        <h2 className="text-2xl font-bold tracking-tight">
                             {isRtl ? "الخدمات المتاحة" : "Available Services"}
                         </h2>
                     </div>
@@ -137,18 +137,18 @@ export function ClientServiceCatalog({ client, globalServices, requests }: { cli
             {/* Request History Section */}
             {requests.length > 0 && (
                 <div className="space-y-6 pt-10">
-                    <h2 className={`text-3xl font-black uppercase tracking-tighter ${isRtl ? 'text-right' : ''}`}>
+                    <h2 className={`text-2xl font-bold tracking-tight ${isRtl ? 'text-right' : ''}`}>
                         {isRtl ? "سجل طلباتي" : "My Requests History"}
                     </h2>
                     <div className="grid gap-4">
                         {requests.map((request) => (
-                            <div key={request.id} className={`p-6 rounded-3xl bg-card/40 border border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-4 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                            <div key={request.id} className={`p-6 rounded-xl bg-card/40 border border-border flex flex-col md:flex-row md:items-center justify-between gap-4 ${isRtl ? 'flex-row-reverse' : ''}`}>
                                 <div className={`flex items-center gap-4 ${isRtl ? 'flex-row-reverse' : ''}`}>
-                                    <div className="h-10 w-10 rounded-xl bg-white/5 flex items-center justify-center text-primary font-black">
+                                    <div className="h-10 w-10 rounded-xl bg-muted/30 flex items-center justify-center text-primary font-semibold">
                                         <Clock className="h-5 w-5" />
                                     </div>
                                     <div className={isRtl ? 'text-right' : ''}>
-                                        <p className="font-black text-lg">{isRtl ? request.globalService?.nameAr : request.globalService?.nameEn}</p>
+                                        <p className="font-semibold text-lg">{isRtl ? request.globalService?.nameAr : request.globalService?.nameEn}</p>
                                         <p className="text-xs text-muted-foreground font-bold opacity-60">
                                             {request.createdAt ? new Date(request.createdAt).toISOString().split('T')[0] : ""}
                                         </p>
@@ -161,7 +161,7 @@ export function ClientServiceCatalog({ client, globalServices, requests }: { cli
                                         </p>
                                     )}
                                     <Badge variant="outline" className={`
-                                        rounded-full px-4 py-1.5 font-black uppercase tracking-widest text-[9px]
+                                        rounded-full px-4 py-1.5 font-semibold section-label
                                         ${request.status === 'PENDING' ? 'bg-orange-500/10 text-orange-500 border-orange-500/20' : ''}
                                         ${request.status === 'APPROVED' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : ''}
                                         ${request.status === 'REJECTED' ? 'bg-red-500/10 text-red-500 border-red-500/20' : ''}

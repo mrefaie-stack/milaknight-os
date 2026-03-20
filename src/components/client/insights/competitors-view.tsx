@@ -73,15 +73,15 @@ function ItemsGrid({ items, isRtl, animated = true, isHistory = false }: { items
                         transition={animated ? { delay: i * 0.07, duration: 0.4 } : undefined}
                         className="h-full"
                     >
-                        <Card className={`${isHistory ? 'bg-white/5 border border-white/5' : 'glass-card border-none'} rounded-3xl overflow-hidden h-full`}>
+                        <Card className={`${isHistory ? 'bg-muted/30 border border-border' : 'bg-card border border-border'} rounded-xl overflow-hidden h-full`}>
                             <CardContent className="p-6 space-y-5 flex flex-col h-full">
                                 {/* Name */}
                                 <div className={`flex items-start gap-3 ${isRtl ? "flex-row-reverse" : ""}`}>
-                                    <div className="w-11 h-11 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center font-black text-lg text-primary shrink-0">
+                                    <div className="w-11 h-11 rounded-lg bg-muted/30 border border-border flex items-center justify-center font-semibold text-lg text-primary shrink-0">
                                         {comp.name.charAt(0).toUpperCase()}
                                     </div>
                                     <div className={`flex-1 ${isRtl ? "text-right" : ""}`}>
-                                        <h3 className="font-black text-xl leading-tight">{comp.name}</h3>
+                                        <h3 className="font-semibold text-xl leading-tight">{comp.name}</h3>
                                         <p className="text-xs text-muted-foreground font-medium opacity-60 mt-1 leading-relaxed">
                                             {isRtl ? comp.descAr : comp.descEn}
                                         </p>
@@ -90,40 +90,40 @@ function ItemsGrid({ items, isRtl, animated = true, isHistory = false }: { items
 
                                 {/* Badges */}
                                 <div className={`flex items-center gap-2 flex-wrap ${isRtl ? "flex-row-reverse" : ""}`}>
-                                    <Badge variant="outline" className={`text-[9px] font-black uppercase tracking-widest rounded-full gap-1 ${LEVEL[comp.threat] || LEVEL.MEDIUM}`}>
+                                    <Badge variant="outline" className={`section-label rounded-full gap-1 ${LEVEL[comp.threat] || LEVEL.MEDIUM}`}>
                                         <AlertTriangle className="h-2.5 w-2.5" />
                                         {isRtl ? T_AR[comp.threat] : T_EN[comp.threat]}
                                     </Badge>
-                                    <Badge variant="outline" className={`text-[9px] font-black uppercase tracking-widest rounded-full ${LEVEL[comp.socialPresence] || LEVEL.MEDIUM}`}>
+                                    <Badge variant="outline" className={`section-label rounded-full ${LEVEL[comp.socialPresence] || LEVEL.MEDIUM}`}>
                                         {isRtl ? S_AR[comp.socialPresence] : S_EN[comp.socialPresence]}
                                     </Badge>
                                 </div>
 
                                 {/* Social Media row */}
                                 {comp.socialMedia && (
-                                    <div className={`flex items-center gap-2 flex-wrap p-3 rounded-2xl bg-white/3 border border-white/5 ${isRtl ? "flex-row-reverse" : ""}`}>
+                                    <div className={`flex items-center gap-2 flex-wrap p-3 rounded-lg bg-muted/30 border border-border ${isRtl ? "flex-row-reverse" : ""}`}>
                                         {ok(comp.socialMedia.instagram) && (
-                                            <span className="inline-flex items-center gap-1 text-[10px] font-black rounded-full px-2 py-0.5 bg-pink-500/10 text-pink-400">
+                                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold rounded-full px-2 py-0.5 bg-pink-500/10 text-pink-400">
                                                 <Instagram className="h-2.5 w-2.5" />{comp.socialMedia.instagram}
                                             </span>
                                         )}
                                         {ok(comp.socialMedia.twitter) && (
-                                            <span className="inline-flex items-center gap-1 text-[10px] font-black rounded-full px-2 py-0.5 bg-sky-500/10 text-sky-400">
+                                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold rounded-full px-2 py-0.5 bg-sky-500/10 text-sky-400">
                                                 <XIcon className="h-2.5 w-2.5" />{comp.socialMedia.twitter}
                                             </span>
                                         )}
                                         {ok(comp.socialMedia.tiktok) && (
-                                            <span className="inline-flex items-center gap-1 text-[10px] font-black rounded-full px-2 py-0.5 bg-purple-500/10 text-purple-400">
+                                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold rounded-full px-2 py-0.5 bg-purple-500/10 text-purple-400">
                                                 <TikTokIcon className="h-2.5 w-2.5" />{comp.socialMedia.tiktok}
                                             </span>
                                         )}
                                         {ok(comp.socialMedia.linkedin) && (
-                                            <span className="inline-flex items-center gap-1 text-[10px] font-black rounded-full px-2 py-0.5 bg-blue-600/10 text-blue-400">
+                                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold rounded-full px-2 py-0.5 bg-blue-600/10 text-blue-400">
                                                 <Linkedin className="h-2.5 w-2.5" />LinkedIn
                                             </span>
                                         )}
                                         {comp.socialMedia.estimatedFollowers && (
-                                            <span className="text-[10px] font-black text-muted-foreground opacity-40 ms-auto">
+                                            <span className="text-[10px] font-semibold text-muted-foreground opacity-40 ms-auto">
                                                 ~{comp.socialMedia.estimatedFollowers}
                                                 {comp.socialMedia.activity && (
                                                     <span className={comp.socialMedia.activity === "HIGH" ? " text-emerald-400" : comp.socialMedia.activity === "MEDIUM" ? " text-orange-400" : " text-rose-400"}>
@@ -140,7 +140,7 @@ function ItemsGrid({ items, isRtl, animated = true, isHistory = false }: { items
                                     <div className={`space-y-2 ${isRtl ? "text-right" : ""}`}>
                                         <div className={`flex items-center gap-1.5 text-emerald-400 ${isRtl ? "flex-row-reverse" : ""}`}>
                                             <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
-                                            <span className="text-[10px] font-black uppercase tracking-widest">{isRtl ? "نقاط قوة" : "Strengths"}</span>
+                                            <span className="section-label">{isRtl ? "نقاط قوة" : "Strengths"}</span>
                                         </div>
                                         <ul className="space-y-1.5">
                                             {(comp.strengths || []).slice(0, 4).map((s, j) => (
@@ -154,7 +154,7 @@ function ItemsGrid({ items, isRtl, animated = true, isHistory = false }: { items
                                     <div className={`space-y-2 ${isRtl ? "text-right" : ""}`}>
                                         <div className={`flex items-center gap-1.5 text-rose-400 ${isRtl ? "flex-row-reverse" : ""}`}>
                                             <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
-                                            <span className="text-[10px] font-black uppercase tracking-widest">{isRtl ? "نقاط ضعف" : "Weaknesses"}</span>
+                                            <span className="section-label">{isRtl ? "نقاط ضعف" : "Weaknesses"}</span>
                                         </div>
                                         <ul className="space-y-1.5">
                                             {(comp.weaknesses || []).slice(0, 4).map((w, j) => (
@@ -189,11 +189,11 @@ export function CompetitorsView({
         <div className="space-y-8 max-w-5xl mx-auto" dir={isRtl ? "rtl" : "ltr"}>
             <div className={`flex flex-col md:flex-row md:items-end justify-between gap-4 ${isRtl ? "text-right" : ""}`}>
                 <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400">
+                    <div className="w-12 h-12 rounded-lg bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400">
                         <Target className="h-6 w-6" />
                     </div>
                     <div>
-                        <h1 className="text-4xl font-black tracking-tighter premium-gradient-text uppercase">
+                        <h1 className="text-2xl font-bold tracking-tight">
                             {isRtl ? "تحليل المنافسين" : "Competitors"}
                         </h1>
                         <p className="text-sm text-muted-foreground font-medium opacity-70">

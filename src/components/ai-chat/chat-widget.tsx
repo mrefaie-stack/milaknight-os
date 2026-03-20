@@ -246,7 +246,7 @@ export function AiChatWidget({ user }: { user: { name: string; role: string; id:
             >
               <div 
                 className={cn(
-                  "bg-primary text-primary-foreground px-4 py-3 rounded-2xl shadow-xl cursor-pointer hover:bg-primary/95 transition-colors max-w-[200px]",
+                  "bg-primary text-primary-foreground px-4 py-3 rounded-xl shadow-lg cursor-pointer hover:bg-primary/95 transition-colors max-w-[200px]",
                   isRtl ? "rounded-bl-none text-right" : "rounded-br-none text-right"
                 )}
                 onClick={() => {
@@ -302,7 +302,7 @@ export function AiChatWidget({ user }: { user: { name: string; role: string; id:
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.2 }}
             className={cn(
-              "fixed bottom-36 md:bottom-24 z-[55] flex flex-col rounded-2xl border bg-background/95 backdrop-blur-xl shadow-2xl overflow-hidden",
+              "fixed bottom-36 md:bottom-24 z-[55] flex flex-col rounded-xl border border-border bg-card shadow-lg overflow-hidden",
               "inset-x-3 h-[70vh] sm:inset-x-auto sm:h-[550px] sm:max-h-[70vh] sm:w-[400px]",
               isRtl ? "sm:left-6" : "sm:right-6"
             )}
@@ -416,7 +416,7 @@ export function AiChatWidget({ user }: { user: { name: string; role: string; id:
                   >
                     <div
                       className={cn(
-                        "max-w-[85%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed",
+                        "max-w-[85%] rounded-xl px-3.5 py-2.5 text-sm leading-relaxed",
                         msg.role === "user"
                           ? "bg-primary text-primary-foreground rounded-br-md"
                           : "bg-muted rounded-bl-md"
@@ -454,7 +454,7 @@ export function AiChatWidget({ user }: { user: { name: string; role: string; id:
                 {/* Loading indicator */}
                 {isLoading && !activeTool && messages[messages.length - 1]?.role === "user" && (
                   <div className="flex justify-start">
-                    <div className="bg-muted rounded-2xl rounded-bl-md px-4 py-3">
+                    <div className="bg-muted rounded-xl rounded-bl-md px-4 py-3">
                       <div className="flex gap-1.5">
                         <span className="size-2 bg-muted-foreground/40 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
                         <span className="size-2 bg-muted-foreground/40 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />

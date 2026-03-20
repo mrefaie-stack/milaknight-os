@@ -12,7 +12,7 @@ export function ThemeToggle() {
         <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 rounded-full bg-white/5 hover:bg-white/10 border border-white/5 text-muted-foreground transition-all"
+            className="h-8 w-8 rounded-full bg-muted/30 hover:bg-muted/50 border border-border text-muted-foreground transition-all"
             onClick={() => setTheme(theme === "light" ? "dark" : "light")}
         >
             <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />

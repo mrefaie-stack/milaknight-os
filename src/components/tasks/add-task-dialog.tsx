@@ -60,7 +60,7 @@ export function AddTaskDialog({ clients }: { clients: any[] }) {
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button className="font-black uppercase tracking-widest gap-2 rounded-2xl">
+                <Button className="font-semibold gap-2 rounded-lg">
                     <Plus className="h-4 w-4" />
                     {isRtl ? "إضافة مهمة" : "Add Task"}
                 </Button>
@@ -136,7 +136,7 @@ export function AddTaskDialog({ clients }: { clients: any[] }) {
                     </div>
 
                     <DialogFooter className={isRtl ? "flex-row-reverse gap-2" : ""}>
-                        <Button type="submit" disabled={loading} className="font-black px-8">
+                        <Button type="submit" disabled={loading} className="font-semibold px-8">
                             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : (isRtl ? "إرسال" : "Send")}
                         </Button>
                     </DialogFooter>

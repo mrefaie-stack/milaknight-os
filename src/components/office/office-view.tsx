@@ -62,12 +62,12 @@ function StatusPicker({ currentStatus, isRtl }: { currentStatus: string; isRtl: 
             <button
                 onClick={() => setOpen(!open)}
                 className={cn(
-                    "flex items-center gap-2 px-4 py-2.5 rounded-xl border border-white/10 bg-white/5 hover:bg-white/8 transition-all",
+                    "flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-muted hover:bg-muted/80 transition-colors",
                     isRtl ? "flex-row-reverse" : ""
                 )}
             >
                 <span className={cn("w-2.5 h-2.5 rounded-full shrink-0", s.color)} />
-                <span className="text-xs font-black">{isRtl ? s.labelAr : s.labelEn}</span>
+                <span className="text-xs font-medium">{isRtl ? s.labelAr : s.labelEn}</span>
                 <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
             </button>
             <AnimatePresence>
@@ -78,7 +78,7 @@ function StatusPicker({ currentStatus, isRtl }: { currentStatus: string; isRtl: 
                         exit={{ opacity: 0, y: -8, scale: 0.96 }}
                         transition={{ duration: 0.15 }}
                         className={cn(
-                            "absolute top-full mt-1 w-52 bg-card border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-50",
+                            "absolute top-full mt-1 w-52 bg-card border border-border rounded-lg shadow-lg overflow-hidden z-50",
                             isRtl ? "right-0" : "left-0"
                         )}
                     >
@@ -88,9 +88,9 @@ function StatusPicker({ currentStatus, isRtl }: { currentStatus: string; isRtl: 
                                 onClick={() => changeStatus(st.value)}
                                 disabled={loading === st.value}
                                 className={cn(
-                                    "w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors text-sm font-bold",
+                                    "w-full flex items-center gap-3 px-4 py-3 hover:bg-muted transition-colors text-sm font-medium",
                                     isRtl ? "flex-row-reverse text-right" : "text-left",
-                                    currentStatus === st.value && "bg-white/5"
+                                    currentStatus === st.value && "bg-muted"
                                 )}
                             >
                                 <span className={cn("w-2.5 h-2.5 rounded-full shrink-0", st.color)} />
@@ -168,19 +168,19 @@ export function OfficeView({ initialData, currentUserId }: Props) {
             {/* Header */}
             <div className={cn("flex flex-col md:flex-row md:items-center justify-between gap-4", isRtl ? "text-right" : "")}>
                 <div className="space-y-1">
-                    <h1 className="text-3xl md:text-5xl font-black tracking-tighter premium-gradient-text uppercase">
+                    <h1 className="text-2xl font-bold tracking-tight">
                         {isRtl ? "المكتب الافتراضي" : "Virtual Office"}
                     </h1>
                     <div className={cn("flex items-center gap-3 text-sm text-muted-foreground flex-wrap", isRtl ? "flex-row-reverse" : "")}>
-                        <span className="font-bold">{time}</span>
-                        <span className="text-white/20">·</span>
+                        <span className="font-medium">{time}</span>
+                        <span className="text-muted-foreground/30">·</span>
                         <span className={cn("flex items-center gap-1.5", isRtl ? "flex-row-reverse" : "")}>
-                            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                            <span className="font-bold text-emerald-500">
+                            <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                            <span className="font-medium text-emerald-500">
                                 {onlineUsers.length} {isRtl ? "متصل الآن" : "online now"}
                             </span>
                         </span>
-                        <span className="text-white/20">·</span>
+                        <span className="text-muted-foreground/30">·</span>
                         <span className={cn("flex items-center gap-1 text-xs", isRtl ? "flex-row-reverse" : "")}>
                             {connected
                                 ? <Wifi className="h-3 w-3 text-muted-foreground/40" />
@@ -194,7 +194,7 @@ export function OfficeView({ initialData, currentUserId }: Props) {
                 </div>
                 {currentUser && (
                     <div className={cn("flex items-center gap-3", isRtl ? "flex-row-reverse" : "")}>
-                        <span className="text-xs text-muted-foreground font-bold uppercase tracking-widest">
+                        <span className="section-label text-muted-foreground">
                             {isRtl ? "حالتي:" : "My status:"}
                         </span>
                         <StatusPicker currentStatus={currentUser.status} isRtl={isRtl} />
@@ -214,7 +214,7 @@ export function OfficeView({ initialData, currentUserId }: Props) {
                 >
                     <BellOff className="h-5 w-5 text-purple-400 shrink-0" />
                     <div>
-                        <p className="text-sm font-black text-purple-300">
+                        <p className="text-sm font-medium text-purple-400">
                             {isRtl ? "وضع التركيز نشط" : "Focus Mode Active"}
                         </p>
                         <p className="text-xs text-purple-400/60 font-medium">
@@ -227,7 +227,7 @@ export function OfficeView({ initialData, currentUserId }: Props) {
             {/* Online Team */}
             {onlineUsers.filter(p => !p.isCurrentUser).length > 0 && (
                 <div className="space-y-3">
-                    <p className={cn("text-[10px] font-black uppercase tracking-[0.25em] text-primary/40", isRtl ? "text-right" : "")}>
+                    <p className={cn("section-label text-muted-foreground", isRtl ? "text-right" : "")}>
                         {isRtl ? "الفريق المتصل" : "Online Team"}
                     </p>
                     <div className={cn("flex flex-wrap gap-3", isRtl ? "flex-row-reverse" : "")}>
@@ -237,16 +237,16 @@ export function OfficeView({ initialData, currentUserId }: Props) {
                             return (
                                 <div
                                     key={user.userId}
-                                    className={cn("flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/8", isRtl ? "flex-row-reverse" : "")}
+                                    className={cn("flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-card", isRtl ? "flex-row-reverse" : "")}
                                 >
                                     <div className="relative">
-                                        <div className="w-7 h-7 rounded-lg bg-white/8 flex items-center justify-center text-[11px] font-black">
+                                        <div className="w-7 h-7 rounded-md bg-muted flex items-center justify-center text-[11px] font-medium">
                                             {initials}
                                         </div>
                                         <span className={cn("absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-background", s.color)} />
                                     </div>
                                     <div className={isRtl ? "text-right" : ""}>
-                                        <p className="text-xs font-black">{user.name}</p>
+                                        <p className="text-xs font-medium">{user.name}</p>
                                         <p className="text-[10px] text-muted-foreground">{isRtl ? s.labelAr : s.labelEn}</p>
                                     </div>
                                 </div>
@@ -259,7 +259,7 @@ export function OfficeView({ initialData, currentUserId }: Props) {
             {/* Offline Users */}
             {offlineUsers.length > 0 && (
                 <div className="space-y-3">
-                    <p className={cn("text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground/30", isRtl ? "text-right" : "")}>
+                    <p className={cn("section-label text-muted-foreground/50", isRtl ? "text-right" : "")}>
                         {isRtl ? "غير متصل" : "Offline"}
                     </p>
                     <div className={cn("flex flex-wrap gap-3", isRtl ? "flex-row-reverse" : "")}>
@@ -268,16 +268,16 @@ export function OfficeView({ initialData, currentUserId }: Props) {
                             return (
                                 <div
                                     key={user.userId}
-                                    className={cn("flex items-center gap-2 px-3 py-2 rounded-xl bg-white/3 border border-white/5 opacity-40", isRtl ? "flex-row-reverse" : "")}
+                                    className={cn("flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-card opacity-50", isRtl ? "flex-row-reverse" : "")}
                                 >
                                     <div className="relative">
-                                        <div className="w-7 h-7 rounded-lg bg-white/8 flex items-center justify-center text-[11px] font-black">
+                                        <div className="w-7 h-7 rounded-md bg-muted flex items-center justify-center text-[11px] font-medium">
                                             {initials}
                                         </div>
                                         <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-background bg-zinc-600" />
                                     </div>
                                     <div className={isRtl ? "text-right" : ""}>
-                                        <p className="text-xs font-black">{user.name}</p>
+                                        <p className="text-xs font-medium">{user.name}</p>
                                         {user.updatedAt && (
                                             <p className={cn("text-[9px] text-muted-foreground flex items-center gap-0.5", isRtl ? "flex-row-reverse" : "")}>
                                                 <Clock className="h-2.5 w-2.5" />

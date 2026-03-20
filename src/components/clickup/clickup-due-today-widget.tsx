@@ -18,15 +18,15 @@ export function ClickupDueTodayWidget() {
     if (tasks === null || tasks.length === 0) return null;
 
     return (
-        <Card className="bg-card/50 border-white/5" dir={isRtl ? "rtl" : "ltr"}>
+        <Card className="bg-card border-border" dir={isRtl ? "rtl" : "ltr"}>
             <CardContent className="p-5">
                 <div className={`flex items-center gap-2 mb-3 ${isRtl ? "flex-row-reverse" : ""}`}>
                     <div className="p-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20">
                         <Clock className="h-4 w-4 text-amber-400" />
                     </div>
                     <div>
-                        <p className="text-xs font-black uppercase tracking-widest text-amber-400">ClickUp</p>
-                        <p className="text-sm font-black">
+                        <p className="section-label text-amber-400">ClickUp</p>
+                        <p className="text-sm font-semibold">
                             {isRtl ? `مهام اليوم (${tasks.length})` : `Due Today (${tasks.length})`}
                         </p>
                     </div>
@@ -38,7 +38,7 @@ export function ClickupDueTodayWidget() {
                             href={task.url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className={`flex items-center gap-2 p-2 rounded-xl bg-white/5 hover:bg-white/10 transition-all group ${isRtl ? "flex-row-reverse" : ""}`}
+                            className={`flex items-center gap-2 p-2 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all group ${isRtl ? "flex-row-reverse" : ""}`}
                         >
                             <div
                                 className="w-2 h-2 rounded-full shrink-0"

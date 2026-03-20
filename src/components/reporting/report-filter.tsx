@@ -40,8 +40,8 @@ export function ReportFilter({ onFilter }: { onFilter: (month: string | null, ye
     };
 
     return (
-        <div className={`flex flex-wrap items-center gap-4 bg-card/30 p-4 rounded-2xl border backdrop-blur-sm ${isRtl ? 'flex-row-reverse' : ''}`}>
-            <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">
+        <div className={`flex flex-wrap items-center gap-4 bg-card/30 p-4 rounded-lg border ${isRtl ? 'flex-row-reverse' : ''}`}>
+            <span className="text-xs font-medium section-label text-muted-foreground">
                 {isRtl ? "فلتر الأرشيف" : "Filter Archive"}
             </span>
 

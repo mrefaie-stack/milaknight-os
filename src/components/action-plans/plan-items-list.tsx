@@ -87,7 +87,7 @@ export function PlanItemsList({ items, planId }: { items: any[], planId: string 
                     <div key={section.labelKey} className="space-y-4">
                         <div className={`flex items-center gap-3 p-3 rounded-xl border ${section.bg} ${section.border}`}>
                             <SectionIcon className={`h-5 w-5 ${section.color}`} />
-                            <h2 className={`text-sm font-black uppercase tracking-widest ${section.color}`}>
+                            <h2 className={`text-sm font-semibold ${section.color}`}>
                                 {t(`dashboard.types.${section.labelKey}`)}
                                 <span className="mx-2 text-muted-foreground opacity-30">/</span>
                                 <span className="text-muted-foreground/60">{sectionItems.length}</span>
@@ -96,7 +96,7 @@ export function PlanItemsList({ items, planId }: { items: any[], planId: string 
 
                         <div className="grid gap-4">
                             {sectionItems.map((item) => (
-                                <div key={item.id} className="p-4 border rounded-xl bg-card/50 backdrop-blur-sm shadow-sm flex flex-col gap-4 hover:bg-card transition-all duration-300 hover:shadow-md group border-primary/5 hover:border-primary/20">
+                                <div key={item.id} className="p-4 border rounded-xl bg-card shadow-sm flex flex-col gap-4 hover:bg-card transition-all duration-300 hover:shadow-md group border-border hover:border-primary/20">
                                     <div className={`flex flex-col md:flex-row gap-4 justify-between items-start md:items-center ${isRtl ? 'md:flex-row-reverse' : ''}`}>
                                         <div className={`flex items-center gap-4 flex-1 ${isRtl ? 'flex-row-reverse' : ''}`}>
                                             <div className="p-3 bg-primary/5 rounded-xl text-primary hidden md:block group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
@@ -104,16 +104,16 @@ export function PlanItemsList({ items, planId }: { items: any[], planId: string 
                                             </div>
                                             <div className={`flex-1 min-w-0 ${isRtl ? 'text-right' : 'text-left'}`}>
                                                 <div className={`flex items-center gap-2 mb-1 ${isRtl ? 'flex-row-reverse' : ''}`}>
-                                                    <Badge variant="outline" className="bg-background/50 text-[10px] font-black uppercase tracking-widest border-primary/10">{t(`dashboard.types.${item.type}`)}</Badge>
-                                                    <Badge variant={item.status === 'DRAFT' ? 'secondary' : item.status === 'APPROVED' ? 'default' : 'destructive'} className="text-[10px] font-black uppercase shadow-sm">
+                                                    <Badge variant="outline" className="bg-background/50 text-[10px] font-medium border-primary/10">{t(`dashboard.types.${item.type}`)}</Badge>
+                                                    <Badge variant={item.status === 'DRAFT' ? 'secondary' : item.status === 'APPROVED' ? 'default' : 'destructive'} className="text-[10px] font-medium shadow-sm">
                                                         {t(`common.status.${item.status}`)}
                                                     </Badge>
-                                                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{item.platform}</span>
+                                                    <span className="text-[10px] font-medium text-muted-foreground">{item.platform}</span>
                                                     {item.clientComment && !item.feedbackResolved && (
-                                                        <Badge variant="destructive" className="animate-pulse text-[10px] font-black uppercase">{t("dashboard.feedback_pending")}</Badge>
+                                                        <Badge variant="destructive" className="animate-pulse text-[10px] font-medium">{t("dashboard.feedback_pending")}</Badge>
                                                     )}
                                                     {item.feedbackResolved && (
-                                                        <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-[10px] font-black uppercase">{t("dashboard.resolved")}</Badge>
+                                                        <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-[10px] font-medium">{t("dashboard.resolved")}</Badge>
                                                     )}
                                                 </div>
                                                 <div className="text-sm font-medium text-foreground/80 whitespace-pre-wrap mt-2">
@@ -134,7 +134,7 @@ export function PlanItemsList({ items, planId }: { items: any[], planId: string 
                                                             href={item.imageUrl}
                                                             target="_blank"
                                                             rel="noopener noreferrer"
-                                                            className={`absolute bottom-2 ${isRtl ? 'left-2' : 'right-2'} p-1.5 rounded-lg bg-black/60 backdrop-blur-md border border-white/20 text-white/80 hover:text-white hover:bg-black/80 transition-all opacity-0 group-hover/img:opacity-100 z-20 flex items-center gap-1.5 text-[8px] font-black uppercase tracking-widest`}
+                                                            className={`absolute bottom-2 ${isRtl ? 'left-2' : 'right-2'} p-1.5 rounded-lg bg-black/60 backdrop-blur-md border border-white/20 text-white/80 hover:text-white hover:bg-black/80 transition-all opacity-0 group-hover/img:opacity-100 z-20 flex items-center gap-1.5 text-[8px] font-medium`}
                                                         >
                                                             <ExternalLink className="h-2.5 w-2.5" />
                                                             {isRtl ? 'فتح' : 'Open'}
@@ -152,14 +152,14 @@ export function PlanItemsList({ items, planId }: { items: any[], planId: string 
                                                     <div className="mt-6 pt-6 border-t border-primary/5 space-y-4">
                                                         <div className={`flex items-center gap-2 text-primary ${isRtl ? 'flex-row-reverse' : ''}`}>
                                                             <MessageSquare className="h-3.5 w-3.5" />
-                                                            <span className="text-[10px] font-black uppercase tracking-widest">{isRtl ? 'سجل النقاش' : 'Discussion Log'}</span>
+                                                            <span className="text-[10px] font-medium">{isRtl ? 'سجل النقاش' : 'Discussion Log'}</span>
                                                         </div>
                                                         <div className="space-y-3">
                                                             {(item as any).comments.map((c: any) => (
-                                                                <div key={c.id} className={`flex flex-col gap-1 p-3 rounded-2xl border transition-all duration-300 ${c.user.role === 'CLIENT' ? 'bg-orange-50/50 border-orange-100/50' : 'bg-primary/5 border-primary/10'
+                                                                <div key={c.id} className={`flex flex-col gap-1 p-3 rounded-xl border transition-all duration-300 ${c.user.role === 'CLIENT' ? 'bg-orange-50/50 border-orange-100/50' : 'bg-primary/5 border-primary/10'
                                                                     }`}>
                                                                     <div className={`flex items-center justify-between ${isRtl ? 'flex-row-reverse' : ''}`}>
-                                                                        <span className="text-[10px] font-black text-foreground/70">{c.user.firstName} {c.user.lastName}</span>
+                                                                        <span className="text-[10px] font-medium text-foreground/70">{c.user.firstName} {c.user.lastName}</span>
                                                                         <span className="text-[9px] font-bold text-muted-foreground">
                                                                             {c.createdAt ? new Date(c.createdAt).toISOString().substring(0, 16).replace('T', ' ') : ""}
                                                                         </span>
@@ -203,7 +203,7 @@ export function PlanItemsList({ items, planId }: { items: any[], planId: string 
                                     </div>
                                     {item.amComment && (
                                         <div className={`p-4 rounded-xl text-sm border bg-primary/5 border-primary/20 text-foreground shadow-inner`}>
-                                            <div className={`flex items-center gap-2 mb-1 font-black text-[10px] uppercase tracking-tighter text-primary ${isRtl ? 'flex-row-reverse text-right' : ''}`}>
+                                            <div className={`flex items-center gap-2 mb-1 font-medium text-[10px] text-primary ${isRtl ? 'flex-row-reverse text-right' : ''}`}>
                                                 <MessageSquare className="h-3 w-3" />
                                                 {isRtl ? 'ملاحظات مدير الحساب' : 'Account Manager Notes'}
                                             </div>
@@ -214,7 +214,7 @@ export function PlanItemsList({ items, planId }: { items: any[], planId: string 
                                     )}
                                     {item.clientComment && (
                                         <div className={`p-4 rounded-xl text-sm border transition-all duration-300 ${item.feedbackResolved ? 'bg-muted/30 border-muted text-muted-foreground' : 'bg-orange-50 border-orange-100 text-orange-900 shadow-inner'}`}>
-                                            <div className={`flex items-center gap-2 mb-1 font-black text-[10px] uppercase tracking-tighter ${isRtl ? 'flex-row-reverse text-right' : ''}`}>
+                                            <div className={`flex items-center gap-2 mb-1 font-medium text-[10px] ${isRtl ? 'flex-row-reverse text-right' : ''}`}>
                                                 <MessageSquare className="h-3 w-3" />
                                                 {t("dashboard.client_feedback")} {item.feedbackResolved && `(${t("dashboard.resolved")})`}
                                             </div>
@@ -231,9 +231,9 @@ export function PlanItemsList({ items, planId }: { items: any[], planId: string 
             })}
 
             <Dialog open={!!editingItem} onOpenChange={() => setEditingItem(null)}>
-                <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto border-none shadow-2xl bg-background/95 backdrop-blur-md">
+                <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto border-none shadow-lg bg-background">
                     <DialogHeader className={isRtl ? 'text-right' : 'text-left'}>
-                        <DialogTitle className="text-2xl font-black">{t("common.edit")} {t(`dashboard.types.${editingItem?.type}`)} {editingItem?.platform}</DialogTitle>
+                        <DialogTitle className="text-2xl font-bold tracking-tight">{t("common.edit")} {t(`dashboard.types.${editingItem?.type}`)} {editingItem?.platform}</DialogTitle>
                     </DialogHeader>
                     {editingItem && (
                         <ContentItemEditor

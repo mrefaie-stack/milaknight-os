@@ -16,7 +16,7 @@ export function LanguageToggle() {
             variant="ghost"
             size="sm"
             onClick={toggleLanguage}
-            className="flex items-center gap-2 font-black text-[10px] uppercase tracking-widest hover:bg-primary/10 transition-all rounded-full border border-white/5 px-4 h-8"
+            className="flex items-center gap-2 font-medium text-[10px] section-label hover:bg-primary/10 transition-all rounded-full border border-border px-4 h-8"
         >
             <Globe className="h-3 w-3 text-primary animate-pulse" />
             <span className="opacity-70 group-hover:opacity-100">{language === 'ar' ? 'English' : 'عربي'}</span>

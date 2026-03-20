@@ -156,7 +156,7 @@ export function EditClientDialog({ client, accountManagers, marketingManagers = 
                     <div className="grid gap-6 py-4">
                         {/* Profile Section */}
                         <div className="space-y-4">
-                            <h4 className={`text-sm font-black uppercase tracking-widest text-primary flex items-center gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                            <h4 className={`text-sm font-semibold section-label text-primary flex items-center gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
                                 <Edit className="h-4 w-4" /> {t("dashboard.client_profile")}
                             </h4>
                             <div className="grid gap-4 pl-4 border-l-2 border-primary/10">
@@ -184,7 +184,7 @@ export function EditClientDialog({ client, accountManagers, marketingManagers = 
 
                         {/* Assignment & Package Section */}
                         <div className="space-y-4">
-                            <h4 className={`text-sm font-black uppercase tracking-widest text-primary flex items-center gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                            <h4 className={`text-sm font-semibold section-label text-primary flex items-center gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
                                 <UserCog className="h-4 w-4" /> {t("dashboard.management_services")}
                             </h4>
                             <div className="grid gap-4 pl-4 border-l-2 border-primary/10">
@@ -291,7 +291,7 @@ export function EditClientDialog({ client, accountManagers, marketingManagers = 
 
                         {/* Brief and Deliverables */}
                         <div className="space-y-4">
-                            <h4 className={`text-sm font-black uppercase tracking-widest text-primary flex items-center gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                            <h4 className={`text-sm font-semibold section-label text-primary flex items-center gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
                                 <Edit className="h-4 w-4" /> {isRtl ? 'موجز العميل والمخرجات' : 'Client Brief & Deliverables'}
                             </h4>
                             <div className="grid gap-4 pl-4 border-l-2 border-primary/10">
@@ -398,7 +398,7 @@ export function EditClientDialog({ client, accountManagers, marketingManagers = 
 
                         {/* Social Links */}
                         <div className="space-y-4">
-                            <h4 className={`text-sm font-black uppercase tracking-widest text-primary flex items-center gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                            <h4 className={`text-sm font-semibold section-label text-primary flex items-center gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
                                 <Globe className="h-4 w-4" /> {isRtl ? 'روابط وسائل التواصل' : 'Social Media Links'}
                             </h4>
                             <div className="grid grid-cols-2 gap-4 pl-4 border-l-2 border-primary/10">
@@ -439,7 +439,7 @@ export function EditClientDialog({ client, accountManagers, marketingManagers = 
 
                         {/* Credentials Section */}
                         <div className="space-y-4">
-                            <h4 className={`text-sm font-black uppercase tracking-widest text-primary flex items-center gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                            <h4 className={`text-sm font-semibold section-label text-primary flex items-center gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
                                 <UserCog className="h-4 w-4" /> {t("dashboard.access_credentials")}
                             </h4>
                             <div className="grid gap-4 pl-4 border-l-2 border-primary/10">

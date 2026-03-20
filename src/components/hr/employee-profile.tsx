@@ -163,7 +163,7 @@ export function EmployeeProfile({ employee: emp, viewerRole }: Props) {
             {/* Header */}
             <div className={cn("flex items-start gap-4", isRtl ? "flex-row-reverse" : "")}>
                 <div className="relative shrink-0">
-                    <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-xl font-black text-primary">
+                    <div className="w-16 h-16 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-xl font-semibold text-primary">
                         {emp.firstName.charAt(0)}{emp.lastName.charAt(0)}
                     </div>
                     <span className={cn(
@@ -172,21 +172,21 @@ export function EmployeeProfile({ employee: emp, viewerRole }: Props) {
                     )} />
                 </div>
                 <div className={cn("flex-1", isRtl ? "text-right" : "")}>
-                    <h1 className="text-2xl md:text-3xl font-black tracking-tighter">
+                    <h1 className="text-2xl font-bold tracking-tight">
                         {emp.firstName} {emp.lastName}
                     </h1>
                     <p className="text-sm text-muted-foreground">{emp.email}</p>
                     <div className={cn("flex items-center gap-2 mt-1.5 flex-wrap", isRtl ? "flex-row-reverse" : "")}>
-                        <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary uppercase tracking-widest">
+                        <span className="section-label px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary">
                             {isRtl ? roleLabel?.ar : roleLabel?.en ?? emp.role}
                         </span>
                         {emp.department && (
-                            <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-muted-foreground">
+                            <span className="text-[10px] font-medium px-2.5 py-1 rounded-full bg-muted/30 border border-border text-muted-foreground">
                                 {emp.department}
                             </span>
                         )}
                         {avgScore && (
-                            <span className="flex items-center gap-1 text-[10px] font-black text-yellow-400">
+                            <span className="flex items-center gap-1 text-[10px] font-semibold text-yellow-400">
                                 <Star className="h-3 w-3 fill-current" />{avgScore}/5
                             </span>
                         )}
@@ -196,7 +196,7 @@ export function EmployeeProfile({ employee: emp, viewerRole }: Props) {
                     <button
                         onClick={() => editMode ? handleSaveProfile() : setEditMode(true)}
                         disabled={saving}
-                        className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary/10 border border-primary/20 text-primary text-xs font-black hover:bg-primary/20 transition-colors disabled:opacity-50"
+                        className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary/10 border border-primary/20 text-primary text-xs font-semibold hover:bg-primary/20 transition-colors disabled:opacity-50"
                     >
                         {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : editMode ? <Save className="h-3.5 w-3.5" /> : <User className="h-3.5 w-3.5" />}
                         {editMode ? (isRtl ? "حفظ" : "Save") : (isRtl ? "تعديل" : "Edit")}
@@ -205,13 +205,13 @@ export function EmployeeProfile({ employee: emp, viewerRole }: Props) {
             </div>
 
             {/* Tabs */}
-            <div className={cn("flex gap-1 p-1 bg-white/3 rounded-2xl border border-white/8", isRtl ? "flex-row-reverse" : "")}>
+            <div className={cn("flex gap-1 p-1 bg-muted/20 rounded-xl border border-border", isRtl ? "flex-row-reverse" : "")}>
                 {TABS.map(t => (
                     <button
                         key={t}
                         onClick={() => setTab(t)}
                         className={cn(
-                            "flex-1 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all",
+                            "flex-1 py-2 rounded-xl section-label transition-all",
                             tab === t ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20" : "text-muted-foreground hover:text-foreground"
                         )}
                     >
@@ -242,8 +242,8 @@ export function EmployeeProfile({ employee: emp, viewerRole }: Props) {
                                 { icon: Briefcase, label: isRtl ? "نوع العقد" : "Contract", field: "contractType" as const, type: "select" },
                                 { icon: DollarSign, label: isRtl ? "الراتب (ر.س)" : "Salary (SAR)", field: "salary" as const, type: "number" },
                             ].map(({ icon: Icon, label, field, type }) => (
-                                <div key={field} className={cn("p-4 rounded-2xl border border-white/8 bg-white/2 space-y-2", isRtl ? "text-right" : "")}>
-                                    <div className={cn("flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground/50", isRtl ? "flex-row-reverse" : "")}>
+                                <div key={field} className={cn("p-4 rounded-xl border border-border bg-muted/10 space-y-2", isRtl ? "text-right" : "")}>
+                                    <div className={cn("flex items-center gap-2 section-label text-muted-foreground/50", isRtl ? "flex-row-reverse" : "")}>
                                         <Icon className="h-3 w-3" />{label}
                                     </div>
                                     {editMode && isAdmin ? (
@@ -251,7 +251,7 @@ export function EmployeeProfile({ employee: emp, viewerRole }: Props) {
                                             <select
                                                 value={profile[field]}
                                                 onChange={e => setProfile(p => ({ ...p, [field]: e.target.value }))}
-                                                className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm outline-none focus:border-primary/40"
+                                                className="w-full bg-muted/30 border border-border rounded-xl px-3 py-2 text-sm outline-none focus:border-primary/40"
                                                 dir={isRtl ? "rtl" : "ltr"}
                                             >
                                                 <option value="">{isRtl ? "غير محدد" : "Not set"}</option>
@@ -264,7 +264,7 @@ export function EmployeeProfile({ employee: emp, viewerRole }: Props) {
                                                 type={type}
                                                 value={profile[field]}
                                                 onChange={e => setProfile(p => ({ ...p, [field]: e.target.value }))}
-                                                className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm outline-none focus:border-primary/40"
+                                                className="w-full bg-muted/30 border border-border rounded-xl px-3 py-2 text-sm outline-none focus:border-primary/40"
                                                 dir={isRtl ? "rtl" : "ltr"}
                                             />
                                         )
@@ -283,8 +283,8 @@ export function EmployeeProfile({ employee: emp, viewerRole }: Props) {
                             ))}
 
                             {/* Presence */}
-                            <div className={cn("p-4 rounded-2xl border border-white/8 bg-white/2 space-y-1 md:col-span-2", isRtl ? "text-right" : "")}>
-                                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">
+                            <div className={cn("p-4 rounded-xl border border-border bg-muted/10 space-y-1 md:col-span-2", isRtl ? "text-right" : "")}>
+                                <p className="section-label text-muted-foreground/50">
                                     {isRtl ? "الحالة الحالية" : "Current Status"}
                                 </p>
                                 <div className={cn("flex items-center gap-2", isRtl ? "flex-row-reverse" : "")}>
@@ -310,10 +310,10 @@ export function EmployeeProfile({ employee: emp, viewerRole }: Props) {
                                     <p className="text-sm font-bold">{isRtl ? "لا توجد إجازات" : "No leave requests"}</p>
                                 </div>
                             ) : emp.leaveRequests.map(leave => (
-                                <div key={leave.id} className={cn("p-4 rounded-2xl border border-white/8 bg-white/2 space-y-2", isRtl ? "text-right" : "")}>
+                                <div key={leave.id} className={cn("p-4 rounded-xl border border-border bg-muted/10 space-y-2", isRtl ? "text-right" : "")}>
                                     <div className={cn("flex items-start justify-between gap-2", isRtl ? "flex-row-reverse" : "")}>
                                         <div>
-                                            <p className="text-sm font-black">
+                                            <p className="text-sm font-semibold">
                                                 {isRtl ? LEAVE_TYPE_AR[leave.type] : leave.type.replace("_", " ")} · {leave.days} {isRtl ? "يوم" : "days"}
                                             </p>
                                             <p className="text-[11px] text-muted-foreground">
@@ -327,7 +327,7 @@ export function EmployeeProfile({ employee: emp, viewerRole }: Props) {
                                                 </p>
                                             )}
                                         </div>
-                                        <span className={cn("text-[10px] font-black px-2 py-1 rounded-full border uppercase", LEAVE_STATUS_STYLE[leave.status])}>
+                                        <span className={cn("section-label px-2 py-1 rounded-full border", LEAVE_STATUS_STYLE[leave.status])}>
                                             {isRtl
                                                 ? { PENDING: "معلق", APPROVED: "موافق", REJECTED: "مرفوض" }[leave.status]
                                                 : leave.status}
@@ -344,7 +344,7 @@ export function EmployeeProfile({ employee: emp, viewerRole }: Props) {
                             {["ADMIN", "MARKETING_MANAGER"].includes(viewerRole) && (
                                 <button
                                     onClick={() => setShowReviewForm(v => !v)}
-                                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary/10 border border-primary/20 text-primary text-xs font-black hover:bg-primary/20 transition-colors"
+                                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary/10 border border-primary/20 text-primary text-xs font-semibold hover:bg-primary/20 transition-colors"
                                 >
                                     <Plus className="h-3.5 w-3.5" />
                                     {isRtl ? "إضافة تقييم" : "Add Review"}
@@ -359,19 +359,19 @@ export function EmployeeProfile({ employee: emp, viewerRole }: Props) {
                                         exit={{ opacity: 0, height: 0 }}
                                         className="overflow-hidden"
                                     >
-                                        <div className="p-4 rounded-2xl border border-primary/20 bg-primary/5 space-y-3">
+                                        <div className="p-4 rounded-xl border border-primary/20 bg-primary/5 space-y-3">
                                             <div className="grid grid-cols-2 gap-3">
                                                 <input
                                                     placeholder={isRtl ? "الفترة (مثال: 2025-Q1)" : "Period (e.g. 2025-Q1)"}
                                                     value={reviewForm.period}
                                                     onChange={e => setReviewForm(f => ({ ...f, period: e.target.value }))}
-                                                    className="bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-primary/40"
+                                                    className="bg-muted/30 border border-border rounded-xl px-3 py-2.5 text-sm outline-none focus:border-primary/40"
                                                     dir={isRtl ? "rtl" : "ltr"}
                                                 />
                                                 <select
                                                     value={reviewForm.score}
                                                     onChange={e => setReviewForm(f => ({ ...f, score: e.target.value }))}
-                                                    className="bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-primary/40"
+                                                    className="bg-muted/30 border border-border rounded-xl px-3 py-2.5 text-sm outline-none focus:border-primary/40"
                                                 >
                                                     {[5, 4, 3, 2, 1].map(s => (
                                                         <option key={s} value={s}>{s}/5 {"⭐".repeat(s)}</option>
@@ -388,14 +388,14 @@ export function EmployeeProfile({ employee: emp, viewerRole }: Props) {
                                                     value={reviewForm[field as keyof typeof reviewForm]}
                                                     onChange={e => setReviewForm(f => ({ ...f, [field]: e.target.value }))}
                                                     rows={2}
-                                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-primary/40 resize-none"
+                                                    className="w-full bg-muted/30 border border-border rounded-xl px-3 py-2.5 text-sm outline-none focus:border-primary/40 resize-none"
                                                     dir={isRtl ? "rtl" : "ltr"}
                                                 />
                                             ))}
                                             <button
                                                 onClick={handleAddReview}
                                                 disabled={reviewLoading || !reviewForm.period}
-                                                className="w-full py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-black hover:bg-primary/90 disabled:opacity-40 transition-colors"
+                                                className="w-full py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 disabled:opacity-40 transition-colors"
                                             >
                                                 {reviewLoading ? <Loader2 className="h-4 w-4 animate-spin mx-auto" /> : (isRtl ? "إضافة التقييم" : "Add Review")}
                                             </button>
@@ -410,12 +410,12 @@ export function EmployeeProfile({ employee: emp, viewerRole }: Props) {
                                     <p className="text-sm font-bold">{isRtl ? "لا توجد تقييمات" : "No reviews yet"}</p>
                                 </div>
                             ) : emp.performanceReviews.map(review => (
-                                <div key={review.id} className={cn("p-4 rounded-2xl border border-white/8 bg-white/2 space-y-2", isRtl ? "text-right" : "")}>
+                                <div key={review.id} className={cn("p-4 rounded-xl border border-border bg-muted/10 space-y-2", isRtl ? "text-right" : "")}>
                                     <div className={cn("flex items-center justify-between", isRtl ? "flex-row-reverse" : "")}>
-                                        <p className="text-sm font-black">{review.period}</p>
+                                        <p className="text-sm font-semibold">{review.period}</p>
                                         <div className="flex items-center gap-1 text-yellow-400">
                                             <Star className="h-3.5 w-3.5 fill-current" />
-                                            <span className="text-sm font-black">{review.score}/5</span>
+                                            <span className="text-sm font-semibold">{review.score}/5</span>
                                         </div>
                                     </div>
                                     <p className="text-[11px] text-muted-foreground/60">
@@ -423,19 +423,19 @@ export function EmployeeProfile({ employee: emp, viewerRole }: Props) {
                                     </p>
                                     {review.strengths && (
                                         <div>
-                                            <p className="text-[10px] font-black uppercase text-green-400/70 mb-0.5">{isRtl ? "نقاط القوة" : "Strengths"}</p>
+                                            <p className="section-label text-green-400/70 mb-0.5">{isRtl ? "نقاط القوة" : "Strengths"}</p>
                                             <p className="text-xs text-muted-foreground">{review.strengths}</p>
                                         </div>
                                     )}
                                     {review.improvements && (
                                         <div>
-                                            <p className="text-[10px] font-black uppercase text-yellow-400/70 mb-0.5">{isRtl ? "التحسينات" : "Improvements"}</p>
+                                            <p className="section-label text-yellow-400/70 mb-0.5">{isRtl ? "التحسينات" : "Improvements"}</p>
                                             <p className="text-xs text-muted-foreground">{review.improvements}</p>
                                         </div>
                                     )}
                                     {review.goals && (
                                         <div>
-                                            <p className="text-[10px] font-black uppercase text-blue-400/70 mb-0.5">{isRtl ? "الأهداف" : "Goals"}</p>
+                                            <p className="section-label text-blue-400/70 mb-0.5">{isRtl ? "الأهداف" : "Goals"}</p>
                                             <p className="text-xs text-muted-foreground">{review.goals}</p>
                                         </div>
                                     )}
@@ -454,13 +454,13 @@ export function EmployeeProfile({ employee: emp, viewerRole }: Props) {
                                         value={noteText}
                                         onChange={e => setNoteText(e.target.value)}
                                         rows={3}
-                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm outline-none focus:border-primary/40 resize-none"
+                                        className="w-full bg-muted/30 border border-border rounded-xl px-4 py-3 text-sm outline-none focus:border-primary/40 resize-none"
                                         dir={isRtl ? "rtl" : "ltr"}
                                     />
                                     <button
                                         onClick={handleAddNote}
                                         disabled={noteLoading || !noteText.trim()}
-                                        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-black hover:bg-primary/90 disabled:opacity-40 transition-colors"
+                                        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 disabled:opacity-40 transition-colors"
                                     >
                                         {noteLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
                                         {isRtl ? "إضافة ملاحظة" : "Add Note"}
@@ -473,7 +473,7 @@ export function EmployeeProfile({ employee: emp, viewerRole }: Props) {
                                     <p className="text-sm font-bold">{isRtl ? "لا توجد ملاحظات" : "No notes yet"}</p>
                                 </div>
                             ) : emp.hrNotes.map(note => (
-                                <div key={note.id} className={cn("p-4 rounded-2xl border border-white/8 bg-white/2", isRtl ? "text-right" : "")}>
+                                <div key={note.id} className={cn("p-4 rounded-xl border border-border bg-muted/10", isRtl ? "text-right" : "")}>
                                     <p className="text-[11px] text-muted-foreground/50 mb-1">
                                         {note.author.firstName} {note.author.lastName} · {new Date(note.createdAt).toLocaleDateString()}
                                     </p>

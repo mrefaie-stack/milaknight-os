@@ -118,10 +118,10 @@ export function MmApprovalsView({ pendingPlans, pendingReports }: Props) {
             {/* Header */}
             <div className={`space-y-2 ${isRtl ? "text-right" : ""}`}>
                 <div className={`flex items-center gap-3 ${isRtl ? "flex-row-reverse justify-end" : ""}`}>
-                    <div className="p-2.5 rounded-2xl bg-primary/10 border border-primary/20">
-                        <CheckSquare className="h-6 w-6 text-primary" />
+                    <div className="p-2 rounded-lg bg-primary/10">
+                        <CheckSquare className="h-5 w-5 text-primary" />
                     </div>
-                    <h1 className="text-4xl font-black tracking-tight premium-gradient-text uppercase">
+                    <h1 className="text-2xl font-bold tracking-tight">
                         {isRtl ? "الموافقات" : "Approvals"}
                     </h1>
                 </div>
@@ -134,27 +134,27 @@ export function MmApprovalsView({ pendingPlans, pendingReports }: Props) {
 
             {/* Stats */}
             <div className="grid grid-cols-2 gap-4">
-                <Card className="bg-card/50 border-white/5">
+                <Card>
                     <CardContent className="p-5 flex items-center gap-4">
                         <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20">
                             <FolderKanban className="h-5 w-5 text-blue-400" />
                         </div>
                         <div>
-                            <p className="text-2xl font-black">{plans.length}</p>
-                            <p className="text-xs text-muted-foreground font-medium uppercase tracking-widest">
+                            <p className="text-2xl font-bold">{plans.length}</p>
+                            <p className="section-label text-muted-foreground">
                                 {isRtl ? "خطط عمل" : "Action Plans"}
                             </p>
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="bg-card/50 border-white/5">
+                <Card>
                     <CardContent className="p-5 flex items-center gap-4">
                         <div className="p-3 rounded-xl bg-violet-500/10 border border-violet-500/20">
                             <BarChart3 className="h-5 w-5 text-violet-400" />
                         </div>
                         <div>
-                            <p className="text-2xl font-black">{reports.length}</p>
-                            <p className="text-xs text-muted-foreground font-medium uppercase tracking-widest">
+                            <p className="text-2xl font-bold">{reports.length}</p>
+                            <p className="section-label text-muted-foreground">
                                 {isRtl ? "تقارير" : "Reports"}
                             </p>
                         </div>
@@ -164,11 +164,11 @@ export function MmApprovalsView({ pendingPlans, pendingReports }: Props) {
 
             {/* Tabs */}
             <Tabs defaultValue="plans">
-                <TabsList className="bg-white/5 border border-white/10">
-                    <TabsTrigger value="plans" className="font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                <TabsList>
+                    <TabsTrigger value="plans">
                         {isRtl ? `خطط العمل (${plans.length})` : `Action Plans (${plans.length})`}
                     </TabsTrigger>
-                    <TabsTrigger value="reports" className="font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                    <TabsTrigger value="reports">
                         {isRtl ? `التقارير (${reports.length})` : `Reports (${reports.length})`}
                     </TabsTrigger>
                 </TabsList>
@@ -183,7 +183,7 @@ export function MmApprovalsView({ pendingPlans, pendingReports }: Props) {
                         />
                     ) : (
                         plans.map((plan) => (
-                            <Card key={plan.id} className="bg-card/50 border-white/5 hover:border-white/10 transition-all">
+                            <Card key={plan.id} className="hover:bg-muted/30 transition-colors">
                                 <CardContent className="p-5">
                                     <div className={`flex items-start justify-between gap-4 ${isRtl ? "flex-row-reverse" : ""}`}>
                                         <div className={`flex items-start gap-4 ${isRtl ? "flex-row-reverse" : ""}`}>
@@ -191,10 +191,10 @@ export function MmApprovalsView({ pendingPlans, pendingReports }: Props) {
                                                 <FolderKanban className="h-5 w-5 text-blue-400" />
                                             </div>
                                             <div className={isRtl ? "text-right" : ""}>
-                                                <p className="text-xs text-muted-foreground font-medium uppercase tracking-widest mb-0.5">
+                                                <p className="section-label text-muted-foreground mb-0.5">
                                                     {clientName(plan.client)}
                                                 </p>
-                                                <p className="text-xl font-black">{plan.month}</p>
+                                                <p className="text-base font-semibold">{plan.month}</p>
                                                 <div className={`flex items-center gap-2 mt-1.5 ${isRtl ? "flex-row-reverse" : ""}`}>
                                                     <Clock className="h-3.5 w-3.5 text-amber-400" />
                                                     <span className="text-xs text-amber-400 font-bold">
@@ -209,14 +209,14 @@ export function MmApprovalsView({ pendingPlans, pendingReports }: Props) {
                                         </div>
                                         <div className={`flex items-center gap-2 shrink-0 ${isRtl ? "flex-row-reverse" : ""}`}>
                                             <Link href={`/am/action-plans/${plan.id}`}>
-                                                <Button variant="outline" size="sm" className="gap-1.5 border-white/10 text-xs font-bold">
+                                                <Button variant="outline" size="sm" className="gap-1.5 text-xs">
                                                     <ExternalLink className="h-3.5 w-3.5" />
                                                     {isRtl ? "التفاصيل" : "Details"}
                                                 </Button>
                                             </Link>
                                             <Button
                                                 size="sm"
-                                                className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold"
+                                                className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs"
                                                 disabled={loadingId === plan.id}
                                                 onClick={() => handleApprove(plan.id, "plan")}
                                             >
@@ -230,7 +230,7 @@ export function MmApprovalsView({ pendingPlans, pendingReports }: Props) {
                                             <Button
                                                 size="sm"
                                                 variant="destructive"
-                                                className="gap-1.5 text-xs font-bold"
+                                                className="gap-1.5 text-xs"
                                                 disabled={loadingId === plan.id}
                                                 onClick={() => openRejectDialog(plan.id, "plan")}
                                             >
@@ -255,7 +255,7 @@ export function MmApprovalsView({ pendingPlans, pendingReports }: Props) {
                         />
                     ) : (
                         reports.map((report) => (
-                            <Card key={report.id} className="bg-card/50 border-white/5 hover:border-white/10 transition-all">
+                            <Card key={report.id} className="hover:bg-muted/30 transition-colors">
                                 <CardContent className="p-5">
                                     <div className={`flex items-start justify-between gap-4 ${isRtl ? "flex-row-reverse" : ""}`}>
                                         <div className={`flex items-start gap-4 ${isRtl ? "flex-row-reverse" : ""}`}>
@@ -263,10 +263,10 @@ export function MmApprovalsView({ pendingPlans, pendingReports }: Props) {
                                                 <BarChart3 className="h-5 w-5 text-violet-400" />
                                             </div>
                                             <div className={isRtl ? "text-right" : ""}>
-                                                <p className="text-xs text-muted-foreground font-medium uppercase tracking-widest mb-0.5">
+                                                <p className="section-label text-muted-foreground mb-0.5">
                                                     {clientName(report.client)}
                                                 </p>
-                                                <p className="text-xl font-black">{report.month}</p>
+                                                <p className="text-base font-semibold">{report.month}</p>
                                                 <div className={`flex items-center gap-2 mt-1.5 ${isRtl ? "flex-row-reverse" : ""}`}>
                                                     <Clock className="h-3.5 w-3.5 text-amber-400" />
                                                     <span className="text-xs text-amber-400 font-bold">
@@ -277,14 +277,14 @@ export function MmApprovalsView({ pendingPlans, pendingReports }: Props) {
                                         </div>
                                         <div className={`flex items-center gap-2 shrink-0 ${isRtl ? "flex-row-reverse" : ""}`}>
                                             <Link href={`/am/reports/${report.id}`}>
-                                                <Button variant="outline" size="sm" className="gap-1.5 border-white/10 text-xs font-bold">
+                                                <Button variant="outline" size="sm" className="gap-1.5 text-xs">
                                                     <ExternalLink className="h-3.5 w-3.5" />
                                                     {isRtl ? "التفاصيل" : "Details"}
                                                 </Button>
                                             </Link>
                                             <Button
                                                 size="sm"
-                                                className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold"
+                                                className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs"
                                                 disabled={loadingId === report.id}
                                                 onClick={() => handleApprove(report.id, "report")}
                                             >
@@ -298,7 +298,7 @@ export function MmApprovalsView({ pendingPlans, pendingReports }: Props) {
                                             <Button
                                                 size="sm"
                                                 variant="destructive"
-                                                className="gap-1.5 text-xs font-bold"
+                                                className="gap-1.5 text-xs"
                                                 disabled={loadingId === report.id}
                                                 onClick={() => openRejectDialog(report.id, "report")}
                                             >
@@ -318,7 +318,7 @@ export function MmApprovalsView({ pendingPlans, pendingReports }: Props) {
             <Dialog open={!!rejectingId} onOpenChange={(open) => { if (!open) { setRejectingId(null); setRejectingType(null); setFeedback(""); } }}>
                 <DialogContent className="sm:max-w-md" dir={isRtl ? "rtl" : "ltr"}>
                     <DialogHeader>
-                        <DialogTitle className={`font-black ${isRtl ? "text-right" : ""}`}>
+                        <DialogTitle className={isRtl ? "text-right" : ""}>
                             {isRtl ? "رفض وطلب مراجعة" : "Reject & Request Revision"}
                         </DialogTitle>
                     </DialogHeader>
@@ -332,7 +332,7 @@ export function MmApprovalsView({ pendingPlans, pendingReports }: Props) {
                             value={feedback}
                             onChange={(e) => setFeedback(e.target.value)}
                             placeholder={isRtl ? "سبب الرفض..." : "Reason for rejection..."}
-                            className={`min-h-[100px] bg-white/5 border-white/10 ${isRtl ? "text-right" : ""}`}
+                            className={`min-h-[100px] ${isRtl ? "text-right" : ""}`}
                             dir={isRtl ? "rtl" : "ltr"}
                         />
                     </div>
@@ -340,7 +340,6 @@ export function MmApprovalsView({ pendingPlans, pendingReports }: Props) {
                         <Button
                             variant="outline"
                             onClick={() => { setRejectingId(null); setRejectingType(null); setFeedback(""); }}
-                            className="border-white/10"
                         >
                             {isRtl ? "إلغاء" : "Cancel"}
                         </Button>
@@ -369,7 +368,7 @@ function EmptyState({ icon, title, subtitle }: { icon: React.ReactNode; title: s
         <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
             <div className="text-muted-foreground">{icon}</div>
             <div>
-                <p className="font-black text-lg">{title}</p>
+                <p className="text-base font-semibold">{title}</p>
                 <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>
             </div>
         </div>

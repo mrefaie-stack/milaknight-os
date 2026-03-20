@@ -87,7 +87,7 @@ function InsightBanner({ insight, isRtl }: { insight: { text: string; trend: "up
         flat: "bg-muted/20 border-border text-muted-foreground"
     };
     return (
-        <div className={`flex items-start gap-3 p-4 rounded-2xl border text-sm font-medium mt-4 ${colors[insight.trend]} ${isRtl ? 'flex-row-reverse text-right' : 'text-left'}`}>
+        <div className={`flex items-start gap-3 p-4 rounded-xl border text-sm font-medium mt-4 ${colors[insight.trend]} ${isRtl ? 'flex-row-reverse text-right' : 'text-left'}`}>
             <Icon className="h-4 w-4 mt-0.5 shrink-0" />
             <p className="leading-relaxed">{insight.text}</p>
         </div>
@@ -174,24 +174,24 @@ export function ReportComparisonView({ reports, role }: { reports: any[], role: 
     return (
         <div className="space-y-8 print-container max-w-6xl mx-auto" dir={isRtl ? "rtl" : "ltr"} id="pdf-content">
             {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 p-8 rounded-3xl bg-card border-none glass-card relative overflow-hidden print:hidden">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 p-8 rounded-xl bg-card border border-border relative overflow-hidden print:hidden">
                 <div className="absolute top-0 right-0 p-8 opacity-5">
                     <GitCompare className="h-48 w-48 -mr-16 -mt-16" />
                 </div>
                 <div className="relative z-10 flex flex-col gap-4">
-                    <Button variant="ghost" onClick={() => router.back()} className="w-fit hover:bg-white/5 -ml-4">
+                    <Button variant="ghost" onClick={() => router.back()} className="w-fit hover:bg-muted/30 -ml-4">
                         <ArrowLeft className={`h-4 w-4 mr-2 ${isRtl ? 'rotate-180 ml-2 mr-0' : ''}`} /> {t("common.back")}
                     </Button>
                     <div>
                         <div className="flex items-center gap-3 mb-2">
-                            <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 text-xs font-black uppercase tracking-widest">
+                            <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 text-xs font-medium">
                                 {isRtl ? "تحليل المقارنة" : "Comparison Analysis"}
                             </Badge>
-                            <Badge variant="secondary" className="text-xs font-black uppercase">
+                            <Badge variant="secondary" className="text-xs font-medium">
                                 {reports.length} {isRtl ? "شهور" : "Months"}
                             </Badge>
                         </div>
-                        <h1 className="text-4xl md:text-5xl font-black tracking-tighter premium-gradient-text uppercase">
+                        <h1 className="text-2xl font-bold tracking-tight">
                             {isRtl ? "اتجاه الأداء" : "Performance Trend"}
                         </h1>
                         <p className="text-xl text-muted-foreground font-medium mt-2">{clientName}</p>
@@ -203,12 +203,12 @@ export function ReportComparisonView({ reports, role }: { reports: any[], role: 
             </div>
 
             {/* ─── Overall Summary Banner ─────────────────── */}
-            <div className={`p-6 rounded-3xl border flex items-start gap-4 ${isRtl ? 'flex-row-reverse text-right' : 'text-left'} ${overallTrend === 'up' ? 'bg-emerald-500/5 border-emerald-500/20' : overallTrend === 'down' ? 'bg-red-500/5 border-red-500/20' : 'bg-muted/20 border-border'}`}>
-                <div className={`p-3 rounded-2xl shrink-0 ${overallTrend === 'up' ? 'bg-emerald-500/10' : overallTrend === 'down' ? 'bg-red-500/10' : 'bg-muted/20'}`}>
+            <div className={`p-6 rounded-xl border flex items-start gap-4 ${isRtl ? 'flex-row-reverse text-right' : 'text-left'} ${overallTrend === 'up' ? 'bg-emerald-500/5 border-emerald-500/20' : overallTrend === 'down' ? 'bg-red-500/5 border-red-500/20' : 'bg-muted/20 border-border'}`}>
+                <div className={`p-3 rounded-xl shrink-0 ${overallTrend === 'up' ? 'bg-emerald-500/10' : overallTrend === 'down' ? 'bg-red-500/10' : 'bg-muted/20'}`}>
                     <BarChart3 className={`h-6 w-6 ${overallTrend === 'up' ? 'text-emerald-500' : overallTrend === 'down' ? 'text-red-500' : 'text-muted-foreground'}`} />
                 </div>
                 <div className="space-y-1">
-                    <p className={`text-[11px] font-black uppercase tracking-widest ${overallTrend === 'up' ? 'text-emerald-500' : overallTrend === 'down' ? 'text-red-500' : 'text-muted-foreground'}`}>
+                    <p className={`section-label ${overallTrend === 'up' ? 'text-emerald-500' : overallTrend === 'down' ? 'text-red-500' : 'text-muted-foreground'}`}>
                         {isRtl ? "ملخص الفترة الكاملة" : "Period Summary"}
                     </p>
                     <p className="text-base font-semibold leading-relaxed">{overallText}</p>
@@ -218,9 +218,9 @@ export function ReportComparisonView({ reports, role }: { reports: any[], role: 
             {/* Charts Grid */}
             <div className="grid gap-6 md:grid-cols-2">
                 {/* Total Reach + Impressions Trend */}
-                <Card className="glass-card border-none md:col-span-2">
+                <Card className="border border-border bg-card md:col-span-2">
                     <CardHeader>
-                        <CardTitle className="text-xl font-black">{isRtl ? "إجمالي الوصول ومرات الظهور" : "Total Brand Reach & Impressions"}</CardTitle>
+                        <CardTitle className="text-xl font-bold">{isRtl ? "إجمالي الوصول ومرات الظهور" : "Total Brand Reach & Impressions"}</CardTitle>
                         <CardDescription>{isRtl ? "الوصول الإجمالي عبر كل المنصات" : "Aggregated reach across all social platforms"}</CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -245,9 +245,9 @@ export function ReportComparisonView({ reports, role }: { reports: any[], role: 
                 </Card>
 
                 {/* Engagement Trend */}
-                <Card className="glass-card border-none">
+                <Card className="border border-border bg-card">
                     <CardHeader>
-                        <CardTitle className="text-xl font-black">{isRtl ? "التفاعل" : "Engagement Trend"}</CardTitle>
+                        <CardTitle className="text-xl font-bold">{isRtl ? "التفاعل" : "Engagement Trend"}</CardTitle>
                         <CardDescription>{isRtl ? "مجموع اللايكات والتعليقات والمشاركات" : "Total likes, comments, and shares"}</CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -267,9 +267,9 @@ export function ReportComparisonView({ reports, role }: { reports: any[], role: 
                 </Card>
 
                 {/* SEO Score Trend */}
-                <Card className="glass-card border-none">
+                <Card className="border border-border bg-card">
                     <CardHeader>
-                        <CardTitle className="text-xl font-black">{isRtl ? "تقييم السيو (SEO)" : "Website Score (SEO)"}</CardTitle>
+                        <CardTitle className="text-xl font-bold">{isRtl ? "تقييم السيو (SEO)" : "Website Score (SEO)"}</CardTitle>
                         <CardDescription>{isRtl ? "صحة الموقع وقوة النطاق" : "Domain authority and health score"}</CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -289,9 +289,9 @@ export function ReportComparisonView({ reports, role }: { reports: any[], role: 
                 </Card>
 
                 {/* Ad Spend Trend */}
-                <Card className="glass-card border-none md:col-span-2">
+                <Card className="border border-border bg-card md:col-span-2">
                     <CardHeader>
-                        <CardTitle className="text-xl font-black">{isRtl ? "الإنفاق الإعلاني" : "Ad Spend Trend"}</CardTitle>
+                        <CardTitle className="text-xl font-bold">{isRtl ? "الإنفاق الإعلاني" : "Ad Spend Trend"}</CardTitle>
                         <CardDescription>{isRtl ? "الإجمالي الإعلاني عبر كل المنصات" : "Total investment across all platforms"}</CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -314,7 +314,7 @@ export function ReportComparisonView({ reports, role }: { reports: any[], role: 
                 </Card>
             </div>
 
-            <div className="text-center text-sm font-bold opacity-30 uppercase tracking-widest pt-12 pb-4">
+            <div className="text-center text-sm font-medium opacity-30 pt-12 pb-4">
                 MilaKnight Creative Agency &copy; {new Date().getFullYear()}
             </div>
         </div>

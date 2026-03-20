@@ -50,7 +50,7 @@ export function AdminRequestsUI({ initialRequests }: { initialRequests: any[] })
     return (
         <div className="space-y-8" dir={isRtl ? "rtl" : "ltr"}>
             <div className={`space-y-2 ${isRtl ? 'text-right' : ''}`}>
-                <h1 className="text-4xl font-black tracking-tight premium-gradient-text uppercase">
+                <h1 className="text-2xl font-bold tracking-tight">
                     {isRtl ? "طلبات الخدمات" : "Service Requests"}
                 </h1>
                 <p className="text-muted-foreground font-medium opacity-60">
@@ -60,24 +60,24 @@ export function AdminRequestsUI({ initialRequests }: { initialRequests: any[] })
 
             <div className="grid gap-4">
                 {requests.length === 0 ? (
-                    <div className="py-20 text-center glass-card rounded-3xl opacity-40">
+                    <div className="py-20 text-center bg-card rounded-xl border border-border opacity-40">
                         <Sparkles className="h-10 w-10 mx-auto mb-4 text-muted-foreground" />
-                        <p className="font-black italic uppercase tracking-widest">{isRtl ? "لا توجد طلبات حالياً" : "No requests found"}</p>
+                        <p className="font-medium italic section-label">{isRtl ? "لا توجد طلبات حالياً" : "No requests found"}</p>
                     </div>
                 ) : (
                     requests.map((request) => (
-                        <Card key={request.id} className="glass-card border-none overflow-hidden rounded-3xl hover:bg-white/5 transition-all">
+                        <Card key={request.id} className="bg-card border border-border overflow-hidden rounded-xl hover:bg-muted/30 transition-all">
                             <CardContent className="p-6">
                                 <div className={`flex flex-col md:flex-row md:items-center justify-between gap-6 ${isRtl ? 'flex-row-reverse' : ''}`}>
                                     {/* Client & Service Info */}
                                     <div className={`flex items-start gap-4 flex-1 ${isRtl ? 'flex-row-reverse' : ''}`}>
-                                        <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                                        <div className="h-14 w-14 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
                                             <Building className="h-7 w-7" />
                                         </div>
                                         <div className={`space-y-1 ${isRtl ? 'text-right' : ''}`}>
                                             <div className="flex items-center gap-2 flex-wrap">
-                                                <h3 className="text-xl font-black">{request.client?.name || "Unknown Client"}</h3>
-                                                <Badge variant="outline" className="rounded-full px-3 py-0.5 text-[10px] font-black uppercase tracking-widest bg-primary/5 text-primary">
+                                                <h3 className="text-xl font-semibold">{request.client?.name || "Unknown Client"}</h3>
+                                                <Badge variant="outline" className="rounded-full px-3 py-0.5 text-[10px] font-medium section-label bg-primary/5 text-primary">
                                                     {isRtl ? request.globalService?.nameAr : request.globalService?.nameEn}
                                                 </Badge>
                                             </div>
@@ -92,7 +92,7 @@ export function AdminRequestsUI({ initialRequests }: { initialRequests: any[] })
                                                 </div>
                                             </div>
                                             {request.notes && (
-                                                <p className="text-sm mt-2 p-3 rounded-xl bg-white/5 italic opacity-80">
+                                                <p className="text-sm mt-2 p-3 rounded-xl bg-muted/30 italic opacity-80">
                                                     "{request.notes}"
                                                 </p>
                                             )}
@@ -107,7 +107,7 @@ export function AdminRequestsUI({ initialRequests }: { initialRequests: any[] })
                                                     onClick={() => openRejectDialog(request)}
                                                     variant="secondary"
                                                     disabled={loading === request.id}
-                                                    className="rounded-full font-black uppercase tracking-widest text-xs h-10 px-6 bg-red-500/10 text-red-500 hover:bg-red-500/20"
+                                                    className="rounded-full font-medium text-xs h-10 px-6 bg-red-500/10 text-red-500 hover:bg-red-500/20"
                                                 >
                                                     <XCircle className={`h-4 w-4 ${isRtl ? 'ml-2' : 'mr-2'}`} />
                                                     {isRtl ? "رفض" : "Reject"}
@@ -115,7 +115,7 @@ export function AdminRequestsUI({ initialRequests }: { initialRequests: any[] })
                                                 <Button
                                                     onClick={() => handleAction(request.id, "APPROVED")}
                                                     disabled={loading === request.id}
-                                                    className="rounded-full font-black uppercase tracking-widest text-xs h-10 px-6 shadow-lg shadow-emerald-500/20"
+                                                    className="rounded-full font-medium text-xs h-10 px-6 shadow-lg shadow-emerald-500/20"
                                                 >
                                                     <CheckCircle2 className={`h-4 w-4 ${isRtl ? 'ml-2' : 'mr-2'}`} />
                                                     {isRtl ? "موافقة" : "Approve"}
@@ -124,7 +124,7 @@ export function AdminRequestsUI({ initialRequests }: { initialRequests: any[] })
                                         ) : (
                                             <div className={`flex flex-col ${isRtl ? 'items-end' : 'items-start'}`}>
                                                 <Badge className={`
-                                                    rounded-full px-6 py-2 font-black uppercase tracking-widest text-xs
+                                                    rounded-full px-6 py-2 font-medium text-xs
                                                     ${request.status === 'APPROVED' ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'}
                                                 `}>
                                                     {isRtl ? (request.status === 'APPROVED' ? 'تم الموافقة' : 'مرفوض') : request.status}
@@ -146,7 +146,7 @@ export function AdminRequestsUI({ initialRequests }: { initialRequests: any[] })
 
             {/* Reject Dialog */}
             <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
-                <DialogContent className="rounded-3xl border-none" dir={isRtl ? "rtl" : "ltr"}>
+                <DialogContent className="rounded-xl" dir={isRtl ? "rtl" : "ltr"}>
                     <DialogHeader>
                         <DialogTitle className={isRtl ? "text-right" : ""}>
                             {isRtl ? "رفض الطلب" : "Reject Request"}
@@ -160,7 +160,7 @@ export function AdminRequestsUI({ initialRequests }: { initialRequests: any[] })
                             placeholder={isRtl ? "مثال: هذه الخدمة غير متوفرة في منطقتك حالياً" : "Example: This service is currently unavailable for your region."}
                             value={rejectReason}
                             onChange={(e) => setRejectReason(e.target.value)}
-                            className={`min-h-[100px] rounded-2xl ${isRtl ? 'text-right' : ''}`}
+                            className={`min-h-[100px] rounded-lg ${isRtl ? 'text-right' : ''}`}
                         />
                     </div>
                     <DialogFooter className={isRtl ? 'flex-row-reverse gap-2' : ''}>

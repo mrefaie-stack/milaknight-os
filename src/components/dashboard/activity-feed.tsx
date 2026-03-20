@@ -38,7 +38,7 @@ export function ActivityFeed() {
         return (
             <div className="flex flex-col items-center justify-center py-12 gap-3 opacity-20">
                 <Loader2 className="h-6 w-6 animate-spin" />
-                <p className="text-xs font-black uppercase tracking-widest">
+                <p className="text-xs font-medium">
                     {isRtl ? "جاري التزامن..." : "Synchronizing..."}
                 </p>
             </div>
@@ -49,16 +49,16 @@ export function ActivityFeed() {
         <div className="space-y-4" dir={isRtl ? "rtl" : "ltr"}>
             <div className="space-y-3">
                 {activities.map((log) => (
-                    <div key={log.id} className={`flex gap-4 items-start p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all group ${isRtl ? "flex-row-reverse" : ""}`}>
-                        <div className="mt-1 p-2 bg-primary/10 rounded-xl group-hover:scale-110 transition-transform shrink-0">
+                    <div key={log.id} className={`flex gap-3 items-start p-3.5 rounded-lg border border-border hover:bg-muted/30 transition-colors ${isRtl ? "flex-row-reverse" : ""}`}>
+                        <div className="mt-0.5 p-1.5 bg-muted rounded-md shrink-0">
                             {getIcon(log.entityType)}
                         </div>
-                        <div className="flex-1">
-                            <p className={`text-sm font-bold leading-tight ${isRtl ? "text-right" : "text-left"}`}>
-                                <span className="text-primary">{log.user.firstName} {log.user.lastName}</span>
-                                <span className="text-muted-foreground font-medium opacity-80"> {log.action}</span>
+                        <div className="flex-1 min-w-0">
+                            <p className={`text-sm leading-tight ${isRtl ? "text-right" : "text-left"}`}>
+                                <span className="font-medium text-primary">{log.user.firstName} {log.user.lastName}</span>
+                                <span className="text-muted-foreground"> {log.action}</span>
                             </p>
-                            <p className={`text-[10px] text-muted-foreground font-black uppercase tracking-widest mt-1 opacity-40 ${isRtl ? "text-right" : "text-left"}`}>
+                            <p className={`text-[10px] text-muted-foreground mt-0.5 ${isRtl ? "text-right" : ""}`}>
                                 {timeAgo(log.createdAt)}
                             </p>
                         </div>
@@ -66,8 +66,8 @@ export function ActivityFeed() {
                 ))}
 
                 {activities.length === 0 && (
-                    <div className="text-center py-12 opacity-30">
-                        <p className="text-sm font-black uppercase tracking-widest italic">
+                    <div className="text-center py-10">
+                        <p className="text-sm text-muted-foreground">
                             {isRtl ? "لا توجد أنشطة حديثة" : "No recent activity"}
                         </p>
                     </div>
