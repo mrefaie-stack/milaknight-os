@@ -153,15 +153,15 @@ export function RoomSession({ room, currentUserId, initialMembers, allTeamMember
 
     return (
         <div className={cn(
-            "flex flex-col rounded-3xl border overflow-hidden",
-            "bg-card/85 backdrop-blur-2xl",
+            "flex flex-col rounded-xl border overflow-hidden",
+            "bg-card",
             room.activeBorder,
-            `shadow-2xl ${room.glow}`
+            `shadow-lg ${room.glow}`
         )}>
             {/* Header */}
-            <div className={cn("relative flex items-center gap-3 px-4 py-3.5 border-b border-white/8 overflow-hidden", room.bg)}>
+            <div className={cn("relative flex items-center gap-3 px-4 py-3.5 border-b border-border overflow-hidden", room.bg)}>
                 <div className="absolute inset-0 opacity-30 bg-gradient-to-r from-transparent via-white/2 to-transparent pointer-events-none" />
-                <div className={cn("relative flex items-center justify-center w-9 h-9 rounded-xl bg-white/10 border border-white/10", room.color)}>
+                <div className={cn("relative flex items-center justify-center w-9 h-9 rounded-xl bg-muted/30 border border-border", room.color)}>
                     <Icon className="h-4 w-4" />
                     {/* live dot */}
                     <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
@@ -170,7 +170,7 @@ export function RoomSession({ room, currentUserId, initialMembers, allTeamMember
                     </span>
                 </div>
                 <div className="flex-1 min-w-0">
-                    <p className={cn("text-sm font-black", room.color)}>
+                    <p className={cn("text-sm font-semibold", room.color)}>
                         {isRtl ? room.nameAr : room.nameEn}
                     </p>
                     <p className="text-[10px] text-muted-foreground/70">
@@ -189,7 +189,7 @@ export function RoomSession({ room, currentUserId, initialMembers, allTeamMember
             </div>
 
             {/* Members strip with animated presence */}
-            <div className="flex items-center gap-1.5 px-3 py-2.5 border-b border-white/5 flex-wrap">
+            <div className="flex items-center gap-1.5 px-3 py-2.5 border-b border-border flex-wrap">
                 <AnimatePresence mode="popLayout">
                     {members.map(m => (
                         <motion.div
@@ -202,12 +202,12 @@ export function RoomSession({ room, currentUserId, initialMembers, allTeamMember
                                 "flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-bold border",
                                 m.isCurrentUser
                                     ? "bg-primary/15 text-primary border-primary/30"
-                                    : "bg-white/5 text-foreground/70 border-white/8"
+                                    : "bg-muted/30 text-foreground/70 border-border"
                             )}
                         >
                             <div className={cn(
-                                "w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-black",
-                                m.isCurrentUser ? "bg-primary text-primary-foreground" : "bg-white/20"
+                                "w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-semibold",
+                                m.isCurrentUser ? "bg-primary text-primary-foreground" : "bg-muted/30"
                             )}>
                                 {m.name.charAt(0)}
                             </div>
@@ -229,7 +229,7 @@ export function RoomSession({ room, currentUserId, initialMembers, allTeamMember
             </div>
 
             {/* Voice controls */}
-            <div className="flex items-center gap-2 px-3 py-2.5 border-b border-white/5">
+            <div className="flex items-center gap-2 px-3 py-2.5 border-b border-border">
                 <motion.button
                     whileTap={{ scale: 0.92 }}
                     onClick={async () => {
@@ -258,7 +258,7 @@ export function RoomSession({ room, currentUserId, initialMembers, allTeamMember
                             ? "bg-red-500/15 text-red-400 border-red-500/30"
                             : micOn
                             ? "bg-green-500/15 text-green-400 border-green-500/30 shadow-lg shadow-green-500/10"
-                            : "bg-white/5 text-muted-foreground border-white/10 hover:bg-white/10"
+                            : "bg-muted/30 text-muted-foreground border-border hover:bg-muted/50"
                     )}
                 >
                     {micOn ? <Mic className="h-3.5 w-3.5" /> : <MicOff className="h-3.5 w-3.5" />}
@@ -305,7 +305,7 @@ export function RoomSession({ room, currentUserId, initialMembers, allTeamMember
                             onClick={() => setTab(t)}
                             className={cn(
                                 "flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all",
-                                tab === t ? "bg-primary/15 text-primary border border-primary/30" : "bg-white/5 text-muted-foreground hover:bg-white/10 border border-transparent"
+                                tab === t ? "bg-primary/15 text-primary border border-primary/30" : "bg-muted/30 text-muted-foreground hover:bg-muted/50 border border-transparent"
                             )}
                         >
                             {t === "chat" ? <MessageSquare className="h-3 w-3" /> : <UserPlus className="h-3 w-3" />}
@@ -353,10 +353,10 @@ export function RoomSession({ room, currentUserId, initialMembers, allTeamMember
                                             </span>
                                         )}
                                         <div className={cn(
-                                            "px-3 py-2 rounded-2xl text-sm leading-relaxed",
+                                            "px-3 py-2 rounded-xl text-sm leading-relaxed",
                                             msg.isCurrentUser
                                                 ? "bg-primary text-primary-foreground rounded-br-md"
-                                                : "bg-white/8 text-foreground rounded-bl-md"
+                                                : "bg-muted/30 text-foreground rounded-bl-md"
                                         )}>
                                             {msg.text}
                                         </div>
@@ -366,16 +366,15 @@ export function RoomSession({ room, currentUserId, initialMembers, allTeamMember
                             <div ref={chatBottomRef} />
                         </div>
 
-                        <div className="flex items-center gap-2 px-3 py-2.5 border-t border-white/5">
+                        <div className="flex items-center gap-2 px-3 py-2.5 border-t border-border">
                             <input
                                 value={draft}
                                 onChange={e => setDraft(e.target.value)}
                                 onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
                                 placeholder={isRtl ? "اكتب رسالة..." : "Type a message..."}
-                                className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm outline-none focus:border-primary/40 focus:bg-white/8 placeholder:text-muted-foreground/30 transition-colors"
+                                className="flex-1 bg-muted/30 border border-border rounded-xl px-3 py-2 text-sm outline-none focus:border-primary/40 placeholder:text-muted-foreground/30 transition-colors"
                             />
                             <motion.button
-                                whileTap={{ scale: 0.88 }}
                                 onClick={sendMessage}
                                 disabled={!draft.trim() || sending}
                                 className="flex items-center justify-center w-9 h-9 rounded-xl bg-primary text-primary-foreground disabled:opacity-30 hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
@@ -409,9 +408,9 @@ export function RoomSession({ room, currentUserId, initialMembers, allTeamMember
                                 initial={{ opacity: 0, x: -10 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 transition={{ delay: i * 0.05 }}
-                                className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-white/5 transition-colors"
+                                className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-muted/30 transition-colors"
                             >
-                                <div className="w-8 h-8 rounded-full bg-white/10 border border-white/10 flex items-center justify-center text-xs font-black">
+                                <div className="w-8 h-8 rounded-full bg-muted/30 border border-border flex items-center justify-center text-xs font-semibold">
                                     {m.name.charAt(0)}
                                 </div>
                                 <div className="flex-1 min-w-0">
@@ -419,7 +418,6 @@ export function RoomSession({ room, currentUserId, initialMembers, allTeamMember
                                     <p className="text-[10px] text-muted-foreground">{m.role.replace("_", " ")}</p>
                                 </div>
                                 <motion.button
-                                    whileTap={{ scale: 0.9 }}
                                     onClick={() => handleInviteClick(m.userId)}
                                     className={cn(
                                         "flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold transition-all",

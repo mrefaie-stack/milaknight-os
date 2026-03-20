@@ -23,10 +23,10 @@ export function ComingSoonView({ titleAr, titleEn, descAr, descEn, icon }: Comin
                 transition={{ duration: 0.5, ease: "easeOut" }}
                 className="relative"
             >
-                <div className="w-28 h-28 rounded-3xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
+                <div className="w-28 h-28 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
                     {icon || <Sparkles className="h-12 w-12" />}
                 </div>
-                <div className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-white text-xs font-black">
+                <div className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-white text-xs font-semibold">
                     !
                 </div>
             </motion.div>
@@ -37,12 +37,12 @@ export function ComingSoonView({ titleAr, titleEn, descAr, descEn, icon }: Comin
                 transition={{ duration: 0.5, delay: 0.1 }}
                 className="space-y-3 max-w-md"
             >
-                <h1 className="text-5xl font-black tracking-tighter premium-gradient-text uppercase">
+                <h1 className="text-2xl font-bold tracking-tight">
                     {isRtl ? titleAr : titleEn}
                 </h1>
                 <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-5 py-2">
                     <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                    <span className="text-xs font-black uppercase tracking-widest text-primary">
+                    <span className="section-label text-primary">
                         {isRtl ? "قريباً" : "Coming Soon"}
                     </span>
                 </div>

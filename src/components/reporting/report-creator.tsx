@@ -137,7 +137,7 @@ interface MetricFieldProps {
 function MetricField({ label, icon: Icon, value, onChange, placeholder = "0", type = "number", prefix, suffix }: MetricFieldProps) {
     return (
         <div className="space-y-2 group">
-            <Label className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground group-focus-within:text-primary transition-colors">
+            <Label className="flex items-center gap-2 text-xs font-medium text-muted-foreground group-focus-within:text-primary transition-colors">
                 <Icon className="h-3 w-3" />
                 {label}
             </Label>
@@ -167,8 +167,8 @@ function MetricField({ label, icon: Icon, value, onChange, placeholder = "0", ty
 function CalcMetric({ label, value, suffix = "", prefix = "" }: { label: string, value: string | number, suffix?: string, prefix?: string }) {
     return (
         <div className="p-4 rounded-xl bg-primary/5 border border-primary/10 flex flex-col justify-center">
-            <span className="text-[10px] font-black uppercase text-primary/60 mb-1">{label}</span>
-            <span className="text-xl font-black text-primary">
+            <span className="text-[10px] font-semibold text-primary/60 mb-1">{label}</span>
+            <span className="text-xl font-semibold text-primary">
                 {prefix}{value}{suffix}
             </span>
         </div>
@@ -513,9 +513,9 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
     return (
         <form onSubmit={handleSubmit} className="space-y-8 max-w-6xl mx-auto pb-24">
             {/* Header Section */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 bg-card/30 p-4 md:p-8 rounded-2xl md:rounded-3xl border border-white/10 backdrop-blur-xl shadow-2xl">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 bg-card p-4 md:p-8 rounded-xl border border-border shadow-lg">
                 <div className={isRtl ? 'text-right' : ''}>
-                    <h1 className="text-3xl md:text-5xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-400">
+                    <h1 className="text-2xl font-bold tracking-tight">
                         {isRtl ? 'إنشاء تقرير أداء' : 'Generate Report'}
                     </h1>
                     <p className="text-muted-foreground text-lg font-medium mt-2">
@@ -524,11 +524,11 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                 </div>
                 <div className={`flex flex-col sm:flex-row gap-3 w-full md:w-auto ${isRtl ? 'sm:flex-row-reverse' : ''}`}>
                     <div className="space-y-1">
-                        <Label className={`text-[10px] font-black uppercase text-muted-foreground ${isRtl ? 'mr-1 text-right' : 'ml-1'}`}>
+                        <Label className={`text-[10px] font-medium text-muted-foreground ${isRtl ? 'mr-1 text-right' : 'ml-1'}`}>
                             {isRtl ? 'العميل' : 'Client'}
                         </Label>
                         <Select name="clientId" defaultValue={initialData?.clientId} onValueChange={setCurrentClientId} required>
-                            <SelectTrigger className="w-full sm:w-64 bg-background/50 border-white/5 h-12 text-base font-bold rounded-xl shadow-lg">
+                            <SelectTrigger className="w-full sm:w-64 bg-background/50 border-border h-12 text-base font-bold rounded-xl shadow-lg">
                                 <SelectValue placeholder={isRtl ? 'اختر العميل' : 'Select Client'} />
                             </SelectTrigger>
                             <SelectContent>
@@ -537,26 +537,26 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                         </Select>
                     </div>
                     <div className="space-y-1">
-                        <Label className={`text-[10px] font-black uppercase text-muted-foreground ${isRtl ? 'mr-1 text-right' : 'ml-1'}`}>
+                        <Label className={`text-[10px] font-medium text-muted-foreground ${isRtl ? 'mr-1 text-right' : 'ml-1'}`}>
                             {isRtl ? 'شهر الأداء' : 'Performance Month'}
                         </Label>
                         <Input
                             name="month"
                             type="month"
                             defaultValue={initialData?.month}
-                            className="w-full sm:w-48 bg-background/50 border-white/5 h-12 text-base font-bold rounded-xl shadow-lg"
+                            className="w-full sm:w-48 bg-background/50 border-border h-12 text-base font-bold rounded-xl shadow-lg"
                             required
                         />
                     </div>
                     <div className="space-y-1">
-                        <Label className={`text-[10px] font-black uppercase text-muted-foreground ${isRtl ? 'mr-1 text-right' : 'ml-1'}`}>
+                        <Label className={`text-[10px] font-medium text-muted-foreground ${isRtl ? 'mr-1 text-right' : 'ml-1'}`}>
                             {isRtl ? 'جدولة النشر (اختياري)' : 'Schedule Publish (Optional)'}
                         </Label>
                         <Input
                             name="scheduledSendAt"
                             type="datetime-local"
                             defaultValue={initialData?.scheduledSendAt ? new Date(initialData.scheduledSendAt).toISOString().slice(0, 16) : undefined}
-                            className="w-full sm:w-56 bg-background/50 border-white/5 h-12 text-sm font-bold rounded-xl shadow-lg"
+                            className="w-full sm:w-56 bg-background/50 border-border h-12 text-sm font-bold rounded-xl shadow-lg"
                         />
                     </div>
                 </div>
@@ -565,9 +565,9 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
 
 
             {/* ===== Section Toggle (Platform Configurator) ===== */}
-            <div className="bg-card/30 p-6 md:p-8 rounded-2xl md:rounded-3xl border border-white/10 backdrop-blur-xl shadow-xl space-y-5 mb-12">
+            <div className="bg-card p-6 md:p-8 rounded-xl border border-border shadow-lg space-y-5 mb-12">
                 <div className={isRtl ? 'text-right' : ''}>
-                    <h3 className="text-xl font-black mb-1">{isRtl ? 'محتويات التقرير' : 'Report Contents'}</h3>
+                    <h3 className="text-xl font-semibold mb-1">{isRtl ? 'محتويات التقرير' : 'Report Contents'}</h3>
                     <p className="text-sm text-muted-foreground">{isRtl ? 'فعّل المنصات والأقسام التي تريد تضمينها في هذا التقرير.' : 'Toggle the platforms and sections you want to include in this report.'}</p>
                 </div>
                 <div className={`flex flex-wrap gap-3 ${isRtl ? 'flex-row-reverse' : ''}`}>
@@ -578,26 +578,26 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                                 type="button"
                                 key={plat.id}
                                 onClick={() => toggleSection(plat.id)}
-                                className={`flex items-center gap-2 py-2.5 px-5 rounded-2xl font-bold text-sm transition-all duration-300 border ${isActive ? 'bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20 scale-[1.02]' : 'bg-background/80 text-foreground/70 border-white/5 hover:bg-white/10 hover:scale-[1.02]'}`}
+                                className={`flex items-center gap-2 py-2.5 px-5 rounded-lg font-bold text-sm transition-all duration-300 border ${isActive ? 'bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20' : 'bg-background/80 text-foreground/70 border-border hover:bg-muted/30'}`}
                             >
                                 <plat.icon className={`h-4 w-4 ${isActive ? 'text-white' : plat.color}`} />
                                 {plat.name}
                             </button>
                         );
                     })}
-                    <div className="w-px h-10 bg-white/10 mx-1 hidden sm:block self-center" />
+                    <div className="w-px h-10 bg-border mx-1 hidden sm:block self-center" />
                     <button type="button" onClick={() => toggleSection('email')}
-                        className={`flex items-center gap-2 py-2.5 px-5 rounded-2xl font-bold text-sm transition-all duration-300 border ${activeSections.includes('email') ? 'bg-rose-500 text-white border-rose-500 shadow-lg shadow-rose-500/20 scale-[1.02]' : 'bg-background/80 text-foreground/70 border-white/5 hover:bg-white/10 hover:scale-[1.02]'}`}>
+                        className={`flex items-center gap-2 py-2.5 px-5 rounded-lg font-bold text-sm transition-all duration-300 border ${activeSections.includes('email') ? 'bg-rose-500 text-white border-rose-500 shadow-lg shadow-rose-500/20' : 'bg-background/80 text-foreground/70 border-border hover:bg-muted/30'}`}>
                         <Mail className={`h-4 w-4 ${activeSections.includes('email') ? 'text-white' : 'text-rose-400'}`} />
                         {isRtl ? 'الإيميل التسويقي' : 'Email Marketing'}
                     </button>
                     <button type="button" onClick={() => toggleSection('seo')}
-                        className={`flex items-center gap-2 py-2.5 px-5 rounded-2xl font-bold text-sm transition-all duration-300 border ${activeSections.includes('seo') ? 'bg-emerald-500 text-white border-emerald-500 shadow-lg shadow-emerald-500/20 scale-[1.02]' : 'bg-background/80 text-foreground/70 border-white/5 hover:bg-white/10 hover:scale-[1.02]'}`}>
+                        className={`flex items-center gap-2 py-2.5 px-5 rounded-lg font-bold text-sm transition-all duration-300 border ${activeSections.includes('seo') ? 'bg-emerald-500 text-white border-emerald-500 shadow-lg shadow-emerald-500/20' : 'bg-background/80 text-foreground/70 border-border hover:bg-muted/30'}`}>
                         <Globe className={`h-4 w-4 ${activeSections.includes('seo') ? 'text-white' : 'text-emerald-400'}`} />
                         {isRtl ? 'الموقع و SEO' : 'Website & SEO'}
                     </button>
                     <button type="button" onClick={() => toggleSection('summary')}
-                        className={`flex items-center gap-2 py-2.5 px-5 rounded-2xl font-bold text-sm transition-all duration-300 border ${activeSections.includes('summary') ? 'bg-purple-500 text-white border-purple-500 shadow-lg shadow-purple-500/20 scale-[1.02]' : 'bg-background/80 text-foreground/70 border-white/5 hover:bg-white/10 hover:scale-[1.02]'}`}>
+                        className={`flex items-center gap-2 py-2.5 px-5 rounded-lg font-bold text-sm transition-all duration-300 border ${activeSections.includes('summary') ? 'bg-purple-500 text-white border-purple-500 shadow-lg shadow-purple-500/20' : 'bg-background/80 text-foreground/70 border-border hover:bg-muted/30'}`}>
                         <BarChart3 className={`h-4 w-4 ${activeSections.includes('summary') ? 'text-white' : 'text-purple-400'}`} />
                         {isRtl ? 'الملخص الاستراتيجي' : 'Strategic Summary'}
                     </button>
@@ -611,13 +611,13 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                 {PLATFORMS.map(p => activeSections.includes(p.id) && (
                     <div key={p.id} className="space-y-6">
                         {/* Section Header */}
-                        <div className={`flex items-center gap-4 border-b-2 border-white/10 pb-5 ${isRtl ? 'flex-row-reverse' : ''}`}>
-                            <div className="p-4 bg-white/5 rounded-2xl border border-white/10 shadow-inner">
+                        <div className={`flex items-center gap-4 border-b-2 border-border pb-5 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                            <div className="p-4 bg-muted/30 rounded-xl border border-border shadow-inner">
                                 <p.icon className={`h-8 w-8 ${p.color}`} />
                             </div>
                             <div className={isRtl ? 'text-right' : ''}>
-                                <h2 className="text-3xl font-black tracking-tight">{p.name}</h2>
-                                <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">{isRtl ? 'أداء المنصة' : 'Platform Performance'}</p>
+                                <h2 className="text-2xl font-bold tracking-tight">{p.name}</h2>
+                                <p className="section-label">{isRtl ? 'أداء المنصة' : 'Platform Performance'}</p>
                             </div>
                         </div>
 
@@ -629,8 +629,8 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                                 <CalcMetric label={isRtl ? 'الوصول في المنصة' : "Platform Reach"} value={(Number(activeCampaign.platforms[p.id]?.paidReach) || 0) + (Number(activeCampaign.platforms[p.id]?.organicReach) || 0)} />
                                 <div className={`p-4 rounded-xl bg-primary/20 border border-primary/30 flex items-center justify-between ${isRtl ? 'flex-row-reverse' : ''}`}>
                                     <div className={`flex flex-col ${isRtl ? 'text-right' : ''}`}>
-                                        <span className="text-[10px] font-black uppercase text-primary/80 mb-1 leading-tight">{isRtl ? 'حالة البيانات' : 'Platform Status'}</span>
-                                        <span className="text-sm font-black text-primary">{isRtl ? 'جاهزة' : 'DATA READY'}</span>
+                                        <span className="text-[10px] font-semibold text-primary/80 mb-1 leading-tight">{isRtl ? 'حالة البيانات' : 'Platform Status'}</span>
+                                        <span className="text-sm font-semibold text-primary">{isRtl ? 'جاهزة' : 'DATA READY'}</span>
                                     </div>
                                     <Zap className="h-5 w-5 text-primary animate-pulse" />
                                 </div>
@@ -638,9 +638,9 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
 
                             <div className="grid md:grid-cols-3 gap-6">
                                 {/* Dynamic Metrics Panel */}
-                                <Card className="border-white/10 bg-card/20 backdrop-blur-md shadow-lg overflow-hidden md:col-span-2">
-                                    <CardHeader className="bg-primary/5 border-b border-white/5 py-4">
-                                        <CardTitle className={`text-xs font-black uppercase tracking-[0.2em] text-primary/80 flex items-center gap-2 ${isRtl ? 'flex-row-reverse text-right' : ''}`}>
+                                <Card className="border-border bg-card shadow-lg overflow-hidden md:col-span-2">
+                                    <CardHeader className="bg-primary/5 border-b border-border py-4">
+                                        <CardTitle className={`text-xs font-semibold text-primary/80 flex items-center gap-2 ${isRtl ? 'flex-row-reverse text-right' : ''}`}>
                                             <TrendingUp className="h-3 w-3" /> {isRtl ? 'مقاييس الأداء' : 'Performance Metrics'}
                                         </CardTitle>
                                     </CardHeader>
@@ -667,16 +667,16 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                                 </Card>
 
                                 {/* Paid Performance Panel */}
-                                <Card className="border-white/10 bg-card/20 backdrop-blur-md shadow-lg overflow-hidden">
-                                    <CardHeader className="bg-primary/5 border-b border-white/5 py-4">
-                                        <CardTitle className={`text-xs font-black uppercase tracking-[0.2em] text-primary/80 flex items-center gap-2 ${isRtl ? 'flex-row-reverse text-right' : ''}`}>
+                                <Card className="border-border bg-card shadow-lg overflow-hidden">
+                                    <CardHeader className="bg-primary/5 border-b border-border py-4">
+                                        <CardTitle className={`text-xs font-semibold text-primary/80 flex items-center gap-2 ${isRtl ? 'flex-row-reverse text-right' : ''}`}>
                                             <DollarSign className="h-3 w-3" /> {isRtl ? 'الأداء الممول' : 'Paid Performance'}
                                         </CardTitle>
                                     </CardHeader>
                                     <CardContent className="p-6 space-y-6">
                                         <div className="space-y-4">
                                             <div className={`flex items-center justify-between ${isRtl ? 'flex-row-reverse' : ''}`}>
-                                                <Label className="text-[10px] font-black uppercase text-primary tracking-widest">{isRtl ? 'تفاصيل الحملات' : 'Campaign Details'}</Label>
+                                                <Label className="section-label text-primary">{isRtl ? 'تفاصيل الحملات' : 'Campaign Details'}</Label>
                                                 <Button type="button" variant="outline" size="sm"
                                                     className="h-7 text-[10px] font-bold rounded-lg border-primary/20 text-primary hover:bg-primary/10"
                                                     onClick={() => addPaidCampaign(p.id)}>
@@ -685,7 +685,7 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                                             </div>
                                             <div className="space-y-4">
                                                 {(activeCampaign.platforms[p.id]?.paidCampaigns || []).map((camp: any, idx: number) => (
-                                                    <div key={idx} className="p-4 rounded-xl bg-white/5 border border-white/5 space-y-3 relative group/camp">
+                                                    <div key={idx} className="p-4 rounded-xl bg-muted/30 border border-border space-y-3 relative group/camp">
                                                         <Button type="button" variant="ghost" size="icon"
                                                             className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-destructive text-white opacity-0 group-hover/camp:opacity-100 transition-opacity"
                                                             onClick={() => removePaidCampaign(p.id, idx)}>
@@ -693,12 +693,12 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                                                         </Button>
                                                         <Input placeholder={isRtl ? "اسم الحملة" : "Campaign Name"} value={camp.name}
                                                             onChange={(e) => updatePaidCampaign(p.id, idx, 'name', e.target.value)}
-                                                            className="h-8 text-xs font-bold bg-background/50 border-white/5" />
+                                                            className="h-8 text-xs font-bold bg-background/50 border-border" />
                                                         <div className="grid grid-cols-2 gap-3">
                                                             <div className="space-y-1">
-                                                                <Label className="text-[9px] font-black uppercase text-muted-foreground/60 ml-1">{isRtl ? 'الهدف' : 'Objective'}</Label>
+                                                                <Label className="text-[9px] font-medium text-muted-foreground/60 ml-1">{isRtl ? 'الهدف' : 'Objective'}</Label>
                                                                 <Select value={camp.objective} onValueChange={(v) => updatePaidCampaign(p.id, idx, 'objective', v)}>
-                                                                    <SelectTrigger className="h-9 text-[10px] font-bold bg-background/50 border-white/5 rounded-lg"><SelectValue placeholder="Objective" /></SelectTrigger>
+                                                                    <SelectTrigger className="h-9 text-[10px] font-bold bg-background/50 border-border rounded-lg"><SelectValue placeholder="Objective" /></SelectTrigger>
                                                                     <SelectContent>
                                                                         <SelectItem value="AWARENESS">{isRtl ? 'وعي' : 'Awareness'}</SelectItem>
                                                                         <SelectItem value="REACH">{isRtl ? 'وصول' : 'Reach'}</SelectItem>
@@ -711,26 +711,26 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                                                                 </Select>
                                                             </div>
                                                             <div className="space-y-1">
-                                                                <Label className="text-[9px] font-black uppercase text-muted-foreground/60 ml-1">{isRtl ? 'الصرف (ريال)' : 'Spend (SAR)'}</Label>
+                                                                <Label className="text-[9px] font-medium text-muted-foreground/60 ml-1">{isRtl ? 'الصرف (ريال)' : 'Spend (SAR)'}</Label>
                                                                 <Input type="number" placeholder="0" value={camp.spend}
                                                                     onChange={(e) => updatePaidCampaign(p.id, idx, 'spend', e.target.value)}
-                                                                    className="h-9 text-xs font-bold bg-background/50 border-white/5 rounded-lg" />
+                                                                    className="h-9 text-xs font-bold bg-background/50 border-border rounded-lg" />
                                                             </div>
                                                         </div>
                                                         <div className="grid grid-cols-2 gap-3">
                                                             <div className="space-y-1">
-                                                                <Label className="text-[9px] font-black uppercase text-muted-foreground/60 ml-1">{isRtl ? 'الوصول' : 'Reach'}</Label>
+                                                                <Label className="text-[9px] font-medium text-muted-foreground/60 ml-1">{isRtl ? 'الوصول' : 'Reach'}</Label>
                                                                 <Input type="number" placeholder="0" value={camp.reach}
                                                                     onChange={(e) => updatePaidCampaign(p.id, idx, 'reach', e.target.value)}
-                                                                    className="h-9 text-xs font-bold bg-background/50 border-white/5 rounded-lg" />
+                                                                    className="h-9 text-xs font-bold bg-background/50 border-border rounded-lg" />
                                                             </div>
                                                             <div className="space-y-1">
-                                                                <Label className="text-[9px] font-black uppercase text-muted-foreground/60 ml-1">
+                                                                <Label className="text-[9px] font-medium text-muted-foreground/60 ml-1">
                                                                     {camp.objective === 'MESSAGES' ? (isRtl ? 'المحادثات' : 'Messages') : camp.objective === 'LEADS' ? (isRtl ? 'ليدز' : 'Leads') : camp.objective === 'ENGAGEMENT' ? (isRtl ? 'التفاعلات' : 'Engagements') : (isRtl ? 'النتائج' : 'Results')}
                                                                 </Label>
                                                                 <Input type="number" placeholder="0" value={camp.results}
                                                                     onChange={(e) => updatePaidCampaign(p.id, idx, 'results', e.target.value)}
-                                                                    className="h-9 text-xs font-bold bg-background/50 border-white/5 rounded-lg" />
+                                                                    className="h-9 text-xs font-bold bg-background/50 border-border rounded-lg" />
                                                             </div>
                                                         </div>
                                                     </div>
@@ -746,7 +746,7 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                                         {/* Linked Posts */}
                                         <div className="space-y-3 pt-2">
                                             <div className="flex items-center justify-between">
-                                                <Label className="text-[10px] font-black uppercase text-primary/80 tracking-widest">{isRtl ? 'المنشورات المرتبطة' : 'Linked Posts'}</Label>
+                                                <Label className="section-label text-primary/80">{isRtl ? 'المنشورات المرتبطة' : 'Linked Posts'}</Label>
                                                 <Button type="button" variant="ghost" size="sm" className="h-7 text-[10px] font-bold text-primary"
                                                     onClick={() => { setSelectedPlatformForLinking(p.id); setIsPostSelectorOpen(true); }}>
                                                     <Link className="h-3 w-3 mr-1" />
@@ -755,7 +755,7 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                                             </div>
                                             <div className="grid grid-cols-2 gap-3">
                                                 {(activeCampaign.linkedItems || []).filter((item: any) => item.platform === p.id).map((item: any) => (
-                                                    <div key={item.id} className="relative group/post aspect-square rounded-xl overflow-hidden border border-white/10 bg-white/5">
+                                                    <div key={item.id} className="relative group/post aspect-square rounded-xl overflow-hidden border border-border bg-muted/30">
                                                         {item.imageUrl ? (<img src={item.imageUrl} alt="" className="w-full h-full object-cover" />) : item.videoUrl ? (
                                                             <div className="w-full h-full bg-slate-900 flex items-center justify-center"><Video className="h-6 w-6 text-white/40" /></div>
                                                         ) : (<div className="w-full h-full p-2 text-[8px] overflow-hidden text-muted-foreground">{item.captionEn || item.captionAr}</div>)}
@@ -774,11 +774,11 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
 
                             {/* Platform Note */}
                             <div className={`space-y-2 ${isRtl ? 'text-right' : ''}`}>
-                                <Label className={`text-xs font-black uppercase tracking-wider text-muted-foreground ${isRtl ? 'mr-1 flex-row-reverse' : 'ml-1'} flex items-center gap-2`}>
+                                <Label className={`text-xs font-medium text-muted-foreground ${isRtl ? 'mr-1 flex-row-reverse' : 'ml-1'} flex items-center gap-2`}>
                                     <MessageSquare className="h-3 w-3" /> {isRtl ? 'ملاحظة المنصة (اختياري)' : 'Platform Note (Optional)'}
                                 </Label>
                                 <textarea
-                                    className={`flex w-full rounded-2xl border border-white/10 bg-background/50 p-4 text-sm font-medium shadow-inner focus:border-primary/50 focus:ring-primary/20 transition-all outline-none placeholder:text-muted-foreground/40 min-h-[80px] ${isRtl ? 'text-right' : ''}`}
+                                    className={`flex w-full rounded-xl border border-border bg-background/50 p-4 text-sm font-medium shadow-inner focus:border-primary/50 focus:ring-primary/20 transition-all outline-none placeholder:text-muted-foreground/40 min-h-[80px] ${isRtl ? 'text-right' : ''}`}
                                     placeholder={isRtl ? `أضف رؤية أو تعليقاً على أداء ${p.name} هذا الشهر...` : `Add a specific insight or comment about ${p.name} performance this month...`}
                                     value={activeCampaign.platforms[p.id]?.comment || ""}
                                     onChange={e => updatePlatformMetric(p.id, 'comment', e.target.value)}
@@ -794,23 +794,23 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                 {activeSections.includes('email') && (
                     <div className="space-y-6">
                         <div className={`flex items-center gap-4 border-b-2 border-rose-500/20 pb-5 ${isRtl ? 'flex-row-reverse' : ''}`}>
-                            <div className="p-4 bg-rose-500/10 rounded-2xl border border-rose-500/20 shadow-inner">
+                            <div className="p-4 bg-rose-500/10 rounded-xl border border-rose-500/20 shadow-inner">
                                 <Mail className="h-8 w-8 text-rose-500" />
                             </div>
                             <div className={isRtl ? 'text-right' : ''}>
-                                <h2 className="text-3xl font-black tracking-tight">{isRtl ? 'البريد الإلكتروني' : 'Email Marketing'}</h2>
-                                <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">{isRtl ? 'أداء الحملات' : 'Campaign Performance'}</p>
+                                <h2 className="text-2xl font-bold tracking-tight">{isRtl ? 'البريد الإلكتروني' : 'Email Marketing'}</h2>
+                                <p className="section-label">{isRtl ? 'أداء الحملات' : 'Campaign Performance'}</p>
                             </div>
                         </div>
                         <div className="space-y-6">
                             {(metrics.emailMarketing?.campaigns || []).map((camp: any, idx: number) => (
-                                <div key={idx} className="relative group/ec bg-card/20 border border-white/10 rounded-2xl overflow-hidden shadow-lg">
-                                    <div className="bg-rose-500/5 border-b border-white/5 p-4 flex items-center justify-between">
+                                <div key={idx} className="relative group/ec bg-card border border-border rounded-xl overflow-hidden shadow-lg">
+                                    <div className="bg-rose-500/5 border-b border-border p-4 flex items-center justify-between">
                                         <div className="flex items-center gap-3">
                                             <Mail className="h-4 w-4 text-rose-400" />
                                             <Input placeholder={isRtl ? `اسم الحملة ${idx + 1}` : `Campaign ${idx + 1} Name`} value={camp.name}
                                                 onChange={(e) => updateEmailCampaign(idx, 'name', e.target.value)}
-                                                className="h-8 w-56 text-sm font-bold bg-transparent border-white/10 focus:border-rose-400/50" />
+                                                className="h-8 w-56 text-sm font-bold bg-transparent border-border focus:border-rose-400/50" />
                                         </div>
                                         {(metrics.emailMarketing?.campaigns || []).length > 1 && (
                                             <Button type="button" variant="ghost" size="icon"
@@ -829,7 +829,7 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                                 </div>
                             ))}
                             <Button type="button" variant="outline"
-                                className="w-full h-14 rounded-2xl border-dashed border-rose-400/40 text-rose-400 hover:bg-rose-500/5 font-bold text-base"
+                                className="w-full h-14 rounded-xl border-dashed border-rose-400/40 text-rose-400 hover:bg-rose-500/5 font-bold text-base"
                                 onClick={addEmailCampaign}>
                                 <Mail className="h-4 w-4 mr-2" />
                                 {isRtl ? '+ إضافة حملة إيميل جديدة' : '+ Add Email Campaign'}
@@ -842,18 +842,18 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                 {activeSections.includes('seo') && (
                     <div className="space-y-6">
                         <div className={`flex items-center gap-4 border-b-2 border-emerald-500/20 pb-5 ${isRtl ? 'flex-row-reverse' : ''}`}>
-                            <div className="p-4 bg-emerald-500/10 rounded-2xl border border-emerald-500/20 shadow-inner">
+                            <div className="p-4 bg-emerald-500/10 rounded-xl border border-emerald-500/20 shadow-inner">
                                 <Globe className="h-8 w-8 text-emerald-500" />
                             </div>
                             <div className={isRtl ? 'text-right' : ''}>
-                                <h2 className="text-3xl font-black tracking-tight">{isRtl ? 'الموقع و SEO' : 'Website & SEO'}</h2>
-                                <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">{isRtl ? 'أداء الموقع' : 'Website Performance'}</p>
+                                <h2 className="text-2xl font-bold tracking-tight">{isRtl ? 'الموقع و SEO' : 'Website & SEO'}</h2>
+                                <p className="section-label">{isRtl ? 'أداء الموقع' : 'Website Performance'}</p>
                             </div>
                         </div>
                         <div className="grid md:grid-cols-2 gap-8">
-                            <Card className="border-white/10 bg-card/20 backdrop-blur-md shadow-lg">
-                                <CardHeader className="bg-emerald-500/5 border-b border-white/5">
-                                    <CardTitle className="text-emerald-400 flex items-center gap-2 text-sm font-black uppercase tracking-widest">
+                            <Card className="border-border bg-card shadow-lg">
+                                <CardHeader className="bg-emerald-500/5 border-b border-border">
+                                    <CardTitle className="text-emerald-400 flex items-center gap-2 text-sm font-semibold">
                                         <Globe className="h-4 w-4" /> {isRtl ? 'مقاييس الموقع و SEO' : 'Website & SEO Metrics'}
                                     </CardTitle>
                                 </CardHeader>
@@ -872,17 +872,17 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                 {activeSections.includes('summary') && (
                     <div className="space-y-6">
                         <div className={`flex items-center gap-4 border-b-2 border-purple-500/20 pb-5 ${isRtl ? 'flex-row-reverse' : ''}`}>
-                            <div className="p-4 bg-purple-500/10 rounded-2xl border border-purple-500/20 shadow-inner">
+                            <div className="p-4 bg-purple-500/10 rounded-xl border border-purple-500/20 shadow-inner">
                                 <BarChart3 className="h-8 w-8 text-purple-500" />
                             </div>
                             <div className={isRtl ? 'text-right' : ''}>
-                                <h2 className="text-3xl font-black tracking-tight">{isRtl ? 'الملخص الاستراتيجي التنفيذي' : 'Executive Strategic Summary'}</h2>
-                                <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">{isRtl ? 'الرؤية والتوجه' : 'Vision & Direction'}</p>
+                                <h2 className="text-2xl font-bold tracking-tight">{isRtl ? 'الملخص الاستراتيجي التنفيذي' : 'Executive Strategic Summary'}</h2>
+                                <p className="section-label">{isRtl ? 'الرؤية والتوجه' : 'Vision & Direction'}</p>
                             </div>
                         </div>
-                        <Card className="border-white/10 bg-card/30 backdrop-blur-md shadow-2xl">
-                            <CardHeader className={`border-b border-white/5 flex flex-row items-center justify-between ${isRtl ? 'flex-row-reverse' : ''}`}>
-                                <CardTitle className={`text-xl font-black flex items-center gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                        <Card className="border-border bg-card shadow-lg">
+                            <CardHeader className={`border-b border-border flex flex-row items-center justify-between ${isRtl ? 'flex-row-reverse' : ''}`}>
+                                <CardTitle className={`text-xl font-semibold flex items-center gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
                                     <BarChart3 className="h-5 w-5 text-primary" /> {isRtl ? 'اكتب الملخص أو ولده بذكاء' : 'Write or AI Auto-generate'}
                                 </CardTitle>
                                 <Button
@@ -900,7 +900,7 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                                         }
                                     }}
                                     disabled={isGeneratingSummary}
-                                    className="h-10 px-6 rounded-xl bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 font-bold uppercase tracking-widest text-xs"
+                                    className="h-10 px-6 rounded-xl bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 font-semibold text-xs"
                                 >
                                     {isGeneratingSummary ? <Zap className="h-4 w-4 animate-spin mr-2" /> : <Zap className="h-4 w-4 mr-2" />}
                                     {isRtl ? "توليد بالذكاء الاصطناعي" : "AI Auto Generate"}
@@ -917,7 +917,7 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                                         required
                                         value={metrics.summary || ""}
                                         onChange={(e) => setMetrics((prev: any) => ({ ...prev, summary: e.target.value }))}
-                                        className={`flex w-full rounded-2xl border-white/10 bg-background/50 p-6 text-base font-medium shadow-inner focus:border-primary/50 focus:ring-primary/20 transition-all outline-none leading-relaxed ${isRtl ? 'text-right' : ''}`}
+                                        className={`flex w-full rounded-xl border border-border bg-background/50 p-6 text-base font-medium shadow-inner focus:border-primary/50 focus:ring-primary/20 transition-all outline-none leading-relaxed ${isRtl ? 'text-right' : ''}`}
                                         placeholder={isRtl ? "ملخص أداء هذا الشهر، النتائج الاستراتيجية للمنصات والموقع، وتوصيات الشهر القادم..." : "Summary of this month's performance, strategic results for platforms and website, and recommendations for next month..."}
                                         dir={isRtl ? 'rtl' : 'ltr'}
                                     />
@@ -932,31 +932,31 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
 
 
             {/* Bottom Actions */}
-            <div className={`fixed bottom-0 left-0 right-0 p-6 bg-background/80 backdrop-blur-2xl border-t border-white/5 flex items-center justify-end gap-6 z-50 ${isRtl ? 'flex-row-reverse' : ''}`}>
+            <div className={`fixed bottom-0 left-0 right-0 p-6 bg-background/80 border-t border-border flex items-center justify-end gap-6 z-50 ${isRtl ? 'flex-row-reverse' : ''}`}>
                 <div className={`flex items-center gap-3 ${isRtl ? 'flex-row-reverse' : ''}`}>
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground whitespace-nowrap">
+                    <Label className="text-[10px] font-medium text-muted-foreground whitespace-nowrap">
                         {isRtl ? 'جدولة الإرسال' : 'Schedule Delivery'}
                     </Label>
                     <Input
                         type="date"
                         value={scheduledSendAt}
                         onChange={(e) => setScheduledSendAt(e.target.value)}
-                        className="h-10 w-44 rounded-xl bg-background/50 border-white/10 text-xs font-bold"
+                        className="h-10 w-44 rounded-xl bg-background/50 border-border text-xs font-bold"
                     />
                 </div>
-                <div className="h-8 w-px bg-white/10 hidden md:block" />
+                <div className="h-8 w-px bg-border hidden md:block" />
                 <Button
                     type="button"
                     variant="ghost"
                     onClick={() => router.back()}
-                    className="h-14 px-8 text-base font-bold rounded-2xl hover:bg-white/5"
+                    className="h-14 px-8 text-base font-bold rounded-xl hover:bg-muted/30"
                 >
                     {isRtl ? 'إلغاء العمل' : 'Cancel Work'}
                 </Button>
                 <Button
                     type="submit"
                     disabled={loading}
-                    className="h-14 px-12 text-lg font-black rounded-2xl bg-gradient-to-r from-primary to-purple-600 hover:shadow-2xl hover:shadow-primary/40 transition-all duration-300"
+                    className="h-14 px-12 text-lg font-bold rounded-xl bg-gradient-to-r from-primary to-purple-600 hover:shadow-lg hover:shadow-primary/40 transition-all duration-300"
                 >
                     {loading ? (
                         <span className={`flex items-center gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
@@ -971,7 +971,7 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
             </div>
             {/* Post Selector Dialog */}
             <Dialog open={isPostSelectorOpen} onOpenChange={setIsPostSelectorOpen}>
-                <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto bg-card border-white/10">
+                <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto bg-card border-border">
                     <DialogHeader>
                         <DialogTitle>{isRtl ? 'اختر منشوراً للربط' : 'Select Post to Link'}</DialogTitle>
                     </DialogHeader>
@@ -984,7 +984,7 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                             {approvedPosts.filter(p => p.platform?.toLowerCase() === selectedPlatformForLinking?.toLowerCase()).map((post) => (
                                 <div
                                     key={post.id}
-                                    className="cursor-pointer group relative aspect-square rounded-xl overflow-hidden border border-white/5 hover:border-primary/50 transition-all"
+                                    className="cursor-pointer group relative aspect-square rounded-xl overflow-hidden border border-border hover:border-primary/50 transition-all"
                                     onClick={() => linkPost(post)}
                                 >
                                     {post.imageUrl ? (
@@ -994,7 +994,7 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                                             <Video className="h-8 w-8 text-white/40" />
                                         </div>
                                     ) : (
-                                        <div className="w-full h-full p-4 bg-white/5 text-[10px] text-muted-foreground line-clamp-6">
+                                        <div className="w-full h-full p-4 bg-muted/30 text-[10px] text-muted-foreground line-clamp-6">
                                             {post.captionEn || post.captionAr}
                                         </div>
                                     )}

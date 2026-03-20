@@ -47,7 +47,7 @@ const PRIORITY_COLORS: Record<string, string> = {
 };
 
 function PriorityDot({ priority }: { priority: Task["priority"] }) {
-    if (!priority) return <div className="w-2.5 h-2.5 rounded-full bg-white/10" />;
+    if (!priority) return <div className="w-2.5 h-2.5 rounded-full bg-muted/30" />;
     const color = PRIORITY_COLORS[priority.priority] || priority.color || "#d8d8d8";
     return <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: color }} title={priority.priority} />;
 }
@@ -56,7 +56,7 @@ function StatusBadge({ status }: { status: Task["status"] }) {
     const bg = status.color || "#4f46e5";
     return (
         <span
-            className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest text-white"
+            className="inline-flex items-center px-2 py-0.5 rounded-full section-label text-white"
             style={{ backgroundColor: bg + "33", color: bg, border: `1px solid ${bg}55` }}
         >
             {status.status}
@@ -121,7 +121,7 @@ function SpaceItem({
         <div>
             <button
                 onClick={toggle}
-                className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${isSpaceSelected ? "bg-primary text-primary-foreground" : "hover:bg-white/8 text-foreground/70"}`}
+                className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${isSpaceSelected ? "bg-primary text-primary-foreground" : "hover:bg-muted/30 text-foreground/70"}`}
             >
                 {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin shrink-0" /> : open ? <ChevronDown className="h-3.5 w-3.5 shrink-0" /> : <Chevron className="h-3.5 w-3.5 shrink-0" />}
                 <FolderOpen className="h-3.5 w-3.5 shrink-0" />
@@ -131,20 +131,20 @@ function SpaceItem({
             {!isSpaceSelected && (
                 <button
                     onClick={() => onSelectSpace(space.id)}
-                    className="w-full flex items-center gap-2 px-3 py-1 rounded-xl text-xs text-muted-foreground hover:bg-white/5 pl-9 mt-0.5"
+                    className="w-full flex items-center gap-2 px-3 py-1 rounded-xl text-xs text-muted-foreground hover:bg-muted/30 pl-9 mt-0.5"
                 >
                     <ListTodo className="h-3 w-3 shrink-0" />
                     <span className="truncate">All tasks</span>
                 </button>
             )}
             {open && (
-                <div className="ml-4 mt-0.5 space-y-0.5 border-l border-white/5 pl-2">
+                <div className="ml-4 mt-0.5 space-y-0.5 border-l border-border pl-2">
                     {/* Folderless lists */}
                     {flLists.map((list) => (
                         <button
                             key={list.id}
                             onClick={() => onSelectList(list.id, space.id)}
-                            className={`w-full flex items-center gap-2 px-2 py-1 rounded-lg text-xs transition-all ${selected.listId === list.id ? "bg-primary/20 text-primary" : "hover:bg-white/5 text-foreground/60"}`}
+                            className={`w-full flex items-center gap-2 px-2 py-1 rounded-lg text-xs transition-all ${selected.listId === list.id ? "bg-primary/20 text-primary" : "hover:bg-muted/30 text-foreground/60"}`}
                         >
                             <ListTodo className="h-3 w-3 shrink-0" />
                             <span className="truncate">{list.name}</span>
@@ -155,18 +155,18 @@ function SpaceItem({
                         <div key={folder.id}>
                             <button
                                 onClick={() => setFolderListsOpen(p => ({ ...p, [folder.id]: !p[folder.id] }))}
-                                className="w-full flex items-center gap-2 px-2 py-1 rounded-lg text-xs hover:bg-white/5 text-foreground/70"
+                                className="w-full flex items-center gap-2 px-2 py-1 rounded-lg text-xs hover:bg-muted/30 text-foreground/70"
                             >
                                 {folderListsOpen[folder.id] ? <ChevronDown className="h-3 w-3 shrink-0" /> : <Chevron className="h-3 w-3 shrink-0" />}
                                 <span className="truncate font-bold">{folder.name}</span>
                             </button>
                             {folderListsOpen[folder.id] && (
-                                <div className="ml-3 space-y-0.5 border-l border-white/5 pl-2">
+                                <div className="ml-3 space-y-0.5 border-l border-border pl-2">
                                     {(folder.lists || []).map((list) => (
                                         <button
                                             key={list.id}
                                             onClick={() => onSelectList(list.id, space.id)}
-                                            className={`w-full flex items-center gap-2 px-2 py-1 rounded-lg text-xs transition-all ${selected.listId === list.id ? "bg-primary/20 text-primary" : "hover:bg-white/5 text-foreground/60"}`}
+                                            className={`w-full flex items-center gap-2 px-2 py-1 rounded-lg text-xs transition-all ${selected.listId === list.id ? "bg-primary/20 text-primary" : "hover:bg-muted/30 text-foreground/60"}`}
                                         >
                                             <ListTodo className="h-3 w-3 shrink-0" />
                                             <span className="truncate">{list.name}</span>
@@ -283,30 +283,30 @@ export function ClickupDashboard({ clickupUser, team }: { clickupUser: any; team
         <div className="flex gap-0 h-full min-h-[70vh]" dir={isRtl ? "rtl" : "ltr"}>
             {/* ─── Left Space Tree ─────────────────────────────────────── */}
             <div className={`transition-all duration-300 ${sidebarOpen ? "w-64" : "w-0 overflow-hidden"} shrink-0`}>
-                <div className="w-64 h-full bg-card/30 border-r border-white/5 flex flex-col p-3 gap-2">
+                <div className="w-64 h-full bg-card/30 border-r border-border flex flex-col p-3 gap-2">
                     {/* User info */}
                     <div className="flex items-center gap-2 px-2 py-2 mb-1">
                         {clickupUser?.profilePicture ? (
                             <img src={clickupUser.profilePicture} alt="" className="w-7 h-7 rounded-full" />
                         ) : (
-                            <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center text-xs font-black text-primary">
+                            <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center text-xs font-semibold text-primary">
                                 {clickupUser?.username?.[0]?.toUpperCase() || "U"}
                             </div>
                         )}
                         <div className="flex-1 min-w-0">
-                            <p className="text-xs font-black truncate">{clickupUser?.username}</p>
+                            <p className="text-xs font-semibold truncate">{clickupUser?.username}</p>
                             <p className="text-[10px] text-muted-foreground truncate">{team?.name}</p>
                         </div>
                     </div>
 
-                    <div className="text-[9px] font-black text-primary/40 uppercase tracking-[0.25em] px-2 mb-1">
+                    <div className="section-label text-primary/40 px-2 mb-1">
                         SPACES
                     </div>
 
                     {/* All tasks button */}
                     <button
                         onClick={handleClearFilter}
-                        className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${!selectedSpaceId ? "bg-primary text-primary-foreground" : "hover:bg-white/8 text-foreground/70"}`}
+                        className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${!selectedSpaceId ? "bg-primary text-primary-foreground" : "hover:bg-muted/30 text-foreground/70"}`}
                     >
                         <ListTodo className="h-3.5 w-3.5 shrink-0" />
                         {isRtl ? "كل المهام" : "All Tasks"}
@@ -354,7 +354,7 @@ export function ClickupDashboard({ clickupUser, team }: { clickupUser: any; team
                             <Layers className="h-4 w-4" />
                         </Button>
                         <div>
-                            <h1 className="text-3xl font-black premium-gradient-text uppercase tracking-tight">ClickUp</h1>
+                            <h1 className="text-2xl font-bold tracking-tight">ClickUp</h1>
                             <p className="text-xs text-muted-foreground">
                                 {selectedListId ? "List view" : selectedSpaceId ? "Space view" : isRtl ? "كل مهامك" : "All your tasks"}
                             </p>
@@ -368,7 +368,7 @@ export function ClickupDashboard({ clickupUser, team }: { clickupUser: any; team
                                 size="sm"
                                 variant={filter === f ? "default" : "outline"}
                                 onClick={() => handleFilterChange(f)}
-                                className={`text-xs font-bold border-white/10 ${filter === f ? "" : "text-muted-foreground"}`}
+                                className={`text-xs font-bold border-border ${filter === f ? "" : "text-muted-foreground"}`}
                             >
                                 {f === "all" ? (isRtl ? "الكل" : "All") : f === "overdue" ? (isRtl ? "متأخرة" : "Overdue") : (isRtl ? "جارية" : "In Progress")}
                             </Button>
@@ -381,7 +381,7 @@ export function ClickupDashboard({ clickupUser, team }: { clickupUser: any; team
 
                 {/* Tabs */}
                 <Tabs defaultValue="tasks" onValueChange={(v) => v === "goals" && handleGoalsTab()}>
-                    <TabsList className="bg-white/5 border border-white/10">
+                    <TabsList className="bg-muted/30 border border-border">
                         <TabsTrigger value="tasks" className="font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                             <ListTodo className="h-3.5 w-3.5 mr-1.5" />
                             {isRtl ? "مهامي" : "My Tasks"}
@@ -402,7 +402,7 @@ export function ClickupDashboard({ clickupUser, team }: { clickupUser: any; team
                             <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
                                 <CheckCircle2 className="h-16 w-16 opacity-10" />
                                 <div>
-                                    <p className="font-black text-lg">{isRtl ? "لا توجد مهام" : "No Tasks Found"}</p>
+                                    <p className="font-semibold text-lg">{isRtl ? "لا توجد مهام" : "No Tasks Found"}</p>
                                     <p className="text-sm text-muted-foreground mt-1">
                                         {isRtl ? "كل حاجة خلصت أو مفيش مهام في الفلتر دا" : "All clear or no tasks match this filter."}
                                     </p>
@@ -417,7 +417,7 @@ export function ClickupDashboard({ clickupUser, team }: { clickupUser: any; team
                                         <Card
                                             key={task.id}
                                             onClick={() => window.open(task.url, "_blank")}
-                                            className="bg-card/40 border-white/5 hover:border-primary/30 hover:bg-card/60 transition-all cursor-pointer group"
+                                            className="bg-card/40 border-border hover:border-primary/30 hover:bg-card/60 transition-all cursor-pointer group"
                                         >
                                             <CardContent className="p-4">
                                                 <div className={`flex items-center gap-3 ${isRtl ? "flex-row-reverse" : ""}`}>
@@ -453,7 +453,7 @@ export function ClickupDashboard({ clickupUser, team }: { clickupUser: any; team
                                             size="sm"
                                             onClick={handleLoadMore}
                                             disabled={loading}
-                                            className="border-white/10 text-xs font-bold"
+                                            className="border-border text-xs font-bold"
                                         >
                                             {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-2" /> : null}
                                             {isRtl ? "تحميل المزيد" : "Load More"}
@@ -474,7 +474,7 @@ export function ClickupDashboard({ clickupUser, team }: { clickupUser: any; team
                             <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
                                 <Target className="h-16 w-16 opacity-10" />
                                 <div>
-                                    <p className="font-black text-lg">{isRtl ? "لا توجد أهداف" : "No Goals Found"}</p>
+                                    <p className="font-semibold text-lg">{isRtl ? "لا توجد أهداف" : "No Goals Found"}</p>
                                     <p className="text-sm text-muted-foreground mt-1">
                                         {isRtl ? "أضف أهدافك من ClickUp" : "Create goals in ClickUp to see them here."}
                                     </p>
@@ -485,7 +485,7 @@ export function ClickupDashboard({ clickupUser, team }: { clickupUser: any; team
                                 <Card
                                     key={goal.id}
                                     onClick={() => window.open(`https://app.clickup.com/${team?.id}/goals/${goal.id}`, "_blank")}
-                                    className="bg-card/40 border-white/5 hover:border-primary/30 hover:bg-card/60 transition-all cursor-pointer group"
+                                    className="bg-card/40 border-border hover:border-primary/30 hover:bg-card/60 transition-all cursor-pointer group"
                                 >
                                     <CardContent className="p-4 space-y-3">
                                         <div className={`flex items-start justify-between ${isRtl ? "flex-row-reverse" : ""}`}>
@@ -498,11 +498,11 @@ export function ClickupDashboard({ clickupUser, team }: { clickupUser: any; team
                                                 )}
                                             </div>
                                             <div className="text-right shrink-0 ml-4">
-                                                <span className="text-xl font-black text-primary">{Math.round(goal.percent_complete)}%</span>
+                                                <span className="text-xl font-semibold text-primary">{Math.round(goal.percent_complete)}%</span>
                                             </div>
                                         </div>
                                         {/* Progress bar */}
-                                        <div className="w-full bg-white/10 rounded-full h-1.5">
+                                        <div className="w-full bg-muted/30 rounded-full h-1.5">
                                             <div
                                                 className="h-1.5 rounded-full bg-primary transition-all"
                                                 style={{ width: `${Math.round(goal.percent_complete)}%` }}

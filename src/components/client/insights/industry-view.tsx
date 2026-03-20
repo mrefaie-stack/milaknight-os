@@ -40,20 +40,20 @@ function ItemsGrid({ items, isRtl, animated = true, isHistory = false }: { items
                         animate={animated ? { opacity: 1, y: 0 } : undefined} 
                         transition={animated ? { delay: i * 0.05, duration: 0.35 } : undefined}
                     >
-                        <Card className={`${isHistory ? 'bg-white/5 border border-white/5' : 'glass-card border-none'} rounded-3xl overflow-hidden group hover:bg-white/5 transition-all duration-300`}>
+                        <Card className={`${isHistory ? 'bg-muted/30 border border-border' : 'bg-card border border-border'} rounded-xl overflow-hidden group transition-all duration-300`}>
                             <CardContent className="p-6 space-y-4">
                                 <div className={`flex items-start justify-between gap-3 ${isRtl ? 'flex-row-reverse' : ''}`}>
                                     <span className="text-3xl">{item.emoji || "💡"}</span>
                                     <div className={`flex gap-2 flex-wrap ${isRtl ? 'flex-row-reverse' : ''}`}>
-                                        <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest rounded-full border-white/10 text-muted-foreground">
+                                        <Badge variant="outline" className="section-label rounded-full border-border text-muted-foreground">
                                             {item.tag}
                                         </Badge>
-                                        <Badge variant="outline" className={`text-[9px] font-black uppercase tracking-widest rounded-full ${IMPACT_STYLES[item.impact] || IMPACT_STYLES.MEDIUM}`}>
+                                        <Badge variant="outline" className={`section-label rounded-full ${IMPACT_STYLES[item.impact] || IMPACT_STYLES.MEDIUM}`}>
                                             {isRtl ? IMPACT_AR[item.impact] : IMPACT_EN[item.impact]}
                                         </Badge>
                                     </div>
                                 </div>
-                                <h3 className={`text-lg font-black leading-tight tracking-tight ${isRtl ? 'text-right' : ''}`}>
+                                <h3 className={`text-lg font-semibold leading-tight tracking-tight ${isRtl ? 'text-right' : ''}`}>
                                     {isRtl ? item.titleAr : item.titleEn}
                                 </h3>
                                 <p className={`text-sm text-muted-foreground leading-relaxed font-medium opacity-70 ${isRtl ? 'text-right' : ''}`}>
@@ -84,11 +84,11 @@ export function IndustryView({
             {/* Header */}
             <div className={`flex flex-col md:flex-row md:items-end justify-between gap-4 ${isRtl ? 'text-right' : ''}`}>
                 <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+                    <div className="w-12 h-12 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
                         <Lightbulb className="h-6 w-6" />
                     </div>
                     <div>
-                        <h1 className="text-4xl font-black tracking-tighter premium-gradient-text uppercase">
+                        <h1 className="text-2xl font-bold tracking-tight">
                             {isRtl ? "رؤى السوق" : "Market Insights"}
                         </h1>
                         <p className="text-sm text-muted-foreground font-medium opacity-70">

@@ -63,9 +63,9 @@ export function CreateApprovalDialog({ open, onClose }: { open: boolean; onClose
 
     return (
         <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-            <DialogContent className="glass-card border border-white/10 rounded-3xl max-w-lg" dir={isRtl ? "rtl" : "ltr"}>
+            <DialogContent className="max-w-lg" dir={isRtl ? "rtl" : "ltr"}>
                 <DialogHeader>
-                    <DialogTitle className="text-xl font-black tracking-tight">
+                    <DialogTitle className="text-[15px] font-semibold">
                         {isRtl ? "طلب موافقة جديد" : "New Approval Request"}
                     </DialogTitle>
                 </DialogHeader>
@@ -73,14 +73,14 @@ export function CreateApprovalDialog({ open, onClose }: { open: boolean; onClose
                 <form onSubmit={handleSubmit} className="space-y-5 mt-2">
                     {/* Title */}
                     <div className="space-y-1.5">
-                        <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">
+                        <Label className="section-label text-muted-foreground">
                             {isRtl ? "العنوان *" : "Title *"}
                         </Label>
                         <Input
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
                             placeholder={isRtl ? "عنوان الطلب" : "Request title"}
-                            className="bg-white/5 border-white/10 rounded-xl"
+                            className=""
                             required
                             dir={isRtl ? "rtl" : "ltr"}
                         />
@@ -88,40 +88,40 @@ export function CreateApprovalDialog({ open, onClose }: { open: boolean; onClose
 
                     {/* Description */}
                     <div className="space-y-1.5">
-                        <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">
+                        <Label className="section-label text-muted-foreground">
                             {isRtl ? "الوصف" : "Description"}
                         </Label>
                         <Textarea
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
                             placeholder={isRtl ? "وصف تفصيلي (اختياري)" : "Detailed description (optional)"}
-                            className="bg-white/5 border-white/10 rounded-xl resize-none h-24"
+                            className="resize-none h-24"
                             dir={isRtl ? "rtl" : "ltr"}
                         />
                     </div>
 
                     {/* Client */}
                     <div className="space-y-1.5">
-                        <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">
+                        <Label className="section-label text-muted-foreground">
                             {isRtl ? "العميل *" : "Client *"}
                         </Label>
                         <Select value={clientId} onValueChange={setClientId} required>
-                            <SelectTrigger className={cn("bg-white/5 border-white/10 rounded-xl", selectedClientHasNoMM && "border-rose-500/40")}>
+                            <SelectTrigger className={cn(selectedClientHasNoMM && "border-destructive/40")}>
                                 <SelectValue placeholder={isRtl ? "اختر العميل" : "Select client"} />
                             </SelectTrigger>
-                            <SelectContent className="glass-card border border-white/10 rounded-2xl">
+                            <SelectContent>
                                 {clients.map((c) => (
-                                    <SelectItem key={c.id} value={c.id} className="rounded-xl">
+                                    <SelectItem key={c.id} value={c.id}>
                                         <span>{c.name}</span>
                                         {!c.mmId && (
-                                            <span className="ml-2 text-[9px] text-orange-400 font-black">NO MM</span>
+                                            <span className="ml-2 text-[9px] text-orange-400 font-medium">NO MM</span>
                                         )}
                                     </SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
                         {selectedClientHasNoMM && (
-                            <p className={cn("text-[10px] text-rose-400 font-black flex items-center gap-1 mt-1", isRtl ? "flex-row-reverse" : "")}>
+                            <p className={cn("text-[10px] text-destructive flex items-center gap-1 mt-1", isRtl ? "flex-row-reverse" : "")}>
                                 <AlertCircle className="h-3 w-3 shrink-0" />
                                 {isRtl ? "هذا العميل ليس لديه مدير تسويق — لا يمكن إرسال الطلب" : "This client has no Marketing Manager assigned"}
                             </p>
@@ -130,7 +130,7 @@ export function CreateApprovalDialog({ open, onClose }: { open: boolean; onClose
 
                     {/* ClickUp Link — required */}
                     <div className="space-y-1.5">
-                        <Label className={cn("text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1.5", isRtl ? "flex-row-reverse" : "")}>
+                        <Label className={cn("section-label text-muted-foreground flex items-center gap-1.5", isRtl ? "flex-row-reverse" : "")}>
                             <Link2 className="h-3 w-3" />
                             {isRtl ? "رابط ClickUp Task *" : "ClickUp Task Link *"}
                         </Label>
@@ -139,14 +139,14 @@ export function CreateApprovalDialog({ open, onClose }: { open: boolean; onClose
                             onChange={(e) => setClickupLink(e.target.value)}
                             placeholder="https://app.clickup.com/t/..."
                             className={cn(
-                                "bg-white/5 border-white/10 rounded-xl font-mono text-sm",
+                                "font-mono text-sm",
                                 !clickupLink && "border-orange-500/30"
                             )}
                             required
                             dir="ltr"
                         />
                         {!clickupLink && (
-                            <p className={cn("text-[10px] text-orange-400 font-black flex items-center gap-1", isRtl ? "flex-row-reverse" : "")}>
+                            <p className={cn("text-[10px] text-orange-400 flex items-center gap-1", isRtl ? "flex-row-reverse" : "")}>
                                 <AlertCircle className="h-3 w-3 shrink-0" />
                                 {isRtl ? "رابط ClickUp Task إلزامي" : "ClickUp Task link is required"}
                             </p>
@@ -157,7 +157,7 @@ export function CreateApprovalDialog({ open, onClose }: { open: boolean; onClose
                         <Button
                             type="submit"
                             disabled={loading || !isValid}
-                            className="flex-1 h-11 bg-violet-600 hover:bg-violet-700 text-white font-black uppercase tracking-wider rounded-xl"
+                            className="flex-1 bg-violet-600 hover:bg-violet-700 text-white"
                         >
                             {loading
                                 ? (isRtl ? "جاري الإرسال..." : "Sending...")
@@ -167,7 +167,7 @@ export function CreateApprovalDialog({ open, onClose }: { open: boolean; onClose
                             type="button"
                             variant="ghost"
                             onClick={onClose}
-                            className="h-11 rounded-xl font-black"
+                            className=""
                         >
                             {isRtl ? "إلغاء" : "Cancel"}
                         </Button>

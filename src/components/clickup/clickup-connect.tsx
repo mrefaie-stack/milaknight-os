@@ -32,7 +32,7 @@ export function ClickupConnect() {
             className="flex items-center justify-center min-h-[60vh]"
             dir={isRtl ? "rtl" : "ltr"}
         >
-            <Card className="w-full max-w-md bg-card/50 border-white/5">
+            <Card className="w-full max-w-md bg-card border-border">
                 <CardContent className="p-8 space-y-6">
                     {/* Header */}
                     <div className="flex flex-col items-center gap-3 text-center">
@@ -40,7 +40,7 @@ export function ClickupConnect() {
                             <Layers className="h-8 w-8 text-primary" />
                         </div>
                         <div>
-                            <h1 className="text-2xl font-black premium-gradient-text">
+                            <h1 className="text-2xl font-bold tracking-tight">
                                 {isRtl ? "ربط ClickUp" : "Connect ClickUp"}
                             </h1>
                             <p className="text-sm text-muted-foreground mt-1">
@@ -63,7 +63,7 @@ export function ClickupConnect() {
                     <Button
                         onClick={handleConnect}
                         disabled={loading}
-                        className="w-full h-12 font-black uppercase tracking-widest text-sm"
+                        className="w-full h-12 font-semibold text-sm"
                     >
                         {loading ? (
                             <Loader2 className={`h-4 w-4 animate-spin ${isRtl ? "ml-2" : "mr-2"}`} />

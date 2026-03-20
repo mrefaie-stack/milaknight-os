@@ -15,26 +15,30 @@ export default async function DashboardLayout({ children }: { children: React.Re
     }
 
     return (
-        <div className="flex h-screen bg-background overflow-hidden relative">
-            {/* Background Ornaments */}
-            <div className="absolute top-[-10%] left-[-5%] w-[40%] h-[40%] bg-primary/20 rounded-full blur-[120px] pointer-events-none z-0" />
-            <div className="absolute bottom-[-10%] right-[-5%] w-[30%] h-[30%] bg-purple-500/10 rounded-full blur-[100px] pointer-events-none z-0" />
-
+        <div className="flex h-screen bg-background overflow-hidden">
             <DashboardSidebar role={session.user.role} user={session.user} />
 
-            <main className="flex-1 flex flex-col items-stretch overflow-hidden relative z-10 w-full">
+            <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
                 <MobileHeader role={session.user.role} user={session.user} />
-                <div className="flex-1 overflow-auto p-4 md:p-8 custom-scrollbar relative z-10">
-                    <div className="mx-auto max-w-6xl reveal-animation pb-20 md:pb-0">
-                        {children}
+
+                <div className="flex-1 overflow-auto custom-scrollbar">
+                    <div className="p-4 md:p-6 pb-24 md:pb-6">
+                        <div className="mx-auto max-w-6xl reveal-animation">
+                            {children}
+                        </div>
                     </div>
                 </div>
             </main>
 
             {session.user.role !== "CLIENT" && <PresenceUpdater />}
             <NotificationToaster />
-            <AiChatWidget user={{ name: session.user.name || "User", role: session.user.role, id: session.user.id }} />
+            <AiChatWidget
+                user={{
+                    name: session.user.name || "User",
+                    role: session.user.role,
+                    id: session.user.id,
+                }}
+            />
         </div>
     );
 }
-

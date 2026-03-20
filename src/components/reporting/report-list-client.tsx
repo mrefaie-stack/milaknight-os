@@ -70,7 +70,7 @@ export function ReportListClient({
 
     return (
         <div className="space-y-6">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-card/30 p-4 rounded-3xl border border-white/5 backdrop-blur-md relative z-20">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-card/30 p-4 rounded-xl border border-border relative z-20">
                 <ReportFilter onFilter={handleFilter} />
 
                 <div className="flex items-center gap-3">
@@ -80,7 +80,7 @@ export function ReportListClient({
                             setIsCompareMode(!isCompareMode);
                             if (isCompareMode) setSelectedReports([]);
                         }}
-                        className={`rounded-2xl transition-all ${isCompareMode ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25' : ''}`}
+                        className={`rounded-lg transition-all ${isCompareMode ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25' : ''}`}
                     >
                         <GitCompare className="mr-2 h-4 w-4" />
                         {isCompareMode ? (t("common.cancel") || "Cancel Compare") : (t("common.compare_reports") || "Compare Reports")}
@@ -89,7 +89,7 @@ export function ReportListClient({
                     {isCompareMode && selectedReports.length > 0 && (
                         <Button
                             onClick={handleCompare}
-                            className="rounded-2xl bg-indigo-500 hover:bg-indigo-600 outline outline-2 outline-offset-2 outline-indigo-500 text-white shadow-xl shadow-indigo-500/30 animate-in slide-in-from-right-4"
+                            className="rounded-lg bg-indigo-500 hover:bg-indigo-600 outline outline-2 outline-offset-2 outline-indigo-500 text-white shadow-xl shadow-indigo-500/30 animate-in slide-in-from-right-4"
                         >
                             {t("common.compare") || "Compare"} ({selectedReports.length})
                         </Button>
@@ -105,7 +105,7 @@ export function ReportListClient({
                         <div
                             key={report.id}
                             onClick={() => isCompareMode && toggleSelection(report)}
-                            className={`group relative p-6 border rounded-3xl bg-card/50 backdrop-blur-sm transition-all overflow-hidden ${isCompareMode ? 'cursor-pointer hover:border-primary/80' : 'hover:border-primary/50 hover:shadow-xl hover:shadow-primary/5'} ${isSelected ? 'ring-2 ring-indigo-500 border-indigo-500 bg-indigo-500/5' : ''}`}
+                            className={`group relative p-6 border rounded-xl bg-card/50 transition-all overflow-hidden ${isCompareMode ? 'cursor-pointer hover:border-primary/80' : 'hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5'} ${isSelected ? 'ring-2 ring-indigo-500 border-indigo-500 bg-indigo-500/5' : ''}`}
                         >
                             {isCompareMode && (
                                 <div className="absolute top-4 right-4 z-20">
@@ -122,14 +122,14 @@ export function ReportListClient({
                             <div className="relative z-10 flex flex-col h-full pointer-events-none">
                                 <div className="flex items-center gap-2 mb-2">
                                     <Calendar className="h-4 w-4 text-primary" />
-                                    <span className="text-sm font-bold text-muted-foreground uppercase tracking-widest">
+                                    <span className="text-sm font-medium text-muted-foreground section-label">
                                         {report.month}
                                     </span>
                                 </div>
 
-                                <h3 className="font-black text-2xl mb-1 truncate">{report.client.name}</h3>
+                                <h3 className="font-bold text-2xl mb-1 truncate">{report.client.name}</h3>
                                 <div className="flex gap-2 mb-6">
-                                    <Badge variant="outline" className={`text-[10px] font-black uppercase ${report.status === 'SENT' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-200' : 'bg-orange-500/10 text-orange-600 border-orange-200'}`}>
+                                    <Badge variant="outline" className={`text-[10px] font-medium ${report.status === 'SENT' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-200' : 'bg-orange-500/10 text-orange-600 border-orange-200'}`}>
                                         {report.status}
                                     </Badge>
                                 </div>
@@ -138,20 +138,20 @@ export function ReportListClient({
                                     {!isCompareMode ? (
                                         <>
                                             <Link href={`/${role === 'CLIENT' ? 'client' : 'am'}/reports/${report.id}`} className="flex-1">
-                                                <Button className="w-full font-bold rounded-2xl h-12 shadow-lg shadow-primary/10">
+                                                <Button className="w-full font-bold rounded-lg h-12 shadow-lg shadow-primary/10">
                                                     {isRtl ? 'عرض التقرير' : 'View Dashboard'}
                                                 </Button>
                                             </Link>
                                             {(role === 'AM' || role === 'ADMIN' || role === 'MARKETING_MANAGER') && (
                                                 <Link href={`/am/reports/${report.id}/edit`}>
-                                                    <Button variant="outline" size="icon" className="h-12 w-12 rounded-2xl border-2 hover:bg-primary/5 hover:text-primary transition-all">
+                                                    <Button variant="outline" size="icon" className="h-12 w-12 rounded-lg border-2 hover:bg-primary/5 hover:text-primary transition-all">
                                                         <Settings className="h-5 w-5" />
                                                     </Button>
                                                 </Link>
                                             )}
                                         </>
                                     ) : (
-                                        <div className="h-12 flex items-center justify-center w-full rounded-2xl border border-dashed text-xs font-bold text-muted-foreground">
+                                        <div className="h-12 flex items-center justify-center w-full rounded-lg border border-dashed text-xs font-bold text-muted-foreground">
                                             {isSelected ? (isRtl ? 'تم الاختيار ✓' : 'Selected ✓') : (isRtl ? 'اضغط للاختيار' : 'Click to select')}
                                         </div>
                                     )}
@@ -162,7 +162,7 @@ export function ReportListClient({
                 })}
 
                 {filteredReports.length === 0 && (
-                    <div className="col-span-full py-24 border-2 border-dashed rounded-3xl text-center bg-card/30 backdrop-blur-sm">
+                    <div className="col-span-full py-24 border-2 border-dashed rounded-xl text-center bg-card/30">
                         <div className="max-w-xs mx-auto space-y-4">
                             <div className="p-4 bg-muted rounded-full w-fit mx-auto">
                                 <BarChart3 className="h-8 w-8 text-muted-foreground opacity-20" />

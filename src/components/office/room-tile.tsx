@@ -40,15 +40,13 @@ export function RoomTile({ room, members, isCurrentUserHere, onClick, isRtl, isM
     return (
         <motion.button
             onClick={onClick}
-            whileHover={{ scale: 1.03, y: -2 }}
-            whileTap={{ scale: 0.97 }}
             transition={{ type: "spring", stiffness: 300, damping: 22 }}
             className={cn(
-                "relative flex flex-col justify-between p-3.5 rounded-2xl border text-left w-full h-full min-h-[110px] overflow-hidden",
-                "transition-colors duration-300",
+                "relative flex flex-col justify-between p-3.5 rounded-lg border text-left w-full h-full min-h-[110px] overflow-hidden",
+                "transition-colors duration-200",
                 hasMembers
-                    ? [room.bg, room.activeBorder, `shadow-xl ${room.glow}`]
-                    : "bg-white/2 border-white/6 hover:bg-white/4 hover:border-white/12",
+                    ? [room.bg, room.activeBorder, `shadow-md ${room.glow}`]
+                    : "bg-card border-border hover:bg-muted/30",
                 isCurrentUserHere && "ring-2 ring-primary/60 ring-offset-1 ring-offset-background"
             )}
         >
@@ -75,7 +73,7 @@ export function RoomTile({ room, members, isCurrentUserHere, onClick, isRtl, isM
                     animate={{ opacity: 1, scale: 1 }}
                     className="absolute top-2 left-2 flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-primary/20 border border-primary/40 z-10"
                 >
-                    <span className="text-[8px] font-black text-primary uppercase tracking-wider">
+                    <span className="text-[8px] font-medium text-primary uppercase tracking-wider">
                         {isRtl ? "أنت هنا" : "You"}
                     </span>
                 </motion.div>
@@ -99,7 +97,7 @@ export function RoomTile({ room, members, isCurrentUserHere, onClick, isRtl, isM
                                     delay: i * 0.3,
                                 }}
                                 className={cn(
-                                    "flex items-center justify-center w-6 h-6 rounded-full text-[9px] font-black text-white border-2 shadow-lg",
+                                    "flex items-center justify-center w-6 h-6 rounded-full text-[9px] font-medium text-white border-2 shadow-sm",
                                     m.isCurrentUser
                                         ? "bg-primary border-primary/60 shadow-primary/40"
                                         : `${roleColor} border-black/20 shadow-black/30`
@@ -116,15 +114,15 @@ export function RoomTile({ room, members, isCurrentUserHere, onClick, isRtl, isM
             {/* Room label + icon */}
             <div className={cn("relative z-10 flex items-center gap-2", hasMembers ? "mt-auto" : "")}>
                 <div className={cn(
-                    "flex items-center justify-center w-7 h-7 rounded-xl transition-colors",
-                    hasMembers ? "bg-white/10" : "bg-white/4",
+                    "flex items-center justify-center w-7 h-7 rounded-lg transition-colors",
+                    hasMembers ? "bg-white/10" : "bg-muted/50",
                     room.color
                 )}>
                     <Icon className="h-3.5 w-3.5" />
                 </div>
                 <div className="flex-1 min-w-0">
                     <span className={cn(
-                        "block text-[11px] font-black uppercase tracking-wide leading-tight truncate",
+                        "block text-[11px] font-medium uppercase tracking-wide leading-tight truncate",
                         hasMembers ? room.color : "text-muted-foreground/50"
                     )}>
                         {label}

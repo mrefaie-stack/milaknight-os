@@ -1,15 +1,11 @@
 "use client";
 
 import { useLanguage } from "@/contexts/language-context";
-import {
-    Layers,
-    Search,
-    Filter,
-    ChevronRight,
-    CheckCircle2
-} from "lucide-react";
+import { Layers, Search, Filter, ChevronRight, CheckCircle2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { useState } from "react";
+import { cn } from "@/lib/utils";
 
 export function ModeratorActionPlansList({ plans }: { plans: any[] }) {
     const { isRtl } = useLanguage();
@@ -21,17 +17,17 @@ export function ModeratorActionPlansList({ plans }: { plans: any[] }) {
     );
 
     return (
-        <div className="space-y-8 max-w-7xl mx-auto">
-            <div className={`flex flex-col md:flex-row md:items-center justify-between gap-4 ${isRtl ? 'md:flex-row-reverse' : ''}`}>
+        <div className="space-y-5 max-w-5xl mx-auto">
+            <div className={cn("flex flex-col sm:flex-row sm:items-center justify-between gap-4", isRtl ? "sm:flex-row-reverse text-right" : "")}>
                 <div>
-                    <h1 className="text-3xl font-black uppercase tracking-tighter">
+                    <h1 className="text-2xl font-bold tracking-tight">
                         {isRtl ? "خطط المحتوى" : "Content Plans"}
                     </h1>
-                    <p className="text-muted-foreground font-medium">
+                    <p className="text-sm text-muted-foreground mt-1">
                         {isRtl ? "المحتوى المعتمد والجاهز للتنفيذ" : "Approved content ready for execution"}
                     </p>
                     {filteredPlans.length > 0 && plans.length > filteredPlans.length && (
-                        <div className={`mt-2 flex items-center gap-2 text-xs font-bold text-primary ${isRtl ? 'flex-row-reverse' : ''}`}>
+                        <div className={cn("mt-2 flex items-center gap-2 text-xs text-primary", isRtl ? "flex-row-reverse" : "")}>
                             <Filter className="h-3 w-3" />
                             {isRtl ? `عرض خطط: ${filteredPlans[0].client?.name}` : `Viewing plans for: ${filteredPlans[0].client?.name}`}
                             <Link href="/moderator/action-plans" className="underline opacity-60 hover:opacity-100 transition-opacity">
@@ -41,60 +37,67 @@ export function ModeratorActionPlansList({ plans }: { plans: any[] }) {
                     )}
                 </div>
 
-                <div className={`flex items-center gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
-                    <div className="relative max-w-xs">
-                        <Search className={`absolute top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground ${isRtl ? 'right-3' : 'left-3'}`} />
-                        <input
-                            type="text"
-                            placeholder={isRtl ? "بحث بالخطة أو العميل..." : "Search plans or clients..."}
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            className={`h-11 w-full md:w-64 bg-card border border-white/10 rounded-2xl px-10 text-sm focus:ring-2 focus:ring-primary focus:border-transparent transition-all ${isRtl ? 'pr-10 text-right' : 'pl-10 text-left'}`}
-                        />
-                    </div>
+                <div className="relative w-full sm:w-auto">
+                    <Search className={cn("absolute top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50", isRtl ? "right-3" : "left-3")} />
+                    <input
+                        type="text"
+                        placeholder={isRtl ? "بحث بالخطة أو العميل..." : "Search plans or clients..."}
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        className={cn(
+                            "h-9 w-full sm:w-64 bg-background border border-border rounded-lg text-sm",
+                            "focus:outline-none focus:border-primary focus:ring-3 focus:ring-primary/15",
+                            "placeholder:text-muted-foreground/50",
+                            isRtl ? "pr-10 pl-3 text-right" : "pl-10 pr-3",
+                        )}
+                    />
                 </div>
             </div>
 
-            <div className="grid gap-4">
+            <div className="space-y-2">
                 {filteredPlans.length > 0 ? (
                     filteredPlans.map((plan) => (
                         <Link
                             key={plan.id}
                             href={`/moderator/action-plans/${plan.id}`}
-                            className={`group flex items-center justify-between p-6 rounded-3xl bg-card border border-white/10 hover:border-emerald-500/30 hover:bg-emerald-500/5 transition-all ${isRtl ? 'flex-row-reverse' : ''}`}
+                            className={cn(
+                                "group flex items-center justify-between p-4 rounded-lg border border-border bg-card",
+                                "hover:border-emerald-500/30 hover:bg-muted/30 transition-colors duration-150",
+                                isRtl ? "flex-row-reverse" : "",
+                            )}
                         >
-                            <div className={`flex items-center gap-6 ${isRtl ? 'flex-row-reverse' : ''}`}>
-                                <div className={`h-16 w-16 rounded-2xl ${plan.status === 'SCHEDULED' ? 'bg-emerald-500/20 text-emerald-600' : 'bg-emerald-500/10 text-emerald-600'} flex items-center justify-center border border-emerald-500/20 shadow-inner`}>
-                                    <Layers className="h-8 w-8" />
+                            <div className={cn("flex items-center gap-3", isRtl ? "flex-row-reverse" : "")}>
+                                <div className="h-10 w-10 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0">
+                                    <Layers className="h-5 w-5 text-emerald-500" />
                                 </div>
-                                <div className={isRtl ? 'text-right' : 'text-left'}>
-                                    <h3 className="font-black text-xl leading-none mb-1 group-hover:text-emerald-600 transition-colors">{plan.month}</h3>
-                                    <div className={`flex items-center gap-2 text-sm text-muted-foreground font-bold ${isRtl ? 'flex-row-reverse' : ''}`}>
+                                <div className={isRtl ? "text-right" : ""}>
+                                    <h3 className="text-sm font-semibold">{plan.month}</h3>
+                                    <div className={cn("flex items-center gap-2 text-xs text-muted-foreground mt-0.5", isRtl ? "flex-row-reverse" : "")}>
                                         <span>{plan.client?.name}</span>
-                                        <span className="opacity-30">•</span>
-                                        <span className={`flex items-center gap-1 ${plan.status === 'SCHEDULED' ? 'text-emerald-700' : 'text-emerald-600'}`}>
-                                            <CheckCircle2 className="h-3 w-3" />
-                                            {plan.status === 'SCHEDULED' ? (isRtl ? "تمت الجدولة" : "Scheduled") : (isRtl ? "معتمد" : "Approved")}
-                                        </span>
+                                        <span>·</span>
+                                        <Badge variant={plan.status === "SCHEDULED" ? "success" : "info"} className="text-[10px]">
+                                            {plan.status === "SCHEDULED" ? (isRtl ? "مجدول" : "Scheduled") : (isRtl ? "معتمد" : "Approved")}
+                                        </Badge>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className={`flex items-center gap-6 ${isRtl ? 'flex-row-reverse' : ''}`}>
-                                <div className="text-center px-4 hidden sm:block">
-                                    <div className="text-2xl font-black">{plan.items?.length || 0}</div>
-                                    <div className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">{isRtl ? "عنصر محتوى" : "ITEMS"}</div>
+                            <div className={cn("flex items-center gap-4", isRtl ? "flex-row-reverse" : "")}>
+                                <div className="hidden sm:block text-center">
+                                    <div className="text-sm font-semibold">{plan.items?.length || 0}</div>
+                                    <div className="section-label text-[9px] text-muted-foreground">{isRtl ? "عنصر" : "Items"}</div>
                                 </div>
-                                <div className="p-3 rounded-full bg-white/5 group-hover:bg-emerald-500 group-hover:text-white transition-all shadow-sm">
-                                    {isRtl ? <ChevronRight className="h-6 w-6 rotate-180" /> : <ChevronRight className="h-6 w-6" />}
-                                </div>
+                                <ChevronRight className={cn(
+                                    "h-4 w-4 text-muted-foreground/50 group-hover:text-muted-foreground transition-colors",
+                                    isRtl ? "rotate-180" : "",
+                                )} />
                             </div>
                         </Link>
                     ))
                 ) : (
-                    <div className="py-24 text-center rounded-3xl border-2 border-dashed border-white/5">
-                        <Layers className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-20" />
-                        <p className="text-muted-foreground font-bold">{isRtl ? "لا توجد نتائج مطابقة لبحثك" : "No plans matching your search"}</p>
+                    <div className="py-16 text-center rounded-lg border border-dashed border-border">
+                        <Layers className="h-9 w-9 mx-auto mb-3 text-muted-foreground/30" />
+                        <p className="text-sm text-muted-foreground">{isRtl ? "لا توجد نتائج مطابقة لبحثك" : "No plans matching your search"}</p>
                     </div>
                 )}
             </div>

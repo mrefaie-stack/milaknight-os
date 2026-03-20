@@ -60,10 +60,10 @@ export function MeetingRequestModal({ open, onOpenChange }: { open: boolean; onO
             <DialogContent className={`sm:max-w-md ${isRtl ? 'text-right' : 'text-left'}`}>
                 <DialogHeader>
                     <div className={`flex items-center gap-2 mb-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
-                        <div className="p-2 rounded-xl bg-primary/10 text-primary">
-                            <Calendar className="h-5 w-5" />
+                        <div className="p-2 rounded-lg bg-primary/10 text-primary">
+                            <Calendar className="h-4 w-4" />
                         </div>
-                        <DialogTitle className="text-2xl font-black uppercase tracking-tighter">
+                        <DialogTitle className="text-[15px] font-semibold">
                             {isRtl ? "طلب اجتماع" : "Request Meeting"}
                         </DialogTitle>
                     </div>
@@ -76,7 +76,7 @@ export function MeetingRequestModal({ open, onOpenChange }: { open: boolean; onO
 
                 <div className="space-y-6 py-4">
                     <div className="space-y-3">
-                        <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest flex items-center gap-2">
+                        <Label className="section-label text-muted-foreground flex items-center gap-2">
                             <Users2 className="h-3 w-3" /> {isRtl ? 'الفرق المطلوبة' : 'Required Teams'}
                         </Label>
                         <div className="grid grid-cols-2 gap-3">
@@ -84,9 +84,9 @@ export function MeetingRequestModal({ open, onOpenChange }: { open: boolean; onO
                                 <div
                                     key={team.id}
                                     onClick={() => toggleTeam(team.id)}
-                                    className={`flex items-center gap-2 p-3 rounded-2xl border transition-all cursor-pointer group ${selectedTeams.includes(team.id)
-                                            ? 'bg-primary/10 border-primary shadow-sm'
-                                            : 'bg-white/5 border-white/10 hover:border-primary/30'
+                                    className={`flex items-center gap-2 p-3 rounded-md border transition-colors cursor-pointer ${selectedTeams.includes(team.id)
+                                            ? 'bg-primary/10 border-primary'
+                                            : 'border-border hover:border-primary/30 hover:bg-muted'
                                         } ${isRtl ? 'flex-row-reverse' : ''}`}
                                 >
                                     <Checkbox
@@ -95,28 +95,28 @@ export function MeetingRequestModal({ open, onOpenChange }: { open: boolean; onO
                                         onCheckedChange={() => toggleTeam(team.id)}
                                         className="rounded-full"
                                     />
-                                    <span className="text-xs font-bold leading-none">{isRtl ? team.labelAr : team.labelEn}</span>
+                                    <span className="text-xs font-medium leading-none">{isRtl ? team.labelAr : team.labelEn}</span>
                                 </div>
                             ))}
                         </div>
                     </div>
 
                     <div className="space-y-3">
-                        <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest flex items-center gap-2">
+                        <Label className="section-label text-muted-foreground flex items-center gap-2">
                             <MessageSquare className="h-3 w-3" /> {isRtl ? 'سبب الاجتماع / التفاصيل' : 'Reason / Details'}
                         </Label>
                         <Textarea
                             placeholder={isRtl ? "كيف يمكننا مساعدتك في هذا الاجتماع؟" : "How can we help you in this meeting?"}
                             value={reason}
                             onChange={(e) => setReason(e.target.value)}
-                            className="min-h-[100px] rounded-2xl border-primary/10 bg-primary/5 italic"
+                            className="min-h-[100px]"
                         />
                     </div>
                 </div>
 
                 <DialogFooter>
                     <Button
-                        className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-primary/20"
+                        className="w-full gap-2"
                         onClick={handleSubmit}
                         disabled={isLoading}
                     >

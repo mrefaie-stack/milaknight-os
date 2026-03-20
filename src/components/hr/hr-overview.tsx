@@ -1,14 +1,16 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/contexts/language-context";
 import { useRouter } from "next/navigation";
 import {
-    Users, Clock, TrendingUp, CheckCircle2, XCircle,
+    Users, Clock, CheckCircle2, XCircle,
     Plus, Megaphone, Star, Calendar, ChevronRight, Loader2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { getAllLeaves, reviewLeave, createAnnouncement } from "@/app/actions/hr";
 import { toast } from "sonner";
 
@@ -31,7 +33,7 @@ type Stats = { totalEmployees: number; pendingLeaves: number; approvedThisMonth:
 
 const STATUS_COLORS: Record<string, string> = {
     ONLINE: "bg-emerald-500", AWAY: "bg-yellow-400",
-    MEETING: "bg-rose-500", DND: "bg-purple-500", OFFLINE: "bg-zinc-500",
+    MEETING: "bg-rose-500", DND: "bg-violet-500", OFFLINE: "bg-zinc-400",
 };
 
 const ROLE_LABELS: Record<string, string> = {
@@ -97,107 +99,100 @@ export function HROverview({ employees, initialStats, employeeBasePath = "/admin
     }).length;
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-6">
             {/* Header */}
-            <div className={cn("flex flex-col md:flex-row md:items-center justify-between gap-4", isRtl ? "text-right" : "")}>
+            <div className={cn("flex flex-col sm:flex-row sm:items-center justify-between gap-4", isRtl ? "sm:flex-row-reverse text-right" : "")}>
                 <div>
-                    <h1 className="text-3xl md:text-5xl font-black tracking-tighter premium-gradient-text uppercase">
+                    <h1 className="text-2xl font-bold tracking-tight">
                         {isRtl ? "الموارد البشرية" : "HR Dashboard"}
                     </h1>
                     <p className="text-sm text-muted-foreground mt-1">
                         {isRtl ? "إدارة الفريق والإجازات والأداء" : "Manage your team, leaves, and performance"}
                     </p>
                 </div>
-                <button
-                    onClick={() => setShowAnnounce(true)}
-                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
-                >
+                <Button onClick={() => setShowAnnounce(true)} className={cn("gap-2 shrink-0", isRtl ? "flex-row-reverse" : "")}>
                     <Megaphone className="h-4 w-4" />
                     {isRtl ? "إعلان جديد" : "New Announcement"}
-                </button>
+                </Button>
             </div>
 
             {/* Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {[
-                    { icon: Users, label: isRtl ? "الموظفون" : "Team", value: stats.totalEmployees, color: "text-blue-400", bg: "bg-blue-500/8 border-blue-500/20" },
-                    { icon: Clock, label: isRtl ? "متصل الآن" : "Online Now", value: onlineCount, color: "text-emerald-400", bg: "bg-emerald-500/8 border-emerald-500/20" },
-                    { icon: Calendar, label: isRtl ? "إجازات معلقة" : "Pending Leaves", value: stats.pendingLeaves, color: "text-yellow-400", bg: "bg-yellow-500/8 border-yellow-500/20" },
-                    { icon: Star, label: isRtl ? "متوسط الأداء" : "Avg Performance", value: stats.avgScore ? `${stats.avgScore}/5` : "—", color: "text-purple-400", bg: "bg-purple-500/8 border-purple-500/20" },
-                ].map(({ icon: Icon, label, value, color, bg }, i) => (
-                    <motion.div
-                        key={i}
-                        initial={{ opacity: 0, y: 12 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: i * 0.07 }}
-                        className={cn("p-4 rounded-2xl border flex flex-col gap-2", bg)}
-                    >
-                        <div className={cn("flex items-center gap-2", isRtl ? "flex-row-reverse" : "")}>
-                            <Icon className={cn("h-4 w-4", color)} />
-                            <span className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/60">{label}</span>
-                        </div>
-                        <p className={cn("text-3xl font-black", color)}>{value}</p>
-                    </motion.div>
+                    { icon: Users,    label: isRtl ? "الموظفون" : "Team",             value: stats.totalEmployees,                         className: "text-blue-500" },
+                    { icon: Clock,    label: isRtl ? "متصل الآن" : "Online Now",       value: onlineCount,                                  className: "text-emerald-500" },
+                    { icon: Calendar, label: isRtl ? "إجازات معلقة" : "Pending Leaves", value: stats.pendingLeaves,                          className: "text-warning" },
+                    { icon: Star,     label: isRtl ? "متوسط الأداء" : "Avg Performance", value: stats.avgScore ? `${stats.avgScore}/5` : "—", className: "text-violet-500" },
+                ].map(({ icon: Icon, label, value, className }, i) => (
+                    <Card key={i}>
+                        <CardHeader className={cn("pb-2 pt-4 flex flex-row items-center gap-2", isRtl ? "flex-row-reverse" : "")}>
+                            <Icon className={cn("h-4 w-4", className)} />
+                            <p className="section-label text-[10px] text-muted-foreground">{label}</p>
+                        </CardHeader>
+                        <CardContent className="pt-0 pb-4">
+                            <div className={cn("text-2xl font-bold tracking-tight", className, isRtl ? "text-right" : "")}>
+                                {value}
+                            </div>
+                        </CardContent>
+                    </Card>
                 ))}
             </div>
 
-            <div className="grid md:grid-cols-[1fr_340px] gap-6">
+            <div className="grid md:grid-cols-[1fr_320px] gap-5">
                 {/* Employee Grid */}
                 <div className="space-y-3">
-                    <p className="text-[10px] font-black uppercase tracking-[0.25em] text-primary/40">
+                    <p className="section-label text-muted-foreground">
                         {isRtl ? "الفريق" : "Team Members"} ({employees.length})
                     </p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                         {employees.map((emp, i) => {
-                            const status = emp.presence?.status ?? "OFFLINE";
-                            const lastReview = emp.performanceReviews[0];
+                            const status      = emp.presence?.status ?? "OFFLINE";
+                            const lastReview  = emp.performanceReviews[0];
                             const pendingCount = emp.leaveRequests.length;
 
                             return (
-                                <motion.button
+                                <button
                                     key={emp.id}
-                                    initial={{ opacity: 0, y: 8 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: i * 0.04 }}
-                                    whileHover={{ scale: 1.02 }}
-                                    whileTap={{ scale: 0.98 }}
                                     onClick={() => router.push(`${employeeBasePath}/${emp.id}`)}
-                                    className="text-left p-4 rounded-2xl border border-white/8 bg-white/2 hover:bg-white/5 hover:border-white/15 transition-all group"
+                                    className={cn(
+                                        "text-left p-3.5 rounded-lg border border-border bg-card hover:bg-muted/30 transition-colors group",
+                                        isRtl ? "text-right" : "",
+                                    )}
                                 >
-                                    <div className={cn("flex items-start gap-3", isRtl ? "flex-row-reverse text-right" : "")}>
+                                    <div className={cn("flex items-start gap-3", isRtl ? "flex-row-reverse" : "")}>
                                         <div className="relative shrink-0">
-                                            <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-sm font-black text-primary">
+                                            <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center text-sm font-medium text-primary">
                                                 {emp.firstName.charAt(0)}{emp.lastName.charAt(0)}
                                             </div>
                                             <span className={cn(
-                                                "absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-background",
-                                                STATUS_COLORS[status] ?? "bg-zinc-500"
+                                                "absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-card",
+                                                STATUS_COLORS[status] ?? "bg-zinc-400",
                                             )} />
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-black truncate">
+                                            <p className="text-sm font-medium truncate">
                                                 {emp.firstName} {emp.lastName}
                                             </p>
-                                            <p className="text-[11px] text-muted-foreground font-medium">
+                                            <p className="text-xs text-muted-foreground">
                                                 {emp.department ?? ROLE_LABELS[emp.role] ?? emp.role}
                                             </p>
-                                            <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                                            <div className="flex items-center gap-2 mt-1 flex-wrap">
                                                 {lastReview && (
-                                                    <span className="flex items-center gap-0.5 text-[10px] text-yellow-400 font-bold">
+                                                    <span className="flex items-center gap-0.5 text-[10px] text-yellow-500 font-medium">
                                                         <Star className="h-2.5 w-2.5 fill-current" />
                                                         {lastReview.score}/5
                                                     </span>
                                                 )}
                                                 {pendingCount > 0 && (
-                                                    <span className="text-[10px] bg-yellow-500/15 text-yellow-400 px-1.5 py-0.5 rounded-full font-bold">
+                                                    <span className="text-[10px] bg-warning/10 text-warning px-1.5 py-0.5 rounded font-medium">
                                                         {pendingCount} {isRtl ? "إجازة معلقة" : "pending leave"}
                                                     </span>
                                                 )}
                                             </div>
                                         </div>
-                                        <ChevronRight className={cn("h-4 w-4 text-muted-foreground/30 group-hover:text-primary transition-colors shrink-0 mt-1", isRtl ? "rotate-180" : "")} />
+                                        <ChevronRight className={cn("h-4 w-4 text-muted-foreground/40 group-hover:text-muted-foreground transition-colors shrink-0", isRtl ? "rotate-180" : "")} />
                                     </div>
-                                </motion.button>
+                                </button>
                             );
                         })}
                     </div>
@@ -205,59 +200,57 @@ export function HROverview({ employees, initialStats, employeeBasePath = "/admin
 
                 {/* Pending Leaves */}
                 <div className="space-y-3">
-                    <p className="text-[10px] font-black uppercase tracking-[0.25em] text-primary/40">
+                    <p className="section-label text-muted-foreground">
                         {isRtl ? "طلبات الإجازات المعلقة" : "Pending Leave Requests"}
                     </p>
                     {pendingLeaves.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-12 gap-2 text-muted-foreground/30">
-                            <CheckCircle2 className="h-8 w-8" />
-                            <p className="text-xs font-bold">{isRtl ? "لا توجد طلبات معلقة" : "No pending requests"}</p>
+                        <div className="flex flex-col items-center justify-center py-10 gap-2 text-muted-foreground/50 rounded-lg border border-dashed border-border">
+                            <CheckCircle2 className="h-7 w-7" />
+                            <p className="text-xs">{isRtl ? "لا توجد طلبات معلقة" : "No pending requests"}</p>
                         </div>
                     ) : (
                         <AnimatePresence>
                             {pendingLeaves.map(leave => (
                                 <motion.div
                                     key={leave.id}
-                                    initial={{ opacity: 0, x: 10 }}
+                                    initial={{ opacity: 0, x: 8 }}
                                     animate={{ opacity: 1, x: 0 }}
-                                    exit={{ opacity: 0, x: -10 }}
-                                    className="p-4 rounded-2xl border border-yellow-500/20 bg-yellow-500/5 space-y-3"
+                                    exit={{ opacity: 0, x: -8 }}
+                                    className="p-3.5 rounded-lg border border-warning/20 bg-warning/5 space-y-3"
                                 >
-                                    <div className={cn("flex items-start justify-between gap-2", isRtl ? "flex-row-reverse" : "")}>
+                                    <div className={cn("flex items-start gap-2", isRtl ? "flex-row-reverse text-right" : "")}>
                                         <div>
-                                            <p className="text-sm font-black">
+                                            <p className="text-sm font-medium">
                                                 {leave.user.firstName} {leave.user.lastName}
                                             </p>
-                                            <p className="text-[11px] text-muted-foreground">
+                                            <p className="text-xs text-muted-foreground">
                                                 {LEAVE_TYPE_AR[leave.type] ?? leave.type} · {leave.days} {isRtl ? "يوم" : "days"}
                                             </p>
-                                            <p className="text-[10px] text-muted-foreground/60 mt-0.5">
+                                            <p className="text-[10px] text-muted-foreground/70 mt-0.5">
                                                 {new Date(leave.startDate).toLocaleDateString()} – {new Date(leave.endDate).toLocaleDateString()}
                                             </p>
                                             {leave.reason && (
-                                                <p className="text-[11px] text-muted-foreground mt-1 italic">"{leave.reason}"</p>
+                                                <p className="text-xs text-muted-foreground mt-1 italic">"{leave.reason}"</p>
                                             )}
                                         </div>
                                     </div>
                                     <div className="flex gap-2">
-                                        <motion.button
-                                            whileTap={{ scale: 0.93 }}
+                                        <button
                                             onClick={() => handleReview(leave.id, "APPROVED")}
                                             disabled={reviewingId === leave.id}
-                                            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-green-500/15 text-green-400 border border-green-500/30 text-xs font-bold hover:bg-green-500/25 transition-colors disabled:opacity-50"
+                                            className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 text-xs font-medium hover:bg-emerald-500/15 transition-colors disabled:opacity-50"
                                         >
                                             {reviewingId === leave.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
                                             {isRtl ? "موافقة" : "Approve"}
-                                        </motion.button>
-                                        <motion.button
-                                            whileTap={{ scale: 0.93 }}
+                                        </button>
+                                        <button
                                             onClick={() => handleReview(leave.id, "REJECTED")}
                                             disabled={reviewingId === leave.id}
-                                            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-red-500/15 text-red-400 border border-red-500/30 text-xs font-bold hover:bg-red-500/25 transition-colors disabled:opacity-50"
+                                            className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md bg-destructive/10 text-destructive border border-destructive/20 text-xs font-medium hover:bg-destructive/15 transition-colors disabled:opacity-50"
                                         >
                                             <XCircle className="h-3.5 w-3.5" />
                                             {isRtl ? "رفض" : "Reject"}
-                                        </motion.button>
+                                        </button>
                                     </div>
                                 </motion.div>
                             ))}
@@ -273,24 +266,24 @@ export function HROverview({ employees, initialStats, employeeBasePath = "/admin
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
                         onClick={() => setShowAnnounce(false)}
                     >
                         <motion.div
-                            initial={{ opacity: 0, scale: 0.93, y: 20 }}
+                            initial={{ opacity: 0, scale: 0.96, y: 12 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.93 }}
+                            exit={{ opacity: 0, scale: 0.96 }}
                             onClick={e => e.stopPropagation()}
-                            className="w-full max-w-md bg-card border border-white/10 rounded-3xl p-6 space-y-4 shadow-2xl"
+                            className="w-full max-w-md bg-card border border-border rounded-xl p-5 space-y-4 shadow-lg"
                         >
-                            <h2 className={cn("text-lg font-black", isRtl ? "text-right" : "")}>
+                            <h2 className={cn("text-[15px] font-semibold", isRtl ? "text-right" : "")}>
                                 {isRtl ? "إعلان جديد للفريق" : "New Team Announcement"}
                             </h2>
                             <input
                                 value={annTitle}
                                 onChange={e => setAnnTitle(e.target.value)}
                                 placeholder={isRtl ? "عنوان الإعلان..." : "Announcement title..."}
-                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm outline-none focus:border-primary/40"
+                                className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm outline-none focus:border-primary focus:ring-3 focus:ring-primary/15"
                                 dir={isRtl ? "rtl" : "ltr"}
                             />
                             <textarea
@@ -298,20 +291,20 @@ export function HROverview({ employees, initialStats, employeeBasePath = "/admin
                                 onChange={e => setAnnContent(e.target.value)}
                                 placeholder={isRtl ? "محتوى الإعلان..." : "Announcement content..."}
                                 rows={4}
-                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm outline-none focus:border-primary/40 resize-none"
+                                className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm outline-none focus:border-primary focus:ring-3 focus:ring-primary/15 resize-none"
                                 dir={isRtl ? "rtl" : "ltr"}
                             />
-                            <div className="flex gap-3">
+                            <div className="flex gap-2">
                                 <button
                                     onClick={() => setShowAnnounce(false)}
-                                    className="flex-1 py-2.5 rounded-xl border border-white/10 text-sm font-bold text-muted-foreground hover:bg-white/5"
+                                    className="flex-1 py-2 rounded-lg border border-border text-sm font-medium text-muted-foreground hover:bg-muted transition-colors"
                                 >
                                     {isRtl ? "إلغاء" : "Cancel"}
                                 </button>
                                 <button
                                     onClick={handleAnnounce}
                                     disabled={posting || !annTitle.trim() || !annContent.trim()}
-                                    className="flex-1 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 disabled:opacity-40 transition-colors"
+                                    className="flex-1 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 disabled:opacity-40 transition-colors"
                                 >
                                     {posting ? (isRtl ? "جاري النشر..." : "Posting...") : (isRtl ? "نشر" : "Post")}
                                 </button>

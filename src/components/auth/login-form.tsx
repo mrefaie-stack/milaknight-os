@@ -58,7 +58,6 @@ export function LoginForm() {
             return;
         }
 
-        // Get session to redirect based on role directly
         const session = await getSession();
         const role = session?.user?.role?.toUpperCase();
         if (role === "ADMIN" || role === "MARKETING_MANAGER") {
@@ -89,76 +88,76 @@ export function LoginForm() {
     }
 
     return (
-        <div className="space-y-5">
-        <Button
-            type="button"
-            onClick={onGoogleSignIn}
-            disabled={googleLoading || isLoading}
-            variant="outline"
-            className="w-full h-12 font-bold rounded-xl border-white/10 bg-white/5 hover:bg-white/10 flex items-center gap-3"
-        >
-            {googleLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <GoogleIcon />}
-            Sign in with Google
-        </Button>
-
-        <div className="flex items-center gap-3">
-            <div className="flex-1 h-px bg-white/10" />
-            <span className="text-xs text-muted-foreground font-medium">or</span>
-            <div className="flex-1 h-px bg-white/10" />
-        </div>
-
-        <form onSubmit={onSubmit} className="space-y-5">
-            <div className="space-y-2">
-                <Label htmlFor="email" className="text-xs font-black uppercase tracking-widest text-muted-foreground">
-                    Email Address
-                </Label>
-                <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50 pointer-events-none" />
-                    <Input
-                        id="email"
-                        name="email"
-                        placeholder="name@milaknight.com"
-                        type="email"
-                        autoCapitalize="none"
-                        autoComplete="email"
-                        autoCorrect="off"
-                        disabled={isLoading}
-                        required
-                        className="pl-10 h-12 bg-white/5 border-white/10 rounded-xl focus-visible:border-primary/50 focus-visible:ring-primary/20 placeholder:text-muted-foreground/40"
-                    />
-                </div>
-            </div>
-
-            <div className="space-y-2">
-                <Label htmlFor="password" className="text-xs font-black uppercase tracking-widest text-muted-foreground">
-                    Password
-                </Label>
-                <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50 pointer-events-none" />
-                    <Input
-                        id="password"
-                        name="password"
-                        type="password"
-                        autoComplete="current-password"
-                        disabled={isLoading}
-                        required
-                        className="pl-10 h-12 bg-white/5 border-white/10 rounded-xl focus-visible:border-primary/50 focus-visible:ring-primary/20"
-                    />
-                </div>
-            </div>
-
+        <div className="space-y-4">
             <Button
-                disabled={isLoading}
-                className="w-full h-12 font-black uppercase tracking-widest rounded-xl shadow-xl shadow-primary/20 hover:scale-[1.01] transition-all"
+                type="button"
+                onClick={onGoogleSignIn}
+                disabled={googleLoading || isLoading}
+                variant="outline"
+                className="w-full flex items-center gap-2.5"
             >
-                {isLoading ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                    <ArrowRight className="mr-2 h-4 w-4" />
-                )}
-                {isLoading ? "Signing in..." : "Sign In"}
+                {googleLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <GoogleIcon />}
+                Sign in with Google
             </Button>
-        </form>
+
+            <div className="flex items-center gap-3">
+                <div className="flex-1 h-px bg-border" />
+                <span className="text-xs text-muted-foreground">or</span>
+                <div className="flex-1 h-px bg-border" />
+            </div>
+
+            <form onSubmit={onSubmit} className="space-y-4">
+                <div className="space-y-1.5">
+                    <Label htmlFor="email" className="section-label">
+                        Email Address
+                    </Label>
+                    <div className="relative">
+                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50 pointer-events-none" />
+                        <Input
+                            id="email"
+                            name="email"
+                            placeholder="name@milaknight.com"
+                            type="email"
+                            autoCapitalize="none"
+                            autoComplete="email"
+                            autoCorrect="off"
+                            disabled={isLoading}
+                            required
+                            className="pl-10"
+                        />
+                    </div>
+                </div>
+
+                <div className="space-y-1.5">
+                    <Label htmlFor="password" className="section-label">
+                        Password
+                    </Label>
+                    <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50 pointer-events-none" />
+                        <Input
+                            id="password"
+                            name="password"
+                            type="password"
+                            autoComplete="current-password"
+                            disabled={isLoading}
+                            required
+                            className="pl-10"
+                        />
+                    </div>
+                </div>
+
+                <Button
+                    disabled={isLoading}
+                    className="w-full"
+                >
+                    {isLoading ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                        <ArrowRight className="h-4 w-4" />
+                    )}
+                    {isLoading ? "Signing in..." : "Sign In"}
+                </Button>
+            </form>
         </div>
     );
 }

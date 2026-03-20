@@ -91,21 +91,21 @@ function ScheduleModal({ meetingId, onClose, onScheduled }: {
     }
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4" onClick={onClose}>
-            <div className="w-full max-w-sm bg-card border border-white/10 rounded-3xl p-6 space-y-5 shadow-2xl" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4" onClick={onClose}>
+            <div className="w-full max-w-sm bg-card border border-border rounded-xl p-5 space-y-4 shadow-lg" onClick={e => e.stopPropagation()}>
                 <div>
-                    <h2 className="text-lg font-black">Schedule Meeting</h2>
+                    <h2 className="text-[15px] font-semibold">Schedule Meeting</h2>
                     <p className="text-xs text-muted-foreground mt-1">Set date & time — Google Meet link will be auto-generated</p>
                 </div>
                 <input
                     type="datetime-local"
                     value={value}
                     onChange={e => setValue(e.target.value)}
-                    className="w-full h-12 px-4 rounded-xl bg-white/5 border border-white/10 text-sm font-medium focus:outline-none focus:border-primary/50"
+                    className="w-full h-9 px-3 rounded-lg bg-background border border-border text-sm focus:outline-none focus:border-primary focus:ring-3 focus:ring-primary/15"
                 />
-                <div className="flex gap-3">
-                    <Button variant="outline" className="flex-1 rounded-xl" onClick={onClose} disabled={loading}>Cancel</Button>
-                    <Button className="flex-1 rounded-xl font-black" onClick={submit} disabled={loading || !value}>
+                <div className="flex gap-2">
+                    <Button variant="outline" className="flex-1" onClick={onClose} disabled={loading}>Cancel</Button>
+                    <Button className="flex-1" onClick={submit} disabled={loading || !value}>
                         {loading ? "Scheduling..." : "Schedule"}
                     </Button>
                 </div>
@@ -169,57 +169,56 @@ function CreateTeamMeetingModal({ staffUsers, currentUserId, onClose, onCreated 
     }
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4" onClick={onClose}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4" onClick={onClose}>
             <div
-                className="w-full max-w-lg bg-card border border-white/10 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+                className="w-full max-w-lg bg-card border border-border rounded-xl shadow-lg overflow-hidden flex flex-col max-h-[90vh]"
                 onClick={e => e.stopPropagation()}
             >
                 {/* Header */}
-                <div className="p-6 pb-4 border-b border-white/8 flex items-center justify-between">
+                <div className="p-5 pb-4 border-b border-border flex items-center justify-between">
                     <div>
-                        <h2 className="text-lg font-black">New Team Meeting</h2>
+                        <h2 className="text-[15px] font-semibold">New Team Meeting</h2>
                         <p className="text-xs text-muted-foreground mt-0.5">
                             Google Meet link auto-generated · Notifications sent to all participants
                         </p>
                     </div>
-                    <button onClick={onClose} className="p-2 rounded-xl hover:bg-white/5 transition-colors">
+                    <button onClick={onClose} className="p-1.5 rounded-md hover:bg-muted transition-colors">
                         <X className="h-4 w-4 text-muted-foreground" />
                     </button>
                 </div>
 
                 {/* Body */}
-                <div className="p-6 space-y-4 overflow-y-auto flex-1">
+                <div className="p-5 space-y-4 overflow-y-auto flex-1">
                     {/* Title */}
                     <div className="space-y-1.5">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Meeting Title *</label>
+                        <label className="section-label text-muted-foreground">Meeting Title *</label>
                         <Input
                             value={title}
                             onChange={e => setTitle(e.target.value)}
                             placeholder="e.g. Weekly Sync, Project Kickoff..."
-                            className="rounded-xl bg-white/5 border-white/10 h-11"
                         />
                     </div>
 
                     {/* Description */}
                     <div className="space-y-1.5">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Description</label>
+                        <label className="section-label text-muted-foreground">Description</label>
                         <textarea
                             value={description}
                             onChange={e => setDescription(e.target.value)}
                             placeholder="Agenda, topics to discuss..."
                             rows={2}
-                            className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-sm resize-none focus:outline-none focus:border-primary/50 placeholder:text-muted-foreground/40"
+                            className="w-full px-3 py-2 rounded-lg bg-background border border-border text-sm resize-none focus:outline-none focus:border-primary focus:ring-3 focus:ring-primary/15 placeholder:text-muted-foreground/40"
                         />
                     </div>
 
                     {/* Date & Time */}
                     <div className="space-y-1.5">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Date & Time *</label>
+                        <label className="section-label text-muted-foreground">Date & Time *</label>
                         <input
                             type="datetime-local"
                             value={scheduledAt}
                             onChange={e => setScheduledAt(e.target.value)}
-                            className="w-full h-11 px-4 rounded-xl bg-white/5 border border-white/10 text-sm font-medium focus:outline-none focus:border-primary/50"
+                            className="w-full h-9 px-3 rounded-lg bg-background border border-border text-sm focus:outline-none focus:border-primary focus:ring-3 focus:ring-primary/15"
                         />
                     </div>
 
@@ -229,7 +228,7 @@ function CreateTeamMeetingModal({ staffUsers, currentUserId, onClose, onCreated 
                             className="flex items-center justify-between w-full"
                             onClick={() => setShowParticipants(p => !p)}
                         >
-                            <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground cursor-pointer">
+                            <label className="section-label text-muted-foreground cursor-pointer">
                                 Participants * {selectedIds.size > 0 && <span className="text-primary ml-1">({selectedIds.size} selected)</span>}
                             </label>
                             {showParticipants ? <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />}
@@ -243,10 +242,10 @@ function CreateTeamMeetingModal({ staffUsers, currentUserId, onClose, onCreated 
                                         value={search}
                                         onChange={e => setSearch(e.target.value)}
                                         placeholder="Search team members..."
-                                        className="pl-9 rounded-xl bg-white/5 border-white/10 h-9 text-xs"
+                                        className="pl-9 h-9 text-xs"
                                     />
                                 </div>
-                                <div className="max-h-44 overflow-y-auto space-y-1 rounded-xl border border-white/8 p-1">
+                                <div className="max-h-44 overflow-y-auto space-y-1 rounded-lg border border-border p-1">
                                     {filtered.length === 0 ? (
                                         <p className="text-xs text-muted-foreground text-center py-4">No team members found</p>
                                     ) : filtered.map(u => {
@@ -256,18 +255,18 @@ function CreateTeamMeetingModal({ staffUsers, currentUserId, onClose, onCreated 
                                                 key={u.id}
                                                 onClick={() => toggleUser(u.id)}
                                                 className={cn(
-                                                    "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors",
-                                                    selected ? "bg-primary/15 border border-primary/20" : "hover:bg-white/5"
+                                                    "w-full flex items-center gap-3 px-3 py-2 rounded-md text-left transition-colors",
+                                                    selected ? "bg-primary/10 border border-primary/20" : "hover:bg-muted"
                                                 )}
                                             >
                                                 <div className={cn(
-                                                    "w-4 h-4 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors",
-                                                    selected ? "bg-primary border-primary" : "border-white/20"
+                                                    "w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-colors",
+                                                    selected ? "bg-primary border-primary" : "border-muted-foreground/30"
                                                 )}>
                                                     {selected && <CheckCircle2 className="h-2.5 w-2.5 text-white fill-white" />}
                                                 </div>
                                                 <div className="flex-1 min-w-0">
-                                                    <p className="text-xs font-black truncate">{u.firstName} {u.lastName}</p>
+                                                    <p className="text-xs font-medium truncate">{u.firstName} {u.lastName}</p>
                                                     <p className="text-[10px] text-muted-foreground">{ROLE_LABELS[u.role] || u.role}</p>
                                                 </div>
                                             </button>
@@ -280,10 +279,10 @@ function CreateTeamMeetingModal({ staffUsers, currentUserId, onClose, onCreated 
                 </div>
 
                 {/* Footer */}
-                <div className="p-6 pt-4 border-t border-white/8 flex gap-3">
-                    <Button variant="outline" className="flex-1 rounded-xl" onClick={onClose} disabled={loading}>Cancel</Button>
+                <div className="p-5 pt-4 border-t border-border flex gap-2">
+                    <Button variant="outline" className="flex-1" onClick={onClose} disabled={loading}>Cancel</Button>
                     <Button
-                        className="flex-1 rounded-xl font-black"
+                        className="flex-1"
                         onClick={submit}
                         disabled={loading || !title.trim() || selectedIds.size === 0}
                     >
@@ -375,44 +374,40 @@ export function MeetingRequestsUI({
         .sort((a, b) => new Date(b.scheduledAt).getTime() - new Date(a.scheduledAt).getTime());
 
     return (
-        <div className="space-y-10">
+        <div className="space-y-8">
 
             {/* ── Section: Team Meetings (all staff) ── */}
             {isStaff && (
-                <section className="space-y-5">
+                <section className="space-y-4">
                     <div className={cn("flex items-center justify-between", isRtl ? "flex-row-reverse" : "")}>
                         <div className={cn("flex items-center gap-2", isRtl ? "flex-row-reverse" : "")}>
-                            <Users className="h-4 w-4 text-primary/60" />
-                            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-primary/40">
+                            <Users className="h-4 w-4 text-muted-foreground" />
+                            <p className="section-label text-muted-foreground">
                                 {isRtl ? "اجتماعات الفريق" : "Team Meetings"}
                             </p>
                         </div>
-                        <Button
-                            size="sm"
-                            className="rounded-xl font-black text-[11px] gap-1.5 h-9"
-                            onClick={() => setShowCreateMeeting(true)}
-                        >
+                        <Button size="sm" className="gap-1.5" onClick={() => setShowCreateMeeting(true)}>
                             <Plus className="h-3.5 w-3.5" />
                             {isRtl ? "اجتماع جديد" : "New Meeting"}
                         </Button>
                     </div>
 
                     {upcomingTeamMeetings.length === 0 && pastTeamMeetings.length === 0 ? (
-                        <div className="py-14 rounded-3xl border-2 border-dashed border-white/10 text-center">
-                            <CalendarDays className="h-10 w-10 mx-auto mb-3 text-muted-foreground opacity-20" />
-                            <p className="text-muted-foreground font-semibold text-sm mb-3">
+                        <div className="py-12 rounded-lg border border-dashed border-border text-center">
+                            <CalendarDays className="h-8 w-8 mx-auto mb-3 text-muted-foreground/30" />
+                            <p className="text-sm text-muted-foreground mb-3">
                                 {isRtl ? "لا توجد اجتماعات فريق بعد." : "No team meetings yet."}
                             </p>
-                            <Button size="sm" className="rounded-xl font-black text-[11px] gap-1.5" onClick={() => setShowCreateMeeting(true)}>
+                            <Button size="sm" className="gap-1.5" onClick={() => setShowCreateMeeting(true)}>
                                 <Plus className="h-3.5 w-3.5" />
                                 {isRtl ? "أنشئ اجتماعاً" : "Create one"}
                             </Button>
                         </div>
                     ) : (
-                        <div className="space-y-6">
+                        <div className="space-y-5">
                             {upcomingTeamMeetings.length > 0 && (
-                                <div className="space-y-3">
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-emerald-500/60">
+                                <div className="space-y-2">
+                                    <p className="section-label text-emerald-500/70">
                                         {isRtl ? "القادمة" : "Upcoming"}
                                     </p>
                                     {upcomingTeamMeetings.map(meeting => (
@@ -421,8 +416,8 @@ export function MeetingRequestsUI({
                                 </div>
                             )}
                             {pastTeamMeetings.length > 0 && (
-                                <div className="space-y-3">
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/30">
+                                <div className="space-y-2">
+                                    <p className="section-label text-muted-foreground">
                                         {isRtl ? "السابقة" : "Past"}
                                     </p>
                                     {pastTeamMeetings.slice(0, 5).map(meeting => (
@@ -437,65 +432,65 @@ export function MeetingRequestsUI({
 
             {/* ── Section: Client Meeting Requests (admin/AM only) ── */}
             {isAdminOrAM && (
-                <section className="space-y-5">
+                <section className="space-y-4">
                     <div className={cn("flex items-center gap-2", isRtl ? "flex-row-reverse" : "")}>
-                        <MessageSquare className="h-4 w-4 text-primary/60" />
-                        <p className="text-[10px] font-black uppercase tracking-[0.25em] text-primary/40">
+                        <MessageSquare className="h-4 w-4 text-muted-foreground" />
+                        <p className="section-label text-muted-foreground">
                             {isRtl ? "طلبات اجتماعات العملاء" : "Client Meeting Requests"}
                         </p>
                     </div>
 
-                    <div className={cn("flex flex-col md:flex-row md:items-center justify-between gap-4", isRtl ? "md:flex-row-reverse" : "")}>
+                    <div className={cn("flex flex-col md:flex-row md:items-center justify-between gap-3", isRtl ? "md:flex-row-reverse" : "")}>
                         <div className="relative flex-1 max-w-md">
-                            <Search className={cn("absolute top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground", isRtl ? "right-3" : "left-3")} />
+                            <Search className={cn("absolute top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50", isRtl ? "right-3" : "left-3")} />
                             <Input
                                 placeholder={isRtl ? "البحث..." : "Search requests..."}
-                                className={cn("rounded-2xl border-white/10 bg-white/5", isRtl ? "pr-9" : "pl-9")}
+                                className={cn(isRtl ? "pr-9" : "pl-9")}
                                 value={search}
                                 onChange={e => setSearch(e.target.value)}
                             />
                         </div>
-                        <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0">
+                        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0">
                             {["ALL", "PENDING", "SCHEDULED", "COMPLETED", "CANCELLED"].map(s => (
                                 <Button
                                     key={s}
                                     variant={filter === s ? "default" : "outline"}
                                     size="sm"
                                     onClick={() => setFilter(s)}
-                                    className="rounded-xl font-black uppercase tracking-widest text-[10px] h-9 shrink-0"
+                                    className="shrink-0 text-xs"
                                 >
-                                    {s === "ALL" ? (isRtl ? "الكل" : "ALL") : (isRtl ? STATUS_CONFIG[s]?.labelAr : STATUS_CONFIG[s]?.labelEn) || s}
+                                    {s === "ALL" ? (isRtl ? "الكل" : "All") : (isRtl ? STATUS_CONFIG[s]?.labelAr : STATUS_CONFIG[s]?.labelEn) || s}
                                 </Button>
                             ))}
                         </div>
                     </div>
 
                     {filteredRequests.length > 0 ? (
-                        <div className="grid gap-4">
+                        <div className="grid gap-3">
                             {filteredRequests.map(req => {
                                 const status = STATUS_CONFIG[req.status] || STATUS_CONFIG.PENDING;
                                 const StatusIcon = status.icon;
                                 return (
-                                    <Card key={req.id} className="overflow-hidden bg-card/40 backdrop-blur-xl border-white/10 hover:border-primary/20 transition-all rounded-3xl">
+                                    <Card key={req.id} className="hover:bg-muted/30 transition-colors">
                                         <CardContent className="p-0">
-                                            <div className={cn("flex flex-col md:flex-row md:items-center p-6 gap-6", isRtl ? "md:flex-row-reverse" : "")}>
-                                                <div className={cn("flex items-center gap-3 min-w-[180px]", isRtl ? "flex-row-reverse text-right" : "")}>
-                                                    <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20 shrink-0">
+                                            <div className={cn("flex flex-col md:flex-row md:items-center p-4 gap-4", isRtl ? "md:flex-row-reverse" : "")}>
+                                                <div className={cn("flex items-center gap-3 min-w-[160px]", isRtl ? "flex-row-reverse text-right" : "")}>
+                                                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center border border-border shrink-0">
                                                         {req.client?.logoUrl
-                                                            ? <img src={req.client.logoUrl} alt="" className="h-8 w-8 object-contain" />
-                                                            : <Users className="h-6 w-6 text-primary" />
+                                                            ? <img src={req.client.logoUrl} alt="" className="h-7 w-7 object-contain" />
+                                                            : <Users className="h-5 w-5 text-primary" />
                                                         }
                                                     </div>
                                                     <div>
-                                                        <p className="font-black text-sm uppercase tracking-tight">{req.client?.name}</p>
-                                                        <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-widest">Client</p>
+                                                        <p className="text-sm font-medium">{req.client?.name}</p>
+                                                        <p className="section-label text-muted-foreground">Client</p>
                                                     </div>
                                                 </div>
 
-                                                <div className={cn("flex-1 space-y-2", isRtl ? "text-right" : "text-left")}>
+                                                <div className={cn("flex-1 space-y-1.5", isRtl ? "text-right" : "text-left")}>
                                                     <div className={cn("flex items-center gap-2", isRtl ? "flex-row-reverse" : "")}>
-                                                        <MessageSquare className="h-4 w-4 text-primary opacity-60" />
-                                                        <h3 className="font-bold text-base leading-tight">{req.reason}</h3>
+                                                        <MessageSquare className="h-3.5 w-3.5 text-muted-foreground" />
+                                                        <h3 className="text-sm font-medium leading-tight">{req.reason}</h3>
                                                     </div>
                                                     <div className={cn("flex flex-wrap items-center gap-3 text-xs text-muted-foreground", isRtl ? "flex-row-reverse" : "")}>
                                                         <span className={cn("flex items-center gap-1.5", isRtl ? "flex-row-reverse" : "")}>
@@ -512,7 +507,7 @@ export function MeetingRequestsUI({
                                                     </div>
                                                     {req.meetLink && (
                                                         <a href={req.meetLink} target="_blank" rel="noopener noreferrer"
-                                                            className={cn("inline-flex items-center gap-1.5 text-xs font-bold text-blue-400 hover:text-blue-300 transition-colors", isRtl ? "flex-row-reverse" : "")}>
+                                                            className={cn("inline-flex items-center gap-1.5 text-xs font-medium text-blue-500 hover:text-blue-400 transition-colors", isRtl ? "flex-row-reverse" : "")}>
                                                             <Video className="h-3.5 w-3.5" />
                                                             Google Meet
                                                             <ExternalLink className="h-3 w-3" />
@@ -520,37 +515,37 @@ export function MeetingRequestsUI({
                                                     )}
                                                 </div>
 
-                                                <div className={cn("flex flex-col md:items-end gap-3 min-w-[150px]", isRtl ? "md:items-start" : "")}>
-                                                    <Badge className={cn("rounded-lg py-1 px-3 border font-black text-[10px] uppercase tracking-widest", status.color)}>
-                                                        <StatusIcon className={cn("h-3 w-3", isRtl ? "ml-1.5" : "mr-1.5")} />
+                                                <div className={cn("flex flex-col md:items-end gap-2 min-w-[140px]", isRtl ? "md:items-start" : "")}>
+                                                    <Badge className={cn("border text-[10px]", status.color)}>
+                                                        <StatusIcon className={cn("h-3 w-3", isRtl ? "ml-1" : "mr-1")} />
                                                         {isRtl ? status.labelAr : status.labelEn}
                                                     </Badge>
 
                                                     {req.status === "PENDING" && (
-                                                        <div className="flex gap-2">
+                                                        <div className="flex gap-1.5">
                                                             <Button size="sm" variant="ghost"
-                                                                className="text-blue-400 hover:text-blue-500 hover:bg-blue-500/10 rounded-xl text-[10px] font-black"
+                                                                className="text-blue-500 hover:text-blue-600 hover:bg-blue-500/10 h-7 text-xs"
                                                                 onClick={() => setScheduleId(req.id)} disabled={isLoading === req.id}>
-                                                                {isRtl ? "جدولة" : "SCHEDULE"}
+                                                                {isRtl ? "جدولة" : "Schedule"}
                                                             </Button>
                                                             <Button size="sm" variant="ghost"
-                                                                className="text-red-500 hover:text-red-600 hover:bg-red-500/10 rounded-xl text-[10px] font-black"
+                                                                className="text-destructive hover:text-destructive hover:bg-destructive/10 h-7 text-xs"
                                                                 onClick={() => handleStatusUpdate(req.id, "CANCELLED")} disabled={isLoading === req.id}>
-                                                                {isRtl ? "إلغاء" : "CANCEL"}
+                                                                {isRtl ? "إلغاء" : "Cancel"}
                                                             </Button>
                                                         </div>
                                                     )}
                                                     {req.status === "SCHEDULED" && (
-                                                        <div className="flex gap-2">
+                                                        <div className="flex gap-1.5">
                                                             <Button size="sm" variant="ghost"
-                                                                className="text-emerald-500 hover:text-emerald-600 hover:bg-emerald-500/10 rounded-xl text-[10px] font-black"
+                                                                className="text-emerald-500 hover:text-emerald-600 hover:bg-emerald-500/10 h-7 text-xs"
                                                                 onClick={() => handleStatusUpdate(req.id, "COMPLETED")} disabled={isLoading === req.id}>
-                                                                {isRtl ? "إتمام" : "DONE"}
+                                                                {isRtl ? "إتمام" : "Done"}
                                                             </Button>
                                                             <Button size="sm" variant="ghost"
-                                                                className="text-red-500 hover:text-red-600 hover:bg-red-500/10 rounded-xl text-[10px] font-black"
+                                                                className="text-destructive hover:text-destructive hover:bg-destructive/10 h-7 text-xs"
                                                                 onClick={() => handleStatusUpdate(req.id, "CANCELLED")} disabled={isLoading === req.id}>
-                                                                {isRtl ? "إلغاء" : "CANCEL"}
+                                                                {isRtl ? "إلغاء" : "Cancel"}
                                                             </Button>
                                                         </div>
                                                     )}
@@ -562,9 +557,9 @@ export function MeetingRequestsUI({
                             })}
                         </div>
                     ) : (
-                        <div className="py-20 rounded-3xl border-2 border-dashed border-white/10 text-center">
-                            <CalendarDays className="h-10 w-10 mx-auto mb-3 text-muted-foreground opacity-20" />
-                            <p className="text-muted-foreground font-semibold text-sm">
+                        <div className="py-16 rounded-lg border border-dashed border-border text-center">
+                            <CalendarDays className="h-8 w-8 mx-auto mb-3 text-muted-foreground/30" />
+                            <p className="text-sm text-muted-foreground">
                                 {isRtl ? "لا توجد طلبات اجتماعات." : "No meeting requests found."}
                             </p>
                         </div>
@@ -574,39 +569,39 @@ export function MeetingRequestsUI({
 
             {/* Client view — their requests */}
             {userRole === "CLIENT" && (
-                <section className="space-y-5">
+                <section className="space-y-4">
                     <div className={cn("flex items-center gap-2", isRtl ? "flex-row-reverse" : "")}>
-                        <MessageSquare className="h-4 w-4 text-primary/60" />
-                        <p className="text-[10px] font-black uppercase tracking-[0.25em] text-primary/40">
+                        <MessageSquare className="h-4 w-4 text-muted-foreground" />
+                        <p className="section-label text-muted-foreground">
                             {isRtl ? "طلبات الاجتماعات" : "My Meeting Requests"}
                         </p>
                     </div>
                     {filteredRequests.length > 0 ? (
-                        <div className="grid gap-4">
+                        <div className="grid gap-3">
                             {filteredRequests.map(req => {
                                 const status = STATUS_CONFIG[req.status] || STATUS_CONFIG.PENDING;
                                 const StatusIcon = status.icon;
                                 return (
-                                    <Card key={req.id} className="overflow-hidden bg-card/40 backdrop-blur-xl border-white/10 hover:border-primary/20 transition-all rounded-3xl">
-                                        <CardContent className="p-6">
-                                            <div className={cn("flex flex-col md:flex-row md:items-center gap-4", isRtl ? "md:flex-row-reverse" : "")}>
-                                                <div className="flex-1 space-y-2">
-                                                    <h3 className="font-bold text-base">{req.reason}</h3>
+                                    <Card key={req.id} className="hover:bg-muted/30 transition-colors">
+                                        <CardContent className="p-4">
+                                            <div className={cn("flex flex-col md:flex-row md:items-center gap-3", isRtl ? "md:flex-row-reverse" : "")}>
+                                                <div className="flex-1 space-y-1">
+                                                    <h3 className="text-sm font-medium">{req.reason}</h3>
                                                     <p className="text-xs text-muted-foreground">{req.teams}</p>
                                                     {req.scheduledAt && (
-                                                        <p className="text-xs text-blue-400 font-bold">
+                                                        <p className="text-xs text-blue-500 font-medium">
                                                             {new Date(req.scheduledAt).toLocaleString(isRtl ? "ar-EG" : "en-US", { dateStyle: "medium", timeStyle: "short" })}
                                                         </p>
                                                     )}
                                                 </div>
-                                                <div className={cn("flex flex-col items-end gap-3", isRtl ? "items-start" : "")}>
-                                                    <Badge className={cn("rounded-lg py-1 px-3 border font-black text-[10px] uppercase tracking-widest", status.color)}>
-                                                        <StatusIcon className={cn("h-3 w-3", isRtl ? "ml-1.5" : "mr-1.5")} />
+                                                <div className={cn("flex flex-col items-end gap-2", isRtl ? "items-start" : "")}>
+                                                    <Badge className={cn("border text-[10px]", status.color)}>
+                                                        <StatusIcon className={cn("h-3 w-3", isRtl ? "ml-1" : "mr-1")} />
                                                         {isRtl ? status.labelAr : status.labelEn}
                                                     </Badge>
                                                     {req.status === "SCHEDULED" && req.meetLink && (
                                                         <a href={req.meetLink} target="_blank" rel="noopener noreferrer"
-                                                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-500/15 text-blue-400 hover:bg-blue-500/25 text-[11px] font-black transition-colors">
+                                                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-blue-500/10 text-blue-500 hover:bg-blue-500/20 text-xs font-medium transition-colors">
                                                             <Video className="h-3.5 w-3.5" />
                                                             Join Meet
                                                         </a>
@@ -619,9 +614,9 @@ export function MeetingRequestsUI({
                             })}
                         </div>
                     ) : (
-                        <div className="py-20 rounded-3xl border-2 border-dashed border-white/10 text-center">
-                            <CalendarDays className="h-10 w-10 mx-auto mb-3 text-muted-foreground opacity-20" />
-                            <p className="text-muted-foreground font-semibold text-sm">
+                        <div className="py-16 rounded-lg border border-dashed border-border text-center">
+                            <CalendarDays className="h-8 w-8 mx-auto mb-3 text-muted-foreground/30" />
+                            <p className="text-sm text-muted-foreground">
                                 {isRtl ? "لا توجد طلبات اجتماعات." : "No meeting requests yet."}
                             </p>
                         </div>
@@ -631,7 +626,7 @@ export function MeetingRequestsUI({
 
             {/* ── Section: Google Calendar ── */}
             {isStaff && (
-                <section className="space-y-5">
+                <section className="space-y-4">
                     <div className={cn("flex items-center justify-between", isRtl ? "flex-row-reverse" : "")}>
                         <div className={cn("flex items-center gap-2", isRtl ? "flex-row-reverse" : "")}>
                             <svg className="h-4 w-4" viewBox="0 0 24 24">
@@ -640,24 +635,24 @@ export function MeetingRequestsUI({
                                 <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" />
                                 <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                             </svg>
-                            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-primary/40">
+                            <p className="section-label text-muted-foreground">
                                 {isRtl ? "جوجل كالندر — الأسبوع القادم" : "Google Calendar — Next 7 Days"}
                             </p>
                         </div>
                         {calConnected && (
-                            <button onClick={fetchCalendar} className="p-1.5 rounded-lg hover:bg-white/5 transition-colors" title="Refresh">
-                                <RefreshCw className="h-3.5 w-3.5 text-muted-foreground/40" />
+                            <button onClick={fetchCalendar} className="p-1.5 rounded-md hover:bg-muted transition-colors" title="Refresh">
+                                <RefreshCw className="h-3.5 w-3.5 text-muted-foreground/50" />
                             </button>
                         )}
                     </div>
 
                     {!calConnected ? (
-                        <div className="rounded-2xl border border-white/8 bg-white/3 p-8 flex flex-col items-center gap-4 text-center">
-                            <p className="text-sm font-black">{isRtl ? "ربط جوجل كالندر" : "Connect Google Calendar"}</p>
+                        <div className="rounded-lg border border-border bg-card p-6 flex flex-col items-center gap-3 text-center">
+                            <p className="text-sm font-medium">{isRtl ? "ربط جوجل كالندر" : "Connect Google Calendar"}</p>
                             <p className="text-xs text-muted-foreground">{isRtl ? "سجّل دخول بجوجل لتشاهد الاجتماعات وتنشئ ميتينجز بـ Meet" : "Sign in with Google to see your calendar and auto-generate Meet links"}</p>
                             <button
                                 onClick={() => signIn("google", { callbackUrl: window.location.href })}
-                                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white text-black text-sm font-bold hover:bg-white/90 transition-colors"
+                                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-black text-sm font-medium hover:bg-white/90 transition-colors"
                             >
                                 <svg className="h-4 w-4" viewBox="0 0 24 24">
                                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -669,38 +664,38 @@ export function MeetingRequestsUI({
                             </button>
                         </div>
                     ) : calLoading ? (
-                        <div className="space-y-3">{[1, 2].map(i => <div key={i} className="h-16 rounded-2xl bg-white/3 animate-pulse" />)}</div>
+                        <div className="space-y-2">{[1, 2].map(i => <div key={i} className="h-14 rounded-lg bg-muted animate-pulse" />)}</div>
                     ) : calEvents.length === 0 ? (
-                        <div className="rounded-2xl border border-white/8 bg-white/3 p-8 text-center">
-                            <CalendarDays className="h-7 w-7 text-muted-foreground/20 mx-auto mb-2" />
-                            <p className="text-sm text-muted-foreground font-medium">
+                        <div className="rounded-lg border border-border bg-card p-6 text-center">
+                            <CalendarDays className="h-7 w-7 text-muted-foreground/30 mx-auto mb-2" />
+                            <p className="text-sm text-muted-foreground">
                                 {isRtl ? "لا توجد أحداث في الأسبوع القادم" : "No events in the next 7 days"}
                             </p>
                         </div>
                     ) : (
-                        <div className="space-y-3">
+                        <div className="space-y-2">
                             {calEvents.map(event => {
                                 const live = isNow(event.start, event.end);
                                 return (
                                     <div key={event.id} className={cn(
-                                        "rounded-2xl border p-4 flex items-center gap-4 transition-all",
+                                        "rounded-lg border p-3.5 flex items-center gap-3 transition-colors",
                                         isRtl ? "flex-row-reverse" : "",
-                                        live ? "border-emerald-500/30 bg-emerald-500/5" : "border-white/8 bg-white/3 hover:bg-white/5"
+                                        live ? "border-emerald-500/30 bg-emerald-500/5" : "border-border bg-card hover:bg-muted/30"
                                     )}>
-                                        <div className={cn("shrink-0 w-10 h-10 rounded-xl flex items-center justify-center", live ? "bg-emerald-500/20" : "bg-white/5")}>
-                                            <Video className={cn("h-4 w-4", live ? "text-emerald-400" : "text-muted-foreground/40")} />
+                                        <div className={cn("shrink-0 w-9 h-9 rounded-lg flex items-center justify-center", live ? "bg-emerald-500/15" : "bg-muted")}>
+                                            <Video className={cn("h-4 w-4", live ? "text-emerald-500" : "text-muted-foreground/50")} />
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <div className={cn("flex items-center gap-2", isRtl ? "flex-row-reverse" : "")}>
-                                                {live && <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 bg-emerald-500/15 px-2 py-0.5 rounded-full">Live</span>}
-                                                <p className="text-sm font-black truncate">{event.title}</p>
+                                                {live && <span className="section-label text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full">Live</span>}
+                                                <p className="text-sm font-medium truncate">{event.title}</p>
                                             </div>
                                             <p className="text-xs text-muted-foreground mt-0.5">{formatEventTime(event.start, event.end)}</p>
                                         </div>
                                         {event.meetLink && (
                                             <a href={event.meetLink} target="_blank" rel="noopener noreferrer"
-                                                className={cn("shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-black transition-all",
-                                                    live ? "bg-emerald-500 text-white hover:bg-emerald-400" : "bg-white/8 hover:bg-white/15 border border-white/10")}>
+                                                className={cn("shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors",
+                                                    live ? "bg-emerald-500 text-white hover:bg-emerald-600" : "bg-muted hover:bg-muted/80 border border-border")}>
                                                 <ExternalLink className="h-3 w-3" />
                                                 Join
                                             </a>
@@ -747,17 +742,17 @@ function TeamMeetingCard({ meeting, currentUserId, isRtl, past }: {
 
     return (
         <div className={cn(
-            "rounded-2xl border p-4 flex flex-col md:flex-row md:items-center gap-4 transition-all",
+            "rounded-lg border p-3.5 flex flex-col md:flex-row md:items-center gap-3 transition-colors",
             isRtl ? "md:flex-row-reverse" : "",
-            past ? "opacity-50 border-white/5 bg-white/2" : "border-white/10 bg-white/3 hover:bg-white/5 hover:border-primary/20"
+            past ? "opacity-50 border-border bg-card" : "border-border bg-card hover:bg-muted/30"
         )}>
             {/* Date block */}
-            <div className={cn("shrink-0 w-14 h-14 rounded-2xl flex flex-col items-center justify-center border",
-                past ? "bg-white/3 border-white/8" : "bg-primary/10 border-primary/20")}>
-                <span className="text-[10px] font-black uppercase text-muted-foreground">
+            <div className={cn("shrink-0 w-12 h-12 rounded-lg flex flex-col items-center justify-center border",
+                past ? "bg-muted border-border" : "bg-primary/10 border-primary/20")}>
+                <span className="section-label text-muted-foreground">
                     {date.toLocaleDateString("en", { month: "short" })}
                 </span>
-                <span className={cn("text-xl font-black leading-none", past ? "" : "text-primary")}>
+                <span className={cn("text-lg font-bold leading-none", past ? "" : "text-primary")}>
                     {date.getDate()}
                 </span>
             </div>
@@ -765,9 +760,9 @@ function TeamMeetingCard({ meeting, currentUserId, isRtl, past }: {
             {/* Info */}
             <div className={cn("flex-1 min-w-0", isRtl ? "text-right" : "")}>
                 <div className={cn("flex items-center gap-2 flex-wrap", isRtl ? "flex-row-reverse" : "")}>
-                    <h3 className="text-sm font-black truncate">{meeting.title}</h3>
+                    <h3 className="text-sm font-medium truncate">{meeting.title}</h3>
                     {isOrganizer && (
-                        <span className="text-[9px] font-black uppercase tracking-widest bg-primary/15 text-primary px-2 py-0.5 rounded-full">
+                        <span className="section-label bg-primary/10 text-primary px-2 py-0.5 rounded-full">
                             {isRtl ? "منظّم" : "Organizer"}
                         </span>
                     )}
@@ -775,14 +770,14 @@ function TeamMeetingCard({ meeting, currentUserId, isRtl, past }: {
                 {meeting.description && (
                     <p className="text-xs text-muted-foreground mt-0.5 truncate">{meeting.description}</p>
                 )}
-                <div className={cn("flex items-center gap-3 mt-1.5 flex-wrap", isRtl ? "flex-row-reverse" : "")}>
+                <div className={cn("flex items-center gap-3 mt-1 flex-wrap", isRtl ? "flex-row-reverse" : "")}>
                     <span className="text-[11px] text-muted-foreground">
                         {date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                     </span>
                     <div className={cn("flex items-center gap-1", isRtl ? "flex-row-reverse" : "")}>
                         {displayPeople.map((p, i) => (
                             <div key={p.id} title={`${p.firstName} ${p.lastName}`}
-                                className="w-5 h-5 rounded-full bg-white/10 border border-background flex items-center justify-center text-[8px] font-black -ml-1 first:ml-0"
+                                className="w-5 h-5 rounded-full bg-muted border border-card flex items-center justify-center text-[8px] font-medium -ml-1 first:ml-0"
                                 style={{ zIndex: 10 - i }}>
                                 {p.firstName[0]}{p.lastName[0]}
                             </div>
@@ -798,8 +793,8 @@ function TeamMeetingCard({ meeting, currentUserId, isRtl, past }: {
             {meeting.meetLink && (
                 <a href={meeting.meetLink} target="_blank" rel="noopener noreferrer"
                     className={cn(
-                        "shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-black transition-all",
-                        past ? "bg-white/5 border border-white/8 text-muted-foreground" : "bg-blue-500/15 text-blue-400 hover:bg-blue-500/25 border border-blue-500/20"
+                        "shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors",
+                        past ? "bg-muted border border-border text-muted-foreground" : "bg-blue-500/10 text-blue-500 hover:bg-blue-500/20 border border-blue-500/20"
                     )}>
                     <Video className="h-3.5 w-3.5" />
                     {isRtl ? "انضمام" : "Join"}

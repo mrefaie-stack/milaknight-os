@@ -78,11 +78,11 @@ export function TeamInsightsView({ clients }: { clients: Client[] }) {
             {/* Header */}
             <div className={`flex flex-col md:flex-row md:items-center justify-between gap-6 ${isRtl ? 'text-right' : ''}`}>
                 <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-3xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shadow-xl shadow-primary/5">
+                    <div className="w-14 h-14 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shadow-lg shadow-primary/5">
                         <Sparkles className="h-7 w-7" />
                     </div>
                     <div>
-                        <h1 className="text-4xl font-black tracking-tighter premium-gradient-text uppercase">
+                        <h1 className="text-2xl font-bold tracking-tight">
                             {isRtl ? "استخبارات العملاء" : "Client AI Insights"}
                         </h1>
                         <p className="text-sm text-muted-foreground font-medium opacity-70">
@@ -93,14 +93,14 @@ export function TeamInsightsView({ clients }: { clients: Client[] }) {
 
                 <div className="w-full md:w-80">
                     <div className="space-y-2">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">
+                        <label className="section-label text-muted-foreground opacity-60">
                             {isRtl ? "اختر العميل" : "Select Client"}
                         </label>
                         <Select value={selectedClientId} onValueChange={setSelectedClientId}>
-                            <SelectTrigger className="h-12 bg-white/5 border-white/10 rounded-2xl focus:ring-primary/20 transition-all">
+                            <SelectTrigger className="h-12 bg-muted/30 border-border rounded-lg focus:ring-primary/20 transition-all">
                                 <SelectValue placeholder={isRtl ? "ابحث عن عميل..." : "Search for a client..."} />
                             </SelectTrigger>
-                            <SelectContent className="bg-card/95 backdrop-blur-xl border-white/10 rounded-2xl">
+                            <SelectContent className="bg-card border-border rounded-lg">
                                 {clients.map((client) => (
                                     <SelectItem key={client.id} value={client.id} className="rounded-xl focus:bg-primary/10">
                                         <div className="flex items-center gap-2">
@@ -116,13 +116,13 @@ export function TeamInsightsView({ clients }: { clients: Client[] }) {
             </div>
 
             {!selectedClientId ? (
-                <Card className="glass-card border-dashed border-white/5 rounded-[2rem] py-20">
+                <Card className="bg-card border-dashed border-border rounded-xl py-20">
                     <CardContent className="flex flex-col items-center justify-center text-center space-y-4">
-                        <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center text-muted-foreground opacity-20">
+                        <div className="w-20 h-20 rounded-full bg-muted/30 flex items-center justify-center text-muted-foreground opacity-20">
                             <Users className="h-10 w-10" />
                         </div>
                         <div className="space-y-1">
-                            <h3 className="text-xl font-black">{isRtl ? "يرجى اختيار عميل أولاً" : "Please select a client first"}</h3>
+                            <h3 className="text-xl font-semibold tracking-tight">{isRtl ? "يرجى اختيار عميل أولاً" : "Please select a client first"}</h3>
                             <p className="text-sm text-muted-foreground font-medium">{isRtl ? "اختر عميلاً من القائمة أعلاه لعرض بيانات الذكاء الاصطناعي الخاصة به" : "Choose a client from the dropdown above to view their AI-generated insights"}</p>
                         </div>
                     </CardContent>
@@ -130,22 +130,22 @@ export function TeamInsightsView({ clients }: { clients: Client[] }) {
             ) : loading ? (
                 <div className="py-20 flex flex-col items-center justify-center space-y-4 text-muted-foreground">
                     <Loader2 className="h-12 w-12 animate-spin text-primary" />
-                    <span className="font-black uppercase tracking-widest text-[11px] animate-pulse">
+                    <span className="section-label animate-pulse">
                         {isRtl ? "جاري تحميل البيانات..." : "Loading Data..."}
                     </span>
                 </div>
             ) : (
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8" dir={isRtl ? "rtl" : "ltr"}>
-                    <TabsList className="bg-white/5 border border-white/5 p-1 rounded-2xl h-14">
-                        <TabsTrigger value="industry" className="rounded-xl font-black text-xs uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-primary-foreground h-full px-6 gap-2">
+                    <TabsList className="bg-muted/30 border border-border p-1 rounded-lg h-14">
+                        <TabsTrigger value="industry" className="rounded-lg font-medium text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground h-full px-6 gap-2">
                             <Newspaper className="h-4 w-4" />
                             {isRtl ? "رؤى السوق" : "Market Insights"}
                         </TabsTrigger>
-                        <TabsTrigger value="trending" className="rounded-xl font-black text-xs uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-primary-foreground h-full px-6 gap-2">
+                        <TabsTrigger value="trending" className="rounded-lg font-medium text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground h-full px-6 gap-2">
                             <TrendingUp className="h-4 w-4" />
                             {isRtl ? "المواضيع الرائجة" : "Trending Topics"}
                         </TabsTrigger>
-                        <TabsTrigger value="competitors" className="rounded-xl font-black text-xs uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-primary-foreground h-full px-6 gap-2">
+                        <TabsTrigger value="competitors" className="rounded-lg font-medium text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground h-full px-6 gap-2">
                             <Target className="h-4 w-4" />
                             {isRtl ? "المنافسون" : "Competitors"}
                         </TabsTrigger>
@@ -191,13 +191,13 @@ export function TeamInsightsView({ clients }: { clients: Client[] }) {
 
 function EmptyState({ type, isRtl }: { type: string; isRtl: boolean }) {
     return (
-        <Card className="glass-card border-none rounded-[2rem] py-20">
+        <Card className="bg-card border border-border rounded-xl py-20">
             <CardContent className="flex flex-col items-center justify-center text-center space-y-4">
-                <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center text-muted-foreground opacity-20">
+                <div className="w-16 h-16 rounded-full bg-muted/30 flex items-center justify-center text-muted-foreground opacity-20">
                     <Sparkles className="h-8 w-8" />
                 </div>
                 <div className="space-y-1">
-                    <h3 className="text-xl font-black">{isRtl ? "لا توجد بيانات حالياً" : "No data available yet"}</h3>
+                    <h3 className="text-xl font-semibold tracking-tight">{isRtl ? "لا توجد بيانات حالياً" : "No data available yet"}</h3>
                     <p className="text-sm text-muted-foreground font-medium">
                         {isRtl 
                             ? "لم يتم توليد أي بيانات لهذا العميل بعد. سيقوم النظام المؤتمت بتجهيزها قريباً." 

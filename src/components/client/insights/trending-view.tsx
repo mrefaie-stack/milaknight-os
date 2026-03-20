@@ -42,29 +42,29 @@ function ItemsGrid({ items, isRtl, animated = true, isHistory = false }: { items
                         animate={animated ? { opacity: 1, y: 0 } : undefined} 
                         transition={animated ? { delay: i * 0.04, duration: 0.35 } : undefined}
                     >
-                        <Card className={`${isHistory ? 'bg-white/5 border border-white/5' : 'glass-card border-none'} rounded-3xl overflow-hidden group hover:bg-white/5 transition-all duration-300`}>
+                        <Card className={`${isHistory ? 'bg-muted/30 border border-border' : 'bg-card border border-border'} rounded-xl overflow-hidden group transition-all duration-300`}>
                             <CardContent className="p-6 space-y-3">
                                 <div className={`flex items-start justify-between gap-3 ${isRtl ? 'flex-row-reverse' : ''}`}>
-                                    <span className="text-xl font-black text-primary tracking-tight">{item.hashtag}</span>
-                                    <Badge variant="outline" className={`text-[9px] font-black uppercase tracking-widest rounded-full shrink-0 ${PLATFORM_STYLES[item.platform] || "bg-white/5 text-muted-foreground border-white/10"}`}>
+                                    <span className="text-xl font-semibold text-primary tracking-tight">{item.hashtag}</span>
+                                    <Badge variant="outline" className={`section-label rounded-full shrink-0 ${PLATFORM_STYLES[item.platform] || "bg-muted/30 text-muted-foreground border-border"}`}>
                                         {item.platform}
                                     </Badge>
                                 </div>
-                                <h3 className={`font-black text-base leading-tight ${isRtl ? 'text-right' : ''}`}>
+                                <h3 className={`font-semibold text-base leading-tight ${isRtl ? 'text-right' : ''}`}>
                                     {isRtl ? item.topicAr : item.topicEn}
                                 </h3>
                                 <p className={`text-sm text-muted-foreground leading-relaxed font-medium opacity-70 ${isRtl ? 'text-right' : ''}`}>
                                     {isRtl ? item.descAr : item.descEn}
                                 </p>
-                                <div className={`flex items-center gap-3 pt-2 border-t border-white/5 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                                <div className={`flex items-center gap-3 pt-2 border-t border-border ${isRtl ? 'flex-row-reverse' : ''}`}>
                                     <div className={`flex flex-col ${isRtl ? 'items-end' : ''}`}>
-                                        <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-50">{isRtl ? "الحجم" : "Volume"}</span>
-                                        <span className="text-sm font-black text-primary">{item.volume}</span>
+                                        <span className="section-label text-muted-foreground opacity-50">{isRtl ? "الحجم" : "Volume"}</span>
+                                        <span className="text-sm font-semibold text-primary">{item.volume}</span>
                                     </div>
-                                    <div className="w-px h-6 bg-white/5" />
+                                    <div className="w-px h-6 bg-border" />
                                     <div className={`flex flex-col ${isRtl ? 'items-end' : ''}`}>
-                                        <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-50">{isRtl ? "النمو" : "Growth"}</span>
-                                        <span className="text-sm font-black text-emerald-400">{item.growth}</span>
+                                        <span className="section-label text-muted-foreground opacity-50">{isRtl ? "النمو" : "Growth"}</span>
+                                        <span className="text-sm font-semibold text-emerald-400">{item.growth}</span>
                                     </div>
                                 </div>
                             </CardContent>
@@ -91,11 +91,11 @@ export function TrendingView({
         <div className="space-y-8 max-w-5xl mx-auto" dir={isRtl ? "rtl" : "ltr"}>
             <div className={`flex flex-col md:flex-row md:items-end justify-between gap-4 ${isRtl ? 'text-right' : ''}`}>
                 <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+                    <div className="w-12 h-12 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
                         <TrendingUp className="h-6 w-6" />
                     </div>
                     <div>
-                        <h1 className="text-4xl font-black tracking-tighter premium-gradient-text uppercase">
+                        <h1 className="text-2xl font-bold tracking-tight">
                             {isRtl ? "المواضيع الرائجة" : "Trending Topics"}
                         </h1>
                         <p className="text-sm text-muted-foreground font-medium opacity-70">

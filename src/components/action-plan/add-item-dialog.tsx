@@ -158,8 +158,8 @@ export function AddItemDialog({ planId }: { planId: string }) {
 
                     {/* Per-Platform Captions */}
                     {showCaptions && (
-                        <div className="grid gap-3 p-4 rounded-2xl border border-primary/10 bg-primary/5">
-                            <Label className="text-primary font-black text-xs uppercase tracking-wider">
+                        <div className="grid gap-3 p-4 rounded-xl border border-primary/10 bg-primary/5">
+                            <Label className="text-primary font-semibold text-xs">
                                 {isRtl ? 'كابشن لكل منصة' : 'Caption per Platform'}
                             </Label>
                             {selectedPlatforms.map(plat => (
@@ -265,7 +265,7 @@ export function AddItemDialog({ planId }: { planId: string }) {
 
                     {/* ClickUp Task Link (optional) */}
                     <div className="grid gap-2 border-t pt-4 border-border/40">
-                        <Label className={`flex items-center gap-2 text-muted-foreground text-xs font-bold uppercase tracking-widest ${isRtl ? 'flex-row-reverse' : ''}`}>
+                        <Label className={`flex items-center gap-2 section-label text-muted-foreground ${isRtl ? 'flex-row-reverse' : ''}`}>
                             {isRtl ? 'رابط مهمة ClickUp (اختياري)' : 'ClickUp Task URL (Optional)'}
                         </Label>
                         <Input

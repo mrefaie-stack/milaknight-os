@@ -16,11 +16,11 @@ import { toast } from "sonner";
 
 const LEADER_ROLES = new Set(["ART_LEADER", "CONTENT_LEADER", "SEO_LEAD"]);
 
-const STATUS_CONFIG: Record<string, { label: string; labelAr: string; color: string; icon: React.ComponentType<{ className?: string }> }> = {
-    PENDING_LEADER: { label: "Pending Leader", labelAr: "انتظار الليدر", color: "bg-orange-500/10 text-orange-400 border-orange-500/20", icon: Clock },
-    PENDING_MM: { label: "Pending Marketing Mgr", labelAr: "انتظار مدير التسويق", color: "bg-blue-500/10 text-blue-400 border-blue-500/20", icon: Clock },
-    APPROVED: { label: "Approved", labelAr: "معتمد", color: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20", icon: CheckCircle2 },
-    REJECTED: { label: "Rejected", labelAr: "مرفوض", color: "bg-rose-500/10 text-rose-400 border-rose-500/20", icon: XCircle },
+const STATUS_CONFIG: Record<string, { label: string; labelAr: string; variant: any; icon: React.ComponentType<{ className?: string }> }> = {
+    PENDING_LEADER: { label: "Pending Leader",       labelAr: "انتظار الليدر",          variant: "warning",     icon: Clock },
+    PENDING_MM:     { label: "Pending Marketing Mgr", labelAr: "انتظار مدير التسويق",   variant: "info",        icon: Clock },
+    APPROVED:       { label: "Approved",              labelAr: "معتمد",                  variant: "success",     icon: CheckCircle2 },
+    REJECTED:       { label: "Rejected",              labelAr: "مرفوض",                  variant: "destructive", icon: XCircle },
 };
 
 const ROLE_LABELS: Record<string, string> = {
@@ -31,21 +31,21 @@ const ROLE_LABELS: Record<string, string> = {
 
 function StepDot({ done, active, rejected }: { done: boolean; active: boolean; rejected: boolean }) {
     if (rejected) return (
-        <div className="w-5 h-5 rounded-full bg-rose-500/20 border border-rose-500/40 flex items-center justify-center">
-            <XCircle className="h-3 w-3 text-rose-400" />
+        <div className="w-5 h-5 rounded-full bg-destructive/15 border border-destructive/30 flex items-center justify-center">
+            <XCircle className="h-3 w-3 text-destructive" />
         </div>
     );
     if (done) return (
-        <div className="w-5 h-5 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center">
-            <CheckCircle2 className="h-3 w-3 text-emerald-400" />
+        <div className="w-5 h-5 rounded-full bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center">
+            <CheckCircle2 className="h-3 w-3 text-emerald-500" />
         </div>
     );
     if (active) return (
-        <div className="w-5 h-5 rounded-full bg-orange-500/20 border border-orange-500/30 flex items-center justify-center">
-            <Clock className="h-3 w-3 text-orange-400 animate-pulse" />
+        <div className="w-5 h-5 rounded-full bg-warning/15 border border-warning/30 flex items-center justify-center">
+            <Clock className="h-3 w-3 text-warning animate-pulse" />
         </div>
     );
-    return <div className="w-5 h-5 rounded-full bg-white/5 border border-white/10" />;
+    return <div className="w-5 h-5 rounded-full bg-muted border border-border" />;
 }
 
 interface ApprovalData {
@@ -77,11 +77,10 @@ export function ApprovalCard({ approval, userRole, userId, isRtl }: {
     const [expanded, setExpanded] = useState(false);
     const [rejectOpen, setRejectOpen] = useState<"leader" | "mm" | null>(null);
     const [rejectComment, setRejectComment] = useState("");
+    const [loading, setLoading] = useState(false);
 
-    // Reset comment whenever the reject panel changes
     const openReject = (mode: "leader" | "mm") => { setRejectOpen(mode); setRejectComment(""); };
     const closeReject = () => { setRejectOpen(null); setRejectComment(""); };
-    const [loading, setLoading] = useState(false);
 
     const status = approval.status;
     const cfg = STATUS_CONFIG[status] || STATUS_CONFIG.PENDING_LEADER;
@@ -91,20 +90,18 @@ export function ApprovalCard({ approval, userRole, userId, isRtl }: {
     const isMmAndCanAct = userRole === "MARKETING_MANAGER" && status === "PENDING_MM" && approval.mmId === userId;
 
     const hasLeaderStep = !LEADER_ROLES.has(approval.creatorRole);
-    const leaderDone = approval.leaderAction === "APPROVED";
+    const leaderDone     = approval.leaderAction === "APPROVED";
     const leaderRejected = approval.leaderAction === "REJECTED";
-    const leaderActive = hasLeaderStep && status === "PENDING_LEADER";
-    const mmDone = approval.mmAction === "APPROVED";
-    const mmRejected = approval.mmAction === "REJECTED";
-    const mmActive = status === "PENDING_MM";
+    const leaderActive   = hasLeaderStep && status === "PENDING_LEADER";
+    const mmDone         = approval.mmAction === "APPROVED";
+    const mmRejected     = approval.mmAction === "REJECTED";
+    const mmActive       = status === "PENDING_MM";
 
     async function handleLeaderAction(action: "APPROVED" | "REJECTED") {
         setLoading(true);
         try {
             await leaderActOnApproval(approval.id, action, action === "REJECTED" ? rejectComment : undefined);
-            toast.success(action === "APPROVED"
-                ? (isRtl ? "تمت الموافقة" : "Approved")
-                : (isRtl ? "تم الرفض" : "Rejected"));
+            toast.success(action === "APPROVED" ? (isRtl ? "تمت الموافقة" : "Approved") : (isRtl ? "تم الرفض" : "Rejected"));
             closeReject();
             router.refresh();
         } catch {
@@ -118,9 +115,7 @@ export function ApprovalCard({ approval, userRole, userId, isRtl }: {
         setLoading(true);
         try {
             await mmActOnApproval(approval.id, action, action === "REJECTED" ? rejectComment : undefined);
-            toast.success(action === "APPROVED"
-                ? (isRtl ? "تم الاعتماد النهائي" : "Final Approval Done")
-                : (isRtl ? "تم الرفض" : "Rejected"));
+            toast.success(action === "APPROVED" ? (isRtl ? "تم الاعتماد النهائي" : "Final Approval Done") : (isRtl ? "تم الرفض" : "Rejected"));
             closeReject();
             router.refresh();
         } catch {
@@ -131,44 +126,35 @@ export function ApprovalCard({ approval, userRole, userId, isRtl }: {
     }
 
     return (
-        <Card className="glass-card border-white/5 rounded-2xl overflow-hidden">
+        <Card>
             <CardContent className="p-0">
                 {/* Main row */}
-                <div className={cn("p-5 flex items-start gap-4", isRtl ? "flex-row-reverse" : "")}>
+                <div className={cn("p-4 flex items-start gap-3", isRtl ? "flex-row-reverse" : "")}>
                     {/* Status icon */}
-                    <div className={cn(
-                        "w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border",
-                        cfg.color
-                    )}>
-                        <StatusIcon className="h-5 w-5" />
+                    <div className="p-2 rounded-lg bg-muted shrink-0 mt-0.5">
+                        <StatusIcon className="h-4 w-4 text-muted-foreground" />
                     </div>
 
                     {/* Content */}
                     <div className={cn("flex-1 min-w-0", isRtl ? "text-right" : "")}>
                         <div className={cn("flex items-start justify-between gap-3 flex-wrap", isRtl ? "flex-row-reverse" : "")}>
                             <div className="min-w-0">
-                                <h3 className="font-black text-base leading-tight truncate">{approval.title}</h3>
-                                <div className={cn("flex items-center gap-2 mt-1 flex-wrap", isRtl ? "flex-row-reverse" : "")}>
-                                    <span className="text-[10px] font-black text-muted-foreground opacity-60 uppercase">
-                                        {approval.client.name}
-                                    </span>
-                                    <span className="text-muted-foreground opacity-30 text-[10px]">·</span>
-                                    <span className="text-[10px] font-black text-muted-foreground opacity-60 uppercase">
-                                        {ROLE_LABELS[approval.creatorRole] || approval.creatorRole}
-                                    </span>
-                                    <span className="text-muted-foreground opacity-30 text-[10px]">·</span>
-                                    <span className="text-[10px] text-muted-foreground opacity-40">
-                                        {formatDistanceToNow(new Date(approval.createdAt), { addSuffix: true })}
-                                    </span>
+                                <h3 className="text-sm font-semibold leading-tight truncate">{approval.title}</h3>
+                                <div className={cn("flex items-center gap-2 mt-1 flex-wrap text-xs text-muted-foreground", isRtl ? "flex-row-reverse" : "")}>
+                                    <span>{approval.client.name}</span>
+                                    <span>·</span>
+                                    <span>{ROLE_LABELS[approval.creatorRole] || approval.creatorRole}</span>
+                                    <span>·</span>
+                                    <span>{formatDistanceToNow(new Date(approval.createdAt), { addSuffix: true })}</span>
                                 </div>
                             </div>
                             <div className={cn("flex items-center gap-2 shrink-0", isRtl ? "flex-row-reverse" : "")}>
-                                <Badge variant="outline" className={cn("text-[9px] font-black uppercase tracking-widest rounded-full border whitespace-nowrap", cfg.color)}>
+                                <Badge variant={cfg.variant} className="text-[10px]">
                                     {isRtl ? cfg.labelAr : cfg.label}
                                 </Badge>
                                 <button
                                     onClick={() => setExpanded(!expanded)}
-                                    className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
+                                    className="p-1.5 rounded-md bg-muted hover:bg-muted/80 transition-colors"
                                 >
                                     {expanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
                                 </button>
@@ -177,44 +163,43 @@ export function ApprovalCard({ approval, userRole, userId, isRtl }: {
 
                         {/* Workflow stepper */}
                         <div className={cn("flex items-center gap-2 mt-3 flex-wrap", isRtl ? "flex-row-reverse" : "")}>
-                            {/* Created */}
                             <div className={cn("flex items-center gap-1.5", isRtl ? "flex-row-reverse" : "")}>
-                                <div className="w-5 h-5 rounded-full bg-violet-500/20 border border-violet-500/40 flex items-center justify-center">
-                                    <User className="h-2.5 w-2.5 text-violet-400" />
+                                <div className="w-5 h-5 rounded-full bg-primary/15 border border-primary/30 flex items-center justify-center">
+                                    <User className="h-2.5 w-2.5 text-primary" />
                                 </div>
-                                <span className="text-[9px] font-black text-muted-foreground opacity-50 uppercase hidden sm:block">
+                                <span className="section-label text-[9px] text-muted-foreground hidden sm:block">
                                     {isRtl ? "إنشاء" : "Created"}
                                 </span>
                             </div>
 
                             {hasLeaderStep && (
                                 <>
-                                    <div className="h-px w-5 bg-white/10 shrink-0" />
+                                    <div className="h-px w-4 bg-border shrink-0" />
                                     <div className={cn("flex items-center gap-1.5", isRtl ? "flex-row-reverse" : "")}>
                                         <StepDot done={leaderDone} active={leaderActive} rejected={leaderRejected} />
-                                        <span className="text-[9px] font-black text-muted-foreground opacity-50 uppercase hidden sm:block">
+                                        <span className="section-label text-[9px] text-muted-foreground hidden sm:block">
                                             {isRtl ? "الليدر" : "Leader"}
                                         </span>
                                     </div>
                                 </>
                             )}
 
-                            <div className="h-px w-5 bg-white/10 shrink-0" />
+                            <div className="h-px w-4 bg-border shrink-0" />
                             <div className={cn("flex items-center gap-1.5", isRtl ? "flex-row-reverse" : "")}>
                                 <StepDot done={mmDone} active={mmActive} rejected={mmRejected} />
-                                <span className="text-[9px] font-black text-muted-foreground opacity-50 uppercase hidden sm:block">
+                                <span className="section-label text-[9px] text-muted-foreground hidden sm:block">
                                     {isRtl ? "مدير التسويق" : "Marketing"}
                                 </span>
                             </div>
 
-                            <div className="h-px w-5 bg-white/10 shrink-0" />
+                            <div className="h-px w-4 bg-border shrink-0" />
                             <div className={cn("flex items-center gap-1.5", isRtl ? "flex-row-reverse" : "")}>
                                 <StepDot
                                     done={status === "APPROVED"}
                                     active={false}
                                     rejected={status === "REJECTED"}
                                 />
-                                <span className="text-[9px] font-black text-muted-foreground opacity-50 uppercase hidden sm:block">
+                                <span className="section-label text-[9px] text-muted-foreground hidden sm:block">
                                     {isRtl ? "نهائي" : "Final"}
                                 </span>
                             </div>
@@ -224,9 +209,9 @@ export function ApprovalCard({ approval, userRole, userId, isRtl }: {
 
                 {/* Expanded details */}
                 {expanded && (
-                    <div className={cn("px-5 pb-5 space-y-4 border-t border-white/5 pt-4", isRtl ? "text-right" : "")}>
+                    <div className={cn("px-4 pb-4 space-y-3 border-t border-border pt-4", isRtl ? "text-right" : "")}>
                         {approval.description && (
-                            <p className="text-sm text-muted-foreground opacity-70 leading-relaxed">
+                            <p className="text-sm text-muted-foreground leading-relaxed">
                                 {approval.description}
                             </p>
                         )}
@@ -236,12 +221,12 @@ export function ApprovalCard({ approval, userRole, userId, isRtl }: {
                                 href={approval.clickupLink}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1.5 text-[10px] font-black rounded-xl px-3 py-1.5 bg-violet-500/10 text-violet-400 hover:bg-violet-500/20 transition-colors"
+                                className="inline-flex items-center gap-1.5 text-xs font-medium rounded-md px-2.5 py-1.5 bg-primary/10 text-primary hover:bg-primary/15 transition-colors"
                             >
                                 <ExternalLink className="h-3 w-3" />
                                 {isRtl ? "رابط ClickUp" : "ClickUp Task"}
                             </a>
-                            <span className="inline-flex items-center gap-1.5 text-[10px] font-black rounded-xl px-3 py-1.5 bg-white/5 text-muted-foreground">
+                            <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground bg-muted rounded-md px-2.5 py-1.5">
                                 <User className="h-3 w-3" />
                                 {approval.creator.firstName} {approval.creator.lastName}
                             </span>
@@ -249,40 +234,32 @@ export function ApprovalCard({ approval, userRole, userId, isRtl }: {
 
                         {/* Leader comment */}
                         {approval.leaderComment && (
-                            <div className="rounded-xl p-3 bg-white/3 border border-white/5">
-                                <div className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-50 mb-1">
+                            <div className="rounded-md p-3 bg-muted border border-border">
+                                <p className="section-label text-[9px] text-muted-foreground mb-1">
                                     {isRtl ? "ملاحظة الليدر" : "Leader Comment"}
-                                </div>
+                                </p>
                                 <p className="text-xs text-muted-foreground">{approval.leaderComment}</p>
                             </div>
                         )}
 
                         {/* MM comment */}
                         {approval.mmComment && (
-                            <div className="rounded-xl p-3 bg-white/3 border border-white/5">
-                                <div className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-50 mb-1">
+                            <div className="rounded-md p-3 bg-muted border border-border">
+                                <p className="section-label text-[9px] text-muted-foreground mb-1">
                                     {isRtl ? "ملاحظة مدير التسويق" : "Marketing Manager Comment"}
-                                </div>
+                                </p>
                                 <p className="text-xs text-muted-foreground">{approval.mmComment}</p>
                             </div>
                         )}
 
                         {/* Leader actions */}
                         {isLeaderAndCanAct && rejectOpen !== "leader" && (
-                            <div className={cn("flex gap-2 pt-2", isRtl ? "flex-row-reverse" : "")}>
-                                <Button
-                                    onClick={() => handleLeaderAction("APPROVED")}
-                                    disabled={loading}
-                                    className="h-9 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-xl gap-1.5"
-                                >
+                            <div className={cn("flex gap-2 pt-1", isRtl ? "flex-row-reverse" : "")}>
+                                <Button onClick={() => handleLeaderAction("APPROVED")} disabled={loading} size="sm" className="gap-1.5">
                                     <CheckCircle2 className="h-3.5 w-3.5" />
                                     {isRtl ? "موافقة" : "Approve"}
                                 </Button>
-                                <Button
-                                    onClick={() => openReject("leader")}
-                                    variant="outline"
-                                    className="h-9 border-rose-500/30 text-rose-400 hover:bg-rose-500/10 font-black text-xs rounded-xl gap-1.5"
-                                >
+                                <Button onClick={() => openReject("leader")} variant="outline" size="sm" className="gap-1.5 text-destructive border-destructive/30 hover:bg-destructive/10">
                                     <XCircle className="h-3.5 w-3.5" />
                                     {isRtl ? "رفض" : "Reject"}
                                 </Button>
@@ -291,23 +268,19 @@ export function ApprovalCard({ approval, userRole, userId, isRtl }: {
 
                         {/* Leader reject form */}
                         {isLeaderAndCanAct && rejectOpen === "leader" && (
-                            <div className="space-y-3">
+                            <div className="space-y-2">
                                 <Textarea
                                     value={rejectComment}
                                     onChange={(e) => setRejectComment(e.target.value)}
                                     placeholder={isRtl ? "سبب الرفض (اختياري)" : "Reason for rejection (optional)"}
-                                    className="bg-white/5 border-white/10 rounded-xl text-sm resize-none h-20"
+                                    className="resize-none h-20"
                                     dir={isRtl ? "rtl" : "ltr"}
                                 />
                                 <div className={cn("flex gap-2", isRtl ? "flex-row-reverse" : "")}>
-                                    <Button
-                                        onClick={() => handleLeaderAction("REJECTED")}
-                                        disabled={loading}
-                                        className="h-9 bg-rose-600 hover:bg-rose-700 text-white font-black text-xs rounded-xl"
-                                    >
+                                    <Button onClick={() => handleLeaderAction("REJECTED")} disabled={loading} size="sm" variant="destructive">
                                         {isRtl ? "تأكيد الرفض" : "Confirm Reject"}
                                     </Button>
-                                    <Button onClick={closeReject} variant="ghost" className="h-9 text-xs rounded-xl">
+                                    <Button onClick={closeReject} variant="ghost" size="sm">
                                         {isRtl ? "إلغاء" : "Cancel"}
                                     </Button>
                                 </div>
@@ -316,20 +289,12 @@ export function ApprovalCard({ approval, userRole, userId, isRtl }: {
 
                         {/* MM actions */}
                         {isMmAndCanAct && rejectOpen !== "mm" && (
-                            <div className={cn("flex gap-2 pt-2", isRtl ? "flex-row-reverse" : "")}>
-                                <Button
-                                    onClick={() => handleMmAction("APPROVED")}
-                                    disabled={loading}
-                                    className="h-9 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-xl gap-1.5"
-                                >
+                            <div className={cn("flex gap-2 pt-1", isRtl ? "flex-row-reverse" : "")}>
+                                <Button onClick={() => handleMmAction("APPROVED")} disabled={loading} size="sm" className="gap-1.5">
                                     <CheckCircle2 className="h-3.5 w-3.5" />
                                     {isRtl ? "اعتماد نهائي" : "Final Approve"}
                                 </Button>
-                                <Button
-                                    onClick={() => openReject("mm")}
-                                    variant="outline"
-                                    className="h-9 border-rose-500/30 text-rose-400 hover:bg-rose-500/10 font-black text-xs rounded-xl gap-1.5"
-                                >
+                                <Button onClick={() => openReject("mm")} variant="outline" size="sm" className="gap-1.5 text-destructive border-destructive/30 hover:bg-destructive/10">
                                     <XCircle className="h-3.5 w-3.5" />
                                     {isRtl ? "رفض" : "Reject"}
                                 </Button>
@@ -338,23 +303,19 @@ export function ApprovalCard({ approval, userRole, userId, isRtl }: {
 
                         {/* MM reject form */}
                         {isMmAndCanAct && rejectOpen === "mm" && (
-                            <div className="space-y-3">
+                            <div className="space-y-2">
                                 <Textarea
                                     value={rejectComment}
                                     onChange={(e) => setRejectComment(e.target.value)}
                                     placeholder={isRtl ? "سبب الرفض (اختياري)" : "Reason for rejection (optional)"}
-                                    className="bg-white/5 border-white/10 rounded-xl text-sm resize-none h-20"
+                                    className="resize-none h-20"
                                     dir={isRtl ? "rtl" : "ltr"}
                                 />
                                 <div className={cn("flex gap-2", isRtl ? "flex-row-reverse" : "")}>
-                                    <Button
-                                        onClick={() => handleMmAction("REJECTED")}
-                                        disabled={loading}
-                                        className="h-9 bg-rose-600 hover:bg-rose-700 text-white font-black text-xs rounded-xl"
-                                    >
+                                    <Button onClick={() => handleMmAction("REJECTED")} disabled={loading} size="sm" variant="destructive">
                                         {isRtl ? "تأكيد الرفض" : "Confirm Reject"}
                                     </Button>
-                                    <Button onClick={closeReject} variant="ghost" className="h-9 text-xs rounded-xl">
+                                    <Button onClick={closeReject} variant="ghost" size="sm">
                                         {isRtl ? "إلغاء" : "Cancel"}
                                     </Button>
                                 </div>

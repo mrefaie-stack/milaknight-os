@@ -42,11 +42,11 @@ export function ContentItemEditor({ item, onSave }: { item: any, onSave: (data: 
     }
 
     return (
-        <Card className="border-none bg-card/50 backdrop-blur-sm">
+        <Card className="border-none bg-card">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2 w-full">
                     <Select value={data.type} onValueChange={(val) => setData({ ...data, type: val })}>
-                        <SelectTrigger className="w-[200px] h-8 text-[10px] font-black uppercase tracking-widest bg-transparent">
+                        <SelectTrigger className="w-[200px] h-8 text-[10px] font-medium bg-transparent">
                             <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -209,15 +209,15 @@ export function ContentItemEditor({ item, onSave }: { item: any, onSave: (data: 
 
                 {/* Per-Platform Captions */}
                 {data.type !== 'EMAIL' && data.type !== 'ARTICLE' && data.type !== 'POLL' && (
-                    <div className="grid gap-4 p-4 rounded-2xl border border-primary/10 bg-primary/5">
-                        <Label className="text-primary font-black text-xs uppercase tracking-wider flex items-center gap-2">
+                    <div className="grid gap-4 p-4 rounded-xl border border-primary/10 bg-primary/5">
+                        <Label className="text-primary font-semibold text-xs flex items-center gap-2">
                             <Languages className="h-3.5 w-3.5" />
                             Per-Platform Captions
                         </Label>
                         <div className="grid gap-4 md:grid-cols-2">
                             {data.platform?.split(/[,/]/).map((p: string) => p.trim()).filter(Boolean).map((plat: string) => (
                                 <div key={plat} className="space-y-2">
-                                    <Label className="text-[10px] font-black uppercase text-muted-foreground">{plat}</Label>
+                                    <Label className="section-label text-muted-foreground">{plat}</Label>
                                     <Textarea
                                         className="h-24 text-sm bg-background/50"
                                         placeholder={`Write caption for ${plat}...`}
@@ -236,7 +236,7 @@ export function ContentItemEditor({ item, onSave }: { item: any, onSave: (data: 
                 {/* Dual Language Captions (Fallback/General) */}
                 <div className="grid gap-4 md:grid-cols-2 opacity-60">
                     <div className="space-y-2">
-                        <Label className="flex items-center gap-2 text-[10px] font-black uppercase">
+                        <Label className="flex items-center gap-2 section-label text-muted-foreground">
                             <Languages className="h-3 w-3 text-orange-500" />
                             General Arabic Caption (Fallback)
                         </Label>
@@ -249,7 +249,7 @@ export function ContentItemEditor({ item, onSave }: { item: any, onSave: (data: 
                         />
                     </div>
                     <div className="space-y-2">
-                        <Label className="flex items-center gap-2 text-[10px] font-black uppercase">
+                        <Label className="flex items-center gap-2 section-label text-muted-foreground">
                             <Languages className="h-3 w-3 text-blue-500" />
                             {data.type === 'EMAIL' ? 'Campaign Description / Goal' : 'General English Caption (Fallback)'}
                         </Label>

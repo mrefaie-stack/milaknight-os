@@ -131,14 +131,14 @@ export function MetaMapping() {
     }
 
     return (
-        <Card className="mt-8 border-none bg-white/[0.02] shadow-2xl">
-            <CardHeader className="border-b border-white/5 pb-6">
+        <Card className="mt-8 border-border bg-card shadow-lg">
+            <CardHeader className="border-b border-border pb-6">
                 <div className="flex items-center gap-3">
                     <div className="p-2 bg-rose-500/10 rounded-lg">
                         <Link2 className="w-5 h-5 text-rose-500" />
                     </div>
                     <div>
-                        <CardTitle className="text-xl font-black uppercase tracking-tight">Client Meta Mapping</CardTitle>
+                        <CardTitle className="text-xl font-bold tracking-tight">Client Meta Mapping</CardTitle>
                         <CardDescription>Assign specific Facebook Ad Accounts to your clients.</CardDescription>
                     </div>
                 </div>
@@ -146,9 +146,9 @@ export function MetaMapping() {
             <CardContent className="pt-6 space-y-6">
                 <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input 
-                        placeholder="Search clients..." 
-                        className="pl-10 bg-white/5 border-white/10 rounded-xl"
+                    <Input
+                        placeholder="Search clients..."
+                        className="pl-10 bg-muted/30 border-border rounded-xl"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                     />
@@ -169,9 +169,9 @@ export function MetaMapping() {
                         const isDrafting = draft.accountId !== undefined || draft.pageId !== undefined;
 
                         return (
-                            <div key={client.id} className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 bg-white/5 rounded-2xl border border-white/10 hover:border-white/20 transition-all">
+                            <div key={client.id} className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 bg-muted/30 rounded-lg border border-border hover:border-border/80 transition-all">
                                 <div className="flex items-center gap-4">
-                                    <div className="w-10 h-10 rounded-full bg-white/10 overflow-hidden flex items-center justify-center shrink-0">
+                                    <div className="w-10 h-10 rounded-full bg-muted/30 overflow-hidden flex items-center justify-center shrink-0">
                                         {client.logoUrl ? (
                                             <img src={client.logoUrl} className="w-full h-full object-cover" />
                                         ) : (
@@ -182,14 +182,14 @@ export function MetaMapping() {
                                         <h4 className="font-bold text-sm">{client.name}</h4>
                                         <div className="flex flex-col gap-0.5 mt-1">
                                             {currentMapping?.platformAccountName ? (
-                                                <span className="text-[10px] text-emerald-500 uppercase font-black tracking-widest flex items-center gap-1">
+                                                <span className="text-[10px] text-emerald-500 section-label font-medium flex items-center gap-1">
                                                     <Check className="w-3 h-3" /> AD ACC: {currentMapping.platformAccountName}
                                                 </span>
                                             ) : (
-                                                <span className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">No Ad Account assigned</span>
+                                                <span className="text-[10px] text-muted-foreground section-label font-medium">No Ad Account assigned</span>
                                             )}
                                             {parsedMeta?.pageName && (
-                                                <span className="text-[10px] text-emerald-500 uppercase font-black tracking-widest flex items-center gap-1">
+                                                <span className="text-[10px] text-emerald-500 section-label font-medium flex items-center gap-1">
                                                     <Check className="w-3 h-3" /> PAGE: {parsedMeta.pageName}
                                                 </span>
                                             )}
@@ -200,18 +200,18 @@ export function MetaMapping() {
                                 <div className="flex flex-col sm:flex-row items-end sm:items-center gap-3">
                                     {/* Ad Account Select */}
                                     <div className="flex flex-col gap-1 w-full sm:w-auto">
-                                        <span className="text-[9px] uppercase font-bold text-muted-foreground tracking-widest">Ad Account</span>
+                                        <span className="text-[9px] font-medium section-label text-muted-foreground">Ad Account</span>
                                         <Select 
                                             value={selectedAccountId}
                                             onValueChange={(val) => setDraftLinks(p => ({ ...p, [client.id]: { ...p[client.id], accountId: val } }))}
                                             disabled={linking === client.id}
                                         >
-                                            <SelectTrigger className="w-full sm:w-[180px] bg-white/5 border-white/10 rounded-xl text-xs h-9">
+                                            <SelectTrigger className="w-full sm:w-[180px] bg-muted/30 border-border rounded-xl text-xs h-9">
                                                 <SelectValue placeholder="Select Ad Account" />
                                             </SelectTrigger>
-                                            <SelectContent className="bg-zinc-900 border-white/10 rounded-xl max-h-[300px]">
+                                            <SelectContent className="bg-card border-border rounded-xl max-h-[300px]">
                                                 {adAccounts.map(acc => (
-                                                    <SelectItem key={acc.id} value={acc.id} className="text-xs focus:bg-white/10">
+                                                    <SelectItem key={acc.id} value={acc.id} className="text-xs">
                                                         {acc.name}
                                                     </SelectItem>
                                                 ))}
@@ -221,18 +221,18 @@ export function MetaMapping() {
 
                                     {/* Page Select */}
                                     <div className="flex flex-col gap-1 w-full sm:w-auto">
-                                        <span className="text-[9px] uppercase font-bold text-muted-foreground tracking-widest">FB/IG Page</span>
+                                        <span className="text-[9px] font-medium section-label text-muted-foreground">FB/IG Page</span>
                                         <Select 
                                             value={selectedPageId}
                                             onValueChange={(val) => setDraftLinks(p => ({ ...p, [client.id]: { ...p[client.id], pageId: val } }))}
                                             disabled={linking === client.id || pages.length === 0}
                                         >
-                                            <SelectTrigger className="w-full sm:w-[180px] bg-white/5 border-white/10 rounded-xl text-xs h-9">
+                                            <SelectTrigger className="w-full sm:w-[180px] bg-muted/30 border-border rounded-xl text-xs h-9">
                                                 <SelectValue placeholder={pages.length > 0 ? "Select Page" : "Loading..."} />
                                             </SelectTrigger>
-                                            <SelectContent className="bg-zinc-900 border-white/10 rounded-xl max-h-[300px]">
+                                            <SelectContent className="bg-card border-border rounded-xl max-h-[300px]">
                                                 {pages.map(page => (
-                                                    <SelectItem key={page.id} value={page.id} className="text-xs focus:bg-white/10">
+                                                    <SelectItem key={page.id} value={page.id} className="text-xs">
                                                         {page.name}
                                                     </SelectItem>
                                                 ))}

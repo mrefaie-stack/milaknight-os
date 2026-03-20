@@ -24,7 +24,7 @@ export function TasksView({ tasks, clients, role }: { tasks: any[], clients: any
                 <div className={`space-y-2 ${isRtl ? 'text-right' : 'text-left'}`}>
                     <div className={`flex items-center gap-3 text-primary ${isRtl ? 'flex-row-reverse' : ''}`}>
                         <ListTodo className="h-8 w-8" />
-                        <h1 className="text-4xl font-black tracking-tight">
+                        <h1 className="text-2xl font-bold tracking-tight">
                             {isRtl ? "المهام الداخلية" : "Internal Tasks"}
                         </h1>
                     </div>
@@ -45,41 +45,41 @@ export function TasksView({ tasks, clients, role }: { tasks: any[], clients: any
                 <Card className="p-4 bg-orange-500/5 border-orange-500/10 space-y-1">
                     <div className={`flex items-center gap-2 text-orange-500 ${isRtl ? 'flex-row-reverse' : ''}`}>
                         <Clock className="h-4 w-4" />
-                        <span className="text-[10px] font-black uppercase tracking-wider">
+                        <span className="text-[10px] font-medium section-label">
                             {isRtl ? "قيد الانتظار" : "Pending"}
                         </span>
                     </div>
-                    <div className={`text-2xl font-black ${isRtl ? 'text-right' : ''}`}>{stats.pending}</div>
+                    <div className={`text-2xl font-bold ${isRtl ? 'text-right' : ''}`}>{stats.pending}</div>
                 </Card>
 
                 <Card className="p-4 bg-blue-500/5 border-blue-500/10 space-y-1">
                     <div className={`flex items-center gap-2 text-blue-500 ${isRtl ? 'flex-row-reverse' : ''}`}>
                         <Activity className="h-4 w-4" />
-                        <span className="text-[10px] font-black uppercase tracking-wider">
+                        <span className="text-[10px] font-medium section-label">
                             {isRtl ? "قيد التنفيذ" : "In Progress"}
                         </span>
                     </div>
-                    <div className={`text-2xl font-black ${isRtl ? 'text-right' : ''}`}>{stats.inProgress}</div>
+                    <div className={`text-2xl font-bold ${isRtl ? 'text-right' : ''}`}>{stats.inProgress}</div>
                 </Card>
 
                 <Card className="p-4 bg-red-500/5 border-red-500/10 space-y-1">
                     <div className={`flex items-center gap-2 text-red-500 ${isRtl ? 'flex-row-reverse' : ''}`}>
                         <AlertCircle className="h-4 w-4" />
-                        <span className="text-[10px] font-black uppercase tracking-wider">
+                        <span className="text-[10px] font-medium section-label">
                             {isRtl ? "تحتاج تعديل" : "Needs Fix"}
                         </span>
                     </div>
-                    <div className={`text-2xl font-black ${isRtl ? 'text-right' : ''}`}>{stats.needFix}</div>
+                    <div className={`text-2xl font-bold ${isRtl ? 'text-right' : ''}`}>{stats.needFix}</div>
                 </Card>
 
                 <Card className="p-4 bg-emerald-500/5 border-emerald-500/10 space-y-1">
                     <div className={`flex items-center gap-2 text-emerald-500 ${isRtl ? 'flex-row-reverse' : ''}`}>
                         <CheckCircle2 className="h-4 w-4" />
-                        <span className="text-[10px] font-black uppercase tracking-wider">
+                        <span className="text-[10px] font-medium section-label">
                             {isRtl ? "مكتملة" : "Completed"}
                         </span>
                     </div>
-                    <div className={`text-2xl font-black ${isRtl ? 'text-right' : ''}`}>{stats.completed}</div>
+                    <div className={`text-2xl font-bold ${isRtl ? 'text-right' : ''}`}>{stats.completed}</div>
                 </Card>
             </div>
 
@@ -87,7 +87,7 @@ export function TasksView({ tasks, clients, role }: { tasks: any[], clients: any
             <div className="space-y-6">
                 <div className={`flex items-center gap-2 px-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
                     <div className="h-2 w-2 rounded-full bg-primary" />
-                    <h2 className="text-sm font-black uppercase tracking-[0.2em] text-muted-foreground">
+                    <h2 className="text-sm font-medium section-label text-muted-foreground">
                         {isRtl ? "قائمة المهام" : "Tasks List"}
                     </h2>
                 </div>

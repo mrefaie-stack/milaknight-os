@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { useLanguage } from "@/contexts/language-context";
 import { ClipboardCheck, Plus, Clock, CheckCircle2, XCircle, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { CreateApprovalDialog } from "./create-approval-dialog";
 import { ApprovalCard } from "./approval-card";
@@ -52,40 +53,38 @@ export function ApprovalsView({ approvals, userRole, userId }: {
     }, [approvals, tab]);
 
     const counts = {
-        all: approvals.length,
-        pending: approvals.filter((a) => a.status === "PENDING_LEADER" || a.status === "PENDING_MM").length,
+        all:      approvals.length,
+        pending:  approvals.filter((a) => a.status === "PENDING_LEADER" || a.status === "PENDING_MM").length,
         approved: approvals.filter((a) => a.status === "APPROVED").length,
         rejected: approvals.filter((a) => a.status === "REJECTED").length,
     };
 
-    const tabs: { key: Tab; label: string; labelAr: string; icon: React.ComponentType<{ className?: string }>; color: string }[] = [
-        { key: "all", label: "All", labelAr: "الكل", icon: Filter, color: "text-muted-foreground" },
-        { key: "pending", label: "Pending", labelAr: "قيد الانتظار", icon: Clock, color: "text-orange-400" },
-        { key: "approved", label: "Approved", labelAr: "معتمد", icon: CheckCircle2, color: "text-emerald-400" },
-        { key: "rejected", label: "Rejected", labelAr: "مرفوض", icon: XCircle, color: "text-rose-400" },
+    const tabs: { key: Tab; label: string; labelAr: string; icon: React.ComponentType<{ className?: string }> }[] = [
+        { key: "all",      label: "All",      labelAr: "الكل",          icon: Filter },
+        { key: "pending",  label: "Pending",  labelAr: "قيد الانتظار", icon: Clock },
+        { key: "approved", label: "Approved", labelAr: "معتمد",         icon: CheckCircle2 },
+        { key: "rejected", label: "Rejected", labelAr: "مرفوض",         icon: XCircle },
     ];
 
     return (
-        <div className="space-y-8 max-w-5xl mx-auto" dir={isRtl ? "rtl" : "ltr"}>
+        <div className="space-y-6 max-w-5xl mx-auto" dir={isRtl ? "rtl" : "ltr"}>
             {/* Header */}
-            <div className={cn("flex flex-col md:flex-row md:items-end justify-between gap-4", isRtl ? "text-right" : "")}>
-                <div className={cn("flex items-center gap-3", isRtl ? "flex-row-reverse" : "")}>
-                    <div className="w-12 h-12 rounded-2xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-violet-400">
-                        <ClipboardCheck className="h-6 w-6" />
-                    </div>
-                    <div>
-                        <h1 className="text-4xl font-black tracking-tighter premium-gradient-text uppercase">
-                            {isRtl ? "طلبات الموافقة" : "Approvals"}
-                        </h1>
-                        <p className="text-sm text-muted-foreground font-medium opacity-70">
-                            {isRtl ? "إدارة طلبات الموافقة بين الفرق" : "Manage team approval requests"}
-                        </p>
-                    </div>
+            <div className={cn("flex flex-col sm:flex-row sm:items-end justify-between gap-4", isRtl ? "sm:flex-row-reverse text-right" : "")}>
+                <div>
+                    <p className="section-label text-muted-foreground mb-1">
+                        {isRtl ? "إدارة الموافقات" : "Approval Management"}
+                    </p>
+                    <h1 className="text-2xl font-bold tracking-tight">
+                        {isRtl ? "طلبات الموافقة" : "Approvals"}
+                    </h1>
+                    <p className="text-sm text-muted-foreground mt-1">
+                        {isRtl ? "إدارة طلبات الموافقة بين الفرق" : "Manage team approval requests"}
+                    </p>
                 </div>
                 {canCreate && (
                     <Button
                         onClick={() => setCreateOpen(true)}
-                        className="h-10 bg-violet-600 hover:bg-violet-700 text-white font-black uppercase tracking-wider rounded-xl gap-2"
+                        className={cn("gap-2 shrink-0", isRtl ? "flex-row-reverse" : "")}
                     >
                         <Plus className="h-4 w-4" />
                         {isRtl ? "طلب موافقة جديد" : "New Request"}
@@ -94,41 +93,47 @@ export function ApprovalsView({ approvals, userRole, userId }: {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {[
-                    { label: isRtl ? "الإجمالي" : "Total", value: counts.all, color: "text-primary" },
-                    { label: isRtl ? "قيد الانتظار" : "Pending", value: counts.pending, color: "text-orange-400" },
-                    { label: isRtl ? "معتمد" : "Approved", value: counts.approved, color: "text-emerald-400" },
-                    { label: isRtl ? "مرفوض" : "Rejected", value: counts.rejected, color: "text-rose-400" },
+                    { label: isRtl ? "الإجمالي" : "Total",    value: counts.all,      className: "" },
+                    { label: isRtl ? "قيد الانتظار" : "Pending",  value: counts.pending,  className: "text-orange-500" },
+                    { label: isRtl ? "معتمد" : "Approved",       value: counts.approved, className: "text-emerald-500" },
+                    { label: isRtl ? "مرفوض" : "Rejected",       value: counts.rejected, className: "text-destructive" },
                 ].map((stat) => (
-                    <div key={stat.label} className="glass-card rounded-2xl p-4 text-center border border-white/5">
-                        <div className={cn("text-3xl font-black", stat.color)}>{stat.value}</div>
-                        <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-50 mt-1">
-                            {stat.label}
-                        </div>
-                    </div>
+                    <Card key={stat.label}>
+                        <CardHeader className="pb-1 pt-4">
+                            <p className={cn("section-label text-[10px] text-muted-foreground", isRtl ? "text-right" : "")}>
+                                {stat.label}
+                            </p>
+                        </CardHeader>
+                        <CardContent className="pt-0 pb-4">
+                            <div className={cn("text-2xl font-bold tracking-tight", stat.className, isRtl ? "text-right" : "")}>
+                                {stat.value}
+                            </div>
+                        </CardContent>
+                    </Card>
                 ))}
             </div>
 
             {/* Tabs */}
-            <div className={cn("flex gap-2 flex-wrap", isRtl ? "flex-row-reverse" : "")}>
-                {tabs.map(({ key, label, labelAr, icon: Icon, color }) => (
+            <div className={cn("flex gap-1.5 flex-wrap", isRtl ? "flex-row-reverse" : "")}>
+                {tabs.map(({ key, label, labelAr, icon: Icon }) => (
                     <button
                         key={key}
                         onClick={() => setTab(key)}
                         className={cn(
-                            "flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all border",
+                            "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors border",
                             tab === key
-                                ? "bg-violet-500/15 border-violet-500/30 text-violet-400"
-                                : "bg-white/3 border-white/5 text-muted-foreground hover:bg-white/6"
+                                ? "bg-primary text-primary-foreground border-primary"
+                                : "bg-background text-muted-foreground border-border hover:bg-muted",
                         )}
                     >
-                        <Icon className={cn("h-3.5 w-3.5", tab === key ? "text-violet-400" : color)} />
+                        <Icon className="h-3.5 w-3.5" />
                         {isRtl ? labelAr : label}
                         {counts[key] > 0 && (
                             <span className={cn(
-                                "rounded-full px-1.5 py-0.5 text-[9px] font-black",
-                                tab === key ? "bg-violet-500/20 text-violet-300" : "bg-white/10 text-muted-foreground"
+                                "px-1 py-0.5 rounded text-[9px]",
+                                tab === key ? "bg-primary-foreground/20" : "bg-muted",
                             )}>
                                 {counts[key]}
                             </span>
@@ -139,20 +144,18 @@ export function ApprovalsView({ approvals, userRole, userId }: {
 
             {/* List */}
             {filtered.length === 0 ? (
-                <div className="text-center py-20 text-muted-foreground opacity-40">
-                    <ClipboardCheck className="h-12 w-12 mx-auto mb-3 opacity-20" />
-                    <p className="font-black uppercase tracking-widest text-sm">
-                        {isRtl ? "لا توجد طلبات" : "No requests"}
-                    </p>
+                <div className="text-center py-16 text-muted-foreground">
+                    <ClipboardCheck className="h-10 w-10 mx-auto mb-3 opacity-20" />
+                    <p className="text-sm">{isRtl ? "لا توجد طلبات" : "No requests"}</p>
                 </div>
             ) : (
-                <div className="space-y-4">
+                <div className="space-y-3">
                     {filtered.map((approval, i) => (
                         <motion.div
                             key={approval.id}
-                            initial={{ opacity: 0, y: 12 }}
+                            initial={{ opacity: 0, y: 8 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: i * 0.04, duration: 0.3 }}
+                            transition={{ delay: i * 0.03, duration: 0.25 }}
                         >
                             <ApprovalCard
                                 approval={approval}

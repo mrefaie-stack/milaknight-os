@@ -24,27 +24,27 @@ export function InsightHistory({ history, renderItems }: InsightHistoryProps) {
     if (!history || history.length === 0) return null;
 
     return (
-        <div className="space-y-4 pt-8 border-t border-white/5" dir={isRtl ? "rtl" : "ltr"}>
+        <div className="space-y-4 pt-8 border-t border-border" dir={isRtl ? "rtl" : "ltr"}>
             <div className={`flex items-center gap-2 text-muted-foreground opacity-50`}>
                 <History className="h-4 w-4" />
-                <span className="text-xs font-black uppercase tracking-widest">
+                <span className="section-label">
                     {isRtl ? `السجل السابق (${history.length})` : `Previous Snapshots (${history.length})`}
                 </span>
             </div>
 
             <div className="space-y-3">
                 {history.map((entry) => (
-                    <div key={entry.id} className="rounded-2xl border border-white/5 overflow-hidden">
+                    <div key={entry.id} className="rounded-lg border border-border overflow-hidden">
                         {/* Collapsed header — always visible */}
                         <button
                             onClick={() => setExpandedId(expandedId === entry.id ? null : entry.id)}
-                            className={`w-full flex items-center justify-between px-5 py-4 bg-white/3 hover:bg-white/6 transition-all`}
+                            className={`w-full flex items-center justify-between px-5 py-4 bg-muted/30 hover:bg-muted/50 transition-all`}
                         >
                             <div className={`flex items-center gap-3`}>
-                                <span className="text-xs font-black uppercase tracking-widest text-muted-foreground opacity-60">
+                                <span className="section-label text-muted-foreground opacity-60">
                                     {format(new Date(entry.createdAt), "dd MMM yyyy · HH:mm")}
                                 </span>
-                                <span className="text-[10px] font-black text-muted-foreground opacity-40">
+                                <span className="text-[10px] font-semibold text-muted-foreground opacity-40">
                                     ({formatDistanceToNow(new Date(entry.createdAt), { addSuffix: true })})
                                 </span>
                             </div>
@@ -70,7 +70,7 @@ export function InsightHistory({ history, renderItems }: InsightHistoryProps) {
                                 }}
                                 className="overflow-hidden"
                             >
-                                <div className="p-5 bg-white/2 border-t border-white/5">
+                                <div className="p-5 bg-muted/20 border-t border-border">
                                     {renderItems(entry.items)}
                                 </div>
                             </motion.div>

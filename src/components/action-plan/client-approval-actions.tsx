@@ -64,14 +64,14 @@ export function ClientApprovalActions({ item }: { item: any }) {
             <div className={`w-full flex items-center justify-between p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/10 ${isRtl ? 'flex-row-reverse' : ''}`}>
                 <div className={`flex items-center gap-2 text-emerald-600 ${isRtl ? 'flex-row-reverse text-right' : ''}`}>
                     <CheckCircle2 className="h-4 w-4" />
-                    <span className="text-xs font-black uppercase tracking-widest">{isRtl ? "معتمد من قبلك" : "APPROVED BY YOU"}</span>
+                    <span className="text-xs font-medium">{isRtl ? "معتمد من قبلك" : "Approved by you"}</span>
                 </div>
                 <Button
                     variant="ghost"
                     size="sm"
                     onClick={handleUnapprove}
                     disabled={isLoading}
-                    className="text-[10px] font-black uppercase text-muted-foreground hover:text-destructive hover:bg-destructive/5"
+                    className="text-[10px] font-medium text-muted-foreground hover:text-destructive hover:bg-destructive/5"
                 >
                     {isRtl ? "إلغاء الاعتماد" : "UNAPPROVE"}
                 </Button>
@@ -82,7 +82,7 @@ export function ClientApprovalActions({ item }: { item: any }) {
     return (
         <div className={`flex items-center gap-2 w-full ${isRtl ? 'flex-row-reverse' : ''}`}>
             <Button
-                className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase tracking-widest h-11"
+                className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold h-10"
                 onClick={handleApprove}
                 disabled={isLoading}
             >
@@ -91,7 +91,7 @@ export function ClientApprovalActions({ item }: { item: any }) {
             </Button>
             <Button
                 variant="outline"
-                className="flex-1 font-black uppercase tracking-widest h-11 border-primary/20"
+                className="flex-1 font-semibold h-10 border-primary/20"
                 onClick={() => setEditOpen(true)}
                 disabled={isLoading}
             >
@@ -102,7 +102,7 @@ export function ClientApprovalActions({ item }: { item: any }) {
             <Dialog open={editOpen} onOpenChange={setEditOpen}>
                 <DialogContent className={isRtl ? 'text-right' : 'text-left'}>
                     <DialogHeader>
-                        <DialogTitle className="text-2xl font-black uppercase tracking-tighter">
+                        <DialogTitle className="text-[15px] font-semibold">
                             {isRtl ? "طلب تعديلات" : "Request Revisions"}
                         </DialogTitle>
                         <DialogDescription>
@@ -113,12 +113,12 @@ export function ClientApprovalActions({ item }: { item: any }) {
                         placeholder={isRtl ? "اكتب ملاحظاتك هنا..." : "Type your feedback here..."}
                         value={feedback}
                         onChange={(e) => setFeedback(e.target.value)}
-                        className="min-h-[120px] rounded-2xl border-primary/10 bg-primary/5 italic"
+                        className="min-h-[120px] rounded-xl border-primary/10 bg-primary/5 italic"
                     />
                     <DialogFooter className="gap-2">
                         <Button variant="ghost" onClick={() => setEditOpen(false)}>{t("common.cancel")}</Button>
                         <Button
-                            className="bg-orange-500 hover:bg-orange-600 text-white font-black uppercase tracking-widest"
+                            className="bg-orange-500 hover:bg-orange-600 text-white font-semibold"
                             onClick={handleReject}
                             disabled={isRejecting || !feedback.trim()}
                         >

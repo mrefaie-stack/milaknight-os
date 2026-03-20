@@ -21,7 +21,6 @@ const POLL_INTERVAL = 18000; // 18s
 function playChime() {
     try {
         const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-        // Two-tone gentle chime
         const notes = [880, 1108.73];
         notes.forEach((freq, i) => {
             const osc = ctx.createOscillator();
@@ -57,40 +56,37 @@ function NotifToast({ notif, onDismiss }: { notif: NotifItem; onDismiss: (id: st
     const content = (
         <motion.div
             layout
-            initial={{ opacity: 0, y: 40, scale: 0.94 }}
+            initial={{ opacity: 0, y: 16, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.92, transition: { duration: 0.2 } }}
-            transition={{ type: "spring", damping: 22, stiffness: 260 }}
+            exit={{ opacity: 0, y: 8, scale: 0.97, transition: { duration: 0.15 } }}
+            transition={{ type: "spring", damping: 24, stiffness: 280 }}
             className={cn(
                 "relative flex items-start gap-3 w-80 max-w-[92vw]",
-                "bg-card/90 backdrop-blur-2xl border border-primary/20",
-                "rounded-2xl p-4 shadow-2xl shadow-black/40",
+                "bg-card border border-border",
+                "rounded-xl p-4 shadow-lg",
                 "cursor-pointer overflow-hidden group"
             )}
             onClick={handleDismiss}
         >
             {/* Progress bar */}
             <motion.div
-                className="absolute bottom-0 left-0 h-0.5 bg-primary/60 rounded-full"
+                className="absolute bottom-0 left-0 h-[2px] bg-primary/50 rounded-full"
                 initial={{ width: "100%" }}
                 animate={{ width: "0%" }}
                 transition={{ duration: 6, ease: "linear" }}
             />
 
-            {/* Glow pulse */}
-            <div className="absolute inset-0 bg-primary/3 rounded-2xl" />
-
             {/* Icon */}
-            <div className="shrink-0 mt-0.5 flex items-center justify-center w-9 h-9 rounded-xl bg-primary/10 border border-primary/20">
+            <div className="shrink-0 mt-0.5 flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10">
                 <Bell className="h-4 w-4 text-primary" />
             </div>
 
             {/* Text */}
             <div className="flex-1 min-w-0">
-                <p className="text-sm font-black text-foreground leading-tight">{notif.title}</p>
+                <p className="text-sm font-semibold text-foreground leading-tight">{notif.title}</p>
                 <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2 leading-relaxed">{notif.message}</p>
                 {notif.link && (
-                    <span className="inline-flex items-center gap-1 text-[10px] text-primary font-bold mt-1.5 uppercase tracking-wider">
+                    <span className="inline-flex items-center gap-1 text-[10px] text-primary font-medium mt-1.5">
                         <ExternalLink className="h-2.5 w-2.5" />
                         View
                     </span>
@@ -100,7 +96,7 @@ function NotifToast({ notif, onDismiss }: { notif: NotifItem; onDismiss: (id: st
             {/* Close */}
             <button
                 onClick={(e) => { e.stopPropagation(); handleDismiss(); }}
-                className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 text-muted-foreground hover:text-foreground"
+                className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded text-muted-foreground hover:text-foreground hover:bg-muted"
             >
                 <X className="h-3.5 w-3.5" />
             </button>
@@ -140,13 +136,11 @@ export function NotificationToaster() {
                 fresh.forEach(n => seenIds.current.add(n.id));
                 sinceRef.current = fresh[fresh.length - 1].createdAt;
 
-                // Show max 3 at once
                 setQueue(q => [...q, ...fresh].slice(-3));
                 playChime();
             } catch {}
         };
 
-        // Poll after a 3s warmup so we don't show old notifications on mount
         const warmup = setTimeout(() => {
             poll();
             const interval = setInterval(poll, POLL_INTERVAL);
@@ -157,7 +151,7 @@ export function NotificationToaster() {
     }, []);
 
     return (
-        <div className="fixed bottom-20 md:bottom-6 right-4 z-[200] flex flex-col gap-3 items-end pointer-events-none">
+        <div className="fixed bottom-20 md:bottom-6 right-4 z-[200] flex flex-col gap-2 items-end pointer-events-none">
             <AnimatePresence mode="popLayout">
                 {queue.map(n => (
                     <div key={n.id} className="pointer-events-auto">

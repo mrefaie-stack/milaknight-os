@@ -75,7 +75,7 @@ export function LeaveRequestForm({ leaves }: Props) {
             {/* Header */}
             <div className={cn("flex flex-col md:flex-row md:items-center justify-between gap-4", isRtl ? "text-right" : "")}>
                 <div>
-                    <h1 className="text-3xl md:text-5xl font-black tracking-tighter premium-gradient-text uppercase">
+                    <h1 className="text-2xl font-bold tracking-tight">
                         {isRtl ? "إجازاتي" : "My Leaves"}
                     </h1>
                     <p className="text-sm text-muted-foreground mt-1">
@@ -98,9 +98,9 @@ export function LeaveRequestForm({ leaves }: Props) {
                     { label: isRtl ? "الموافق عليها" : "Approved", value: approvedCount, color: "text-green-400", bg: "bg-green-500/8 border-green-500/20" },
                     { label: isRtl ? "أيام مأخوذة" : "Days Taken", value: totalDays, color: "text-blue-400", bg: "bg-blue-500/8 border-blue-500/20" },
                 ].map(({ label, value, color, bg }) => (
-                    <div key={label} className={cn("p-4 rounded-2xl border", bg, isRtl ? "text-right" : "")}>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1">{label}</p>
-                        <p className={cn("text-3xl font-black", color)}>{value}</p>
+                    <div key={label} className={cn("p-4 rounded-xl border", bg, isRtl ? "text-right" : "")}>
+                        <p className="section-label text-muted-foreground/50 mb-1">{label}</p>
+                        <p className={cn("text-3xl font-bold", color)}>{value}</p>
                     </div>
                 ))}
             </div>
@@ -114,18 +114,18 @@ export function LeaveRequestForm({ leaves }: Props) {
                         exit={{ opacity: 0, height: 0 }}
                         className="overflow-hidden"
                     >
-                        <div className={cn("p-5 rounded-2xl border border-primary/20 bg-primary/5 space-y-4", isRtl ? "text-right" : "")}>
-                            <p className="text-sm font-black">{isRtl ? "طلب إجازة جديد" : "New Leave Request"}</p>
+                        <div className={cn("p-5 rounded-xl border border-primary/20 bg-primary/5 space-y-4", isRtl ? "text-right" : "")}>
+                            <p className="text-sm font-semibold">{isRtl ? "طلب إجازة جديد" : "New Leave Request"}</p>
 
                             <div className="grid md:grid-cols-2 gap-3">
                                 <div className="space-y-1.5">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">
+                                    <label className="section-label text-muted-foreground/50">
                                         {isRtl ? "نوع الإجازة" : "Leave Type"}
                                     </label>
                                     <select
                                         value={form.type}
                                         onChange={e => setForm(f => ({ ...f, type: e.target.value }))}
-                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-primary/40"
+                                        className="w-full bg-muted/30 border border-border rounded-xl px-3 py-2.5 text-sm outline-none focus:border-primary/40"
                                         dir={isRtl ? "rtl" : "ltr"}
                                     >
                                         {Object.entries(LEAVE_TYPE_AR).map(([val, ar]) => (
@@ -134,7 +134,7 @@ export function LeaveRequestForm({ leaves }: Props) {
                                     </select>
                                 </div>
                                 <div className="space-y-1.5">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">
+                                    <label className="section-label text-muted-foreground/50">
                                         {isRtl ? "السبب (اختياري)" : "Reason (optional)"}
                                     </label>
                                     <input
@@ -142,30 +142,30 @@ export function LeaveRequestForm({ leaves }: Props) {
                                         value={form.reason}
                                         onChange={e => setForm(f => ({ ...f, reason: e.target.value }))}
                                         placeholder={isRtl ? "سبب الإجازة..." : "Reason..."}
-                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-primary/40"
+                                        className="w-full bg-muted/30 border border-border rounded-xl px-3 py-2.5 text-sm outline-none focus:border-primary/40"
                                         dir={isRtl ? "rtl" : "ltr"}
                                     />
                                 </div>
                                 <div className="space-y-1.5">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">
+                                    <label className="section-label text-muted-foreground/50">
                                         {isRtl ? "تاريخ البداية" : "Start Date"}
                                     </label>
                                     <input
                                         type="date"
                                         value={form.startDate}
                                         onChange={e => setForm(f => ({ ...f, startDate: e.target.value }))}
-                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-primary/40"
+                                        className="w-full bg-muted/30 border border-border rounded-xl px-3 py-2.5 text-sm outline-none focus:border-primary/40"
                                     />
                                 </div>
                                 <div className="space-y-1.5">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">
+                                    <label className="section-label text-muted-foreground/50">
                                         {isRtl ? "تاريخ النهاية" : "End Date"}
                                     </label>
                                     <input
                                         type="date"
                                         value={form.endDate}
                                         onChange={e => setForm(f => ({ ...f, endDate: e.target.value }))}
-                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-primary/40"
+                                        className="w-full bg-muted/30 border border-border rounded-xl px-3 py-2.5 text-sm outline-none focus:border-primary/40"
                                     />
                                 </div>
                             </div>
@@ -173,7 +173,7 @@ export function LeaveRequestForm({ leaves }: Props) {
                             <div className="flex gap-3">
                                 <button
                                     onClick={() => setShowForm(false)}
-                                    className="flex-1 py-2.5 rounded-xl border border-white/10 text-sm font-bold text-muted-foreground hover:bg-white/5"
+                                    className="flex-1 py-2.5 rounded-xl border border-border text-sm font-bold text-muted-foreground hover:bg-muted/30"
                                 >
                                     {isRtl ? "إلغاء" : "Cancel"}
                                 </button>
@@ -192,7 +192,7 @@ export function LeaveRequestForm({ leaves }: Props) {
 
             {/* History */}
             <div className="space-y-3">
-                <p className="text-[10px] font-black uppercase tracking-[0.25em] text-primary/40">
+                <p className="section-label text-primary/40">
                     {isRtl ? "السجل" : "History"} ({leaves.length})
                 </p>
                 {leaves.length === 0 ? (
@@ -206,12 +206,12 @@ export function LeaveRequestForm({ leaves }: Props) {
                         initial={{ opacity: 0, y: 8 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: i * 0.04 }}
-                        className={cn("p-4 rounded-2xl border border-white/8 bg-white/2 space-y-2", isRtl ? "text-right" : "")}
+                        className={cn("p-4 rounded-xl border border-border bg-muted/10 space-y-2", isRtl ? "text-right" : "")}
                     >
                         <div className={cn("flex items-start justify-between gap-3", isRtl ? "flex-row-reverse" : "")}>
                             <div className="flex-1 min-w-0">
                                 <div className={cn("flex items-center gap-2 flex-wrap", isRtl ? "flex-row-reverse" : "")}>
-                                    <p className="text-sm font-black">
+                                    <p className="text-sm font-semibold">
                                         {isRtl ? LEAVE_TYPE_AR[leave.type] : leave.type.replace("_", " ")}
                                     </p>
                                     <span className="text-[10px] text-muted-foreground/50">·</span>
@@ -233,7 +233,7 @@ export function LeaveRequestForm({ leaves }: Props) {
                                 {leave.status === "PENDING" && <Clock className="h-3.5 w-3.5 text-yellow-400" />}
                                 {leave.status === "APPROVED" && <CheckCircle2 className="h-3.5 w-3.5 text-green-400" />}
                                 {leave.status === "REJECTED" && <XCircle className="h-3.5 w-3.5 text-red-400" />}
-                                <span className={cn("text-[10px] font-black px-2 py-1 rounded-full border uppercase", LEAVE_STATUS_STYLE[leave.status])}>
+                                <span className={cn("section-label px-2 py-1 rounded-full border", LEAVE_STATUS_STYLE[leave.status])}>
                                     {isRtl
                                         ? { PENDING: "معلق", APPROVED: "موافق", REJECTED: "مرفوض" }[leave.status]
                                         : leave.status}
