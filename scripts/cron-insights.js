@@ -145,7 +145,7 @@ async function generateInsight(client, type) {
     try {
         const prompt = buildPrompt(type, client);
         const response = await anthropic.messages.create({
-            model: "claude-3-5-sonnet-20241022",
+            model: "claude-sonnet-4-6",
             max_tokens: 4096,
             system: "You are a business intelligence analyst for a digital marketing agency in the Arab world. Generate structured JSON content based on client profiles. Always use grammatically correct Modern Standard Arabic (فصحى). Always respond with ONLY a valid JSON array. No markdown code blocks, no explanation, no preamble.",
             messages: [{ role: "user", content: prompt }],
