@@ -69,8 +69,7 @@ export class MetaAPI {
     async getPageInsights(pageId: string, pageToken?: string, since?: string, until?: string) {
         const params: Record<string, string> = {
             metric: 'page_impressions,page_impressions_unique,page_post_engagements,page_views_total,page_fan_adds_unique',
-            // total_over_range aggregates correctly across the period (no daily overcounting of unique users)
-            period: 'total_over_range'
+            period: 'day'
         };
         if (since && until) {
             params.since = since;
