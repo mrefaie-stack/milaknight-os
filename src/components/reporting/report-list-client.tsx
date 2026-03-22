@@ -5,10 +5,22 @@ import { ReportFilter } from "./report-filter";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
-import { BarChart3, Settings, ExternalLink, Calendar, GitCompare, CheckCircle2 } from "lucide-react";
+import { BarChart3, Settings, Calendar, GitCompare, CheckCircle2, Trash2 } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { requestReportDeletion } from "@/app/actions/report";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export function ReportListClient({
     initialReports,
@@ -148,6 +160,41 @@ export function ReportListClient({
                                                         <Settings className="h-5 w-5" />
                                                     </Button>
                                                 </Link>
+                                            )}
+                                            {role === 'AM' && (
+                                                <AlertDialog>
+                                                    <AlertDialogTrigger asChild>
+                                                        <Button variant="outline" size="icon" className="h-12 w-12 rounded-lg border-2 hover:bg-destructive/5 hover:text-destructive hover:border-destructive/30 transition-all">
+                                                            <Trash2 className="h-5 w-5" />
+                                                        </Button>
+                                                    </AlertDialogTrigger>
+                                                    <AlertDialogContent>
+                                                        <AlertDialogHeader>
+                                                            <AlertDialogTitle>{isRtl ? 'طلب حذف التقرير' : 'Request Report Deletion'}</AlertDialogTitle>
+                                                            <AlertDialogDescription>
+                                                                {isRtl
+                                                                    ? `سيتم إرسال طلب حذف تقرير "${report.client.name} - ${report.month}" للمسؤول للموافقة عليه.`
+                                                                    : `A deletion request for "${report.client.name} - ${report.month}" will be sent to the admin for approval.`}
+                                                            </AlertDialogDescription>
+                                                        </AlertDialogHeader>
+                                                        <AlertDialogFooter>
+                                                            <AlertDialogCancel>{isRtl ? 'إلغاء' : 'Cancel'}</AlertDialogCancel>
+                                                            <AlertDialogAction
+                                                                className="bg-destructive hover:bg-destructive/90"
+                                                                onClick={async () => {
+                                                                    try {
+                                                                        await requestReportDeletion(report.id);
+                                                                        toast.success(isRtl ? 'تم إرسال طلب الحذف للمسؤول' : 'Deletion request sent to admin');
+                                                                    } catch (e: any) {
+                                                                        toast.error(e.message || 'Error');
+                                                                    }
+                                                                }}
+                                                            >
+                                                                {isRtl ? 'إرسال الطلب' : 'Send Request'}
+                                                            </AlertDialogAction>
+                                                        </AlertDialogFooter>
+                                                    </AlertDialogContent>
+                                                </AlertDialog>
                                             )}
                                         </>
                                     ) : (
