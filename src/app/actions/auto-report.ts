@@ -171,76 +171,103 @@ async function fetchMetaData(
         return row.values.reduce((acc: number, v: any) => acc + (Number(v.value) || 0), 0);
     };
 
+    const label = `[auto-report][${since}→${until}]`;
+
     // --- Ad Account (Paid) ---
     let adInsights: any = {};
-    try {
-        const res: any = await meta.getAdAccountInsights(
-            connection.platformAccountId, 'last_30d', since, until
-        );
-        adInsights = res?.data?.[0] || {};
-    } catch (e) {
-        console.error("Auto report: Ad insights error:", e);
+    if (connection.platformAccountId) {
+        try {
+            const res: any = await meta.getAdAccountInsights(
+                connection.platformAccountId, 'last_30d', since, until
+            );
+            adInsights = res?.data?.[0] || {};
+            console.log(`${label} adInsights:`, JSON.stringify(adInsights));
+        } catch (e: any) {
+            console.error(`${label} Ad insights FAILED:`, e?.message || e);
+        }
+    } else {
+        console.warn(`${label} No platformAccountId — skipping ad insights`);
     }
 
-    if (!connection.metadata) return result;
+    if (!connection.metadata) {
+        console.warn(`${label} No metadata on connection — cannot get pageId`);
+        return result;
+    }
 
+    let parsed: any = {};
+    try { parsed = JSON.parse(connection.metadata); } catch (e) {
+        console.error(`${label} Failed to parse connection.metadata:`, e);
+        return result;
+    }
+
+    if (!parsed?.pageId) {
+        console.warn(`${label} No pageId in metadata:`, parsed);
+        return result;
+    }
+
+    const pageId = parsed.pageId;
+    console.log(`${label} pageId=${pageId}`);
+
+    // Page info — gets page access token + IG account
+    let pageInfo: any = {};
     try {
-        const parsed = JSON.parse(connection.metadata);
-        if (!parsed?.pageId) return result;
+        pageInfo = await meta.getPageInfo(pageId);
+        console.log(`${label} pageInfo fan_count=${pageInfo?.fan_count}, ig=${pageInfo?.instagram_business_account?.id}`);
+    } catch (e: any) {
+        console.error(`${label} getPageInfo FAILED:`, e?.message || e);
+    }
 
-        const pageId = parsed.pageId;
+    const pageToken = pageInfo?.access_token;
+    const igAccount = pageInfo?.instagram_business_account;
 
-        // Page info (fan_count + page token + IG account)
-        let pageInfo: any = {};
-        try { pageInfo = await meta.getPageInfo(pageId); } catch (e) { }
+    if (!pageToken) {
+        console.warn(`${label} No page access_token — page insights will be empty`);
+    }
 
-        const pageToken = pageInfo?.access_token;
-        const igAccount = pageInfo?.instagram_business_account;
-
-        // --- Facebook Organic (daily values summed for the month via Insights API) ---
-        let fbPageData: any[] = [];
-
-        if (pageToken) {
-            try {
-                const pageInsights: any = await meta.getPageInsights(pageId, pageToken, since, until);
-                fbPageData = pageInsights?.data || [];
-            } catch (e) {
-                console.error("Auto report: FB page insights error:", e);
-            }
+    // --- Facebook Page Insights (period=total_over_range) ---
+    let fbPageData: any[] = [];
+    if (pageToken) {
+        try {
+            const pageInsights: any = await meta.getPageInsights(pageId, pageToken, since, until);
+            fbPageData = pageInsights?.data || [];
+            console.log(`${label} FB page metrics fetched:`, fbPageData.map((r: any) => `${r.name}=${r.values?.[0]?.value}`).join(', '));
+        } catch (e: any) {
+            console.error(`${label} FB page insights FAILED:`, e?.message || e);
         }
+    }
 
-        result.facebook = {
-            impressions: sumDailyValues(fbPageData, "page_impressions"),
-            reach: sumDailyValues(fbPageData, "page_impressions_unique"),
-            engagement: sumDailyValues(fbPageData, "page_post_engagements"),
-            clicks: Number(adInsights.clicks) || 0,
-            spend: Number(adInsights.spend) || 0,
-            profileVisits: sumDailyValues(fbPageData, "page_views_total"),   // Page views
-            followers: sumDailyValues(fbPageData, "page_fan_adds_unique"),   // New page likes this month
-        };
+    result.facebook = {
+        impressions: sumDailyValues(fbPageData, "page_impressions"),
+        reach: sumDailyValues(fbPageData, "page_impressions_unique"),
+        engagement: sumDailyValues(fbPageData, "page_post_engagements"),
+        clicks: Number(adInsights.clicks) || 0,
+        spend: Number(adInsights.spend) || 0,
+        profileVisits: sumDailyValues(fbPageData, "page_views_total"),
+        followers: sumDailyValues(fbPageData, "page_fan_adds_unique"),
+    };
+    console.log(`${label} facebook result:`, JSON.stringify(result.facebook));
 
-        // --- Instagram ---
-        if (igAccount?.id && pageToken) {
-            try {
-                const igFollowers = igAccount.followers_count || 0;
+    // --- Instagram (period=day, since IG doesn't support total_over_range) ---
+    if (igAccount?.id && pageToken) {
+        try {
+            const igFollowers = igAccount.followers_count || 0;
+            const igInsightsData: any = await meta.getIgInsights(igAccount.id, pageToken, since, until);
+            const igInsights = igInsightsData?.data || [];
+            console.log(`${label} IG metrics fetched:`, igInsights.map((r: any) => `${r.name}=${r.values?.reduce((s: number, v: any) => s + (v.value || 0), 0)}`).join(', '));
 
-                // All metrics from the official IG Insights API
-                const igInsightsData: any = await meta.getIgInsights(igAccount.id, pageToken, since, until);
-                const igInsights = igInsightsData?.data || [];
-
-                result.instagram = {
-                    views: sumDailyValues(igInsights, "impressions"),        // Impressions → maps to "views" field in report form
-                    reach: sumDailyValues(igInsights, "reach"),
-                    engagement: sumDailyValues(igInsights, "total_interactions"),
-                    profileVisits: sumDailyValues(igInsights, "profile_views"),
-                    followers: igFollowers                                    // Total followers (snapshot)
-                };
-            } catch (e) {
-                console.error("Auto report: Instagram insights error:", e);
-            }
+            result.instagram = {
+                views: sumDailyValues(igInsights, "impressions"),
+                reach: sumDailyValues(igInsights, "reach"),
+                engagement: sumDailyValues(igInsights, "total_interactions"),
+                profileVisits: sumDailyValues(igInsights, "profile_views"),
+                followers: igFollowers
+            };
+            console.log(`${label} instagram result:`, JSON.stringify(result.instagram));
+        } catch (e: any) {
+            console.error(`${label} Instagram insights FAILED:`, e?.message || e);
         }
-    } catch (e) {
-        console.error("Auto report: Organic data error:", e);
+    } else {
+        console.warn(`${label} No IG account or no pageToken — skipping Instagram insights`);
     }
 
     return result;
