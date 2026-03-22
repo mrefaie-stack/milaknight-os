@@ -118,17 +118,12 @@ export class MetaAPI {
         });
     }
 
-    async getIgMediaInsights(igAccountId: string, pageToken: string, since?: string, until?: string) {
-        const params: Record<string, string> = {
+    async getIgMediaInsights(igAccountId: string, pageToken: string) {
+        return this.fetch(`/${igAccountId}/media`, {
             fields: 'id,like_count,comments_count,media_type,media_product_type,video_views,timestamp',
             limit: '50',
             access_token: pageToken
-        };
-        if (since && until) {
-            params.since = since;
-            params.until = until;
-        }
-        return this.fetch(`/${igAccountId}/media`, params);
+        });
     }
 
     /**
