@@ -161,6 +161,28 @@ export class MetaAPI {
     }
 
     /**
+     * Fetch Instagram link_click actions from the ad account.
+     * This is what IG Business Manager shows as "Link clicks" (stories + ads).
+     * Returns the total link_click count for Instagram publisher platform.
+     */
+    async getIgAdLinkClicks(adAccountId: string, since: string, until: string): Promise<number> {
+        const params: Record<string, string> = {
+            fields: 'actions',
+            breakdowns: 'publisher_platform',
+            time_range: JSON.stringify({ since, until })
+        };
+        const r = await this.fetch(`/${adAccountId}/insights`, params);
+        let linkClicks = 0;
+        for (const row of r.data || []) {
+            if (row.publisher_platform === 'instagram') {
+                const lc = (row.actions || []).find((a: any) => a.action_type === 'link_click');
+                if (lc) linkClicks += Number(lc.value) || 0;
+            }
+        }
+        return linkClicks;
+    }
+
+    /**
      * Fetch all pages associated with the token (with pagination loop)
      */
     async getPages() {
