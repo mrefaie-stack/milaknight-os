@@ -18,6 +18,7 @@ export async function GET() {
     return NextResponse.json({
         facebook: platforms.includes('FACEBOOK'),
         snapchat: platforms.includes('SNAPCHAT'),
-        tiktok: platforms.includes('TIKTOK')
+        tiktok: platforms.includes('TIKTOK'),
+        linkedin: platforms.includes('LINKEDIN')
     });
 }

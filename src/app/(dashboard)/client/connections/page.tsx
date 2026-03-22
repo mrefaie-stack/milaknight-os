@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { signIn } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
-import { Facebook, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { Facebook, CheckCircle, AlertCircle, Loader2, Linkedin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -11,8 +11,8 @@ import { toast } from 'sonner';
 
 export default function ClientConnectionsPage() {
     const searchParams = useSearchParams();
-    const [connections, setConnections] = useState<{ facebook: boolean; snapchat: boolean; tiktok: boolean }>({
-        facebook: false, snapchat: false, tiktok: false
+    const [connections, setConnections] = useState<{ facebook: boolean; snapchat: boolean; tiktok: boolean; linkedin: boolean }>({
+        facebook: false, snapchat: false, tiktok: false, linkedin: false
     });
     const [metaPages, setMetaPages] = useState<any[]>([]);
     const [metaAccounts, setMetaAccounts] = useState<any[]>([]);
@@ -39,6 +39,8 @@ export default function ClientConnectionsPage() {
             if (needsSelect) loadSnapchatSetup();
         } else if (success === 'tiktok') {
             toast.success('TikTok connected!');
+        } else if (success === 'linkedin') {
+            toast.success('LinkedIn connected!');
         } else if (searchParams?.get('error')) {
             toast.error('Connection failed. Please try again.');
         }
@@ -87,6 +89,10 @@ export default function ClientConnectionsPage() {
 
     const handleConnectTikTok = () => {
         window.location.href = '/api/auth/tiktok';
+    };
+
+    const handleConnectLinkedIn = () => {
+        window.location.href = '/api/auth/linkedin';
     };
 
     const handleSaveMeta = async () => {
@@ -321,6 +327,37 @@ export default function ClientConnectionsPage() {
                             className="w-full bg-black hover:bg-black/80 text-white font-semibold py-5 rounded-xl"
                         >
                             {connections.tiktok ? 'Reconnect TikTok' : 'Connect TikTok'}
+                        </Button>
+                    </CardContent>
+                </Card>
+
+                {/* LinkedIn */}
+                <Card className={connections.linkedin ? 'border-green-500/30 bg-green-500/5' : 'border-[#0077B5]/20 bg-[#0077B5]/5'}>
+                    <CardHeader>
+                        <div className="flex items-center justify-between">
+                            <div className="p-2 bg-[#0077B5]/10 rounded-lg">
+                                <Linkedin className="w-8 h-8 text-[#0077B5]" />
+                            </div>
+                            {connections.linkedin ? (
+                                <span className="flex items-center gap-1 px-2 py-1 bg-green-500/10 text-green-500 text-xs rounded-full border border-green-500/20">
+                                    <CheckCircle className="w-3 h-3" /> Connected
+                                </span>
+                            ) : (
+                                <span className="flex items-center gap-1 px-2 py-1 bg-yellow-500/10 text-yellow-500 text-xs rounded-full border border-yellow-500/20">
+                                    <AlertCircle className="w-3 h-3" /> Not Connected
+                                </span>
+                            )}
+                        </div>
+                        <CardTitle className="mt-4">LinkedIn</CardTitle>
+                        <CardDescription>Connect your LinkedIn Company Page to track followers, visits, and post performance.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <Button
+                            onClick={handleConnectLinkedIn}
+                            className="w-full bg-[#0077B5] hover:bg-[#0077B5]/90 text-white font-semibold py-5 rounded-xl"
+                        >
+                            <Linkedin className="w-4 h-4 mr-2" />
+                            {connections.linkedin ? 'Reconnect LinkedIn' : 'Connect LinkedIn'}
                         </Button>
                     </CardContent>
                 </Card>
