@@ -1,11 +1,24 @@
 "use client";
 import Link from "next/link";
-import { Plus, FolderKanban, CheckCircle2, Clock, AlertCircle, ChevronRight, ChevronLeft } from "lucide-react";
+import { Plus, FolderKanban, CheckCircle2, Clock, AlertCircle, ChevronRight, ChevronLeft, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useLanguage } from "@/contexts/language-context";
 import { cn } from "@/lib/utils";
+import { requestActionPlanDeletion } from "@/app/actions/action-plan";
+import { toast } from "sonner";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const STATUS_META = {
     DRAFT: { ar: "مسودة", en: "Draft", variant: "ghost" as const, icon: Clock },
@@ -89,7 +102,8 @@ export function AmActionPlansList({ plans, role }: { plans: any[], role?: string
                     const hasFeedback   = plan.items.some((i: any) => i.clientComment && !i.feedbackResolved);
 
                     return (
-                        <Link key={plan.id} href={`/am/action-plans/${plan.id}`} className="group block">
+                        <div key={plan.id} className="group relative">
+                            <Link href={`/am/action-plans/${plan.id}`} className="block">
                             <div className={cn(
                                 "p-4 rounded-lg bg-card border transition-colors duration-150",
                                 needsRevision
@@ -148,7 +162,50 @@ export function AmActionPlansList({ plans, role }: { plans: any[], role?: string
                                     <Chevron className="h-4 w-4 text-muted-foreground/50 group-hover:text-muted-foreground transition-colors" />
                                 </div>
                             </div>
-                        </Link>
+                            </Link>
+
+                            {/* Delete button — only for AM */}
+                            {role === "AM" && (
+                                <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="absolute top-2 right-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                                            onClick={(e) => e.preventDefault()}
+                                        >
+                                            <Trash2 className="h-3.5 w-3.5" />
+                                        </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                            <AlertDialogTitle>{isRtl ? 'طلب حذف الخطة' : 'Request Plan Deletion'}</AlertDialogTitle>
+                                            <AlertDialogDescription>
+                                                {isRtl
+                                                    ? `سيتم إرسال طلب حذف خطة "${plan.client.name} - ${plan.month}" للمسؤول للموافقة عليه.`
+                                                    : `A deletion request for "${plan.client.name} - ${plan.month}" will be sent to the admin for approval.`}
+                                            </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel>{isRtl ? 'إلغاء' : 'Cancel'}</AlertDialogCancel>
+                                            <AlertDialogAction
+                                                className="bg-destructive hover:bg-destructive/90"
+                                                onClick={async () => {
+                                                    try {
+                                                        await requestActionPlanDeletion(plan.id);
+                                                        toast.success(isRtl ? 'تم إرسال طلب الحذف للمسؤول' : 'Deletion request sent to admin');
+                                                    } catch (e: any) {
+                                                        toast.error(e.message || 'Error');
+                                                    }
+                                                }}
+                                            >
+                                                {isRtl ? 'إرسال الطلب' : 'Send Request'}
+                                            </AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
+                            )}
+                        </div>
                     );
                 })}
 
