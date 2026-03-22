@@ -94,11 +94,16 @@ export class MetaAPI {
      * Fetch all Instagram account-level insights for a date range.
      * Returns reach, impressions, total_interactions, profile_views — all from the official Insights API.
      */
+    /**
+     * Instagram only supports: day, week, days_28, month, lifetime.
+     * We use period=day with since/until so each metric is summed across the month.
+     * impressions, total_interactions, profile_views are additive (correct).
+     * reach is approximate (daily unique counts summed — may slightly overcount).
+     */
     async getIgInsights(igAccountId: string, pageToken: string, since?: string, until?: string) {
         const params: Record<string, string> = {
             metric: 'reach,impressions,total_interactions,profile_views',
-            // total_over_range aggregates correctly across the period (no daily overcounting of unique users)
-            period: 'total_over_range',
+            period: 'day',
             access_token: pageToken
         };
         if (since && until) {
