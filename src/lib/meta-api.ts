@@ -68,7 +68,8 @@ export class MetaAPI {
      */
     async getPageInsights(pageId: string, pageToken?: string, since?: string, until?: string) {
         const params: Record<string, string> = {
-            metric: 'page_impressions,page_impressions_unique,page_post_engagements,page_views_total,page_fan_adds_unique',
+            // page_post_engagements and page_fan_adds_unique were deprecated in Meta API v18+
+            metric: 'page_impressions,page_impressions_unique,page_views_total',
             period: 'day'
         };
         if (since && until) {
@@ -101,7 +102,8 @@ export class MetaAPI {
      */
     async getIgInsights(igAccountId: string, pageToken: string, since?: string, until?: string) {
         const params: Record<string, string> = {
-            metric: 'reach,impressions,total_interactions,profile_views',
+            // 'impressions' was deprecated in IG API — replaced by 'views'
+            metric: 'reach,views,total_interactions,profile_views',
             period: 'day',
             access_token: pageToken
         };

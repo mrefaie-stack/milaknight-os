@@ -239,11 +239,11 @@ async function fetchMetaData(
     result.facebook = {
         impressions: sumDailyValues(fbPageData, "page_impressions"),
         reach: sumDailyValues(fbPageData, "page_impressions_unique"),
-        engagement: sumDailyValues(fbPageData, "page_post_engagements"),
+        engagement: 0, // page_post_engagements deprecated in Meta API v18+
         clicks: Number(adInsights.clicks) || 0,
         spend: Number(adInsights.spend) || 0,
         profileVisits: sumDailyValues(fbPageData, "page_views_total"),
-        followers: sumDailyValues(fbPageData, "page_fan_adds_unique"),
+        followers: pageInfo?.fan_count || 0, // total page fans (fan_count from page info)
     };
     console.log(`${label} facebook result:`, JSON.stringify(result.facebook));
 
@@ -256,7 +256,7 @@ async function fetchMetaData(
             console.log(`${label} IG metrics fetched:`, igInsights.map((r: any) => `${r.name}=${r.values?.reduce((s: number, v: any) => s + (v.value || 0), 0)}`).join(', '));
 
             result.instagram = {
-                views: sumDailyValues(igInsights, "impressions"),
+                views: sumDailyValues(igInsights, "views"),
                 reach: sumDailyValues(igInsights, "reach"),
                 engagement: sumDailyValues(igInsights, "total_interactions"),
                 profileVisits: sumDailyValues(igInsights, "profile_views"),
