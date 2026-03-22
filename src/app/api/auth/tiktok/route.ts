@@ -9,7 +9,7 @@ export async function GET() {
     const appKey = process.env.TIKTOK_APP_KEY!;
     const redirectUri = `${process.env.NEXTAUTH_URL}/api/auth/tiktok/callback`;
 
-    const authUrl = new URL('https://ads.tiktok.com/marketing_api/auth');
+    const authUrl = new URL('https://business.tiktok.com/portal/auth');
     authUrl.searchParams.set('app_id', appKey);
     authUrl.searchParams.set('redirect_uri', redirectUri);
     authUrl.searchParams.set('state', Math.random().toString(36).substring(7));

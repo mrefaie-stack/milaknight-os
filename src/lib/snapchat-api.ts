@@ -38,12 +38,13 @@ export class SnapchatAPI {
      * Returns: { impressions, swipes, spend_cents, video_views, reach }
      */
     async getAdAccountStats(adAccountId: string, since: string, until: string) {
-        const startTime = new Date(since + 'T00:00:00Z').getTime();
-        const endTime = new Date(until + 'T23:59:59Z').getTime();
+        // Snapchat expects Unix timestamps in SECONDS (not milliseconds)
+        const startTime = Math.floor(new Date(since + 'T00:00:00Z').getTime() / 1000);
+        const endTime = Math.floor(new Date(until + 'T23:59:59Z').getTime() / 1000);
 
         const data = await this.fetch(`/adaccounts/${adAccountId}/stats`, {
             granularity: 'TOTAL',
-            fields: 'impressions,swipes,spend,video_views,reach',
+            fields: 'impressions,swipes,spend,video_views,reach,frequency,uniques,avg_screen_time_millis',
             start_time: startTime.toString(),
             end_time: endTime.toString()
         });
@@ -51,10 +52,13 @@ export class SnapchatAPI {
         const stat = data.timeseries_stats?.[0]?.timeseries_stat?.stats || {};
         return {
             impressions: stat.impressions || 0,
-            swipes: stat.swipes || 0,              // Link/swipe-up clicks
-            spend: (stat.spend || 0) / 1_000_000,  // Snapchat spend is in micro-currency
+            swipes: stat.swipes || 0,
+            spend: (stat.spend || 0) / 1_000_000,  // micro-currency → dollars
             videoViews: stat.video_views || 0,
-            reach: stat.reach || 0
+            reach: stat.reach || 0,
+            frequency: stat.frequency || 0,
+            uniques: stat.uniques || 0,
+            avgScreenTimeMs: stat.avg_screen_time_millis || 0
         };
     }
 
