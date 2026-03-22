@@ -59,20 +59,21 @@ const PLATFORMS = [
 
 const PLATFORM_METRICS: Record<string, { id: string, labelAr: string, labelEn: string, icon: any }[]> = {
     facebook: [
-        { id: "impressions", labelAr: "مرات الظهور", labelEn: "Impressions", icon: Eye },
-        { id: "reach", labelAr: "الوصول الفعلي", labelEn: "Reach", icon: Users },
-        { id: "engagement", labelAr: "تفاعلات المنشورات", labelEn: "Post Engagements", icon: MousePointer2 },
-        { id: "profileVisits", labelAr: "مشاهدات الصفحة", labelEn: "Page Views", icon: Eye },
-        { id: "followers", labelAr: "إعجابات جديدة", labelEn: "New Page Likes", icon: Users },
-        { id: "clicks", labelAr: "نقرات الإعلان", labelEn: "Ad Clicks", icon: Target },
+        { id: "impressions", labelAr: "المشاهدات", labelEn: "Views", icon: Eye },
+        { id: "reach", labelAr: "المشاهدون", labelEn: "Viewers", icon: Users },
+        { id: "engagement", labelAr: "تفاعلات المحتوى", labelEn: "Content Interactions", icon: MousePointer2 },
+        { id: "clicks", labelAr: "نقرات الروابط", labelEn: "Link Clicks", icon: Link },
+        { id: "profileVisits", labelAr: "الزيارات", labelEn: "Visits", icon: Eye },
+        { id: "followers", labelAr: "المتابعون الجدد", labelEn: "Follows", icon: Users },
         { id: "spend", labelAr: "الإنفاق الإعلاني (ريال)", labelEn: "Ad Spend (SAR)", icon: DollarSign },
     ],
     instagram: [
-        { id: "views", labelAr: "مرات الظهور", labelEn: "Impressions", icon: Eye },
-        { id: "reach", labelAr: "الوصول الفعلي", labelEn: "Reach", icon: Users },
-        { id: "engagement", labelAr: "إجمالي التفاعلات", labelEn: "Total Interactions", icon: MousePointer2 },
-        { id: "profileVisits", labelAr: "مشاهدات الحساب", labelEn: "Profile Views", icon: Eye },
-        { id: "followers", labelAr: "إجمالي المتابعين", labelEn: "Total Followers", icon: Users },
+        { id: "views", labelAr: "المشاهدات", labelEn: "Views", icon: Eye },
+        { id: "reach", labelAr: "الوصول", labelEn: "Reach", icon: Users },
+        { id: "engagement", labelAr: "تفاعلات المحتوى", labelEn: "Content Interactions", icon: MousePointer2 },
+        { id: "clicks", labelAr: "نقرات الروابط", labelEn: "Link Clicks", icon: Link },
+        { id: "profileVisits", labelAr: "الزيارات", labelEn: "Visits", icon: Eye },
+        { id: "followers", labelAr: "المتابعون الجدد", labelEn: "Follows", icon: Users },
     ],
     linkedin: [
         { id: "impressions", labelAr: "الظهور", labelEn: "Impressions", icon: Eye },
