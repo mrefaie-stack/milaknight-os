@@ -181,21 +181,7 @@ async function fetchMetaData(
 
     const label = `[auto-report][${since}→${until}]`;
 
-    // --- Ad Account (Paid) ---
-    let adInsights: any = {};
-    if (connection.platformAccountId) {
-        try {
-            const res: any = await meta.getAdAccountInsights(
-                connection.platformAccountId, 'last_30d', since, until
-            );
-            adInsights = res?.data?.[0] || {};
-            console.log(`${label} adInsights:`, JSON.stringify(adInsights));
-        } catch (e: any) {
-            console.error(`${label} Ad insights FAILED:`, e?.message || e);
-        }
-    } else {
-        console.warn(`${label} No platformAccountId — skipping ad insights`);
-    }
+    // Ad insights intentionally excluded from auto-report (organic only)
 
     if (!connection.metadata) {
         console.warn(`${label} No metadata on connection — cannot get pageId`);
@@ -257,8 +243,8 @@ async function fetchMetaData(
         impressions: sumDailyValues(fbPageData, "page_impressions"),           // Views
         reach: sumDailyValues(fbPageData, "page_impressions_unique"),          // Viewers
         engagement: sumDailyValues(fbPageData, "page_post_engagements"),      // Content interactions
-        clicks: Number(adInsights.clicks) || 0,                                // Link clicks (paid)
-        spend: Number(adInsights.spend) || 0,
+        clicks: 0,
+        spend: 0,
         profileVisits: sumDailyValues(fbPageData, "page_views_total"),         // Visits
         followers: sumDailyValues(fbPageData, "page_fan_adds") || pageInfo?.fan_count || 0, // Follows
     };
