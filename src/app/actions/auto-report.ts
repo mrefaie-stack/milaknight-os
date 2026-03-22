@@ -233,7 +233,7 @@ async function fetchSnapchatData(
     const adAccountId = connection.platformAccountId;
     if (!adAccountId || adAccountId === 'unknown') return null;
 
-    return snap.getAdAccountStats(adAccountId, since, until);
+    return snap.getAdAccountStats(adAccountId);
 }
 
 // ---------------------------------------------------------------------------
