@@ -283,7 +283,9 @@ export function LiveMetrics() {
                             </div>
                             {!currentPlatform.error && (
                                 <>
-                                    <Badge variant="outline" className="text-xs">Last 30 Days</Badge>
+                                    <Badge variant="outline" className="text-xs">
+                                        {activeTab === 'snapchat' && snapData?.period === 'lifetime' ? 'All Time' : 'Last 30 Days'}
+                                    </Badge>
                                     <Badge variant="success" className="text-xs">Optimized</Badge>
                                 </>
                             )}

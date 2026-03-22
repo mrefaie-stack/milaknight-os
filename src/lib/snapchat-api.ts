@@ -32,24 +32,21 @@ export class SnapchatAPI {
         return this.fetch(`/organizations/${orgId}/adaccounts`);
     }
 
+    async getCampaigns(adAccountId: string) {
+        const data = await this.fetch(`/adaccounts/${adAccountId}/campaigns`);
+        return (data.campaigns || []).map((c: any) => c.campaign).filter(Boolean);
+    }
+
     /**
-     * Fetch aggregate ad account stats for a date range.
-     * since/until: YYYY-MM-DD
-     * Returns: { impressions, swipes, spend_cents, video_views, reach }
+     * Fetch lifetime campaign stats (no date range — Snapchat timestamp API is broken).
+     * Returns aggregated totals across the campaign's full lifetime.
      */
-    async getAdAccountStats(adAccountId: string, since: string, until: string) {
-        // Snapchat expects Unix timestamps in SECONDS (not milliseconds)
-        const startTime = Math.floor(new Date(since + 'T00:00:00Z').getTime() / 1000);
-        const endTime = Math.floor(new Date(until + 'T23:59:59Z').getTime() / 1000);
-
-        const data = await this.fetch(`/adaccounts/${adAccountId}/stats`, {
+    async getCampaignStats(campaignId: string) {
+        const data = await this.fetch(`/campaigns/${campaignId}/stats`, {
             granularity: 'TOTAL',
-            fields: 'impressions,swipes,spend,video_views,reach,frequency,uniques,avg_screen_time_millis',
-            start_time: startTime.toString(),
-            end_time: endTime.toString()
+            fields: 'impressions,swipes,spend,video_views,reach,frequency,uniques'
         });
-
-        const stat = data.timeseries_stats?.[0]?.timeseries_stat?.stats || {};
+        const stat = data.total_stats?.[0]?.total_stat?.stats || {};
         return {
             impressions: stat.impressions || 0,
             swipes: stat.swipes || 0,
@@ -57,9 +54,33 @@ export class SnapchatAPI {
             videoViews: stat.video_views || 0,
             reach: stat.reach || 0,
             frequency: stat.frequency || 0,
-            uniques: stat.uniques || 0,
-            avgScreenTimeMs: stat.avg_screen_time_millis || 0
+            uniques: stat.uniques || 0
         };
+    }
+
+    /**
+     * Aggregate stats across all campaigns in an ad account (lifetime totals).
+     */
+    async getAdAccountStats(adAccountId: string) {
+        const campaigns = await this.getCampaigns(adAccountId);
+        const totals = { impressions: 0, swipes: 0, spend: 0, videoViews: 0, reach: 0, frequency: 0, uniques: 0 };
+        let freqCount = 0;
+
+        await Promise.allSettled(campaigns.map(async (campaign: any) => {
+            try {
+                const s = await this.getCampaignStats(campaign.id);
+                totals.impressions += s.impressions;
+                totals.swipes += s.swipes;
+                totals.spend += s.spend;
+                totals.videoViews += s.videoViews;
+                totals.reach += s.reach;
+                totals.uniques += s.uniques;
+                if (s.frequency > 0) { totals.frequency += s.frequency; freqCount++; }
+            } catch { /* skip failed campaigns */ }
+        }));
+
+        if (freqCount > 0) totals.frequency = totals.frequency / freqCount;
+        return { ...totals, campaignCount: campaigns.length };
     }
 
     /**
