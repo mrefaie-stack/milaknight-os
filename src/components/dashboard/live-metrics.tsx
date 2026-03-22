@@ -12,6 +12,7 @@ export function LiveMetrics() {
     const { isRtl } = useLanguage();
     const [metaData, setMetaData] = useState<any>(null);
     const [snapData, setSnapData] = useState<any>(null);
+    const [linkedinData, setLinkedinData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState('facebook');
@@ -20,9 +21,10 @@ export function LiveMetrics() {
         async function fetchData() {
             setLoading(true);
             try {
-                const [metaRes, snapRes] = await Promise.allSettled([
+                const [metaRes, snapRes, linkedinRes] = await Promise.allSettled([
                     fetch('/api/dashboard/live/meta'),
-                    fetch('/api/dashboard/live/snapchat')
+                    fetch('/api/dashboard/live/snapchat'),
+                    fetch('/api/dashboard/live/linkedin')
                 ]);
 
                 if (metaRes.status === 'fulfilled') {
@@ -34,6 +36,11 @@ export function LiveMetrics() {
                 if (snapRes.status === 'fulfilled' && snapRes.value.ok) {
                     const json = await snapRes.value.json();
                     setSnapData(json);
+                }
+
+                if (linkedinRes.status === 'fulfilled' && linkedinRes.value.ok) {
+                    const json = await linkedinRes.value.json();
+                    setLinkedinData(json);
                 }
             } catch (err: any) {
                 setError(err.message);
@@ -175,22 +182,23 @@ export function LiveMetrics() {
         {
             id: 'linkedin',
             name: 'LinkedIn',
-            accountName: 'LinkedIn Company Page',
+            accountName: linkedinData?.accountName || 'LinkedIn Company Page',
             icon: <Linkedin className="w-5 h-5" />,
             color: '#0077B5',
-            isLive: false,
+            isLive: !!linkedinData,
+            error: !linkedinData ? (isRtl ? "حساب لينكد إن غير مربوط" : "LinkedIn not connected") : null,
             organicMetrics: [
-                { label: isRtl ? "المتابعون" : "Followers", value: '5,200', color: "text-blue-400", icon: <Users className="w-4 h-4" /> },
-                { label: isRtl ? "الوصول" : "Unique Visitors", value: '1,200', color: "text-emerald-500", icon: <Activity className="w-4 h-4" /> },
-                { label: isRtl ? "التفاعل" : "Engagement Rate", value: '5.8%', color: "text-primary", icon: <TrendingUp className="w-4 h-4" /> },
-                { label: isRtl ? "المنشورات" : "Post Reach", value: '8,500', color: "text-purple-400", icon: <Search className="w-4 h-4" /> },
+                { label: isRtl ? "المتابعون" : "Followers", value: linkedinData?.stats?.followers?.toLocaleString() ?? '—', color: "text-blue-400", icon: <Users className="w-4 h-4" /> },
+                { label: isRtl ? "زوار الصفحة" : "Unique Visitors", value: linkedinData?.stats?.uniqueVisitors?.toLocaleString() ?? '—', color: "text-emerald-500", icon: <Activity className="w-4 h-4" /> },
+                { label: isRtl ? "مشاهدات الصفحة" : "Page Views", value: linkedinData?.stats?.pageViews?.toLocaleString() ?? '—', color: "text-primary", icon: <Eye className="w-4 h-4" /> },
+                { label: isRtl ? "الظهور" : "Post Impressions", value: linkedinData?.stats?.impressions?.toLocaleString() ?? '—', color: "text-purple-400", icon: <TrendingUp className="w-4 h-4" /> },
             ],
-            adMetrics: [
-                { label: isRtl ? "الإنفاق" : "Spend", value: `SAR 1,200`, color: "text-orange-500", icon: <DollarSign className="w-4 h-4" /> },
-                { label: isRtl ? "الظهور" : "Ad Impressions", value: '12,400', color: "text-primary", icon: <Eye className="w-4 h-4" /> },
-                { label: isRtl ? "النقرات" : "Link Clicks", value: '340', color: "text-emerald-500", icon: <MousePointer2 className="w-4 h-4" /> },
-                { label: isRtl ? "التكلفة للحصول على عميل" : "Avg. CPL", value: `SAR 35.00`, color: "text-blue-500", icon: <BarChart className="w-4 h-4" /> },
-            ],
+            adMetrics: linkedinData ? [
+                { label: isRtl ? "النقرات" : "Post Clicks", value: linkedinData.stats.clicks?.toLocaleString() ?? '0', color: "text-emerald-500", icon: <MousePointer2 className="w-4 h-4" /> },
+                { label: isRtl ? "الظهور" : "Impressions", value: linkedinData.stats.impressions?.toLocaleString() ?? '0', color: "text-primary", icon: <Eye className="w-4 h-4" /> },
+                { label: isRtl ? "المشاركات" : "Shares", value: linkedinData.stats.shares?.toLocaleString() ?? '0', color: "text-blue-500", icon: <Share2 className="w-4 h-4" /> },
+                { label: isRtl ? "التفاعل" : "Engagement", value: linkedinData.stats.engagement?.toFixed(4) ?? '0', color: "text-orange-500", icon: <TrendingUp className="w-4 h-4" /> },
+            ] : [],
             activeAds: []
         }
     ];
