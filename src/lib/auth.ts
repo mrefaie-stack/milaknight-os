@@ -111,7 +111,7 @@ export const authOptions: NextAuthOptions = {
                 }
 
                 if (dbUser) {
-                    console.log(`Linking Meta account [${account.providerAccountId}] to user [${dbUser.email}]`);
+                    console.log(`Linking Meta account [${account.providerAccountId}] to user [${dbUser.email}] role=${dbUser.role}`);
                     await (prisma as any).socialConnection.upsert({
                         where: {
                             userId_platform_platformAccountId: {
@@ -124,6 +124,7 @@ export const authOptions: NextAuthOptions = {
                             accessToken: account.access_token,
                             refreshToken: account.refresh_token,
                             expiresAt: account.expires_at ? new Date(account.expires_at * 1000) : null,
+                            isActive: true,
                         },
                         create: {
                             userId: dbUser.id,
@@ -134,6 +135,19 @@ export const authOptions: NextAuthOptions = {
                             expiresAt: account.expires_at ? new Date(account.expires_at * 1000) : null,
                         },
                     });
+
+                    // If the user is a CLIENT, auto-link to their client record
+                    if (dbUser.role === 'CLIENT') {
+                        const clientRecord = await (prisma as any).client.findFirst({ where: { userId: dbUser.id } });
+                        if (clientRecord) {
+                            await (prisma as any).socialConnection.updateMany({
+                                where: { userId: dbUser.id, platform: 'FACEBOOK', platformAccountId: account.providerAccountId },
+                                data: { clientId: clientRecord.id }
+                            });
+                            console.log(`Auto-linked Meta to client [${clientRecord.id}]`);
+                        }
+                    }
+
                     // IMPORTANT: Return true to allow the sign-in to complete in NextAuth
                     return true;
                 } else {

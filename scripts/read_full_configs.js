@@ -1,0 +1,31 @@
+const { Client } = require('ssh2');
+
+const conn = new Client();
+conn.on('ready', () => {
+  const cmd = [
+    'echo "=== FULL CONFIG: dashboard.aalsaigh.com.conf ==="',
+    'cat /etc/nginx/conf.d/dashboard.aalsaigh.com.conf',
+    'echo ""',
+    'echo "=== FULL CONFIG: dashboard.tba.sa.conf ==="',
+    'cat /etc/nginx/conf.d/dashboard.tba.sa.conf',
+    'echo ""',
+    'echo "=== FULL CONFIG: dashboard.mila-knight.com.conf ==="',
+    'cat /etc/nginx/conf.d/dashboard.mila-knight.com.conf',
+    'echo ""',
+    'echo "=== CHECKING FOR ANY GLOBAL PROXY CONFIGS ==="',
+    'grep -r "proxy_pass" /etc/nginx/nginx.conf /etc/nginx/conf.d/ 2>/dev/null | grep -v "dashboard\\." | grep -v "backend\\."',
+  ].join(' && ');
+
+  conn.exec(cmd, (err, stream) => {
+    if (err) throw err;
+    stream
+      .on('close', () => conn.end())
+      .on('data', d => process.stdout.write(d.toString()))
+      .stderr.on('data', d => process.stderr.write(d.toString()));
+  });
+}).connect({
+  host: '72.61.162.106',
+  port: 22,
+  username: 'root',
+  password: ';hdFJ6C1?YYc6FD8gdY2'
+});
