@@ -217,8 +217,9 @@ async function fetchMetaData(
             reach: fbReach,
             engagement: fbEngagement,
             clicks: Number(adInsights.clicks) || 0,
-            profileVisits: pageInfo?.fan_count || 0, // total page likes (snapshot)
-            followers: 0
+            spend: Number(adInsights.spend) || 0,
+            profileVisits: 0,
+            followers: pageInfo?.fan_count || 0
         };
 
         // --- Instagram ---
@@ -230,9 +231,16 @@ async function fetchMetaData(
                 const igReachData: any = await meta.getIgReach(igAccount.id, pageToken, since, until);
                 const igReach = sumDailyValues(igReachData?.data || [], "reach");
 
-                // Media (filtered to the month via since/until)
-                const igMedia: any = await meta.getIgMediaInsights(igAccount.id, pageToken, since, until);
-                const mediaList = igMedia?.data || [];
+                // Media — fetch last 50 and filter by timestamp (since/until on /media are pagination cursors, not date filters)
+                const igMedia: any = await meta.getIgMediaInsights(igAccount.id, pageToken);
+                const sinceDate = new Date(since);
+                const untilDate = new Date(until);
+                untilDate.setHours(23, 59, 59, 999);
+                const mediaList = (igMedia?.data || []).filter((m: any) => {
+                    if (!m.timestamp) return true;
+                    const ts = new Date(m.timestamp);
+                    return ts >= sinceDate && ts <= untilDate;
+                });
                 let sumViews = 0;
                 let sumEngagement = 0;
                 mediaList.forEach((m: any) => {
