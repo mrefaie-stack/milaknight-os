@@ -19,6 +19,10 @@ export default function ConnectionsPage() {
         window.location.href = '/api/auth/snapchat';
     };
 
+    const handleConnectTikTok = () => {
+        window.location.href = '/api/auth/tiktok';
+    };
+
     return (
         <div className="p-8 max-w-5xl mx-auto">
             <header className="mb-10">
@@ -92,14 +96,18 @@ export default function ConnectionsPage() {
                     </CardContent>
                 </Card>
 
-                {/* TikTok Connection (Coming Soon) */}
-                <Card className="opacity-60 cursor-not-allowed grayscale">
+                {/* TikTok Connection */}
+                <Card className="border-border">
                     <CardHeader>
                         <div className="flex items-center justify-between">
                             <div className="p-2 bg-black/10 rounded-lg">
                                 <div className="w-8 h-8 bg-black rounded-sm flex items-center justify-center">
                                     <span className="text-white font-bold text-xs">TT</span>
                                 </div>
+                            </div>
+                            <div className="flex items-center gap-1 px-2 py-1 bg-yellow-500/10 text-yellow-500 text-xs rounded-full border border-yellow-500/20">
+                                <AlertCircle className="w-3 h-3" />
+                                Pending Setup
                             </div>
                         </div>
                         <CardTitle className="mt-4">TikTok Ads</CardTitle>
@@ -108,9 +116,15 @@ export default function ConnectionsPage() {
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <Button disabled variant="outline" className="w-full py-6 rounded-xl">
-                            Coming Soon
+                        <Button
+                            onClick={handleConnectTikTok}
+                            className="w-full bg-black hover:bg-black/80 text-white font-semibold py-6 rounded-xl transition-all hover:scale-[1.02]"
+                        >
+                            Connect TikTok Account
                         </Button>
+                        <p className="text-[10px] text-muted-foreground mt-4 text-center">
+                            By connecting, you allow MilaKnight OS to access your TikTok Ads data.
+                        </p>
                     </CardContent>
                 </Card>
             </div>

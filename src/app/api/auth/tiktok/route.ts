@@ -6,14 +6,13 @@ export async function GET() {
     const session = await getServerSession(authOptions);
     if (!session) return new NextResponse('Unauthorized', { status: 401 });
 
-    const clientId = process.env.SNAPCHAT_CLIENT_ID!;
-    const redirectUri = `${process.env.NEXTAUTH_URL}/api/auth/snapchat/callback`;
+    const appKey = process.env.TIKTOK_APP_KEY!;
+    const redirectUri = `${process.env.NEXTAUTH_URL}/api/auth/tiktok/callback`;
 
-    const authUrl = new URL('https://accounts.snapchat.com/accounts/oauth2/auth');
-    authUrl.searchParams.set('client_id', clientId);
+    const authUrl = new URL('https://ads.tiktok.com/marketing_api/auth');
+    authUrl.searchParams.set('app_id', appKey);
     authUrl.searchParams.set('redirect_uri', redirectUri);
-    authUrl.searchParams.set('response_type', 'code');
-    authUrl.searchParams.set('scope', 'snapchat-marketing-api');
+    authUrl.searchParams.set('state', Math.random().toString(36).substring(7));
 
     return NextResponse.redirect(authUrl.toString());
 }
