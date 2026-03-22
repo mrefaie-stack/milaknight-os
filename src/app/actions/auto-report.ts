@@ -197,28 +197,25 @@ async function fetchMetaData(
         const pageToken = pageInfo?.access_token;
         const igAccount = pageInfo?.instagram_business_account;
 
-        // --- Facebook Organic (daily values summed for the month) ---
-        let fbReach = 0;
-        let fbEngagement = 0;
+        // --- Facebook Organic (daily values summed for the month via Insights API) ---
+        let fbPageData: any[] = [];
 
         if (pageToken) {
             try {
                 const pageInsights: any = await meta.getPageInsights(pageId, pageToken, since, until);
-                const data = pageInsights?.data || [];
-                fbReach = sumDailyValues(data, "page_impressions_unique");
-                fbEngagement = sumDailyValues(data, "page_post_engagements");
+                fbPageData = pageInsights?.data || [];
             } catch (e) {
                 console.error("Auto report: FB page insights error:", e);
             }
         }
 
         result.facebook = {
-            impressions: Number(adInsights.impressions) || 0,
-            reach: fbReach,
-            engagement: fbEngagement,
+            impressions: sumDailyValues(fbPageData, "page_impressions"),
+            reach: sumDailyValues(fbPageData, "page_impressions_unique"),
+            engagement: sumDailyValues(fbPageData, "page_post_engagements"),
             clicks: Number(adInsights.clicks) || 0,
             spend: Number(adInsights.spend) || 0,
-            profileVisits: 0,
+            profileVisits: sumDailyValues(fbPageData, "page_views_total"),
             followers: pageInfo?.fan_count || 0
         };
 
@@ -227,35 +224,16 @@ async function fetchMetaData(
             try {
                 const igFollowers = igAccount.followers_count || 0;
 
-                // Reach (daily values summed)
-                const igReachData: any = await meta.getIgReach(igAccount.id, pageToken, since, until);
-                const igReach = sumDailyValues(igReachData?.data || [], "reach");
-
-                // Media — fetch last 50 and filter by timestamp (since/until on /media are pagination cursors, not date filters)
-                const igMedia: any = await meta.getIgMediaInsights(igAccount.id, pageToken);
-                const sinceDate = new Date(since);
-                const untilDate = new Date(until);
-                untilDate.setHours(23, 59, 59, 999);
-                const mediaList = (igMedia?.data || []).filter((m: any) => {
-                    if (!m.timestamp) return true;
-                    const ts = new Date(m.timestamp);
-                    return ts >= sinceDate && ts <= untilDate;
-                });
-                let sumViews = 0;
-                let sumEngagement = 0;
-                mediaList.forEach((m: any) => {
-                    sumViews += m.video_views || 0;
-                    sumEngagement += (m.like_count || 0) + (m.comments_count || 0);
-                });
-                // Fallback: if no video views (Reels), estimate from reach
-                if (sumViews === 0 && igReach > 0) sumViews = Math.floor(igReach * 0.95);
+                // All metrics from the official IG Insights API
+                const igInsightsData: any = await meta.getIgInsights(igAccount.id, pageToken, since, until);
+                const igInsights = igInsightsData?.data || [];
 
                 result.instagram = {
-                    views: sumViews,
-                    reach: igReach,
-                    engagement: sumEngagement,
+                    impressions: sumDailyValues(igInsights, "impressions"),
+                    reach: sumDailyValues(igInsights, "reach"),
+                    engagement: sumDailyValues(igInsights, "total_interactions"),
+                    profileVisits: sumDailyValues(igInsights, "profile_views"),
                     clicks: 0,
-                    profileVisits: 0,
                     followers: igFollowers
                 };
             } catch (e) {
@@ -312,7 +290,7 @@ Connected Platforms: ${sourcePlatforms.join(", ") || "None"}
 
 Performance Data:
 ${fbData ? `• Facebook — Reach: ${fbData.reach?.toLocaleString()}, Engagement: ${fbData.engagement?.toLocaleString()}, Impressions: ${fbData.impressions?.toLocaleString()}, Clicks: ${fbData.clicks?.toLocaleString()}${fbReachMom ? `, Reach MoM: ${fbReachMom}` : ""}` : ""}
-${igData ? `• Instagram — Reach: ${igData.reach?.toLocaleString()}, Views: ${igData.views?.toLocaleString()}, Engagement: ${igData.engagement?.toLocaleString()}, Followers: ${igData.followers?.toLocaleString()}${igReachMom ? `, Reach MoM: ${igReachMom}` : ""}` : ""}
+${igData ? `• Instagram — Reach: ${igData.reach?.toLocaleString()}, Impressions: ${igData.impressions?.toLocaleString()}, Engagement: ${igData.engagement?.toLocaleString()}, Profile Views: ${igData.profileVisits?.toLocaleString()}, Followers: ${igData.followers?.toLocaleString()}${igReachMom ? `, Reach MoM: ${igReachMom}` : ""}` : ""}
 ${industryContext ? `\nMarket Context: ${industryContext}` : ""}
 
 Write a concise, professional bilingual summary (3-4 sentences each).

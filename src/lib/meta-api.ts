@@ -68,7 +68,7 @@ export class MetaAPI {
      */
     async getPageInsights(pageId: string, pageToken?: string, since?: string, until?: string) {
         const params: Record<string, string> = {
-            metric: 'page_impressions_unique,page_post_engagements',
+            metric: 'page_impressions,page_impressions_unique,page_post_engagements,page_views_total',
             period: 'day'
         };
         if (since && until) {
@@ -89,9 +89,13 @@ export class MetaAPI {
         });
     }
 
-    async getIgReach(igAccountId: string, pageToken: string, since?: string, until?: string) {
+    /**
+     * Fetch all Instagram account-level insights for a date range.
+     * Returns reach, impressions, total_interactions, profile_views — all from the official Insights API.
+     */
+    async getIgInsights(igAccountId: string, pageToken: string, since?: string, until?: string) {
         const params: Record<string, string> = {
-            metric: 'reach',
+            metric: 'reach,impressions,total_interactions,profile_views',
             period: 'day',
             access_token: pageToken
         };
@@ -100,30 +104,6 @@ export class MetaAPI {
             params.until = until;
         }
         return this.fetch(`/${igAccountId}/insights`, params);
-    }
-
-    async getIgImpressions(igAccountId: string, pageToken: string) {
-        return this.fetch(`/${igAccountId}/insights`, {
-            metric: 'impressions',
-            period: 'days_28',
-            access_token: pageToken
-        });
-    }
-
-    async getIgAccountInteractions(igAccountId: string, pageToken: string) {
-        return this.fetch(`/${igAccountId}/insights`, {
-            metric: 'total_interactions',
-            period: 'day',
-            access_token: pageToken
-        });
-    }
-
-    async getIgMediaInsights(igAccountId: string, pageToken: string) {
-        return this.fetch(`/${igAccountId}/media`, {
-            fields: 'id,like_count,comments_count,media_type,media_product_type,video_views,timestamp',
-            limit: '50',
-            access_token: pageToken
-        });
     }
 
     /**
