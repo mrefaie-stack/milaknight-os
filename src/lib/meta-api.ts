@@ -64,32 +64,33 @@ export class MetaAPI {
 
     /**
      * Fetch page insights (Organic).
-     * Pass since/until (YYYY-MM-DD) for a specific month, else falls back to days_28.
+     * page_impressions and page_fan_adds are deprecated (removed in Meta API 2024+).
+     * Only fetching metrics confirmed to work:
+     *   page_impressions_unique → Viewers
+     *   page_post_engagements   → Content interactions
+     *   page_views_total        → Visits
+     *   page_fan_adds_by_paid_non_paid_unique → New follows
+     *   page_video_views        → Video views
      */
     async getPageInsights(pageId: string, pageToken?: string, since?: string, until?: string) {
         const params: Record<string, string> = {
-            // Maps to Business Manager: Views, Viewers, Content interactions, Visits, Follows
-            // page_fan_adds_unique is deprecated (v18+) — use page_fan_adds instead
-            metric: 'page_impressions,page_impressions_unique,page_post_engagements,page_views_total,page_fan_adds',
+            metric: 'page_impressions_unique,page_post_engagements,page_views_total,page_fan_adds_by_paid_non_paid_unique,page_video_views',
             period: 'day'
         };
         if (since && until) {
             params.since = since;
             params.until = until;
         }
-        // Try page token first; fall back to user token (this.accessToken) if not provided
         params.access_token = pageToken || this.accessToken;
-
         return this.fetch(`/${pageId}/insights`, params);
     }
 
     /**
-     * Fallback page insights with only safe (non-deprecated) metrics.
-     * Used when the full getPageInsights batch fails.
+     * Fallback page insights — minimal safe metrics only.
      */
     async getPageInsightsSafe(pageId: string, pageToken?: string, since?: string, until?: string) {
         const params: Record<string, string> = {
-            metric: 'page_impressions,page_impressions_unique,page_views_total',
+            metric: 'page_impressions_unique,page_post_engagements,page_views_total',
             period: 'day'
         };
         if (since && until) { params.since = since; params.until = until; }
@@ -161,25 +162,31 @@ export class MetaAPI {
     }
 
     /**
-     * Fetch Instagram link_click actions from the ad account.
-     * This is what IG Business Manager shows as "Link clicks" (stories + ads).
-     * Returns the total link_click count for Instagram publisher platform.
+     * Fetch link_click actions from the ad account broken down by publisher_platform.
+     * Returns { facebook: N, instagram: N } — the same "Link Clicks" metric shown
+     * in Meta Business Manager for each platform (includes stories + ads link clicks).
      */
-    async getIgAdLinkClicks(adAccountId: string, since: string, until: string): Promise<number> {
+    async getAdLinkClicksByPlatform(adAccountId: string, since: string, until: string): Promise<{ facebook: number; instagram: number }> {
+        const result = { facebook: 0, instagram: 0 };
         const params: Record<string, string> = {
             fields: 'actions',
             breakdowns: 'publisher_platform',
             time_range: JSON.stringify({ since, until })
         };
         const r = await this.fetch(`/${adAccountId}/insights`, params);
-        let linkClicks = 0;
         for (const row of r.data || []) {
-            if (row.publisher_platform === 'instagram') {
+            const platform = row.publisher_platform as 'facebook' | 'instagram';
+            if (platform === 'facebook' || platform === 'instagram') {
                 const lc = (row.actions || []).find((a: any) => a.action_type === 'link_click');
-                if (lc) linkClicks += Number(lc.value) || 0;
+                if (lc) result[platform] += Number(lc.value) || 0;
             }
         }
-        return linkClicks;
+        return result;
+    }
+
+    /** @deprecated Use getAdLinkClicksByPlatform instead */
+    async getIgAdLinkClicks(adAccountId: string, since: string, until: string): Promise<number> {
+        return (await this.getAdLinkClicksByPlatform(adAccountId, since, until)).instagram;
     }
 
     /**

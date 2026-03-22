@@ -195,7 +195,17 @@ async function fetchMetaData(
 
     const label = `[auto-report][${since}→${until}]`;
 
-    // Ad insights intentionally excluded from auto-report (organic only)
+    // --- Fetch link clicks from ad account (FB + IG combined in one call) ---
+    const adAccountId = connection.platformAccountId; // stored as act_XXXX
+    let adLinkClicks = { facebook: 0, instagram: 0 };
+    if (adAccountId) {
+        try {
+            adLinkClicks = await meta.getAdLinkClicksByPlatform(adAccountId, since, until);
+            console.log(`${label} ad link_clicks:`, JSON.stringify(adLinkClicks));
+        } catch (e: any) {
+            console.error(`${label} ad link_clicks FAILED:`, e?.message || e);
+        }
+    }
 
     if (!connection.metadata) {
         console.warn(`${label} No metadata on connection — cannot get pageId`);
@@ -254,15 +264,15 @@ async function fetchMetaData(
     }
 
     result.facebook = {
-        impressions: sumDailyValues(fbPageData, "page_impressions"),      // Views
-        reach: sumDailyValues(fbPageData, "page_impressions_unique"),     // Viewers
-        engagement: sumDailyValues(fbPageData, "page_post_engagements"),  // Content interactions
-        clicks: 0,
+        impressions: 0,                                                                  // page_impressions deprecated — unavailable in Meta API 2024+
+        reach: sumDailyValues(fbPageData, "page_impressions_unique"),                   // Viewers
+        engagement: sumDailyValues(fbPageData, "page_post_engagements"),                // Content interactions
+        clicks: adLinkClicks.facebook,                                                   // Link clicks (ad account, facebook platform)
         spend: 0,
-        profileVisits: sumDailyValues(fbPageData, "page_views_total"),    // Visits
-        followers: sumDailyValues(fbPageData, "page_fan_adds"),           // New follows only
+        profileVisits: sumDailyValues(fbPageData, "page_views_total"),                  // Visits
+        followers: sumDailyValues(fbPageData, "page_fan_adds_by_paid_non_paid_unique"), // New follows
     };
-    console.log(`${label} facebook result:`, JSON.stringify(result.facebook));
+    console.log(`${label} facebook result (pre-clicks):`, JSON.stringify(result.facebook));
 
     // --- Instagram (period=day, since IG doesn't support total_over_range) ---
     if (igAccount?.id && pageToken) {
@@ -276,31 +286,13 @@ async function fetchMetaData(
             const followsRow = igInsights.find((r: any) => r.name === "follows_and_unfollows");
             console.log(`${label} follows_and_unfollows raw:`, JSON.stringify(followsRow?.total_value || followsRow?.values?.[0]));
 
-            // --- IG Link Clicks from Ad Account (same metric IG Business Manager shows) ---
-            // website_clicks = bio link taps only. IG Business Manager "Link Clicks" = stories + ads clicks.
-            // We fetch link_click action type from the ad account with publisher_platform=instagram.
-            let igLinkClicks = 0;
-            const adAccountId = connection.platformAccountId; // stored as act_XXXX
-            if (adAccountId) {
-                try {
-                    igLinkClicks = await meta.getIgAdLinkClicks(adAccountId, since, until);
-                    console.log(`${label} IG ad link_clicks from ${adAccountId}:`, igLinkClicks);
-                } catch (e: any) {
-                    console.error(`${label} IG ad link_clicks FAILED:`, e?.message || e);
-                    igLinkClicks = sumDailyValues(igInsights, "website_clicks"); // fallback to bio clicks
-                }
-            } else {
-                igLinkClicks = sumDailyValues(igInsights, "website_clicks");
-                console.log(`${label} No adAccountId — using website_clicks as link clicks:`, igLinkClicks);
-            }
-
             result.instagram = {
                 views: sumDailyValues(igInsights, "views"),                    // Views (total_value)
-                reach: sumDailyValues(igInsights, "reach"),                    // Reach (time-series sum OR total_value)
+                reach: sumDailyValues(igInsights, "reach"),                    // Reach
                 engagement: sumDailyValues(igInsights, "total_interactions"),  // Content interactions
-                clicks: igLinkClicks,                                          // Link clicks (stories + ads)
+                clicks: adLinkClicks.instagram || sumDailyValues(igInsights, "website_clicks"), // Link clicks (ad account, fallback to bio)
                 profileVisits: sumDailyValues(igInsights, "profile_views"),    // Profile Visits
-                followers: sumDailyValues(igInsights, "follows_and_unfollows"), // New follows only (not total)
+                followers: sumDailyValues(igInsights, "follows_and_unfollows"), // New follows only
             };
             console.log(`${label} instagram result:`, JSON.stringify(result.instagram));
         } catch (e: any) {
