@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 export function LiveMetrics() {
     const { isRtl } = useLanguage();
     const [metaData, setMetaData] = useState<any>(null);
+    const [snapData, setSnapData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState('facebook');
@@ -19,11 +20,21 @@ export function LiveMetrics() {
         async function fetchData() {
             setLoading(true);
             try {
-                const res = await fetch('/api/dashboard/live/meta');
-                const json = await res.json();
-                console.log('Live Metrics API Response:', json);
-                if (!res.ok) throw new Error(json.error || 'Failed to fetch');
-                setMetaData(json);
+                const [metaRes, snapRes] = await Promise.allSettled([
+                    fetch('/api/dashboard/live/meta'),
+                    fetch('/api/dashboard/live/snapchat')
+                ]);
+
+                if (metaRes.status === 'fulfilled') {
+                    const json = await metaRes.value.json();
+                    if (metaRes.value.ok) setMetaData(json);
+                    else setError(json.error || 'Meta fetch failed');
+                }
+
+                if (snapRes.status === 'fulfilled' && snapRes.value.ok) {
+                    const json = await snapRes.value.json();
+                    setSnapData(json);
+                }
             } catch (err: any) {
                 setError(err.message);
             } finally {
@@ -120,26 +131,25 @@ export function LiveMetrics() {
         {
             id: 'snapchat',
             name: 'Snapchat',
-            accountName: 'Snapchat Public Profile',
+            accountName: snapData?.accountName || 'Snapchat Ads',
             icon: <Ghost className="w-5 h-5" />,
             color: '#FFFC00',
             textColor: 'text-black',
-            isLive: false,
+            isLive: !!snapData,
+            error: !snapData ? (isRtl ? "حساب سناب شات غير مربوط" : "Snapchat not connected") : null,
             organicMetrics: [
-                { label: isRtl ? "المشتركون" : "Subscribers", value: '88,200', color: "text-blue-400", icon: <TrendingUp className="w-4 h-4" /> },
-                { label: isRtl ? "مشاهدات القصة" : "Story Views", value: '450K', color: "text-rose-500", icon: <Eye className="w-4 h-4" /> },
-                { label: isRtl ? "التقاط الشاشة" : "Screenshots", value: '3,200', color: "text-emerald-500", icon: <Smartphone className="w-4 h-4" /> },
-                { label: isRtl ? "تفاعل الفلاتر" : "Lens Plays", value: '12K', color: "text-purple-500", icon: <Sparkles className="w-4 h-4" /> },
+                { label: isRtl ? "الوصول" : "Reach", value: snapData?.stats?.reach?.toLocaleString() ?? '—', color: "text-blue-400", icon: <Users className="w-4 h-4" /> },
+                { label: isRtl ? "مشاهدات الفيديو" : "Video Views", value: snapData?.stats?.videoViews?.toLocaleString() ?? '—', color: "text-rose-500", icon: <PlaySquare className="w-4 h-4" /> },
+                { label: isRtl ? "الظهور" : "Impressions", value: snapData?.stats?.impressions?.toLocaleString() ?? '—', color: "text-emerald-500", icon: <Eye className="w-4 h-4" /> },
+                { label: isRtl ? "سحب للأعلى" : "Swipe Ups", value: snapData?.stats?.swipes?.toLocaleString() ?? '—', color: "text-purple-500", icon: <MousePointer2 className="w-4 h-4" /> },
             ],
-            adMetrics: [
-                { label: isRtl ? "الإنفاق" : "Spend", value: `SAR 340`, color: "text-orange-500", icon: <DollarSign className="w-4 h-4" /> },
-                { label: isRtl ? "الظهور" : "Ad Impressions", value: '14,200', color: "text-primary", icon: <Eye className="w-4 h-4" /> },
-                { label: isRtl ? "سحب الشاشة" : "Swipe Ups", value: '890', color: "text-emerald-500", icon: <MousePointer2 className="w-4 h-4" /> },
-                { label: isRtl ? "تكلفة السحب" : "Avg. CPSU", value: `SAR 0.38`, color: "text-blue-500", icon: <BarChart className="w-4 h-4" /> },
-            ],
-            activeAds: [
-                { id: '3', name: isRtl ? "فلتر رمضان" : "Ramadan Lens", status: 'active', spend: '200 SAR', results: '500 Scans' }
-            ]
+            adMetrics: snapData ? [
+                { label: isRtl ? "الإنفاق" : "Spend", value: `SAR ${snapData.stats.spend?.toFixed(2) ?? '0.00'}`, color: "text-orange-500", icon: <DollarSign className="w-4 h-4" /> },
+                { label: isRtl ? "الظهور" : "Impressions", value: snapData.stats.impressions?.toLocaleString() ?? '0', color: "text-primary", icon: <Eye className="w-4 h-4" /> },
+                { label: isRtl ? "سحب للأعلى" : "Swipe Ups", value: snapData.stats.swipes?.toLocaleString() ?? '0', color: "text-emerald-500", icon: <MousePointer2 className="w-4 h-4" /> },
+                { label: isRtl ? "الوصول" : "Reach", value: snapData.stats.reach?.toLocaleString() ?? '0', color: "text-blue-500", icon: <Activity className="w-4 h-4" /> },
+            ] : [],
+            activeAds: []
         },
         {
             id: 'x',
