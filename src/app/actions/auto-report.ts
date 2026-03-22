@@ -276,11 +276,29 @@ async function fetchMetaData(
             const followsRow = igInsights.find((r: any) => r.name === "follows_and_unfollows");
             console.log(`${label} follows_and_unfollows raw:`, JSON.stringify(followsRow?.total_value || followsRow?.values?.[0]));
 
+            // --- IG Link Clicks from Ad Account (same metric IG Business Manager shows) ---
+            // website_clicks = bio link taps only. IG Business Manager "Link Clicks" = stories + ads clicks.
+            // We fetch link_click action type from the ad account with publisher_platform=instagram.
+            let igLinkClicks = 0;
+            const adAccountId = connection.platformAccountId; // stored as act_XXXX
+            if (adAccountId) {
+                try {
+                    igLinkClicks = await meta.getIgAdLinkClicks(adAccountId, since, until);
+                    console.log(`${label} IG ad link_clicks from ${adAccountId}:`, igLinkClicks);
+                } catch (e: any) {
+                    console.error(`${label} IG ad link_clicks FAILED:`, e?.message || e);
+                    igLinkClicks = sumDailyValues(igInsights, "website_clicks"); // fallback to bio clicks
+                }
+            } else {
+                igLinkClicks = sumDailyValues(igInsights, "website_clicks");
+                console.log(`${label} No adAccountId — using website_clicks as link clicks:`, igLinkClicks);
+            }
+
             result.instagram = {
                 views: sumDailyValues(igInsights, "views"),                    // Views (total_value)
                 reach: sumDailyValues(igInsights, "reach"),                    // Reach (time-series sum OR total_value)
                 engagement: sumDailyValues(igInsights, "total_interactions"),  // Content interactions
-                clicks: sumDailyValues(igInsights, "website_clicks"),          // Link clicks
+                clicks: igLinkClicks,                                          // Link clicks (stories + ads)
                 profileVisits: sumDailyValues(igInsights, "profile_views"),    // Profile Visits
                 followers: sumDailyValues(igInsights, "follows_and_unfollows"), // New follows only (not total)
             };
