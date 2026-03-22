@@ -48,6 +48,31 @@ export async function GET() {
             }
         }
 
+        const snap = new SnapchatAPI(accessToken);
+        const orgId = connection.platformAccountId;
+
+        // Fetch all ad accounts for this org
+        let adAccounts: { id: string; name: string }[] = [];
+        try {
+            // Try metadata first (already fetched at connect time)
+            if (connection.metadata) {
+                const meta = JSON.parse(connection.metadata);
+                if (meta.adAccounts?.length > 0) {
+                    adAccounts = meta.adAccounts;
+                }
+            }
+            // Fallback: fetch live from API
+            if (adAccounts.length === 0) {
+                const data = await snap.getAdAccounts(orgId);
+                adAccounts = (data.adaccounts || [])
+                    .map((a: any) => a.adaccount)
+                    .filter(Boolean)
+                    .map((a: any) => ({ id: a.id, name: a.name }));
+            }
+        } catch (e) {
+            console.error('Snapchat ad accounts fetch failed:', e);
+        }
+
         // Date range: last 30 days
         const until = new Date();
         const since = new Date();
@@ -55,20 +80,52 @@ export async function GET() {
         const sinceStr = since.toISOString().split('T')[0];
         const untilStr = until.toISOString().split('T')[0];
 
-        const adAccountId = connection.platformAccountId;
-        const snap = new SnapchatAPI(accessToken);
-        const stats = await snap.getAdAccountStats(adAccountId, sinceStr, untilStr);
+        // Fetch stats for ALL ad accounts and aggregate
+        const totals = {
+            impressions: 0,
+            swipes: 0,
+            spend: 0,
+            videoViews: 0,
+            reach: 0,
+            frequency: 0,
+            uniques: 0,
+            avgScreenTimeMs: 0
+        };
+
+        let successCount = 0;
+        let freqSum = 0;
+        let screenTimeSum = 0;
+
+        await Promise.allSettled(
+            adAccounts.map(async (acc) => {
+                try {
+                    const s = await snap.getAdAccountStats(acc.id, sinceStr, untilStr);
+                    totals.impressions += s.impressions;
+                    totals.swipes += s.swipes;
+                    totals.spend += s.spend;
+                    totals.videoViews += s.videoViews;
+                    totals.reach += s.reach;
+                    totals.uniques += s.uniques;
+                    freqSum += s.frequency;
+                    screenTimeSum += s.avgScreenTimeMs;
+                    successCount++;
+                } catch (e) {
+                    console.error(`Snapchat stats failed for adaccount ${acc.id}:`, e);
+                }
+            })
+        );
+
+        // Average frequency and screen time across accounts
+        if (successCount > 0) {
+            totals.frequency = freqSum / successCount;
+            totals.avgScreenTimeMs = screenTimeSum / successCount;
+        }
 
         return NextResponse.json({
             platform: 'SNAPCHAT',
-            accountName: connection.platformAccountName || 'Snapchat Ads',
-            stats: {
-                impressions: stats.impressions,
-                swipes: stats.swipes,       // link clicks equivalent
-                spend: stats.spend,
-                videoViews: stats.videoViews,
-                reach: stats.reach
-            },
+            accountName: connection.platformAccountName || 'Snapchat',
+            adAccountsCount: adAccounts.length,
+            stats: totals,
             status: 'success'
         });
     } catch (error: any) {

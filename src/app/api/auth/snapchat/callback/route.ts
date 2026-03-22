@@ -75,33 +75,25 @@ export async function GET(req: NextRequest) {
         ? new Date(Date.now() + tokens.expires_in * 1000)
         : null;
 
-    // For clients: auto-pick the first ad account as platformAccountId
-    // For admins: use orgId as platformAccountId (mapping done separately)
+    // Always store the Org ID as platformAccountId — we aggregate all ad accounts at query time
     let clientRecord: any = null;
     if (isClient) {
         clientRecord = await (prisma as any).client.findFirst({ where: { userId: session.user.id } });
     }
-
-    const platformAccountId = isClient && adAccounts.length > 0
-        ? adAccounts[0].id
-        : orgId;
-    const platformAccountName = isClient && adAccounts.length > 0
-        ? adAccounts[0].name
-        : orgName;
 
     await (prisma as any).socialConnection.upsert({
         where: {
             userId_platform_platformAccountId: {
                 userId: session.user.id,
                 platform: 'SNAPCHAT',
-                platformAccountId
+                platformAccountId: orgId
             }
         },
         update: {
             accessToken: tokens.access_token,
             refreshToken: tokens.refresh_token || null,
             expiresAt,
-            platformAccountName,
+            platformAccountName: orgName,
             isActive: true,
             clientId: clientRecord?.id || undefined,
             metadata: JSON.stringify({ orgId, orgName, adAccounts: adAccounts.map(a => ({ id: a.id, name: a.name })) })
@@ -109,8 +101,8 @@ export async function GET(req: NextRequest) {
         create: {
             userId: session.user.id,
             platform: 'SNAPCHAT',
-            platformAccountId,
-            platformAccountName,
+            platformAccountId: orgId,
+            platformAccountName: orgName,
             accessToken: tokens.access_token,
             refreshToken: tokens.refresh_token || null,
             expiresAt,
@@ -120,7 +112,5 @@ export async function GET(req: NextRequest) {
         }
     });
 
-    // If client has multiple ad accounts, redirect with flag to show selection UI
-    const redirectParam = isClient && adAccounts.length > 1 ? '?success=snapchat&select=1' : '?success=snapchat';
-    return NextResponse.redirect(`${appUrl}${returnUrl}${redirectParam}`);
+    return NextResponse.redirect(`${appUrl}${returnUrl}?success=snapchat`);
 }
