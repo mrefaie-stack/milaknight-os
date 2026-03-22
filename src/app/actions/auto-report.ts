@@ -215,8 +215,8 @@ async function fetchMetaData(
             engagement: sumDailyValues(fbPageData, "page_post_engagements"),
             clicks: Number(adInsights.clicks) || 0,
             spend: Number(adInsights.spend) || 0,
-            profileVisits: sumDailyValues(fbPageData, "page_views_total"),
-            followers: pageInfo?.fan_count || 0
+            profileVisits: sumDailyValues(fbPageData, "page_views_total"),   // Page views
+            followers: sumDailyValues(fbPageData, "page_fan_adds_unique"),   // New page likes this month
         };
 
         // --- Instagram ---
@@ -229,12 +229,11 @@ async function fetchMetaData(
                 const igInsights = igInsightsData?.data || [];
 
                 result.instagram = {
-                    impressions: sumDailyValues(igInsights, "impressions"),
+                    views: sumDailyValues(igInsights, "impressions"),        // Impressions → maps to "views" field in report form
                     reach: sumDailyValues(igInsights, "reach"),
                     engagement: sumDailyValues(igInsights, "total_interactions"),
                     profileVisits: sumDailyValues(igInsights, "profile_views"),
-                    clicks: 0,
-                    followers: igFollowers
+                    followers: igFollowers                                    // Total followers (snapshot)
                 };
             } catch (e) {
                 console.error("Auto report: Instagram insights error:", e);
@@ -289,8 +288,8 @@ Month: ${month}
 Connected Platforms: ${sourcePlatforms.join(", ") || "None"}
 
 Performance Data:
-${fbData ? `• Facebook — Reach: ${fbData.reach?.toLocaleString()}, Engagement: ${fbData.engagement?.toLocaleString()}, Impressions: ${fbData.impressions?.toLocaleString()}, Clicks: ${fbData.clicks?.toLocaleString()}${fbReachMom ? `, Reach MoM: ${fbReachMom}` : ""}` : ""}
-${igData ? `• Instagram — Reach: ${igData.reach?.toLocaleString()}, Impressions: ${igData.impressions?.toLocaleString()}, Engagement: ${igData.engagement?.toLocaleString()}, Profile Views: ${igData.profileVisits?.toLocaleString()}, Followers: ${igData.followers?.toLocaleString()}${igReachMom ? `, Reach MoM: ${igReachMom}` : ""}` : ""}
+${fbData ? `• Facebook — Impressions: ${fbData.impressions?.toLocaleString()}, Reach: ${fbData.reach?.toLocaleString()}, Post Engagements: ${fbData.engagement?.toLocaleString()}, Page Views: ${fbData.profileVisits?.toLocaleString()}, New Page Likes: ${fbData.followers?.toLocaleString()}, Ad Spend: ${fbData.spend} SAR${fbReachMom ? `, Reach MoM: ${fbReachMom}` : ""}` : ""}
+${igData ? `• Instagram — Impressions: ${igData.views?.toLocaleString()}, Reach: ${igData.reach?.toLocaleString()}, Total Interactions: ${igData.engagement?.toLocaleString()}, Profile Views: ${igData.profileVisits?.toLocaleString()}, Total Followers: ${igData.followers?.toLocaleString()}${igReachMom ? `, Reach MoM: ${igReachMom}` : ""}` : ""}
 ${industryContext ? `\nMarket Context: ${industryContext}` : ""}
 
 Write a concise, professional bilingual summary (3-4 sentences each).
