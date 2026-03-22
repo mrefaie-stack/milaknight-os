@@ -104,45 +104,17 @@ export async function GET() {
                     if (igAccount?.id && pageToken) {
                         igFollowers = igAccount.followers_count || 0;
                         try {
-                            // 1. Fetch Reach (28 days)
-                            const igReachData: any = await meta.getIgReach(igAccount.id, pageToken);
-                            igReach = getMetricValue(igReachData?.data || [], 'reach');
-                            
-                            // 2. Fetch Media Insights for Video Views and Engagement
-                            const igMedia: any = await meta.getIgMediaInsights(igAccount.id, pageToken);
-                            const mediaList = igMedia?.data || [];
-                            
-                            let sumViews = 0;
-                            let sumEngagement = 0;
-                            
-                            mediaList.forEach((m: any) => {
-                                // For Reels, video_views is often null in bulk, but for standard videos it works
-                                const views = m.video_views || 0;
-                                sumViews += views;
-                                sumEngagement += (m.like_count || 0) + (m.comments_count || 0);
-                            });
-                            
-                            // 3. Fallback for Video Views: if we have reach but 0 views from media, 
-                            // it likely means they are Reels and we can't see views in bulk.
-                            // We use 90% of Reach as a safe estimate for 'Total Plays' in this case.
-                            if (sumViews === 0 && igReach > 0) {
-                                sumViews = Math.floor(igReach * 0.95);
-                            } else if (sumViews === 0 && sumEngagement > 0) {
-                                sumViews = sumEngagement * 12; // Conservative multiplier
-                            }
-                            
-                            igVideoViews = sumViews;
-                            igInteractions = sumEngagement;
-
-                            // 4. Try account-level interactions for a floor
-                            const igAccountInt: any = await meta.getIgAccountInteractions(igAccount.id, pageToken);
-                            const lastInt = getMetricValue(igAccountInt?.data || [], 'total_interactions');
-                            if (lastInt > (igInteractions / 30)) { // account level is daily
-                                // If today's interactions are high, use them to boost the total if it seems low
-                                // But usually the sum is better for a 'last 30 days' feel.
-                            }
-
-                            console.log('Organic IG Data Aggregated:', { igReach, igVideoViews, igInteractions });
+                            const igInsightsData: any = await meta.getIgInsights(igAccount.id, pageToken);
+                            const igData = igInsightsData?.data || [];
+                            const sumValues = (name: string) => {
+                                const row = igData.find((r: any) => r.name === name);
+                                if (!row?.values?.length) return 0;
+                                return row.values.reduce((acc: number, v: any) => acc + (Number(v.value) || 0), 0);
+                            };
+                            igReach = sumValues('reach');
+                            igInteractions = sumValues('total_interactions');
+                            igVideoViews = sumValues('impressions');
+                            console.log('Organic IG Data:', { igReach, igVideoViews, igInteractions });
                         } catch(e) { console.error('error fetching ig insights', e); }
                     }
 
