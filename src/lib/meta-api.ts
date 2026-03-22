@@ -126,20 +126,11 @@ export class MetaAPI {
     async getIgInsights(igAccountId: string, pageToken: string, since?: string, until?: string) {
         const results: any[] = [];
 
-        // 1. Reach via time-series
-        try {
-            const params: Record<string, string> = { metric: 'reach', period: 'day', access_token: pageToken };
-            if (since && until) { params.since = since; params.until = until; }
-            const r = await this.fetch(`/${igAccountId}/insights`, params);
-            if (r.data) results.push(...r.data);
-        } catch (e: any) {
-            console.error('IG reach (time-series) failed:', e?.message || e);
-        }
-
-        // 2. Other metrics via total_value
+        // All metrics via total_value — gives true monthly aggregates (not daily sums)
+        // reach via total_value = true unique monthly reach (not overcounted daily sum)
         try {
             const params: Record<string, string> = {
-                metric: 'views,total_interactions,website_clicks,profile_views,follows_and_unfollows',
+                metric: 'reach,views,total_interactions,website_clicks,profile_views,follows_and_unfollows',
                 metric_type: 'total_value',
                 period: 'day',
                 access_token: pageToken

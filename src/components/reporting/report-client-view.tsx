@@ -37,20 +37,20 @@ const PLATFORM_NAMES = {
 // Export PLATFORM_METRICS to use in other components
 export const PLATFORM_METRICS: Record<string, { id: string, labelAr: string, labelEn: string, icon: any, suffix?: string }[]> = {
     facebook: [
-        { id: "impressions", labelAr: "المشاهدات", labelEn: "Impressions", icon: Eye },
-        { id: "reach", labelAr: "الوصول", labelEn: "Reach", icon: Users },
+        { id: "impressions", labelAr: "المشاهدات", labelEn: "Views", icon: Eye },
+        { id: "reach", labelAr: "المشاهدون", labelEn: "Viewers", icon: Users },
         { id: "engagement", labelAr: "تفاعلات المحتوى", labelEn: "Content interactions", icon: MousePointer2 },
-        { id: "clicks", labelAr: "نقرات الرابط", labelEn: "Link clicks", icon: Target },
-        { id: "profileVisits", labelAr: "إعجابات الصفحة", labelEn: "Page Likes", icon: Target },
-        { id: "followers", labelAr: "متابعون جدد", labelEn: "New followers", icon: Users },
+        { id: "clicks", labelAr: "نقرات الروابط", labelEn: "Link clicks", icon: Target },
+        { id: "profileVisits", labelAr: "الزيارات", labelEn: "Visits", icon: Target },
+        { id: "followers", labelAr: "متابعون جدد", labelEn: "Follows", icon: Users },
     ],
     instagram: [
         { id: "views", labelAr: "المشاهدات", labelEn: "Views", icon: Eye },
         { id: "reach", labelAr: "الوصول", labelEn: "Reach", icon: Users },
         { id: "engagement", labelAr: "تفاعلات المحتوى", labelEn: "Content interactions", icon: MousePointer2 },
-        { id: "clicks", labelAr: "نقرات الرابط", labelEn: "Link clicks", icon: Target },
-        { id: "profileVisits", labelAr: "زيارات الحساب", labelEn: "Profile visits", icon: Target },
-        { id: "followers", labelAr: "متابعون جدد", labelEn: "New followers", icon: Users },
+        { id: "clicks", labelAr: "نقرات الروابط", labelEn: "Link clicks", icon: Target },
+        { id: "profileVisits", labelAr: "زيارات الملف الشخصي", labelEn: "Profile Visits", icon: Target },
+        { id: "followers", labelAr: "متابعون جدد", labelEn: "Follows", icon: Users },
     ],
     linkedin: [
         { id: "impressions", labelAr: "الظهور", labelEn: "Impressions", icon: Eye },
