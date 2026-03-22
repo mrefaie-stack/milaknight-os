@@ -252,13 +252,13 @@ async function fetchMetaData(
     }
 
     result.facebook = {
-        impressions: sumDailyValues(fbPageData, "page_impressions"),           // Views
-        reach: sumDailyValues(fbPageData, "page_impressions_unique"),          // Viewers
-        engagement: sumDailyValues(fbPageData, "page_post_engagements"),      // Content interactions
+        impressions: sumDailyValues(fbPageData, "page_impressions"),      // Views
+        reach: sumDailyValues(fbPageData, "page_impressions_unique"),     // Viewers
+        engagement: sumDailyValues(fbPageData, "page_post_engagements"),  // Content interactions
         clicks: 0,
         spend: 0,
-        profileVisits: sumDailyValues(fbPageData, "page_views_total"),         // Visits
-        followers: sumDailyValues(fbPageData, "page_fan_adds") || pageInfo?.fan_count || 0, // Follows
+        profileVisits: sumDailyValues(fbPageData, "page_views_total"),    // Visits
+        followers: sumDailyValues(fbPageData, "page_fan_adds"),           // New follows only
     };
     console.log(`${label} facebook result:`, JSON.stringify(result.facebook));
 
@@ -270,13 +270,17 @@ async function fetchMetaData(
             const igInsights = igInsightsData?.data || [];
             console.log(`${label} IG metrics fetched:`, igInsights.map((r: any) => `${r.name}=${r.values?.reduce((s: number, v: any) => s + (v.value || 0), 0)}`).join(', '));
 
+            // Log raw follows_and_unfollows to debug parsing
+            const followsRow = igInsights.find((r: any) => r.name === "follows_and_unfollows");
+            console.log(`${label} follows_and_unfollows raw:`, JSON.stringify(followsRow?.total_value || followsRow?.values?.[0]));
+
             result.instagram = {
-                views: sumDailyValues(igInsights, "views"),                         // Views
-                reach: sumDailyValues(igInsights, "reach"),                         // Reach
-                engagement: sumDailyValues(igInsights, "total_interactions"),       // Content interactions
-                clicks: sumDailyValues(igInsights, "website_clicks"),               // Link clicks
-                profileVisits: sumDailyValues(igInsights, "profile_views"),         // Visits
-                followers: sumDailyValues(igInsights, "follows_and_unfollows") || igFollowers, // Follows
+                views: sumDailyValues(igInsights, "views"),                    // Views (total_value)
+                reach: sumDailyValues(igInsights, "reach"),                    // Reach (time-series sum OR total_value)
+                engagement: sumDailyValues(igInsights, "total_interactions"),  // Content interactions
+                clicks: sumDailyValues(igInsights, "website_clicks"),          // Link clicks
+                profileVisits: sumDailyValues(igInsights, "profile_views"),    // Profile Visits
+                followers: sumDailyValues(igInsights, "follows_and_unfollows"), // New follows only (not total)
             };
             console.log(`${label} instagram result:`, JSON.stringify(result.instagram));
         } catch (e: any) {
