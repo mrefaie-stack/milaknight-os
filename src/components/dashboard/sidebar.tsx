@@ -118,6 +118,7 @@ export function DashboardSidebar({ role, user }: { role: string; user: any }) {
     const clientLinks: NavLink[] = [
         { href: "/client",             label: t("common.overview"),                              icon: LayoutDashboard },
         { href: "/client/live",        label: isRtl ? "الاحصائيات الحية" : "Live Analytics",    icon: Activity        },
+        { href: "/client/connections", label: isRtl ? "ربط الحسابات" : "Connect Accounts",      icon: Link2           },
         { href: "/client/services",    label: t("sidebar.services"),                             icon: Sparkles        },
         { href: "/client/meetings",    label: isRtl ? "الاجتماعات" : "Meetings",                icon: CalendarDays    },
         { href: "/client/action-plans",label: t("sidebar.action_plans"),                         icon: FolderKanban    },
