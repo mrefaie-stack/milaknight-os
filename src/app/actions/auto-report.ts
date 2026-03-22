@@ -164,15 +164,27 @@ async function fetchMetaData(
     const meta = new MetaAPI(connection.accessToken);
     const result: { facebook?: any; instagram?: any } = {};
 
-    // Helper: sum all daily values from a page/ig insights response
-    // Handles both plain numbers and object values (e.g. follows_and_unfollows)
+    // Helper: extract value from a page/ig insights response row.
+    // Handles both time-series (values[]) and total_value formats.
     const sumDailyValues = (data: any[], metricName: string): number => {
         const row = data.find((r: any) => r.name === metricName);
-        if (!row?.values?.length) return 0;
+        if (!row) return 0;
+        // total_value format (Instagram metric_type=total_value)
+        if (row.total_value !== undefined) {
+            const tv = row.total_value;
+            if (typeof tv.value === 'number') return tv.value;
+            // follows_and_unfollows breakdown: [{dimension_values:["FOLLOW"], value:N}]
+            if (Array.isArray(tv.breakdowns?.[0]?.results)) {
+                const followEntry = tv.breakdowns[0].results.find((r: any) => r.dimension_values?.includes('FOLLOW'));
+                return Number(followEntry?.value) || 0;
+            }
+            return 0;
+        }
+        // time-series format (period=day values[])
+        if (!row.values?.length) return 0;
         return row.values.reduce((acc: number, v: any) => {
             const val = v.value;
             if (typeof val === 'object' && val !== null) {
-                // e.g. follows_and_unfollows: {follows: N, unfollows: M}
                 return acc + (Number(val.follows) || Number(val.value) || 0);
             }
             return acc + (Number(val) || 0);

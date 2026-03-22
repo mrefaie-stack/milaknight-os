@@ -77,7 +77,8 @@ export class MetaAPI {
             params.since = since;
             params.until = until;
         }
-        if (pageToken) params.access_token = pageToken;
+        // Try page token first; fall back to user token (this.accessToken) if not provided
+        params.access_token = pageToken || this.accessToken;
 
         return this.fetch(`/${pageId}/insights`, params);
     }
@@ -92,7 +93,7 @@ export class MetaAPI {
             period: 'day'
         };
         if (since && until) { params.since = since; params.until = until; }
-        if (pageToken) params.access_token = pageToken;
+        params.access_token = pageToken || this.accessToken;
         return this.fetch(`/${pageId}/insights`, params);
     }
 
@@ -115,18 +116,42 @@ export class MetaAPI {
      * impressions, total_interactions, profile_views are additive (correct).
      * reach is approximate (daily unique counts summed — may slightly overcount).
      */
+    /**
+     * Instagram Insights — two calls:
+     * 1. reach: still uses period=day (time-series, sum daily values)
+     * 2. views + interactions + clicks + visits + follows: require metric_type=total_value
+     *    Returns combined results. total_value metrics have { total_value: { value: N } }
+     *    instead of { values: [...] }
+     */
     async getIgInsights(igAccountId: string, pageToken: string, since?: string, until?: string) {
-        const params: Record<string, string> = {
-            // Maps to Business Manager: Views, Reach, Content interactions, Link clicks, Visits, Follows
-            metric: 'views,reach,total_interactions,website_clicks,profile_views,follows_and_unfollows',
-            period: 'day',
-            access_token: pageToken
-        };
-        if (since && until) {
-            params.since = since;
-            params.until = until;
+        const results: any[] = [];
+
+        // 1. Reach via time-series
+        try {
+            const params: Record<string, string> = { metric: 'reach', period: 'day', access_token: pageToken };
+            if (since && until) { params.since = since; params.until = until; }
+            const r = await this.fetch(`/${igAccountId}/insights`, params);
+            if (r.data) results.push(...r.data);
+        } catch (e: any) {
+            console.error('IG reach (time-series) failed:', e?.message || e);
         }
-        return this.fetch(`/${igAccountId}/insights`, params);
+
+        // 2. Other metrics via total_value
+        try {
+            const params: Record<string, string> = {
+                metric: 'views,total_interactions,website_clicks,profile_views,follows_and_unfollows',
+                metric_type: 'total_value',
+                period: 'day',
+                access_token: pageToken
+            };
+            if (since && until) { params.since = since; params.until = until; }
+            const r = await this.fetch(`/${igAccountId}/insights`, params);
+            if (r.data) results.push(...r.data);
+        } catch (e: any) {
+            console.error('IG total_value metrics failed:', e?.message || e);
+        }
+
+        return { data: results };
     }
 
     /**
