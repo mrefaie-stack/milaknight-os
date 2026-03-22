@@ -118,19 +118,18 @@ export class MetaAPI {
      */
     /**
      * Instagram Insights — two calls:
-     * 1. reach: still uses period=day (time-series, sum daily values)
-     * 2. views + interactions + clicks + visits + follows: require metric_type=total_value
-     *    Returns combined results. total_value metrics have { total_value: { value: N } }
-     *    instead of { values: [...] }
+     * 1. reach, views, total_interactions, website_clicks, profile_views via metric_type=total_value
+     * 2. follows_and_unfollows separately with breakdown=follow_type (required to get the data)
+     *    NON_FOLLOWER dimension = new follows (non-followers who started following)
+     *    FOLLOWER dimension = unfollows (followers who stopped following)
      */
     async getIgInsights(igAccountId: string, pageToken: string, since?: string, until?: string) {
         const results: any[] = [];
 
-        // All metrics via total_value — gives true monthly aggregates (not daily sums)
-        // reach via total_value = true unique monthly reach (not overcounted daily sum)
+        // Main metrics via total_value — gives true monthly aggregates
         try {
             const params: Record<string, string> = {
-                metric: 'reach,views,total_interactions,website_clicks,profile_views,follows_and_unfollows',
+                metric: 'reach,views,total_interactions,website_clicks,profile_views',
                 metric_type: 'total_value',
                 period: 'day',
                 access_token: pageToken
@@ -140,6 +139,22 @@ export class MetaAPI {
             if (r.data) results.push(...r.data);
         } catch (e: any) {
             console.error('IG total_value metrics failed:', e?.message || e);
+        }
+
+        // follows_and_unfollows requires breakdown=follow_type to return actual data
+        try {
+            const params: Record<string, string> = {
+                metric: 'follows_and_unfollows',
+                metric_type: 'total_value',
+                period: 'day',
+                breakdown: 'follow_type',
+                access_token: pageToken
+            };
+            if (since && until) { params.since = since; params.until = until; }
+            const r = await this.fetch(`/${igAccountId}/insights`, params);
+            if (r.data) results.push(...r.data);
+        } catch (e: any) {
+            console.error('IG follows_and_unfollows failed:', e?.message || e);
         }
 
         return { data: results };

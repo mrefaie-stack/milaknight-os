@@ -173,9 +173,11 @@ async function fetchMetaData(
         if (row.total_value !== undefined) {
             const tv = row.total_value;
             if (typeof tv.value === 'number') return tv.value;
-            // follows_and_unfollows breakdown: [{dimension_values:["FOLLOW"], value:N}]
+            // follows_and_unfollows breakdown by follow_type:
+            // NON_FOLLOWER = new follows (was not following, now following)
+            // FOLLOWER = unfollows (was following, now not following)
             if (Array.isArray(tv.breakdowns?.[0]?.results)) {
-                const followEntry = tv.breakdowns[0].results.find((r: any) => r.dimension_values?.includes('FOLLOW'));
+                const followEntry = tv.breakdowns[0].results.find((r: any) => r.dimension_values?.includes('NON_FOLLOWER'));
                 return Number(followEntry?.value) || 0;
             }
             return 0;
