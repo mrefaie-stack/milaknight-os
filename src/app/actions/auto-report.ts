@@ -337,8 +337,8 @@ Month: ${month}
 Connected Platforms: ${sourcePlatforms.join(", ") || "None"}
 
 Performance Data:
-${fbData ? `• Facebook — Impressions: ${fbData.impressions?.toLocaleString()}, Reach: ${fbData.reach?.toLocaleString()}, Post Engagements: ${fbData.engagement?.toLocaleString()}, Page Views: ${fbData.profileVisits?.toLocaleString()}, New Page Likes: ${fbData.followers?.toLocaleString()}, Ad Spend: ${fbData.spend} SAR${fbReachMom ? `, Reach MoM: ${fbReachMom}` : ""}` : ""}
-${igData ? `• Instagram — Impressions: ${igData.views?.toLocaleString()}, Reach: ${igData.reach?.toLocaleString()}, Total Interactions: ${igData.engagement?.toLocaleString()}, Profile Views: ${igData.profileVisits?.toLocaleString()}, Total Followers: ${igData.followers?.toLocaleString()}${igReachMom ? `, Reach MoM: ${igReachMom}` : ""}` : ""}
+${fbData ? `• Facebook — Views: ${fbData.impressions?.toLocaleString()}, Viewers: ${fbData.reach?.toLocaleString()}, Content Interactions: ${fbData.engagement?.toLocaleString()}, Link Clicks: ${fbData.clicks?.toLocaleString()}, Visits: ${fbData.profileVisits?.toLocaleString()}, New Follows: ${fbData.followers?.toLocaleString()}${fbReachMom ? `, Reach MoM: ${fbReachMom}` : ""}` : ""}
+${igData ? `• Instagram — Views: ${igData.views?.toLocaleString()}, Reach: ${igData.reach?.toLocaleString()}, Content Interactions: ${igData.engagement?.toLocaleString()}, Link Clicks: ${igData.clicks?.toLocaleString()}, Profile Visits: ${igData.profileVisits?.toLocaleString()}, New Follows: ${igData.followers?.toLocaleString()}${igReachMom ? `, Reach MoM: ${igReachMom}` : ""}` : ""}
 ${industryContext ? `\nMarket Context: ${industryContext}` : ""}
 
 Write a concise, professional bilingual summary (3-4 sentences each).
