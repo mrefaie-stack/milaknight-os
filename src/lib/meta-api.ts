@@ -36,13 +36,19 @@ export class MetaAPI {
     }
 
     /**
-     * Fetch insights for a specific ad account
+     * Fetch insights for a specific ad account.
+     * Pass since/until (YYYY-MM-DD) for a specific range, or leave empty for last_30d.
      */
-    async getAdAccountInsights(adAccountId: string, datePreset: string = 'last_30d') {
-        return this.fetch(`/${adAccountId}/insights`, {
-            fields: 'spend,impressions,clicks,cpc,ctr,reach',
-            date_preset: datePreset
-        });
+    async getAdAccountInsights(adAccountId: string, datePreset: string = 'last_30d', since?: string, until?: string) {
+        const params: Record<string, string> = {
+            fields: 'spend,impressions,clicks,cpc,ctr,reach'
+        };
+        if (since && until) {
+            params.time_range = JSON.stringify({ since, until });
+        } else {
+            params.date_preset = datePreset;
+        }
+        return this.fetch(`/${adAccountId}/insights`, params);
     }
 
     /**
@@ -57,15 +63,20 @@ export class MetaAPI {
     }
 
     /**
-     * Fetch page insights (Organic)
+     * Fetch page insights (Organic).
+     * Pass since/until (YYYY-MM-DD) for a specific month, else falls back to days_28.
      */
-    async getPageInsights(pageId: string, pageToken?: string) {
+    async getPageInsights(pageId: string, pageToken?: string, since?: string, until?: string) {
         const params: Record<string, string> = {
             metric: 'page_impressions_unique,page_post_engagements',
-            period: 'days_28'
+            period: 'day'
         };
+        if (since && until) {
+            params.since = since;
+            params.until = until;
+        }
         if (pageToken) params.access_token = pageToken;
-        
+
         return this.fetch(`/${pageId}/insights`, params);
     }
 
@@ -78,12 +89,17 @@ export class MetaAPI {
         });
     }
 
-    async getIgReach(igAccountId: string, pageToken: string) {
-        return this.fetch(`/${igAccountId}/insights`, {
+    async getIgReach(igAccountId: string, pageToken: string, since?: string, until?: string) {
+        const params: Record<string, string> = {
             metric: 'reach',
-            period: 'days_28',
+            period: 'day',
             access_token: pageToken
-        });
+        };
+        if (since && until) {
+            params.since = since;
+            params.until = until;
+        }
+        return this.fetch(`/${igAccountId}/insights`, params);
     }
 
     async getIgImpressions(igAccountId: string, pageToken: string) {
@@ -102,13 +118,17 @@ export class MetaAPI {
         });
     }
 
-    async getIgMediaInsights(igAccountId: string, pageToken: string) {
-        // Fetching the most recent media to sum views and engagement
-        return this.fetch(`/${igAccountId}/media`, {
-            fields: 'id,like_count,comments_count,media_type,media_product_type,video_views',
-            limit: '30',
+    async getIgMediaInsights(igAccountId: string, pageToken: string, since?: string, until?: string) {
+        const params: Record<string, string> = {
+            fields: 'id,like_count,comments_count,media_type,media_product_type,video_views,timestamp',
+            limit: '50',
             access_token: pageToken
-        });
+        };
+        if (since && until) {
+            params.since = since;
+            params.until = until;
+        }
+        return this.fetch(`/${igAccountId}/media`, params);
     }
 
     /**

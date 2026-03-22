@@ -36,6 +36,12 @@ export async function generateAutoReport(clientId: string, month: string) {
         throw new Error(`DUPLICATE:${existing.id}`);
     }
 
+    // --- Calculate exact date range for the selected month ---
+    const [year, monthNum] = month.split("-").map(Number);
+    const since = `${year}-${String(monthNum).padStart(2, "0")}-01`;
+    const lastDay = new Date(year, monthNum, 0).getDate(); // last day of month
+    const until = `${year}-${String(monthNum).padStart(2, "0")}-${lastDay}`;
+
     const sourcePlatforms: string[] = [];
     const campaignPlatforms: Record<string, any> = {};
 
@@ -45,7 +51,7 @@ export async function generateAutoReport(clientId: string, month: string) {
     );
     if (metaConnection) {
         try {
-            const metaData = await fetchMetaData(metaConnection);
+            const metaData = await fetchMetaData(metaConnection, since, until);
             if (metaData.facebook) {
                 campaignPlatforms.facebook = metaData.facebook;
                 sourcePlatforms.push("facebook");
@@ -81,7 +87,6 @@ export async function generateAutoReport(clientId: string, month: string) {
     });
 
     // --- Previous Month Report (MoM context) ---
-    const [year, monthNum] = month.split("-").map(Number);
     const prevMonth =
         monthNum === 1
             ? `${year - 1}-12`
@@ -149,15 +154,29 @@ export async function generateAutoReport(clientId: string, month: string) {
 }
 
 // ---------------------------------------------------------------------------
-// Meta data fetcher (mirrors /api/dashboard/live/meta logic)
+// Meta data fetcher — fetches data for the exact month (since → until)
 // ---------------------------------------------------------------------------
-async function fetchMetaData(connection: any): Promise<{ facebook?: any; instagram?: any }> {
+async function fetchMetaData(
+    connection: any,
+    since: string,
+    until: string
+): Promise<{ facebook?: any; instagram?: any }> {
     const meta = new MetaAPI(connection.accessToken);
     const result: { facebook?: any; instagram?: any } = {};
 
+    // Helper: sum all daily values from a page/ig insights response
+    const sumDailyValues = (data: any[], metricName: string): number => {
+        const row = data.find((r: any) => r.name === metricName);
+        if (!row?.values?.length) return 0;
+        return row.values.reduce((acc: number, v: any) => acc + (Number(v.value) || 0), 0);
+    };
+
+    // --- Ad Account (Paid) ---
     let adInsights: any = {};
     try {
-        const res: any = await meta.getAdAccountInsights(connection.platformAccountId);
+        const res: any = await meta.getAdAccountInsights(
+            connection.platformAccountId, 'last_30d', since, until
+        );
         adInsights = res?.data?.[0] || {};
     } catch (e) {
         console.error("Auto report: Ad insights error:", e);
@@ -170,27 +189,27 @@ async function fetchMetaData(connection: any): Promise<{ facebook?: any; instagr
         if (!parsed?.pageId) return result;
 
         const pageId = parsed.pageId;
+
+        // Page info (fan_count + page token + IG account)
         let pageInfo: any = {};
         try { pageInfo = await meta.getPageInfo(pageId); } catch (e) { }
 
         const pageToken = pageInfo?.access_token;
         const igAccount = pageInfo?.instagram_business_account;
 
+        // --- Facebook Organic (daily values summed for the month) ---
         let fbReach = 0;
         let fbEngagement = 0;
 
         if (pageToken) {
             try {
-                const pageInsights: any = await meta.getPageInsights(pageId, pageToken);
+                const pageInsights: any = await meta.getPageInsights(pageId, pageToken, since, until);
                 const data = pageInsights?.data || [];
-                const getVal = (name: string) => {
-                    const row = data.find((r: any) => r.name === name);
-                    if (!row?.values?.length) return 0;
-                    return row.values[row.values.length - 1].value || 0;
-                };
-                fbReach = getVal("page_impressions_unique");
-                fbEngagement = getVal("page_post_engagements");
-            } catch (e) { }
+                fbReach = sumDailyValues(data, "page_impressions_unique");
+                fbEngagement = sumDailyValues(data, "page_post_engagements");
+            } catch (e) {
+                console.error("Auto report: FB page insights error:", e);
+            }
         }
 
         result.facebook = {
@@ -198,27 +217,21 @@ async function fetchMetaData(connection: any): Promise<{ facebook?: any; instagr
             reach: fbReach,
             engagement: fbEngagement,
             clicks: Number(adInsights.clicks) || 0,
-            profileVisits: pageInfo?.fan_count || 0,
+            profileVisits: pageInfo?.fan_count || 0, // total page likes (snapshot)
             followers: 0
         };
 
+        // --- Instagram ---
         if (igAccount?.id && pageToken) {
             try {
-                let igReach = 0;
-                let igVideoViews = 0;
-                let igInteractions = 0;
                 const igFollowers = igAccount.followers_count || 0;
 
-                const igReachData: any = await meta.getIgReach(igAccount.id, pageToken);
-                const igReachArr = igReachData?.data || [];
-                const getIgVal = (arr: any[], name: string) => {
-                    const row = arr.find((r: any) => r.name === name);
-                    if (!row?.values?.length) return 0;
-                    return row.values[row.values.length - 1].value || 0;
-                };
-                igReach = getIgVal(igReachArr, "reach");
+                // Reach (daily values summed)
+                const igReachData: any = await meta.getIgReach(igAccount.id, pageToken, since, until);
+                const igReach = sumDailyValues(igReachData?.data || [], "reach");
 
-                const igMedia: any = await meta.getIgMediaInsights(igAccount.id, pageToken);
+                // Media (filtered to the month via since/until)
+                const igMedia: any = await meta.getIgMediaInsights(igAccount.id, pageToken, since, until);
                 const mediaList = igMedia?.data || [];
                 let sumViews = 0;
                 let sumEngagement = 0;
@@ -226,15 +239,13 @@ async function fetchMetaData(connection: any): Promise<{ facebook?: any; instagr
                     sumViews += m.video_views || 0;
                     sumEngagement += (m.like_count || 0) + (m.comments_count || 0);
                 });
+                // Fallback: if no video views (Reels), estimate from reach
                 if (sumViews === 0 && igReach > 0) sumViews = Math.floor(igReach * 0.95);
 
-                igVideoViews = sumViews;
-                igInteractions = sumEngagement;
-
                 result.instagram = {
-                    views: igVideoViews,
+                    views: sumViews,
                     reach: igReach,
-                    engagement: igInteractions,
+                    engagement: sumEngagement,
                     clicks: 0,
                     profileVisits: 0,
                     followers: igFollowers
