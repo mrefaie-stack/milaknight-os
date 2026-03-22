@@ -165,10 +165,18 @@ async function fetchMetaData(
     const result: { facebook?: any; instagram?: any } = {};
 
     // Helper: sum all daily values from a page/ig insights response
+    // Handles both plain numbers and object values (e.g. follows_and_unfollows)
     const sumDailyValues = (data: any[], metricName: string): number => {
         const row = data.find((r: any) => r.name === metricName);
         if (!row?.values?.length) return 0;
-        return row.values.reduce((acc: number, v: any) => acc + (Number(v.value) || 0), 0);
+        return row.values.reduce((acc: number, v: any) => {
+            const val = v.value;
+            if (typeof val === 'object' && val !== null) {
+                // e.g. follows_and_unfollows: {follows: N, unfollows: M}
+                return acc + (Number(val.follows) || Number(val.value) || 0);
+            }
+            return acc + (Number(val) || 0);
+        }, 0);
     };
 
     const label = `[auto-report][${since}→${until}]`;
@@ -224,26 +232,35 @@ async function fetchMetaData(
         console.warn(`${label} No page access_token — page insights will be empty`);
     }
 
-    // --- Facebook Page Insights (period=total_over_range) ---
+    // --- Facebook Page Insights ---
+    // Metrics map to Business Manager: Views, Viewers, Content interactions, Visits, Follows
     let fbPageData: any[] = [];
     if (pageToken) {
         try {
             const pageInsights: any = await meta.getPageInsights(pageId, pageToken, since, until);
             fbPageData = pageInsights?.data || [];
-            console.log(`${label} FB page metrics fetched:`, fbPageData.map((r: any) => `${r.name}=${r.values?.[0]?.value}`).join(', '));
+            console.log(`${label} FB page metrics fetched:`, fbPageData.map((r: any) => `${r.name}=${r.values?.reduce((s: number, v: any) => s + (Number(v.value) || 0), 0)}`).join(', '));
         } catch (e: any) {
             console.error(`${label} FB page insights FAILED:`, e?.message || e);
+            // Fallback: try with only the safe metrics if the full batch failed
+            try {
+                const fallback: any = await meta.getPageInsightsSafe(pageId, pageToken, since, until);
+                fbPageData = fallback?.data || [];
+                console.log(`${label} FB page insights (fallback) fetched:`, fbPageData.map((r: any) => r.name).join(', '));
+            } catch (e2: any) {
+                console.error(`${label} FB page insights fallback FAILED:`, e2?.message || e2);
+            }
         }
     }
 
     result.facebook = {
-        impressions: sumDailyValues(fbPageData, "page_impressions"),
-        reach: sumDailyValues(fbPageData, "page_impressions_unique"),
-        engagement: 0, // page_post_engagements deprecated in Meta API v18+
-        clicks: Number(adInsights.clicks) || 0,
+        impressions: sumDailyValues(fbPageData, "page_impressions"),           // Views
+        reach: sumDailyValues(fbPageData, "page_impressions_unique"),          // Viewers
+        engagement: sumDailyValues(fbPageData, "page_post_engagements"),      // Content interactions
+        clicks: Number(adInsights.clicks) || 0,                                // Link clicks (paid)
         spend: Number(adInsights.spend) || 0,
-        profileVisits: sumDailyValues(fbPageData, "page_views_total"),
-        followers: pageInfo?.fan_count || 0, // total page fans (fan_count from page info)
+        profileVisits: sumDailyValues(fbPageData, "page_views_total"),         // Visits
+        followers: sumDailyValues(fbPageData, "page_fan_adds") || pageInfo?.fan_count || 0, // Follows
     };
     console.log(`${label} facebook result:`, JSON.stringify(result.facebook));
 
@@ -256,11 +273,12 @@ async function fetchMetaData(
             console.log(`${label} IG metrics fetched:`, igInsights.map((r: any) => `${r.name}=${r.values?.reduce((s: number, v: any) => s + (v.value || 0), 0)}`).join(', '));
 
             result.instagram = {
-                views: sumDailyValues(igInsights, "views"),
-                reach: sumDailyValues(igInsights, "reach"),
-                engagement: sumDailyValues(igInsights, "total_interactions"),
-                profileVisits: sumDailyValues(igInsights, "profile_views"),
-                followers: igFollowers
+                views: sumDailyValues(igInsights, "views"),                         // Views
+                reach: sumDailyValues(igInsights, "reach"),                         // Reach
+                engagement: sumDailyValues(igInsights, "total_interactions"),       // Content interactions
+                clicks: sumDailyValues(igInsights, "website_clicks"),               // Link clicks
+                profileVisits: sumDailyValues(igInsights, "profile_views"),         // Visits
+                followers: sumDailyValues(igInsights, "follows_and_unfollows") || igFollowers, // Follows
             };
             console.log(`${label} instagram result:`, JSON.stringify(result.instagram));
         } catch (e: any) {

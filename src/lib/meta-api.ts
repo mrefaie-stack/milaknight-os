@@ -68,8 +68,9 @@ export class MetaAPI {
      */
     async getPageInsights(pageId: string, pageToken?: string, since?: string, until?: string) {
         const params: Record<string, string> = {
-            // page_post_engagements and page_fan_adds_unique were deprecated in Meta API v18+
-            metric: 'page_impressions,page_impressions_unique,page_views_total',
+            // Maps to Business Manager: Views, Viewers, Content interactions, Visits, Follows
+            // page_fan_adds_unique is deprecated (v18+) — use page_fan_adds instead
+            metric: 'page_impressions,page_impressions_unique,page_post_engagements,page_views_total,page_fan_adds',
             period: 'day'
         };
         if (since && until) {
@@ -78,6 +79,20 @@ export class MetaAPI {
         }
         if (pageToken) params.access_token = pageToken;
 
+        return this.fetch(`/${pageId}/insights`, params);
+    }
+
+    /**
+     * Fallback page insights with only safe (non-deprecated) metrics.
+     * Used when the full getPageInsights batch fails.
+     */
+    async getPageInsightsSafe(pageId: string, pageToken?: string, since?: string, until?: string) {
+        const params: Record<string, string> = {
+            metric: 'page_impressions,page_impressions_unique,page_views_total',
+            period: 'day'
+        };
+        if (since && until) { params.since = since; params.until = until; }
+        if (pageToken) params.access_token = pageToken;
         return this.fetch(`/${pageId}/insights`, params);
     }
 
@@ -102,8 +117,8 @@ export class MetaAPI {
      */
     async getIgInsights(igAccountId: string, pageToken: string, since?: string, until?: string) {
         const params: Record<string, string> = {
-            // 'impressions' was deprecated in IG API — replaced by 'views'
-            metric: 'reach,views,total_interactions,profile_views',
+            // Maps to Business Manager: Views, Reach, Content interactions, Link clicks, Visits, Follows
+            metric: 'views,reach,total_interactions,website_clicks,profile_views,follows_and_unfollows',
             period: 'day',
             access_token: pageToken
         };
