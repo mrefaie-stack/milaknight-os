@@ -145,16 +145,16 @@ export function LiveMetrics() {
             isLive: !!snapData,
             error: !snapData ? (isRtl ? "حساب سناب شات غير مربوط" : "Snapchat not connected") : null,
             organicMetrics: [
-                { label: isRtl ? "الوصول" : "Reach", value: snapData?.stats?.reach?.toLocaleString() ?? '—', color: "text-blue-400", icon: <Users className="w-4 h-4" /> },
+                { label: isRtl ? "إجمالي الظهور" : "Total Impressions", value: snapData?.stats?.impressions?.toLocaleString() ?? '—', color: "text-blue-400", icon: <Eye className="w-4 h-4" /> },
                 { label: isRtl ? "مشاهدات الفيديو" : "Video Views", value: snapData?.stats?.videoViews?.toLocaleString() ?? '—', color: "text-rose-500", icon: <PlaySquare className="w-4 h-4" /> },
-                { label: isRtl ? "المستخدمون الفريدون" : "Unique Users", value: snapData?.stats?.uniques?.toLocaleString() ?? '—', color: "text-emerald-500", icon: <Eye className="w-4 h-4" /> },
-                { label: isRtl ? "معدل التكرار" : "Frequency", value: snapData?.stats?.frequency ? snapData.stats.frequency.toFixed(2) : '—', color: "text-purple-500", icon: <RefreshCw className="w-4 h-4" /> },
+                { label: isRtl ? "مستخدمون فريدون" : "Unique Users", value: snapData?.stats?.uniques?.toLocaleString() ?? '—', color: "text-emerald-500", icon: <Users className="w-4 h-4" /> },
+                { label: isRtl ? "معدل التكرار" : "Avg Frequency", value: snapData?.stats?.frequency ? snapData.stats.frequency.toFixed(2) : '—', color: "text-purple-500", icon: <RefreshCw className="w-4 h-4" /> },
             ],
             adMetrics: snapData ? [
-                { label: isRtl ? "الإنفاق" : "Spend", value: `SAR ${snapData.stats.spend?.toFixed(2) ?? '0.00'}`, color: "text-orange-500", icon: <DollarSign className="w-4 h-4" /> },
-                { label: isRtl ? "الظهور" : "Impressions", value: snapData.stats.impressions?.toLocaleString() ?? '0', color: "text-primary", icon: <Eye className="w-4 h-4" /> },
+                { label: isRtl ? "إجمالي الإنفاق" : "Total Spend", value: `SAR ${snapData.stats.spend?.toFixed(2) ?? '0.00'}`, color: "text-orange-500", icon: <DollarSign className="w-4 h-4" /> },
                 { label: isRtl ? "سحب للأعلى" : "Swipe Ups", value: snapData.stats.swipes?.toLocaleString() ?? '0', color: "text-emerald-500", icon: <MousePointer2 className="w-4 h-4" /> },
-                { label: isRtl ? "الإعلانات الفعّالة" : "Live Ads", value: `${snapData.validAdCount ?? 0} / ${snapData.adCount ?? 0}`, color: "text-blue-500", icon: <Activity className="w-4 h-4" /> },
+                { label: isRtl ? "الوصول" : "Reach", value: snapData.stats.reach?.toLocaleString() ?? '0', color: "text-primary", icon: <Activity className="w-4 h-4" /> },
+                { label: isRtl ? "إعلانات نشطة" : "Live Ads", value: isRtl ? `${snapData.adCount ?? 0} / ${snapData.validAdCount ?? 0}` : `${snapData.validAdCount ?? 0} / ${snapData.adCount ?? 0}`, color: "text-blue-500", icon: <Hash className="w-4 h-4" /> },
             ] : [],
             activeAds: snapData ? (snapData.topAds || []).map((a: any) => ({
                 id: a.id,
