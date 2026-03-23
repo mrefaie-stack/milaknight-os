@@ -47,19 +47,40 @@ export class SnapchatAPI {
         return (data.ads || []).map((a: any) => a.ad).filter(Boolean);
     }
 
-    async getAdStats(adId: string) {
+    async getAdStats(adId: string, startTime?: string, endTime?: string) {
+        // With date range: use DAY granularity and sum results
+        if (startTime && endTime) {
+            try {
+                const data = await this.fetch(`/ads/${adId}/stats`, {
+                    granularity: 'DAY',
+                    fields: 'impressions,swipes,spend,video_views',
+                    start_time: startTime,
+                    end_time: endTime
+                });
+                const days = data.timeseries_stats?.[0]?.timeseries_stat?.timeseries || [];
+                const agg = { impressions: 0, swipes: 0, spend: 0, videoViews: 0 };
+                for (const d of days) {
+                    agg.impressions += d.stats?.impressions || 0;
+                    agg.swipes += d.stats?.swipes || 0;
+                    agg.spend += (d.stats?.spend || 0) / 1_000_000;
+                    agg.videoViews += d.stats?.video_views || 0;
+                }
+                return agg;
+            } catch {
+                // Fall through to TOTAL if date params rejected
+            }
+        }
+        // All-time (default)
         const data = await this.fetch(`/ads/${adId}/stats`, {
             granularity: 'TOTAL',
-            fields: 'impressions,swipes,spend,video_views,frequency,uniques'
+            fields: 'impressions,swipes,spend,video_views'
         });
         const stat = data.total_stats?.[0]?.total_stat?.stats || {};
         return {
             impressions: stat.impressions || 0,
             swipes: stat.swipes || 0,
             spend: (stat.spend || 0) / 1_000_000,
-            videoViews: stat.video_views || 0,
-            frequency: stat.frequency || 0,
-            uniques: stat.uniques || 0
+            videoViews: stat.video_views || 0
         };
     }
 
@@ -87,7 +108,7 @@ export class SnapchatAPI {
      * Full account data.
      * Totals are derived from ad-level stats (reliable) + reach from campaign stats.
      */
-    async getFullAccountData(adAccountId: string) {
+    async getFullAccountData(adAccountId: string, startTime?: string, endTime?: string) {
         const [campaigns, adSquads, ads] = await Promise.all([
             this.getCampaigns(adAccountId),
             this.getAdSquads(adAccountId).catch(() => []),
@@ -97,8 +118,8 @@ export class SnapchatAPI {
         // --- Ad-level stats (primary source for totals — confirmed reliable) ---
         const adResults = await Promise.allSettled(
             ads.map(async (a: any) => {
-                const stats = await this.getAdStats(a.id).catch(() => ({
-                    impressions: 0, swipes: 0, spend: 0, videoViews: 0, frequency: 0, uniques: 0
+                const stats = await this.getAdStats(a.id, startTime, endTime).catch(() => ({
+                    impressions: 0, swipes: 0, spend: 0, videoViews: 0
                 }));
                 const isValid = (a.delivery_status || []).includes('VALID');
                 return { ...a, stats, isValid };
@@ -109,17 +130,13 @@ export class SnapchatAPI {
             .map((r: any) => r.value);
 
         // Sum ad-level stats for totals
-        const totals = { impressions: 0, swipes: 0, spend: 0, videoViews: 0, reach: 0, uniques: 0 };
-        let freqSum = 0, freqCount = 0;
+        const totals = { impressions: 0, swipes: 0, spend: 0, videoViews: 0 };
         for (const a of enrichedAds) {
             totals.impressions += a.stats.impressions;
             totals.swipes += a.stats.swipes;
             totals.spend += a.stats.spend;
             totals.videoViews += a.stats.videoViews;
-            totals.uniques += a.stats.uniques;
-            if (a.stats.frequency > 0) { freqSum += a.stats.frequency; freqCount++; }
         }
-        const frequency = freqCount > 0 ? freqSum / freqCount : 0;
 
         // --- Campaign-level stats (best-effort — for reach + objective breakdown) ---
         const campaignResults = await Promise.allSettled(
@@ -133,11 +150,6 @@ export class SnapchatAPI {
         const enrichedCampaigns = campaignResults
             .filter(r => r.status === 'fulfilled')
             .map((r: any) => r.value);
-
-        // Add reach from campaigns (not available at ad level)
-        for (const c of enrichedCampaigns) {
-            totals.reach += c.stats.reach;
-        }
 
         // Objective breakdown
         const objectiveBreakdown: Record<string, number> = {};
@@ -209,7 +221,7 @@ export class SnapchatAPI {
         }
 
         return {
-            totals: { ...totals, frequency },
+            totals,
             campaignCount: enrichedCampaigns.length,
             activeCampaignCount: activeCampaigns.length,
             adCount: ads.length,

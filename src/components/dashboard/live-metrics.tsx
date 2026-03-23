@@ -8,14 +8,41 @@ import { useLanguage } from '@/contexts/language-context';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 
+type SnapPeriod = 'all' | '7d' | '30d' | '90d' | 'custom';
+
+function toIso(date: Date) { return date.toISOString(); }
+function daysAgo(n: number) { const d = new Date(); d.setDate(d.getDate() - n); d.setHours(0,0,0,0); return d; }
+
 export function LiveMetrics() {
     const { isRtl } = useLanguage();
     const [metaData, setMetaData] = useState<any>(null);
     const [snapData, setSnapData] = useState<any>(null);
+    const [snapLoading, setSnapLoading] = useState(false);
     const [linkedinData, setLinkedinData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState('facebook');
+    const [snapPeriod, setSnapPeriod] = useState<SnapPeriod>('all');
+    const [snapCustomStart, setSnapCustomStart] = useState('');
+    const [snapCustomEnd, setSnapCustomEnd] = useState('');
+
+    const fetchSnap = async (period: SnapPeriod, customStart?: string, customEnd?: string) => {
+        setSnapLoading(true);
+        try {
+            let url = '/api/dashboard/live/snapchat';
+            const now = new Date(); now.setHours(23,59,59,999);
+            if (period === '7d')  url += `?start=${toIso(daysAgo(7))}&end=${toIso(now)}`;
+            if (period === '30d') url += `?start=${toIso(daysAgo(30))}&end=${toIso(now)}`;
+            if (period === '90d') url += `?start=${toIso(daysAgo(90))}&end=${toIso(now)}`;
+            if (period === 'custom' && customStart && customEnd) {
+                url += `?start=${new Date(customStart).toISOString()}&end=${new Date(customEnd + 'T23:59:59').toISOString()}`;
+            }
+            const res = await fetch(url);
+            if (res.ok) setSnapData(await res.json());
+        } finally {
+            setSnapLoading(false);
+        }
+    };
 
     useEffect(() => {
         async function fetchData() {
@@ -34,13 +61,11 @@ export function LiveMetrics() {
                 }
 
                 if (snapRes.status === 'fulfilled' && snapRes.value.ok) {
-                    const json = await snapRes.value.json();
-                    setSnapData(json);
+                    setSnapData(await snapRes.value.json());
                 }
 
                 if (linkedinRes.status === 'fulfilled' && linkedinRes.value.ok) {
-                    const json = await linkedinRes.value.json();
-                    setLinkedinData(json);
+                    setLinkedinData(await linkedinRes.value.json());
                 }
             } catch (err: any) {
                 setError(err.message);
@@ -145,15 +170,15 @@ export function LiveMetrics() {
             isLive: !!snapData,
             error: !snapData ? (isRtl ? "حساب سناب شات غير مربوط" : "Snapchat not connected") : null,
             organicMetrics: [
-                { label: isRtl ? "إجمالي الظهور" : "Total Impressions", value: snapData?.stats?.impressions?.toLocaleString() ?? '—', color: "text-blue-400", icon: <Eye className="w-4 h-4" /> },
+                { label: isRtl ? "إجمالي الظهور" : "Impressions", value: snapData?.stats?.impressions?.toLocaleString() ?? '—', color: "text-blue-400", icon: <Eye className="w-4 h-4" /> },
                 { label: isRtl ? "مشاهدات الفيديو" : "Video Views", value: snapData?.stats?.videoViews?.toLocaleString() ?? '—', color: "text-rose-500", icon: <PlaySquare className="w-4 h-4" /> },
-                { label: isRtl ? "مستخدمون فريدون" : "Unique Users", value: snapData?.stats?.uniques?.toLocaleString() ?? '—', color: "text-emerald-500", icon: <Users className="w-4 h-4" /> },
-                { label: isRtl ? "معدل التكرار" : "Avg Frequency", value: snapData?.stats?.frequency ? snapData.stats.frequency.toFixed(2) : '—', color: "text-purple-500", icon: <RefreshCw className="w-4 h-4" /> },
+                { label: isRtl ? "سحب للأعلى" : "Swipe Ups", value: snapData?.stats?.swipes?.toLocaleString() ?? '—', color: "text-emerald-500", icon: <MousePointer2 className="w-4 h-4" /> },
+                { label: isRtl ? "إجمالي الإنفاق" : "Total Spend", value: snapData?.stats?.spend != null ? `SAR ${snapData.stats.spend.toFixed(2)}` : '—', color: "text-orange-500", icon: <DollarSign className="w-4 h-4" /> },
             ],
             adMetrics: snapData ? [
                 { label: isRtl ? "إجمالي الإنفاق" : "Total Spend", value: `SAR ${snapData.stats.spend?.toFixed(2) ?? '0.00'}`, color: "text-orange-500", icon: <DollarSign className="w-4 h-4" /> },
+                { label: isRtl ? "الظهور" : "Impressions", value: snapData.stats.impressions?.toLocaleString() ?? '0', color: "text-primary", icon: <Eye className="w-4 h-4" /> },
                 { label: isRtl ? "سحب للأعلى" : "Swipe Ups", value: snapData.stats.swipes?.toLocaleString() ?? '0', color: "text-emerald-500", icon: <MousePointer2 className="w-4 h-4" /> },
-                { label: isRtl ? "الوصول" : "Reach", value: snapData.stats.reach?.toLocaleString() ?? '0', color: "text-primary", icon: <Activity className="w-4 h-4" /> },
                 { label: isRtl ? "إعلانات نشطة" : "Live Ads", value: isRtl ? `${snapData.adCount ?? 0} / ${snapData.validAdCount ?? 0}` : `${snapData.validAdCount ?? 0} / ${snapData.adCount ?? 0}`, color: "text-blue-500", icon: <Hash className="w-4 h-4" /> },
             ] : [],
             activeAds: snapData ? (snapData.topAds || []).map((a: any) => ({
@@ -290,13 +315,67 @@ export function LiveMetrics() {
                             {!currentPlatform.error && (
                                 <>
                                     <Badge variant="outline" className="text-xs">
-                                        {activeTab === 'snapchat' && snapData?.period === 'lifetime' ? 'All Time' : 'Last 30 Days'}
+                                        {activeTab === 'snapchat'
+                                            ? ({ all: isRtl ? 'كل الوقت' : 'All Time', '7d': isRtl ? 'آخر ٧ أيام' : 'Last 7 Days', '30d': isRtl ? 'آخر ٣٠ يوم' : 'Last 30 Days', '90d': isRtl ? 'آخر ٩٠ يوم' : 'Last 90 Days', custom: isRtl ? 'نطاق مخصص' : 'Custom Range' } as Record<SnapPeriod,string>)[snapPeriod]
+                                            : isRtl ? 'آخر ٣٠ يوم' : 'Last 30 Days'}
                                     </Badge>
                                     <Badge variant="success" className="text-xs">Optimized</Badge>
                                 </>
                             )}
                         </div>
                     </div>
+
+                    {/* Snapchat Date Range Picker */}
+                    {activeTab === 'snapchat' && !currentPlatform.error && (
+                        <div className="flex flex-wrap items-center gap-2 p-3 rounded-lg bg-muted/30 border border-border">
+                            <CalendarDays className="w-4 h-4 text-muted-foreground shrink-0" />
+                            <span className="text-xs text-muted-foreground shrink-0">{isRtl ? 'الفترة:' : 'Period:'}</span>
+                            {(['all', '7d', '30d', '90d'] as SnapPeriod[]).map((p) => {
+                                const labels: Record<string, string> = { all: isRtl ? 'كل الوقت' : 'All Time', '7d': isRtl ? '٧ أيام' : '7 Days', '30d': isRtl ? '٣٠ يوم' : '30 Days', '90d': isRtl ? '٩٠ يوم' : '90 Days' };
+                                return (
+                                    <button
+                                        key={p}
+                                        onClick={() => { setSnapPeriod(p); fetchSnap(p); }}
+                                        disabled={snapLoading}
+                                        className={cn(
+                                            "px-3 py-1 rounded-md text-xs font-medium transition-colors",
+                                            snapPeriod === p ? "bg-[#FFFC00] text-black" : "bg-muted hover:bg-muted/80 text-muted-foreground"
+                                        )}
+                                    >{labels[p]}</button>
+                                );
+                            })}
+                            <button
+                                onClick={() => setSnapPeriod('custom')}
+                                className={cn(
+                                    "px-3 py-1 rounded-md text-xs font-medium transition-colors",
+                                    snapPeriod === 'custom' ? "bg-[#FFFC00] text-black" : "bg-muted hover:bg-muted/80 text-muted-foreground"
+                                )}
+                            >{isRtl ? 'مخصص' : 'Custom'}</button>
+                            {snapPeriod === 'custom' && (
+                                <div className="flex items-center gap-2 flex-wrap">
+                                    <input
+                                        type="date"
+                                        value={snapCustomStart}
+                                        onChange={e => setSnapCustomStart(e.target.value)}
+                                        className="text-xs bg-background border border-border rounded px-2 py-1 text-foreground"
+                                    />
+                                    <span className="text-xs text-muted-foreground">→</span>
+                                    <input
+                                        type="date"
+                                        value={snapCustomEnd}
+                                        onChange={e => setSnapCustomEnd(e.target.value)}
+                                        className="text-xs bg-background border border-border rounded px-2 py-1 text-foreground"
+                                    />
+                                    <button
+                                        onClick={() => fetchSnap('custom', snapCustomStart, snapCustomEnd)}
+                                        disabled={!snapCustomStart || !snapCustomEnd || snapLoading}
+                                        className="px-3 py-1 rounded-md text-xs font-medium bg-primary text-primary-foreground disabled:opacity-40"
+                                    >{isRtl ? 'تطبيق' : 'Apply'}</button>
+                                </div>
+                            )}
+                            {snapLoading && <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />}
+                        </div>
+                    )}
 
                     {currentPlatform.error ? (
                         <div className="flex items-center gap-3 bg-destructive/10 border border-destructive/20 px-4 py-3 rounded-lg">
