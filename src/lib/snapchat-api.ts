@@ -84,7 +84,8 @@ export class SnapchatAPI {
     }
 
     /**
-     * Full account data: aggregated stats + enriched campaign list + targeting overview.
+     * Full account data.
+     * Totals are derived from ad-level stats (reliable) + reach from campaign stats.
      */
     async getFullAccountData(adAccountId: string) {
         const [campaigns, adSquads, ads] = await Promise.all([
@@ -93,7 +94,34 @@ export class SnapchatAPI {
             this.getAds(adAccountId).catch(() => [])
         ]);
 
-        // Fetch stats for all campaigns in parallel
+        // --- Ad-level stats (primary source for totals — confirmed reliable) ---
+        const adResults = await Promise.allSettled(
+            ads.map(async (a: any) => {
+                const stats = await this.getAdStats(a.id).catch(() => ({
+                    impressions: 0, swipes: 0, spend: 0, videoViews: 0, frequency: 0, uniques: 0
+                }));
+                const isValid = (a.delivery_status || []).includes('VALID');
+                return { ...a, stats, isValid };
+            })
+        );
+        const enrichedAds = adResults
+            .filter(r => r.status === 'fulfilled')
+            .map((r: any) => r.value);
+
+        // Sum ad-level stats for totals
+        const totals = { impressions: 0, swipes: 0, spend: 0, videoViews: 0, reach: 0, uniques: 0 };
+        let freqSum = 0, freqCount = 0;
+        for (const a of enrichedAds) {
+            totals.impressions += a.stats.impressions;
+            totals.swipes += a.stats.swipes;
+            totals.spend += a.stats.spend;
+            totals.videoViews += a.stats.videoViews;
+            totals.uniques += a.stats.uniques;
+            if (a.stats.frequency > 0) { freqSum += a.stats.frequency; freqCount++; }
+        }
+        const frequency = freqCount > 0 ? freqSum / freqCount : 0;
+
+        // --- Campaign-level stats (best-effort — for reach + objective breakdown) ---
         const campaignResults = await Promise.allSettled(
             campaigns.map(async (c: any) => {
                 const stats = await this.getCampaignStats(c.id).catch(() => ({
@@ -102,25 +130,14 @@ export class SnapchatAPI {
                 return { ...c, stats };
             })
         );
-
         const enrichedCampaigns = campaignResults
             .filter(r => r.status === 'fulfilled')
             .map((r: any) => r.value);
 
-        // Aggregate totals
-        const totals = { impressions: 0, swipes: 0, spend: 0, videoViews: 0, reach: 0, uniques: 0 };
-        let freqSum = 0, freqCount = 0;
-
+        // Add reach from campaigns (not available at ad level)
         for (const c of enrichedCampaigns) {
-            totals.impressions += c.stats.impressions;
-            totals.swipes += c.stats.swipes;
-            totals.spend += c.stats.spend;
-            totals.videoViews += c.stats.videoViews;
             totals.reach += c.stats.reach;
-            totals.uniques += c.stats.uniques;
-            if (c.stats.frequency > 0) { freqSum += c.stats.frequency; freqCount++; }
         }
-        const frequency = freqCount > 0 ? freqSum / freqCount : 0;
 
         // Objective breakdown
         const objectiveBreakdown: Record<string, number> = {};
@@ -129,7 +146,7 @@ export class SnapchatAPI {
             objectiveBreakdown[obj] = (objectiveBreakdown[obj] || 0) + 1;
         }
 
-        // Active campaigns sorted by spend
+        // Active campaigns sorted by ad spend
         const activeCampaigns = enrichedCampaigns
             .filter((c: any) => c.status === 'ACTIVE')
             .sort((a: any, b: any) => b.stats.spend - a.stats.spend)
@@ -143,8 +160,8 @@ export class SnapchatAPI {
                 stats: c.stats
             }));
 
-        // Top campaigns by impressions (active + paused)
-        const topCampaigns = enrichedCampaigns
+        // Top campaigns by impressions
+        const topCampaigns = [...enrichedCampaigns]
             .sort((a: any, b: any) => b.stats.impressions - a.stats.impressions)
             .slice(0, 5)
             .map((c: any) => ({
@@ -154,6 +171,24 @@ export class SnapchatAPI {
                 status: c.status,
                 stats: c.stats
             }));
+
+        // Top ads: valid delivery first, then by impressions
+        const topAds = [...enrichedAds]
+            .sort((a: any, b: any) => {
+                if (a.isValid !== b.isValid) return a.isValid ? -1 : 1;
+                return b.stats.impressions - a.stats.impressions;
+            })
+            .slice(0, 8)
+            .map((a: any) => ({
+                id: a.id,
+                name: a.name,
+                status: a.status,
+                isValid: a.isValid,
+                reviewStatus: a.review_status,
+                stats: a.stats
+            }));
+
+        const validAdCount = enrichedAds.filter((a: any) => a.isValid).length;
 
         // Targeting overview from active ad squads
         const activeSquads = adSquads.filter((s: any) => s.status === 'ACTIVE');
@@ -173,36 +208,6 @@ export class SnapchatAPI {
             };
         }
 
-        // Ads with stats (top by impressions, valid delivery prioritized)
-        const adResults = await Promise.allSettled(
-            ads.map(async (a: any) => {
-                const stats = await this.getAdStats(a.id).catch(() => ({
-                    impressions: 0, swipes: 0, spend: 0, videoViews: 0, frequency: 0, uniques: 0
-                }));
-                const isValid = (a.delivery_status || []).includes('VALID');
-                return { ...a, stats, isValid };
-            })
-        );
-        const enrichedAds = adResults
-            .filter(r => r.status === 'fulfilled')
-            .map((r: any) => r.value)
-            .sort((a: any, b: any) => {
-                if (a.isValid !== b.isValid) return a.isValid ? -1 : 1;
-                return b.stats.impressions - a.stats.impressions;
-            })
-            .slice(0, 8)
-            .map((a: any) => ({
-                id: a.id,
-                name: a.name,
-                status: a.status,
-                isValid: a.isValid,
-                deliveryStatus: a.delivery_status || [],
-                reviewStatus: a.review_status,
-                stats: a.stats
-            }));
-
-        const validAdCount = enrichedAds.filter((a: any) => a.isValid).length;
-
         return {
             totals: { ...totals, frequency },
             campaignCount: enrichedCampaigns.length,
@@ -212,7 +217,7 @@ export class SnapchatAPI {
             objectiveBreakdown,
             activeCampaigns,
             topCampaigns,
-            topAds: enrichedAds,
+            topAds,
             targeting: targetingOverview
         };
     }
