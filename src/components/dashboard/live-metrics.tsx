@@ -2,7 +2,7 @@
 
 import { useState, useEffect, cloneElement } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart, DollarSign, Eye, LineChart, MousePointer2, PlaySquare, TrendingUp, Activity, Smartphone, Hash, Users, MapPin, Search, CalendarDays, ExternalLink, RefreshCw, AlertCircle, Sparkles, Plus, Image as ImageIcon, MessageCircle, Heart, Share2, Info, Facebook, Instagram, Loader2, Ghost, Linkedin, Twitter } from 'lucide-react';
+import { BarChart, DollarSign, Eye, LineChart, MousePointer2, PlaySquare, TrendingUp, Activity, Smartphone, Hash, Users, MapPin, Search, CalendarDays, ExternalLink, RefreshCw, AlertCircle, Sparkles, Plus, Image as ImageIcon, MessageCircle, Heart, Share2, Info, Facebook, Instagram, Loader2, Ghost, Linkedin, Twitter, ShoppingCart, ShoppingBag, Package, Clock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/contexts/language-context';
 import { cn } from '@/lib/utils';
@@ -20,6 +20,7 @@ export function LiveMetrics() {
     const [snapLoading, setSnapLoading] = useState(false);
     const [linkedinData, setLinkedinData] = useState<any>(null);
     const [xData, setXData] = useState<any>(null);
+    const [sallaData, setSallaData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState('facebook');
@@ -49,11 +50,12 @@ export function LiveMetrics() {
         async function fetchData() {
             setLoading(true);
             try {
-                const [metaRes, snapRes, linkedinRes, xRes] = await Promise.allSettled([
+                const [metaRes, snapRes, linkedinRes, xRes, sallaRes] = await Promise.allSettled([
                     fetch('/api/dashboard/live/meta'),
                     fetch('/api/dashboard/live/snapchat'),
                     fetch('/api/dashboard/live/linkedin'),
-                    fetch('/api/dashboard/live/x')
+                    fetch('/api/dashboard/live/x'),
+                    fetch('/api/dashboard/live/salla')
                 ]);
 
                 if (metaRes.status === 'fulfilled') {
@@ -72,6 +74,10 @@ export function LiveMetrics() {
 
                 if (xRes.status === 'fulfilled' && xRes.value.ok) {
                     setXData(await xRes.value.json());
+                }
+
+                if (sallaRes.status === 'fulfilled' && sallaRes.value.ok) {
+                    setSallaData(await sallaRes.value.json());
                 }
             } catch (err: any) {
                 setError(err.message);
@@ -238,6 +244,34 @@ export function LiveMetrics() {
                 { label: isRtl ? "التفاعل" : "Engagement", value: linkedinData.stats.engagement?.toFixed(4) ?? '0', color: "text-orange-500", icon: <TrendingUp className="w-4 h-4" /> },
             ] : [],
             activeAds: []
+        },
+        {
+            id: 'salla',
+            name: 'Salla',
+            accountName: sallaData?.storeName || (sallaData?.domain ? sallaData.domain : 'Salla Store'),
+            icon: <ShoppingBag className="w-5 h-5" />,
+            color: '#7C3AED',
+            isLive: !!sallaData,
+            error: !sallaData ? (isRtl ? "متجر سلة غير مربوط" : "Salla store not connected") : null,
+            organicMetrics: [
+                { label: isRtl ? "إجمالي الطلبات" : "Total Orders", value: sallaData?.stats?.totalOrders?.toLocaleString() ?? '—', color: "text-violet-400", icon: <ShoppingCart className="w-4 h-4" /> },
+                { label: isRtl ? "الإيرادات" : "Revenue", value: sallaData?.stats?.revenue != null ? `SAR ${sallaData.stats.revenue.toLocaleString()}` : '—', color: "text-emerald-500", icon: <DollarSign className="w-4 h-4" /> },
+                { label: isRtl ? "إجمالي العملاء" : "Total Customers", value: sallaData?.stats?.totalCustomers?.toLocaleString() ?? '—', color: "text-blue-400", icon: <Users className="w-4 h-4" /> },
+                { label: isRtl ? "إجمالي المنتجات" : "Total Products", value: sallaData?.stats?.totalProducts?.toLocaleString() ?? '—', color: "text-orange-400", icon: <Package className="w-4 h-4" /> },
+            ],
+            adMetrics: sallaData ? [
+                { label: isRtl ? "متوسط قيمة الطلب" : "Avg Order Value", value: `SAR ${sallaData.stats.avgOrderValue?.toLocaleString() ?? '0'}`, color: "text-violet-500", icon: <TrendingUp className="w-4 h-4" /> },
+                { label: isRtl ? "طلبات معلقة" : "Pending Orders", value: sallaData.stats.pendingOrders?.toLocaleString() ?? '0', color: "text-yellow-500", icon: <Clock className="w-4 h-4" /> },
+                { label: isRtl ? "سلال متروكة" : "Abandoned Carts", value: sallaData.stats.abandonedCarts?.toLocaleString() ?? '0', color: "text-rose-500", icon: <ShoppingCart className="w-4 h-4" /> },
+                { label: isRtl ? "العملاء" : "Customers", value: sallaData.stats.totalCustomers?.toLocaleString() ?? '0', color: "text-blue-400", icon: <Users className="w-4 h-4" /> },
+            ] : [],
+            activeAds: sallaData ? (sallaData.recentOrders || []).map((o: any) => ({
+                id: o.id,
+                name: `${o.id} — ${o.customer}`,
+                status: o.statusSlug === 'complete' ? 'active' : (o.statusSlug || 'pending'),
+                spend: `SAR ${o.total?.toLocaleString() ?? '0'}`,
+                results: o.status
+            })) : []
         }
     ];
 
@@ -324,6 +358,8 @@ export function LiveMetrics() {
                                     <Badge variant="outline" className="text-xs">
                                         {activeTab === 'snapchat'
                                             ? ({ all: isRtl ? 'كل الوقت' : 'All Time', '7d': isRtl ? 'آخر ٧ أيام' : 'Last 7 Days', '30d': isRtl ? 'آخر ٣٠ يوم' : 'Last 30 Days', '90d': isRtl ? 'آخر ٩٠ يوم' : 'Last 90 Days', custom: isRtl ? 'نطاق مخصص' : 'Custom Range' } as Record<SnapPeriod,string>)[snapPeriod]
+                                            : activeTab === 'salla'
+                                            ? (isRtl ? 'آخر ٥٠ طلب' : 'Last 50 Orders')
                                             : isRtl ? 'آخر ٣٠ يوم' : 'Last 30 Days'}
                                     </Badge>
                                     <Badge variant="success" className="text-xs">Optimized</Badge>
@@ -397,7 +433,11 @@ export function LiveMetrics() {
                                 <div className="space-y-3">
                                     <div className="flex items-center gap-2">
                                         <div className="h-3 w-0.5 bg-primary rounded-full" />
-                                        <p className="section-label text-muted-foreground">{isRtl ? "الأداء العضوي" : "Organic Growth"}</p>
+                                        <p className="section-label text-muted-foreground">
+                                            {activeTab === 'salla'
+                                                ? (isRtl ? "إحصائيات المتجر" : "Store Overview")
+                                                : (isRtl ? "الأداء العضوي" : "Organic Growth")}
+                                        </p>
                                     </div>
                                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                                         {currentPlatform.organicMetrics.map((metric, i) => (
@@ -421,7 +461,11 @@ export function LiveMetrics() {
                                 <div className="space-y-3">
                                     <div className="flex items-center gap-2">
                                         <div className="h-3 w-0.5 bg-orange-500 rounded-full" />
-                                        <p className="section-label text-orange-500/70">{isRtl ? "أداء الميزانية" : "Ad Reach & ROI"}</p>
+                                        <p className="section-label text-orange-500/70">
+                                            {activeTab === 'salla'
+                                                ? (isRtl ? "تفاصيل إضافية" : "Store Details")
+                                                : (isRtl ? "أداء الميزانية" : "Ad Reach & ROI")}
+                                        </p>
                                     </div>
                                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                                         {currentPlatform.adMetrics.map((metric, i) => (
@@ -446,7 +490,11 @@ export function LiveMetrics() {
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-2">
                                         <div className="h-3 w-0.5 bg-emerald-500 rounded-full" />
-                                        <p className="section-label text-muted-foreground">{isRtl ? "الإعلانات النشطة" : "Active Creatives"}</p>
+                                        <p className="section-label text-muted-foreground">
+                                            {activeTab === 'salla'
+                                                ? (isRtl ? "آخر الطلبات" : "Recent Orders")
+                                                : (isRtl ? "الإعلانات النشطة" : "Active Creatives")}
+                                        </p>
                                     </div>
                                     <Badge variant="success" className="text-[9px]">Live</Badge>
                                 </div>
@@ -487,9 +535,14 @@ export function LiveMetrics() {
                                         ))
                                     ) : (
                                         <div className="py-12 flex flex-col items-center justify-center text-center rounded-lg border border-dashed border-border">
-                                            <PlaySquare className="w-8 h-8 mb-3 text-muted-foreground/30" />
+                                            {activeTab === 'salla'
+                                                ? <ShoppingCart className="w-8 h-8 mb-3 text-muted-foreground/30" />
+                                                : <PlaySquare className="w-8 h-8 mb-3 text-muted-foreground/30" />
+                                            }
                                             <p className="text-xs text-muted-foreground">
-                                                {isRtl ? "لا توجد حملات حية حالياً" : "No active campaigns at the moment"}
+                                                {activeTab === 'salla'
+                                                    ? (isRtl ? "لا توجد طلبات حديثة" : "No recent orders")
+                                                    : (isRtl ? "لا توجد حملات حية حالياً" : "No active campaigns at the moment")}
                                             </p>
                                         </div>
                                     )}

@@ -20,6 +20,7 @@ export async function GET() {
         snapchat: platforms.includes('SNAPCHAT'),
         tiktok: platforms.includes('TIKTOK'),
         linkedin: platforms.includes('LINKEDIN'),
-        x: platforms.includes('X')
+        x: platforms.includes('X'),
+        salla: platforms.includes('SALLA')
     });
 }
