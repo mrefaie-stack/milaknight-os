@@ -2,7 +2,7 @@
 
 import { useState, useEffect, cloneElement } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart, DollarSign, Eye, LineChart, MousePointer2, PlaySquare, TrendingUp, Activity, Smartphone, Hash, Users, MapPin, Search, CalendarDays, ExternalLink, RefreshCw, AlertCircle, Sparkles, Plus, Image as ImageIcon, MessageCircle, Heart, Share2, Info, Facebook, Instagram, Loader2, Ghost, Linkedin, Twitter, ShoppingCart, ShoppingBag, Package, Clock } from 'lucide-react';
+import { BarChart, DollarSign, Eye, LineChart, MousePointer2, PlaySquare, TrendingUp, Activity, Smartphone, Hash, Users, MapPin, Search, CalendarDays, ExternalLink, RefreshCw, AlertCircle, Sparkles, Plus, Image as ImageIcon, MessageCircle, Heart, Share2, Info, Facebook, Instagram, Loader2, Ghost, Linkedin, Twitter, ShoppingCart, ShoppingBag, Package, Clock, Youtube, Megaphone } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/contexts/language-context';
 import { cn } from '@/lib/utils';
@@ -21,6 +21,8 @@ export function LiveMetrics() {
     const [linkedinData, setLinkedinData] = useState<any>(null);
     const [xData, setXData] = useState<any>(null);
     const [sallaData, setSallaData] = useState<any>(null);
+    const [youtubeData, setYoutubeData] = useState<any>(null);
+    const [googleAdsData, setGoogleAdsData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState('facebook');
@@ -50,12 +52,14 @@ export function LiveMetrics() {
         async function fetchData() {
             setLoading(true);
             try {
-                const [metaRes, snapRes, linkedinRes, xRes, sallaRes] = await Promise.allSettled([
+                const [metaRes, snapRes, linkedinRes, xRes, sallaRes, youtubeRes, googleAdsRes] = await Promise.allSettled([
                     fetch('/api/dashboard/live/meta'),
                     fetch('/api/dashboard/live/snapchat'),
                     fetch('/api/dashboard/live/linkedin'),
                     fetch('/api/dashboard/live/x'),
-                    fetch('/api/dashboard/live/salla')
+                    fetch('/api/dashboard/live/salla'),
+                    fetch('/api/dashboard/live/youtube'),
+                    fetch('/api/dashboard/live/google-ads')
                 ]);
 
                 if (metaRes.status === 'fulfilled') {
@@ -78,6 +82,14 @@ export function LiveMetrics() {
 
                 if (sallaRes.status === 'fulfilled' && sallaRes.value.ok) {
                     setSallaData(await sallaRes.value.json());
+                }
+
+                if (youtubeRes.status === 'fulfilled' && youtubeRes.value.ok) {
+                    setYoutubeData(await youtubeRes.value.json());
+                }
+
+                if (googleAdsRes.status === 'fulfilled' && googleAdsRes.value.ok) {
+                    setGoogleAdsData(await googleAdsRes.value.json());
                 }
             } catch (err: any) {
                 setError(err.message);
@@ -271,6 +283,62 @@ export function LiveMetrics() {
                 status: o.statusSlug === 'complete' ? 'active' : (o.statusSlug || 'pending'),
                 spend: `SAR ${o.total?.toLocaleString() ?? '0'}`,
                 results: o.status
+            })) : []
+        },
+        {
+            id: 'youtube',
+            name: 'YouTube',
+            accountName: youtubeData?.accountName || 'YouTube Channel',
+            icon: <Youtube className="w-5 h-5" />,
+            color: '#FF0000',
+            isLive: !!youtubeData,
+            error: !youtubeData ? (isRtl ? "حساب يوتيوب غير مربوط" : "YouTube not connected") : null,
+            organicMetrics: [
+                { label: isRtl ? "المشتركون" : "Subscribers", value: youtubeData?.stats?.subscribers?.toLocaleString() ?? '—', color: "text-red-500", icon: <Users className="w-4 h-4" /> },
+                { label: isRtl ? "إجمالي المشاهدات" : "Total Views", value: youtubeData?.stats?.totalViews?.toLocaleString() ?? '—', color: "text-emerald-500", icon: <Eye className="w-4 h-4" /> },
+                { label: isRtl ? "مشاهدات (28 يوم)" : "Views (28d)", value: youtubeData?.stats?.recentViews?.toLocaleString() ?? '—', color: "text-primary", icon: <TrendingUp className="w-4 h-4" /> },
+                { label: isRtl ? "عدد الفيديوهات" : "Videos", value: youtubeData?.stats?.videoCount?.toLocaleString() ?? '—', color: "text-orange-400", icon: <PlaySquare className="w-4 h-4" /> },
+            ],
+            adMetrics: youtubeData ? [
+                { label: isRtl ? "وقت المشاهدة (دقيقة)" : "Watch Time (min)", value: youtubeData.stats.watchTimeMinutes?.toLocaleString() ?? '0', color: "text-red-400", icon: <Clock className="w-4 h-4" /> },
+                { label: isRtl ? "متوسط مدة المشاهدة" : "Avg View Duration", value: `${Math.round(youtubeData.stats.avgViewDuration ?? 0)}s`, color: "text-primary", icon: <Activity className="w-4 h-4" /> },
+                { label: isRtl ? "مشتركون جدد" : "New Subscribers", value: youtubeData.stats.subscribersGained?.toLocaleString() ?? '0', color: "text-emerald-500", icon: <Users className="w-4 h-4" /> },
+                { label: isRtl ? "الإعجابات" : "Likes", value: youtubeData.stats.likes?.toLocaleString() ?? '0', color: "text-rose-500", icon: <Heart className="w-4 h-4" /> },
+            ] : [],
+            activeAds: youtubeData ? (youtubeData.recentVideos || []).map((v: any) => ({
+                id: v.id,
+                name: v.title,
+                status: 'active',
+                spend: `${v.views?.toLocaleString() ?? '0'} ${isRtl ? 'مشاهدة' : 'views'}`,
+                results: `${v.likes?.toLocaleString() ?? '0'} ${isRtl ? 'إعجاب' : 'likes'}`
+            })) : []
+        },
+        {
+            id: 'google-ads',
+            name: 'Google Ads',
+            accountName: googleAdsData?.accountName || 'Google Ads',
+            icon: <Megaphone className="w-5 h-5" />,
+            color: '#4285F4',
+            isLive: !!googleAdsData,
+            error: !googleAdsData ? (isRtl ? "حساب جوجل أدز غير مربوط" : "Google Ads not connected") : null,
+            organicMetrics: [
+                { label: isRtl ? "الظهور" : "Impressions", value: googleAdsData?.stats?.totalImpressions?.toLocaleString() ?? '—', color: "text-blue-400", icon: <Eye className="w-4 h-4" /> },
+                { label: isRtl ? "النقرات" : "Clicks", value: googleAdsData?.stats?.totalClicks?.toLocaleString() ?? '—', color: "text-emerald-500", icon: <MousePointer2 className="w-4 h-4" /> },
+                { label: isRtl ? "الإنفاق" : "Spend", value: googleAdsData?.stats?.totalCost != null ? `SAR ${googleAdsData.stats.totalCost.toLocaleString()}` : '—', color: "text-orange-500", icon: <DollarSign className="w-4 h-4" /> },
+                { label: isRtl ? "التحويلات" : "Conversions", value: googleAdsData?.stats?.totalConversions?.toLocaleString() ?? '—', color: "text-primary", icon: <TrendingUp className="w-4 h-4" /> },
+            ],
+            adMetrics: googleAdsData ? [
+                { label: isRtl ? "متوسط النقر (%)" : "Avg CTR (%)", value: `${googleAdsData.stats.avgCtr ?? '0'}%`, color: "text-blue-400", icon: <Activity className="w-4 h-4" /> },
+                { label: isRtl ? "تكلفة النقرة" : "Avg CPC", value: `SAR ${googleAdsData.stats.avgCpc ?? '0'}`, color: "text-orange-500", icon: <BarChart className="w-4 h-4" /> },
+                { label: isRtl ? "معدل التحويل" : "Conv. Rate (%)", value: `${googleAdsData.stats.conversionRate ?? '0'}%`, color: "text-emerald-500", icon: <TrendingUp className="w-4 h-4" /> },
+                { label: isRtl ? "الحسابات" : "Accounts", value: googleAdsData.customerCount?.toString() ?? '0', color: "text-primary", icon: <Hash className="w-4 h-4" /> },
+            ] : [],
+            activeAds: googleAdsData ? (googleAdsData.campaigns || []).map((c: any) => ({
+                id: c.id,
+                name: c.name,
+                status: c.status === 'ENABLED' ? 'active' : 'paused',
+                spend: `SAR ${c.cost?.toFixed(2) ?? '0.00'}`,
+                results: `${c.impressions?.toLocaleString() ?? '0'} ${isRtl ? 'ظهور' : 'impr'}`
             })) : []
         }
     ];

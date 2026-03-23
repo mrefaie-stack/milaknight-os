@@ -11,8 +11,8 @@ import { toast } from 'sonner';
 
 export default function ClientConnectionsPage() {
     const searchParams = useSearchParams();
-    const [connections, setConnections] = useState<{ facebook: boolean; snapchat: boolean; tiktok: boolean; linkedin: boolean; x: boolean; salla: boolean }>({
-        facebook: false, snapchat: false, tiktok: false, linkedin: false, x: false, salla: false
+    const [connections, setConnections] = useState<{ facebook: boolean; snapchat: boolean; tiktok: boolean; linkedin: boolean; x: boolean; salla: boolean; google: boolean }>({
+        facebook: false, snapchat: false, tiktok: false, linkedin: false, x: false, salla: false, google: false
     });
     const [metaPages, setMetaPages] = useState<any[]>([]);
     const [metaAccounts, setMetaAccounts] = useState<any[]>([]);
@@ -46,6 +46,8 @@ export default function ClientConnectionsPage() {
             toast.success('X (Twitter) account connected!');
         } else if (success === 'salla') {
             toast.success('Salla store connected!');
+        } else if (success === 'google') {
+            toast.success('Google account connected! YouTube and Google Ads are now live.');
         } else if (success === 'linkedin') {
             const select = searchParams?.get('select') === '1';
             const noPages = searchParams?.get('no_pages') === '1';
@@ -118,6 +120,10 @@ export default function ClientConnectionsPage() {
 
     const handleConnectSalla = () => {
         window.location.href = '/api/auth/salla';
+    };
+
+    const handleConnectGoogle = () => {
+        window.location.href = '/api/auth/google';
     };
 
     const loadLinkedinPages = async () => {
@@ -481,6 +487,47 @@ export default function ClientConnectionsPage() {
                                 <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.259 5.63 5.905-5.63zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
                             </svg>
                             {connections.x ? 'Reconnect X Account' : 'Connect X Account'}
+                        </Button>
+                    </CardContent>
+                </Card>
+
+                {/* Google (YouTube + Google Ads) */}
+                <Card className={connections.google ? 'border-green-500/30 bg-green-500/5' : 'border-[#EA4335]/20 bg-[#EA4335]/5'}>
+                    <CardHeader>
+                        <div className="flex items-center justify-between">
+                            <div className="p-2 bg-white/10 rounded-lg">
+                                <svg className="w-8 h-8" viewBox="0 0 48 48" aria-hidden="true">
+                                    <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                                    <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                                    <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                                    <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                                </svg>
+                            </div>
+                            {connections.google ? (
+                                <span className="flex items-center gap-1 px-2 py-1 bg-green-500/10 text-green-500 text-xs rounded-full border border-green-500/20">
+                                    <CheckCircle className="w-3 h-3" /> Connected
+                                </span>
+                            ) : (
+                                <span className="flex items-center gap-1 px-2 py-1 bg-yellow-500/10 text-yellow-500 text-xs rounded-full border border-yellow-500/20">
+                                    <AlertCircle className="w-3 h-3" /> Not Connected
+                                </span>
+                            )}
+                        </div>
+                        <CardTitle className="mt-4">Google (YouTube + Ads)</CardTitle>
+                        <CardDescription>Connect your Google account to track YouTube channel stats and Google Ads campaigns.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <Button
+                            onClick={handleConnectGoogle}
+                            className="w-full bg-white hover:bg-gray-50 text-gray-800 border border-gray-200 font-semibold py-5 rounded-xl"
+                        >
+                            <svg className="w-4 h-4 mr-2" viewBox="0 0 48 48" aria-hidden="true">
+                                <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                                <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                                <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                                <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                            </svg>
+                            {connections.google ? 'Reconnect Google' : 'Connect with Google'}
                         </Button>
                     </CardContent>
                 </Card>
