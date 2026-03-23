@@ -11,8 +11,8 @@ import { toast } from 'sonner';
 
 export default function ClientConnectionsPage() {
     const searchParams = useSearchParams();
-    const [connections, setConnections] = useState<{ facebook: boolean; snapchat: boolean; tiktok: boolean; linkedin: boolean; x: boolean }>({
-        facebook: false, snapchat: false, tiktok: false, linkedin: false, x: false
+    const [connections, setConnections] = useState<{ facebook: boolean; snapchat: boolean; tiktok: boolean; linkedin: boolean; x: boolean; salla: boolean }>({
+        facebook: false, snapchat: false, tiktok: false, linkedin: false, x: false, salla: false
     });
     const [metaPages, setMetaPages] = useState<any[]>([]);
     const [metaAccounts, setMetaAccounts] = useState<any[]>([]);
@@ -44,6 +44,8 @@ export default function ClientConnectionsPage() {
             toast.success('TikTok connected!');
         } else if (success === 'x') {
             toast.success('X (Twitter) account connected!');
+        } else if (success === 'salla') {
+            toast.success('Salla store connected!');
         } else if (success === 'linkedin') {
             const select = searchParams?.get('select') === '1';
             const noPages = searchParams?.get('no_pages') === '1';
@@ -112,6 +114,10 @@ export default function ClientConnectionsPage() {
 
     const handleConnectX = () => {
         window.location.href = '/api/auth/x';
+    };
+
+    const handleConnectSalla = () => {
+        window.location.href = '/api/auth/salla';
     };
 
     const loadLinkedinPages = async () => {
@@ -475,6 +481,38 @@ export default function ClientConnectionsPage() {
                                 <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.259 5.63 5.905-5.63zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
                             </svg>
                             {connections.x ? 'Reconnect X Account' : 'Connect X Account'}
+                        </Button>
+                    </CardContent>
+                </Card>
+
+                {/* Salla */}
+                <Card className={connections.salla ? 'border-green-500/30 bg-green-500/5' : 'border-[#7C3AED]/20 bg-[#7C3AED]/5'}>
+                    <CardHeader>
+                        <div className="flex items-center justify-between">
+                            <div className="p-2 bg-[#7C3AED]/10 rounded-lg">
+                                <div className="w-8 h-8 bg-[#7C3AED] rounded-lg flex items-center justify-center">
+                                    <span className="text-white font-bold text-sm">S</span>
+                                </div>
+                            </div>
+                            {connections.salla ? (
+                                <span className="flex items-center gap-1 px-2 py-1 bg-green-500/10 text-green-500 text-xs rounded-full border border-green-500/20">
+                                    <CheckCircle className="w-3 h-3" /> Connected
+                                </span>
+                            ) : (
+                                <span className="flex items-center gap-1 px-2 py-1 bg-yellow-500/10 text-yellow-500 text-xs rounded-full border border-yellow-500/20">
+                                    <AlertCircle className="w-3 h-3" /> Not Connected
+                                </span>
+                            )}
+                        </div>
+                        <CardTitle className="mt-4">سلة (Salla)</CardTitle>
+                        <CardDescription>Connect your Salla store to track orders, revenue, products, and customers.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <Button
+                            onClick={handleConnectSalla}
+                            className="w-full bg-[#7C3AED] hover:bg-[#7C3AED]/90 text-white font-semibold py-5 rounded-xl"
+                        >
+                            {connections.salla ? 'Reconnect Salla Store' : 'Connect Salla Store'}
                         </Button>
                     </CardContent>
                 </Card>
