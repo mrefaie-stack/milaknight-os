@@ -42,6 +42,27 @@ export class SnapchatAPI {
         return (data.adsquads || []).map((a: any) => a.adsquad).filter(Boolean);
     }
 
+    async getAds(adAccountId: string) {
+        const data = await this.fetch(`/adaccounts/${adAccountId}/ads`);
+        return (data.ads || []).map((a: any) => a.ad).filter(Boolean);
+    }
+
+    async getAdStats(adId: string) {
+        const data = await this.fetch(`/ads/${adId}/stats`, {
+            granularity: 'TOTAL',
+            fields: 'impressions,swipes,spend,video_views,frequency,uniques'
+        });
+        const stat = data.total_stats?.[0]?.total_stat?.stats || {};
+        return {
+            impressions: stat.impressions || 0,
+            swipes: stat.swipes || 0,
+            spend: (stat.spend || 0) / 1_000_000,
+            videoViews: stat.video_views || 0,
+            frequency: stat.frequency || 0,
+            uniques: stat.uniques || 0
+        };
+    }
+
     /**
      * Lifetime campaign stats — no date range (Snapchat timestamp queries are broken for 2026 dates).
      */
@@ -66,9 +87,10 @@ export class SnapchatAPI {
      * Full account data: aggregated stats + enriched campaign list + targeting overview.
      */
     async getFullAccountData(adAccountId: string) {
-        const [campaigns, adSquads] = await Promise.all([
+        const [campaigns, adSquads, ads] = await Promise.all([
             this.getCampaigns(adAccountId),
-            this.getAdSquads(adAccountId).catch(() => [])
+            this.getAdSquads(adAccountId).catch(() => []),
+            this.getAds(adAccountId).catch(() => [])
         ]);
 
         // Fetch stats for all campaigns in parallel
@@ -151,13 +173,46 @@ export class SnapchatAPI {
             };
         }
 
+        // Ads with stats (top by impressions, valid delivery prioritized)
+        const adResults = await Promise.allSettled(
+            ads.map(async (a: any) => {
+                const stats = await this.getAdStats(a.id).catch(() => ({
+                    impressions: 0, swipes: 0, spend: 0, videoViews: 0, frequency: 0, uniques: 0
+                }));
+                const isValid = (a.delivery_status || []).includes('VALID');
+                return { ...a, stats, isValid };
+            })
+        );
+        const enrichedAds = adResults
+            .filter(r => r.status === 'fulfilled')
+            .map((r: any) => r.value)
+            .sort((a: any, b: any) => {
+                if (a.isValid !== b.isValid) return a.isValid ? -1 : 1;
+                return b.stats.impressions - a.stats.impressions;
+            })
+            .slice(0, 8)
+            .map((a: any) => ({
+                id: a.id,
+                name: a.name,
+                status: a.status,
+                isValid: a.isValid,
+                deliveryStatus: a.delivery_status || [],
+                reviewStatus: a.review_status,
+                stats: a.stats
+            }));
+
+        const validAdCount = enrichedAds.filter((a: any) => a.isValid).length;
+
         return {
             totals: { ...totals, frequency },
             campaignCount: enrichedCampaigns.length,
             activeCampaignCount: activeCampaigns.length,
+            adCount: ads.length,
+            validAdCount,
             objectiveBreakdown,
             activeCampaigns,
             topCampaigns,
+            topAds: enrichedAds,
             targeting: targetingOverview
         };
     }

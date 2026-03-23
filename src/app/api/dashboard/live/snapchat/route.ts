@@ -60,9 +60,12 @@ export async function GET() {
             totals: { impressions: 0, swipes: 0, spend: 0, videoViews: 0, reach: 0, uniques: 0, frequency: 0 },
             campaignCount: 0,
             activeCampaignCount: 0,
+            adCount: 0,
+            validAdCount: 0,
             objectiveBreakdown: {} as Record<string, number>,
             activeCampaigns: [] as any[],
             topCampaigns: [] as any[],
+            topAds: [] as any[],
             targeting: null as any
         };
 
@@ -77,11 +80,14 @@ export async function GET() {
                 aggregated.totals.uniques += d.totals.uniques;
                 aggregated.campaignCount += d.campaignCount;
                 aggregated.activeCampaignCount += d.activeCampaignCount;
+                aggregated.adCount += d.adCount || 0;
+                aggregated.validAdCount += d.validAdCount || 0;
                 for (const [obj, count] of Object.entries(d.objectiveBreakdown)) {
                     aggregated.objectiveBreakdown[obj] = (aggregated.objectiveBreakdown[obj] || 0) + (count as number);
                 }
                 aggregated.activeCampaigns.push(...d.activeCampaigns);
                 aggregated.topCampaigns.push(...d.topCampaigns);
+                aggregated.topAds.push(...(d.topAds || []));
                 if (!aggregated.targeting && d.targeting) aggregated.targeting = d.targeting;
             } catch (e) {
                 console.error(`Snapchat full data failed for ${acc.id}:`, e);
@@ -92,6 +98,13 @@ export async function GET() {
         aggregated.topCampaigns.sort((a, b) => b.stats.impressions - a.stats.impressions);
         aggregated.topCampaigns = aggregated.topCampaigns.slice(0, 5);
 
+        // Sort combined top ads: valid first, then by impressions
+        aggregated.topAds.sort((a, b) => {
+            if (a.isValid !== b.isValid) return a.isValid ? -1 : 1;
+            return b.stats.impressions - a.stats.impressions;
+        });
+        aggregated.topAds = aggregated.topAds.slice(0, 8);
+
         return NextResponse.json({
             platform: 'SNAPCHAT',
             accountName: connection.platformAccountName || 'Snapchat',
@@ -100,9 +113,12 @@ export async function GET() {
             stats: aggregated.totals,
             campaignCount: aggregated.campaignCount,
             activeCampaignCount: aggregated.activeCampaignCount,
+            adCount: aggregated.adCount,
+            validAdCount: aggregated.validAdCount,
             objectiveBreakdown: aggregated.objectiveBreakdown,
             activeCampaigns: aggregated.activeCampaigns,
             topCampaigns: aggregated.topCampaigns,
+            topAds: aggregated.topAds,
             targeting: aggregated.targeting,
             period: 'lifetime',
             status: 'success'

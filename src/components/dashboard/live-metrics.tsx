@@ -154,19 +154,15 @@ export function LiveMetrics() {
                 { label: isRtl ? "الإنفاق" : "Spend", value: `SAR ${snapData.stats.spend?.toFixed(2) ?? '0.00'}`, color: "text-orange-500", icon: <DollarSign className="w-4 h-4" /> },
                 { label: isRtl ? "الظهور" : "Impressions", value: snapData.stats.impressions?.toLocaleString() ?? '0', color: "text-primary", icon: <Eye className="w-4 h-4" /> },
                 { label: isRtl ? "سحب للأعلى" : "Swipe Ups", value: snapData.stats.swipes?.toLocaleString() ?? '0', color: "text-emerald-500", icon: <MousePointer2 className="w-4 h-4" /> },
-                { label: isRtl ? "الحملات النشطة" : "Active Campaigns", value: `${snapData.activeCampaignCount ?? 0} / ${snapData.campaignCount ?? 0}`, color: "text-blue-500", icon: <Activity className="w-4 h-4" /> },
+                { label: isRtl ? "الإعلانات الفعّالة" : "Live Ads", value: `${snapData.validAdCount ?? 0} / ${snapData.adCount ?? 0}`, color: "text-blue-500", icon: <Activity className="w-4 h-4" /> },
             ] : [],
-            activeAds: snapData ? [
-                ...(snapData.activeCampaigns?.length > 0 ? snapData.activeCampaigns : snapData.topCampaigns || [])
-                    .slice(0, 5)
-                    .map((c: any) => ({
-                        id: c.id,
-                        name: c.name,
-                        status: c.status === 'ACTIVE' ? 'active' : (c.status || '').toLowerCase(),
-                        spend: `SAR ${c.stats?.spend?.toFixed(2) ?? '0.00'}`,
-                        results: `${c.stats?.impressions?.toLocaleString() ?? '0'} ${isRtl ? 'ظهور' : 'impr'}`
-                    }))
-            ] : []
+            activeAds: snapData ? (snapData.topAds || []).map((a: any) => ({
+                id: a.id,
+                name: a.name,
+                status: a.isValid ? 'active' : 'paused',
+                spend: `SAR ${a.stats?.spend?.toFixed(2) ?? '0.00'}`,
+                results: `${a.stats?.impressions?.toLocaleString() ?? '0'} ${isRtl ? 'ظهور' : 'impr'}`
+            })) : []
         },
         {
             id: 'x',
