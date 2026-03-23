@@ -15,7 +15,8 @@ export async function GET() {
         if (!clientProfile) return NextResponse.json({ error: 'Client profile not found' }, { status: 404 });
 
         const connection = await (prisma as any).socialConnection.findFirst({
-            where: { clientId: clientProfile.id, platform: 'LINKEDIN', isActive: true }
+            where: { clientId: clientProfile.id, platform: 'LINKEDIN', isActive: true },
+            orderBy: { updatedAt: 'desc' }
         });
         if (!connection) return NextResponse.json({ error: 'LinkedIn not connected' }, { status: 404 });
 

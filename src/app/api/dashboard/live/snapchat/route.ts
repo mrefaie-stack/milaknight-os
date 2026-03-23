@@ -17,7 +17,8 @@ export async function GET(request: Request) {
         if (!clientProfile) return NextResponse.json({ error: 'Client profile not found' }, { status: 404 });
 
         const connection = await (prisma as any).socialConnection.findFirst({
-            where: { clientId: clientProfile.id, platform: 'SNAPCHAT', isActive: true }
+            where: { clientId: clientProfile.id, platform: 'SNAPCHAT', isActive: true },
+            orderBy: { updatedAt: 'desc' }
         });
         if (!connection) return NextResponse.json({ error: 'Snapchat not connected' }, { status: 404 });
 

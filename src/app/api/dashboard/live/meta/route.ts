@@ -21,13 +21,14 @@ export async function GET() {
             return NextResponse.json({ error: 'Client profile not found' }, { status: 404 });
         }
 
-        // 2. Find the SocialConnection explicitly mapped to this client
+        // 2. Find the SocialConnection explicitly mapped to this client (most recently updated first)
         const clientConnection = await (prisma as any).socialConnection.findFirst({
             where: {
                 clientId: clientProfile.id,
                 platform: 'FACEBOOK',
                 isActive: true
-            }
+            },
+            orderBy: { updatedAt: 'desc' }
         });
 
         if (!clientConnection || !clientConnection.platformAccountId) {
