@@ -35,7 +35,10 @@ export default function LoginPage() {
                 </div>
 
                 <p className="text-center text-[11px] text-muted-foreground">
-                    © 2026 MilaKnight · All rights reserved
+                    © 2026 MilaKnight · All rights reserved ·{' '}
+                    <a href="/privacy" className="underline underline-offset-2 hover:text-foreground transition-colors">Privacy Policy</a>
+                    {' · '}
+                    <a href="/terms" className="underline underline-offset-2 hover:text-foreground transition-colors">Terms of Service</a>
                 </p>
             </div>
         </div>
