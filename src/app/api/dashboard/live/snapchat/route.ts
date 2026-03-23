@@ -4,7 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { SnapchatAPI } from '@/lib/snapchat-api';
 
-export async function GET() {
+export async function GET(request: Request) {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -39,6 +39,12 @@ export async function GET() {
             }
         }
 
+        // Parse optional date range (ISO strings, e.g. 2026-01-01T00:00:00Z)
+        const { searchParams } = new URL(request.url);
+        const startTime = searchParams.get('start') || undefined;
+        const endTime = searchParams.get('end') || undefined;
+        const period = startTime && endTime ? 'custom' : 'lifetime';
+
         const snap = new SnapchatAPI(accessToken);
         const orgId = connection.platformAccountId;
 
@@ -57,7 +63,7 @@ export async function GET() {
 
         // Fetch full data for ALL ad accounts and merge
         const aggregated = {
-            totals: { impressions: 0, swipes: 0, spend: 0, videoViews: 0, reach: 0, uniques: 0, frequency: 0 },
+            totals: { impressions: 0, swipes: 0, spend: 0, videoViews: 0 },
             campaignCount: 0,
             activeCampaignCount: 0,
             adCount: 0,
@@ -71,13 +77,11 @@ export async function GET() {
 
         await Promise.allSettled(adAccounts.map(async (acc) => {
             try {
-                const d = await snap.getFullAccountData(acc.id);
+                const d = await snap.getFullAccountData(acc.id, startTime, endTime);
                 aggregated.totals.impressions += d.totals.impressions;
                 aggregated.totals.swipes += d.totals.swipes;
                 aggregated.totals.spend += d.totals.spend;
                 aggregated.totals.videoViews += d.totals.videoViews;
-                aggregated.totals.reach += d.totals.reach;
-                aggregated.totals.uniques += d.totals.uniques;
                 aggregated.campaignCount += d.campaignCount;
                 aggregated.activeCampaignCount += d.activeCampaignCount;
                 aggregated.adCount += d.adCount || 0;
@@ -120,7 +124,9 @@ export async function GET() {
             topCampaigns: aggregated.topCampaigns,
             topAds: aggregated.topAds,
             targeting: aggregated.targeting,
-            period: 'lifetime',
+            period,
+            startTime,
+            endTime,
             status: 'success'
         });
     } catch (error: any) {
