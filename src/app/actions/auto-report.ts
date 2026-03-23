@@ -230,10 +230,41 @@ async function fetchSnapchatData(
     }
 
     const snap = new SnapchatAPI(accessToken);
-    const adAccountId = connection.platformAccountId;
-    if (!adAccountId || adAccountId === 'unknown') return null;
+    const orgId = connection.platformAccountId;
+    if (!orgId || orgId === 'unknown') return null;
 
-    return snap.getAdAccountStats(adAccountId);
+    // Resolve ad accounts from stored metadata or live API (same pattern as live dashboard)
+    let adAccounts: { id: string; name: string }[] = [];
+    if (connection.metadata) {
+        try {
+            const meta = JSON.parse(connection.metadata);
+            if (meta.adAccounts?.length > 0) adAccounts = meta.adAccounts;
+        } catch { /* ignore parse error */ }
+    }
+    if (adAccounts.length === 0) {
+        const data = await snap.getAdAccounts(orgId).catch(() => ({ adaccounts: [] }));
+        adAccounts = (data.adaccounts || [])
+            .map((a: any) => a.adaccount).filter(Boolean)
+            .map((a: any) => ({ id: a.id, name: a.name }));
+    }
+    if (adAccounts.length === 0) return null;
+
+    // Use ISO date strings for Snapchat date range filtering
+    const startTime = `${since}T00:00:00Z`;
+    const endTime = `${until}T23:59:59Z`;
+
+    // Aggregate across all ad accounts
+    const totals = { impressions: 0, swipes: 0, spend: 0, videoViews: 0, reach: 0 };
+    await Promise.allSettled(adAccounts.map(async (acc) => {
+        const d = await snap.getFullAccountData(acc.id, startTime, endTime).catch(() => null);
+        if (!d) return;
+        totals.impressions += d.totals.impressions;
+        totals.swipes += d.totals.swipes;
+        totals.spend += d.totals.spend;
+        totals.videoViews += d.totals.videoViews;
+    }));
+
+    return totals;
 }
 
 // ---------------------------------------------------------------------------
