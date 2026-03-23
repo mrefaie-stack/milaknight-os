@@ -11,8 +11,8 @@ import { toast } from 'sonner';
 
 export default function ClientConnectionsPage() {
     const searchParams = useSearchParams();
-    const [connections, setConnections] = useState<{ facebook: boolean; snapchat: boolean; tiktok: boolean; linkedin: boolean }>({
-        facebook: false, snapchat: false, tiktok: false, linkedin: false
+    const [connections, setConnections] = useState<{ facebook: boolean; snapchat: boolean; tiktok: boolean; linkedin: boolean; x: boolean }>({
+        facebook: false, snapchat: false, tiktok: false, linkedin: false, x: false
     });
     const [metaPages, setMetaPages] = useState<any[]>([]);
     const [metaAccounts, setMetaAccounts] = useState<any[]>([]);
@@ -42,6 +42,8 @@ export default function ClientConnectionsPage() {
             if (needsSelect) loadSnapchatSetup();
         } else if (success === 'tiktok') {
             toast.success('TikTok connected!');
+        } else if (success === 'x') {
+            toast.success('X (Twitter) account connected!');
         } else if (success === 'linkedin') {
             const select = searchParams?.get('select') === '1';
             const noPages = searchParams?.get('no_pages') === '1';
@@ -106,6 +108,10 @@ export default function ClientConnectionsPage() {
 
     const handleConnectLinkedIn = () => {
         window.location.href = '/api/auth/linkedin';
+    };
+
+    const handleConnectX = () => {
+        window.location.href = '/api/auth/x';
     };
 
     const loadLinkedinPages = async () => {
@@ -433,6 +439,43 @@ export default function ClientConnectionsPage() {
                                 <p>Go to your LinkedIn Developer App → Products → Request access to <strong>Community Management API</strong>, then reconnect.</p>
                             </div>
                         )}
+                    </CardContent>
+                </Card>
+
+                {/* X (Twitter) */}
+                <Card className={connections.x ? 'border-green-500/30 bg-green-500/5' : 'border-border'}>
+                    <CardHeader>
+                        <div className="flex items-center justify-between">
+                            <div className="p-2 bg-black/10 rounded-lg">
+                                <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center">
+                                    <svg viewBox="0 0 24 24" className="w-5 h-5 fill-white" aria-hidden="true">
+                                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.259 5.63 5.905-5.63zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                                    </svg>
+                                </div>
+                            </div>
+                            {connections.x ? (
+                                <span className="flex items-center gap-1 px-2 py-1 bg-green-500/10 text-green-500 text-xs rounded-full border border-green-500/20">
+                                    <CheckCircle className="w-3 h-3" /> Connected
+                                </span>
+                            ) : (
+                                <span className="flex items-center gap-1 px-2 py-1 bg-yellow-500/10 text-yellow-500 text-xs rounded-full border border-yellow-500/20">
+                                    <AlertCircle className="w-3 h-3" /> Not Connected
+                                </span>
+                            )}
+                        </div>
+                        <CardTitle className="mt-4">X (Twitter)</CardTitle>
+                        <CardDescription>Connect your X account to track followers, tweets, and engagement.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <Button
+                            onClick={handleConnectX}
+                            className="w-full bg-black hover:bg-black/80 text-white font-semibold py-5 rounded-xl"
+                        >
+                            <svg viewBox="0 0 24 24" className="w-4 h-4 mr-2 fill-white" aria-hidden="true">
+                                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.259 5.63 5.905-5.63zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                            </svg>
+                            {connections.x ? 'Reconnect X Account' : 'Connect X Account'}
+                        </Button>
                     </CardContent>
                 </Card>
             </div>
