@@ -237,7 +237,7 @@ export class SnapchatAPI {
     /** @deprecated use getFullAccountData */
     async getAdAccountStats(adAccountId: string) {
         const data = await this.getFullAccountData(adAccountId);
-        return { ...data.totals, campaignCount: data.campaignCount };
+        return { ...data.totals, reach: 0, campaignCount: data.campaignCount };
     }
 
     static async refreshAccessToken(refreshToken: string): Promise<{ access_token: string; expires_in: number }> {
