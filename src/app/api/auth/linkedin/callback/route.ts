@@ -119,5 +119,7 @@ export async function GET(req: NextRequest) {
         }
     });
 
-    return NextResponse.redirect(`${appUrl}${returnUrl}?success=linkedin`);
+    // If we found organizations, redirect with select flag to let user pick their page
+    const redirectParam = orgList.length > 0 ? '?success=linkedin&select=1' : '?success=linkedin&no_pages=1';
+    return NextResponse.redirect(`${appUrl}${returnUrl}${redirectParam}`);
 }

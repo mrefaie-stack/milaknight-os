@@ -17,9 +17,12 @@ export default function ClientConnectionsPage() {
     const [metaPages, setMetaPages] = useState<any[]>([]);
     const [metaAccounts, setMetaAccounts] = useState<any[]>([]);
     const [snapAdAccounts, setSnapAdAccounts] = useState<any[]>([]);
+    const [linkedinPages, setLinkedinPages] = useState<any[]>([]);
     const [selectedPage, setSelectedPage] = useState('');
     const [selectedAccount, setSelectedAccount] = useState('');
     const [selectedSnapAccount, setSelectedSnapAccount] = useState('');
+    const [selectedLinkedinPage, setSelectedLinkedinPage] = useState('');
+    const [linkedinNeedsApproval, setLinkedinNeedsApproval] = useState(false);
     const [saving, setSaving] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
 
@@ -40,7 +43,17 @@ export default function ClientConnectionsPage() {
         } else if (success === 'tiktok') {
             toast.success('TikTok connected!');
         } else if (success === 'linkedin') {
-            toast.success('LinkedIn connected!');
+            const select = searchParams?.get('select') === '1';
+            const noPages = searchParams?.get('no_pages') === '1';
+            if (select) {
+                toast.success('LinkedIn connected! Select your company page below.');
+                loadLinkedinPages();
+            } else if (noPages) {
+                toast.warning('LinkedIn connected but no company pages found. You may need to enable Community Management API in your LinkedIn app.');
+                setLinkedinNeedsApproval(true);
+            } else {
+                toast.success('LinkedIn connected!');
+            }
         } else if (searchParams?.get('error')) {
             toast.error('Connection failed. Please try again.');
         }
@@ -93,6 +106,36 @@ export default function ClientConnectionsPage() {
 
     const handleConnectLinkedIn = () => {
         window.location.href = '/api/auth/linkedin';
+    };
+
+    const loadLinkedinPages = async () => {
+        const res = await fetch('/api/client/linkedin/pages');
+        if (res.ok) {
+            const data = await res.json();
+            if (data.pages?.length > 0) setLinkedinPages(data.pages);
+            else setLinkedinNeedsApproval(true);
+        }
+    };
+
+    const handleSaveLinkedin = async () => {
+        if (!selectedLinkedinPage) { toast.error('Please select a company page'); return; }
+        setSaving('linkedin');
+        try {
+            const page = linkedinPages.find(p => p.id === selectedLinkedinPage);
+            const res = await fetch('/api/client/linkedin/select-page', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ orgId: page?.id, orgName: page?.name })
+            });
+            if (!res.ok) throw new Error('Failed');
+            toast.success('LinkedIn company page linked!');
+            setConnections(p => ({ ...p, linkedin: true }));
+            setLinkedinPages([]);
+        } catch {
+            toast.error('Failed to save LinkedIn page');
+        } finally {
+            setSaving(null);
+        }
     };
 
     const handleSaveMeta = async () => {
@@ -351,7 +394,7 @@ export default function ClientConnectionsPage() {
                         <CardTitle className="mt-4">LinkedIn</CardTitle>
                         <CardDescription>Connect your LinkedIn Company Page to track followers, visits, and post performance.</CardDescription>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="space-y-4">
                         <Button
                             onClick={handleConnectLinkedIn}
                             className="w-full bg-[#0077B5] hover:bg-[#0077B5]/90 text-white font-semibold py-5 rounded-xl"
@@ -359,6 +402,37 @@ export default function ClientConnectionsPage() {
                             <Linkedin className="w-4 h-4 mr-2" />
                             {connections.linkedin ? 'Reconnect LinkedIn' : 'Connect LinkedIn'}
                         </Button>
+
+                        {linkedinPages.length > 0 && (
+                            <div className="space-y-3 pt-2 border-t border-border">
+                                <p className="text-xs text-muted-foreground font-medium">Select your company page:</p>
+                                <Select value={selectedLinkedinPage} onValueChange={setSelectedLinkedinPage}>
+                                    <SelectTrigger className="bg-muted/30 border-border rounded-xl text-xs h-9">
+                                        <SelectValue placeholder="Select company page" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {linkedinPages.map(p => (
+                                            <SelectItem key={p.id} value={p.id} className="text-xs">{p.name}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <Button
+                                    size="sm"
+                                    onClick={handleSaveLinkedin}
+                                    disabled={saving === 'linkedin'}
+                                    className="w-full h-9 rounded-xl bg-[#0077B5] text-white font-bold text-xs"
+                                >
+                                    {saving === 'linkedin' ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save Page'}
+                                </Button>
+                            </div>
+                        )}
+
+                        {linkedinNeedsApproval && (
+                            <div className="pt-2 border-t border-border text-xs text-muted-foreground space-y-1">
+                                <p className="font-medium text-yellow-500">Company pages not found</p>
+                                <p>Go to your LinkedIn Developer App → Products → Request access to <strong>Community Management API</strong>, then reconnect.</p>
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
             </div>
