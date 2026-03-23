@@ -23,7 +23,10 @@ export async function generateAutoReport(clientId: string, month: string) {
     const client = await (prisma as any).client.findUnique({
         where: { id: clientId },
         include: {
-            socialConnections: { where: { isActive: true } }
+            socialConnections: {
+                where: { isActive: true },
+                orderBy: { updatedAt: 'desc' }
+            }
         }
     });
 
@@ -51,6 +54,7 @@ export async function generateAutoReport(clientId: string, month: string) {
     const campaignPlatforms: Record<string, any> = {};
 
     // --- Meta (Facebook + Instagram) ---
+    // socialConnections is already ordered by updatedAt desc, so find() returns the latest
     const metaConnection = client.socialConnections?.find(
         (c: any) => c.platform === "FACEBOOK"
     );
@@ -193,9 +197,12 @@ export async function generateAutoReport(clientId: string, month: string) {
 
     // --- AI Summary ---
     try {
-        metrics.summary = await generateAISummary(client, metrics, prevMetrics, insights, month);
-    } catch (e) {
-        console.error("Auto report: AI summary error:", e);
+        const aiSummary = await generateAISummary(client, metrics, prevMetrics, insights, month);
+        if (aiSummary) metrics.summary = aiSummary;
+        else console.warn("Auto report: AI summary returned empty for client", clientId);
+    } catch (e: any) {
+        console.error("Auto report: AI summary FAILED for client", clientId, "—", e?.message || e);
+        // Leave summary empty so report is still created
     }
 
     // --- Create the Draft Report ---
