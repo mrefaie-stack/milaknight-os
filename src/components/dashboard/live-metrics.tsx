@@ -19,6 +19,7 @@ export function LiveMetrics() {
     const [snapData, setSnapData] = useState<any>(null);
     const [snapLoading, setSnapLoading] = useState(false);
     const [linkedinData, setLinkedinData] = useState<any>(null);
+    const [xData, setXData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState('facebook');
@@ -48,10 +49,11 @@ export function LiveMetrics() {
         async function fetchData() {
             setLoading(true);
             try {
-                const [metaRes, snapRes, linkedinRes] = await Promise.allSettled([
+                const [metaRes, snapRes, linkedinRes, xRes] = await Promise.allSettled([
                     fetch('/api/dashboard/live/meta'),
                     fetch('/api/dashboard/live/snapchat'),
-                    fetch('/api/dashboard/live/linkedin')
+                    fetch('/api/dashboard/live/linkedin'),
+                    fetch('/api/dashboard/live/x')
                 ]);
 
                 if (metaRes.status === 'fulfilled') {
@@ -66,6 +68,10 @@ export function LiveMetrics() {
 
                 if (linkedinRes.status === 'fulfilled' && linkedinRes.value.ok) {
                     setLinkedinData(await linkedinRes.value.json());
+                }
+
+                if (xRes.status === 'fulfilled' && xRes.value.ok) {
+                    setXData(await xRes.value.json());
                 }
             } catch (err: any) {
                 setError(err.message);
@@ -192,22 +198,23 @@ export function LiveMetrics() {
         {
             id: 'x',
             name: 'X',
-            accountName: 'X Business Account',
+            accountName: xData ? `@${xData.username}` : 'X Account',
             icon: <Twitter className="w-5 h-5" />,
             color: '#000000',
-            isLive: false,
+            isLive: !!xData,
+            error: !xData ? (isRtl ? "حساب X غير مربوط" : "X not connected") : null,
             organicMetrics: [
-                { label: isRtl ? "المتابعون" : "Followers", value: '12.5K', color: "text-blue-400", icon: <Users className="w-4 h-4" /> },
-                { label: isRtl ? "مرات الظهور" : "Impressions", value: '140K', color: "text-emerald-500", icon: <Activity className="w-4 h-4" /> },
-                { label: isRtl ? "التفاعل" : "Engagement Rate", value: '3.2%', color: "text-primary", icon: <TrendingUp className="w-4 h-4" /> },
-                { label: isRtl ? "إعادة النشر" : "Reposts", value: '450', color: "text-purple-400", icon: <RefreshCw className="w-4 h-4" /> },
+                { label: isRtl ? "المتابعون" : "Followers", value: xData?.stats?.followers?.toLocaleString() ?? '—', color: "text-blue-400", icon: <Users className="w-4 h-4" /> },
+                { label: isRtl ? "يتابع" : "Following", value: xData?.stats?.following?.toLocaleString() ?? '—', color: "text-emerald-500", icon: <Activity className="w-4 h-4" /> },
+                { label: isRtl ? "التغريدات" : "Tweets", value: xData?.stats?.tweets?.toLocaleString() ?? '—', color: "text-primary", icon: <MessageCircle className="w-4 h-4" /> },
+                { label: isRtl ? "الإعجابات المُعطاة" : "Likes Given", value: xData?.stats?.likes?.toLocaleString() ?? '—', color: "text-rose-500", icon: <Heart className="w-4 h-4" /> },
             ],
-            adMetrics: [
-                { label: isRtl ? "الإنفاق" : "Spend", value: `SAR 410`, color: "text-orange-500", icon: <DollarSign className="w-4 h-4" /> },
-                { label: isRtl ? "ظهور الإعلان" : "Ad Impressions", value: '55,000', color: "text-primary", icon: <Eye className="w-4 h-4" /> },
-                { label: isRtl ? "النقرات" : "Link Clicks", value: '820', color: "text-emerald-500", icon: <MousePointer2 className="w-4 h-4" /> },
-                { label: isRtl ? "التكلفة لكل نقرة" : "Avg. CPC", value: `SAR 0.50`, color: "text-blue-500", icon: <BarChart className="w-4 h-4" /> },
-            ],
+            adMetrics: xData ? [
+                { label: isRtl ? "القوائم" : "Listed In", value: xData.stats.listed?.toLocaleString() ?? '0', color: "text-purple-500", icon: <Hash className="w-4 h-4" /> },
+                { label: isRtl ? "المتابعون" : "Followers", value: xData.stats.followers?.toLocaleString() ?? '0', color: "text-blue-400", icon: <Users className="w-4 h-4" /> },
+                { label: isRtl ? "التغريدات" : "Total Tweets", value: xData.stats.tweets?.toLocaleString() ?? '0', color: "text-primary", icon: <MessageCircle className="w-4 h-4" /> },
+                { label: isRtl ? "يتابع" : "Following", value: xData.stats.following?.toLocaleString() ?? '0', color: "text-emerald-500", icon: <Activity className="w-4 h-4" /> },
+            ] : [],
             activeAds: []
         },
         {
