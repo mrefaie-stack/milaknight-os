@@ -126,22 +126,31 @@ async function sendNotificationEmail(to, clientName) {
     }
 }
 
+// Global flag: stop all API calls if credits are exhausted
+let creditsExhausted = false;
+
 async function generateInsight(client, type) {
+    // If credits are exhausted, skip immediately without any API call
+    if (creditsExhausted) {
+        console.log(`[SKIPPED] ${type} for ${client.name} (credits exhausted)`);
+        return false;
+    }
+
     const latest = await prisma.clientInsight.findFirst({
         where: { clientId: client.id, type },
         orderBy: { createdAt: "desc" },
     });
 
     const cacheExpiry = new Date(Date.now() - CACHE_HOURS * 60 * 60 * 1000);
-    
+
     // Only generate if no previous insights exist, or if the latest insight is older than CACHE_HOURS
     if (latest && latest.createdAt > cacheExpiry) {
-        console.log(`[SKIPPED] ${type} for ${client.name} (Cached recently)`);
+        console.log(`[SKIPPED] ${type} for ${client.name} (cached - ${Math.round((Date.now() - latest.createdAt) / 3600000)}h old)`);
         return false;
     }
 
     console.log(`[GENERATING] ${type} for ${client.name}...`);
-    
+
     try {
         const prompt = buildPrompt(type, client);
         const response = await anthropic.messages.create({
@@ -164,6 +173,13 @@ async function generateInsight(client, type) {
         console.log(`[SUCCESS] ${type} inserted for ${client.name}`);
         return true;
     } catch (err) {
+        // Detect credits exhausted — stop all remaining calls this run
+        if (err.message && err.message.includes('credit balance is too low')) {
+            creditsExhausted = true;
+            console.error(`[FATAL] Anthropic credits exhausted. Stopping all remaining insight generation.`);
+            console.error(`[FATAL] Please top up credits at: https://console.anthropic.com/settings/billing`);
+            return false;
+        }
         console.error(`[ERROR] Failed ${type} for ${client.name}:`, err.message);
         return false;
     }
