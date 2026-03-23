@@ -147,16 +147,26 @@ export function LiveMetrics() {
             organicMetrics: [
                 { label: isRtl ? "الوصول" : "Reach", value: snapData?.stats?.reach?.toLocaleString() ?? '—', color: "text-blue-400", icon: <Users className="w-4 h-4" /> },
                 { label: isRtl ? "مشاهدات الفيديو" : "Video Views", value: snapData?.stats?.videoViews?.toLocaleString() ?? '—', color: "text-rose-500", icon: <PlaySquare className="w-4 h-4" /> },
-                { label: isRtl ? "الظهور" : "Impressions", value: snapData?.stats?.impressions?.toLocaleString() ?? '—', color: "text-emerald-500", icon: <Eye className="w-4 h-4" /> },
-                { label: isRtl ? "سحب للأعلى" : "Swipe Ups", value: snapData?.stats?.swipes?.toLocaleString() ?? '—', color: "text-purple-500", icon: <MousePointer2 className="w-4 h-4" /> },
+                { label: isRtl ? "المستخدمون الفريدون" : "Unique Users", value: snapData?.stats?.uniques?.toLocaleString() ?? '—', color: "text-emerald-500", icon: <Eye className="w-4 h-4" /> },
+                { label: isRtl ? "معدل التكرار" : "Frequency", value: snapData?.stats?.frequency ? snapData.stats.frequency.toFixed(2) : '—', color: "text-purple-500", icon: <RefreshCw className="w-4 h-4" /> },
             ],
             adMetrics: snapData ? [
                 { label: isRtl ? "الإنفاق" : "Spend", value: `SAR ${snapData.stats.spend?.toFixed(2) ?? '0.00'}`, color: "text-orange-500", icon: <DollarSign className="w-4 h-4" /> },
                 { label: isRtl ? "الظهور" : "Impressions", value: snapData.stats.impressions?.toLocaleString() ?? '0', color: "text-primary", icon: <Eye className="w-4 h-4" /> },
                 { label: isRtl ? "سحب للأعلى" : "Swipe Ups", value: snapData.stats.swipes?.toLocaleString() ?? '0', color: "text-emerald-500", icon: <MousePointer2 className="w-4 h-4" /> },
-                { label: isRtl ? "الوصول" : "Reach", value: snapData.stats.reach?.toLocaleString() ?? '0', color: "text-blue-500", icon: <Activity className="w-4 h-4" /> },
+                { label: isRtl ? "الحملات النشطة" : "Active Campaigns", value: `${snapData.activeCampaignCount ?? 0} / ${snapData.campaignCount ?? 0}`, color: "text-blue-500", icon: <Activity className="w-4 h-4" /> },
             ] : [],
-            activeAds: []
+            activeAds: snapData ? [
+                ...(snapData.activeCampaigns?.length > 0 ? snapData.activeCampaigns : snapData.topCampaigns || [])
+                    .slice(0, 5)
+                    .map((c: any) => ({
+                        id: c.id,
+                        name: c.name,
+                        status: c.status === 'ACTIVE' ? 'active' : (c.status || '').toLowerCase(),
+                        spend: `SAR ${c.stats?.spend?.toFixed(2) ?? '0.00'}`,
+                        results: `${c.stats?.impressions?.toLocaleString() ?? '0'} ${isRtl ? 'ظهور' : 'impr'}`
+                    }))
+            ] : []
         },
         {
             id: 'x',
@@ -407,6 +417,76 @@ export function LiveMetrics() {
                                     {isRtl ? "عرض جميع الإعلانات" : "View Analytics Report"}
                                 </button>
                             </div>
+                        </div>
+                    )}
+
+                    {/* Snapchat Extras: Targeting + Objective Breakdown */}
+                    {activeTab === 'snapchat' && snapData && (
+                        <div className="grid md:grid-cols-2 gap-4">
+                            {/* Objective Breakdown */}
+                            {snapData.objectiveBreakdown && Object.keys(snapData.objectiveBreakdown).length > 0 && (
+                                <Card>
+                                    <CardContent className="p-4">
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <div className="h-3 w-0.5 bg-yellow-400 rounded-full" />
+                                            <p className="section-label text-muted-foreground">{isRtl ? "تفاصيل الأهداف" : "Campaign Objectives"}</p>
+                                        </div>
+                                        <div className="flex flex-wrap gap-2">
+                                            {Object.entries(snapData.objectiveBreakdown).map(([obj, count]) => (
+                                                <div key={obj} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-muted border border-border">
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-yellow-400" />
+                                                    <span className="text-xs font-medium">{obj.replace(/_/g, ' ')}</span>
+                                                    <span className="text-xs text-muted-foreground">({count as number})</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            )}
+
+                            {/* Targeting Overview */}
+                            {snapData.targeting && (
+                                <Card>
+                                    <CardContent className="p-4">
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <div className="h-3 w-0.5 bg-emerald-500 rounded-full" />
+                                            <p className="section-label text-muted-foreground">{isRtl ? "استهداف الحملة النشطة" : "Active Campaign Targeting"}</p>
+                                        </div>
+                                        <div className="space-y-2">
+                                            {(snapData.targeting.ageMin || snapData.targeting.ageMax) && (
+                                                <div className="flex items-center justify-between text-xs">
+                                                    <span className="text-muted-foreground">{isRtl ? "الفئة العمرية" : "Age Range"}</span>
+                                                    <span className="font-medium">{snapData.targeting.ageMin ?? '—'} – {snapData.targeting.ageMax ?? '—'}</span>
+                                                </div>
+                                            )}
+                                            {snapData.targeting.countries?.length > 0 && (
+                                                <div className="flex items-center justify-between text-xs">
+                                                    <span className="text-muted-foreground">{isRtl ? "الدول" : "Countries"}</span>
+                                                    <span className="font-medium">{snapData.targeting.countries.join(', ')}</span>
+                                                </div>
+                                            )}
+                                            {snapData.targeting.dailyBudget > 0 && (
+                                                <div className="flex items-center justify-between text-xs">
+                                                    <span className="text-muted-foreground">{isRtl ? "الميزانية اليومية" : "Daily Budget"}</span>
+                                                    <span className="font-medium">SAR {snapData.targeting.dailyBudget.toFixed(2)}</span>
+                                                </div>
+                                            )}
+                                            {snapData.targeting.optimizationGoal && (
+                                                <div className="flex items-center justify-between text-xs">
+                                                    <span className="text-muted-foreground">{isRtl ? "هدف التحسين" : "Optimization Goal"}</span>
+                                                    <span className="font-medium">{snapData.targeting.optimizationGoal.replace(/_/g, ' ')}</span>
+                                                </div>
+                                            )}
+                                            {snapData.targeting.bidStrategy && (
+                                                <div className="flex items-center justify-between text-xs">
+                                                    <span className="text-muted-foreground">{isRtl ? "استراتيجية المزايدة" : "Bid Strategy"}</span>
+                                                    <span className="font-medium">{snapData.targeting.bidStrategy.replace(/_/g, ' ')}</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            )}
                         </div>
                     )}
                 </motion.div>
