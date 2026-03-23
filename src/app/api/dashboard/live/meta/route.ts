@@ -34,7 +34,29 @@ export async function GET() {
             return NextResponse.json({ error: 'Meta account not linked for this client' }, { status: 404 });
         }
 
-        const meta = new MetaAPI(clientConnection.accessToken);
+        // Extend Meta token if expired or expiring within 7 days
+        let accessToken = clientConnection.accessToken;
+        const expiresAt = clientConnection.expiresAt ? new Date(clientConnection.expiresAt) : null;
+        const soonThreshold = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+        if (!expiresAt || expiresAt <= soonThreshold) {
+            try {
+                const extended = await MetaAPI.extendToken(accessToken);
+                if (extended) {
+                    accessToken = extended.access_token;
+                    await (prisma as any).socialConnection.update({
+                        where: { id: clientConnection.id },
+                        data: {
+                            accessToken: extended.access_token,
+                            expiresAt: new Date(Date.now() + extended.expires_in * 1000)
+                        }
+                    });
+                }
+            } catch (e) {
+                console.error('Meta token extension failed:', e);
+            }
+        }
+
+        const meta = new MetaAPI(accessToken);
 
         // 3. Fetch Insights for the specific Ad Account mapped to this client
         let adInsights: any;
