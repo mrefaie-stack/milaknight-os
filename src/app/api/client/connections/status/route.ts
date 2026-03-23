@@ -21,6 +21,7 @@ export async function GET() {
         tiktok: platforms.includes('TIKTOK'),
         linkedin: platforms.includes('LINKEDIN'),
         x: platforms.includes('X'),
-        salla: platforms.includes('SALLA')
+        salla: platforms.includes('SALLA'),
+        google: platforms.includes('GOOGLE')
     });
 }
