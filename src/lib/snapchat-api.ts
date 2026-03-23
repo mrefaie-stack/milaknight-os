@@ -37,9 +37,13 @@ export class SnapchatAPI {
         return (data.campaigns || []).map((c: any) => c.campaign).filter(Boolean);
     }
 
+    async getAdSquads(adAccountId: string) {
+        const data = await this.fetch(`/adaccounts/${adAccountId}/adsquads`);
+        return (data.adsquads || []).map((a: any) => a.adsquad).filter(Boolean);
+    }
+
     /**
-     * Fetch lifetime campaign stats (no date range — Snapchat timestamp API is broken).
-     * Returns aggregated totals across the campaign's full lifetime.
+     * Lifetime campaign stats — no date range (Snapchat timestamp queries are broken for 2026 dates).
      */
     async getCampaignStats(campaignId: string) {
         const data = await this.fetch(`/campaigns/${campaignId}/stats`, {
@@ -50,7 +54,7 @@ export class SnapchatAPI {
         return {
             impressions: stat.impressions || 0,
             swipes: stat.swipes || 0,
-            spend: (stat.spend || 0) / 1_000_000,  // micro-currency → dollars
+            spend: (stat.spend || 0) / 1_000_000,
             videoViews: stat.video_views || 0,
             reach: stat.reach || 0,
             frequency: stat.frequency || 0,
@@ -59,33 +63,111 @@ export class SnapchatAPI {
     }
 
     /**
-     * Aggregate stats across all campaigns in an ad account (lifetime totals).
+     * Full account data: aggregated stats + enriched campaign list + targeting overview.
      */
-    async getAdAccountStats(adAccountId: string) {
-        const campaigns = await this.getCampaigns(adAccountId);
-        const totals = { impressions: 0, swipes: 0, spend: 0, videoViews: 0, reach: 0, frequency: 0, uniques: 0 };
-        let freqCount = 0;
+    async getFullAccountData(adAccountId: string) {
+        const [campaigns, adSquads] = await Promise.all([
+            this.getCampaigns(adAccountId),
+            this.getAdSquads(adAccountId).catch(() => [])
+        ]);
 
-        await Promise.allSettled(campaigns.map(async (campaign: any) => {
-            try {
-                const s = await this.getCampaignStats(campaign.id);
-                totals.impressions += s.impressions;
-                totals.swipes += s.swipes;
-                totals.spend += s.spend;
-                totals.videoViews += s.videoViews;
-                totals.reach += s.reach;
-                totals.uniques += s.uniques;
-                if (s.frequency > 0) { totals.frequency += s.frequency; freqCount++; }
-            } catch { /* skip failed campaigns */ }
-        }));
+        // Fetch stats for all campaigns in parallel
+        const campaignResults = await Promise.allSettled(
+            campaigns.map(async (c: any) => {
+                const stats = await this.getCampaignStats(c.id).catch(() => ({
+                    impressions: 0, swipes: 0, spend: 0, videoViews: 0, reach: 0, frequency: 0, uniques: 0
+                }));
+                return { ...c, stats };
+            })
+        );
 
-        if (freqCount > 0) totals.frequency = totals.frequency / freqCount;
-        return { ...totals, campaignCount: campaigns.length };
+        const enrichedCampaigns = campaignResults
+            .filter(r => r.status === 'fulfilled')
+            .map((r: any) => r.value);
+
+        // Aggregate totals
+        const totals = { impressions: 0, swipes: 0, spend: 0, videoViews: 0, reach: 0, uniques: 0 };
+        let freqSum = 0, freqCount = 0;
+
+        for (const c of enrichedCampaigns) {
+            totals.impressions += c.stats.impressions;
+            totals.swipes += c.stats.swipes;
+            totals.spend += c.stats.spend;
+            totals.videoViews += c.stats.videoViews;
+            totals.reach += c.stats.reach;
+            totals.uniques += c.stats.uniques;
+            if (c.stats.frequency > 0) { freqSum += c.stats.frequency; freqCount++; }
+        }
+        const frequency = freqCount > 0 ? freqSum / freqCount : 0;
+
+        // Objective breakdown
+        const objectiveBreakdown: Record<string, number> = {};
+        for (const c of enrichedCampaigns) {
+            const obj = c.objective || 'OTHER';
+            objectiveBreakdown[obj] = (objectiveBreakdown[obj] || 0) + 1;
+        }
+
+        // Active campaigns sorted by spend
+        const activeCampaigns = enrichedCampaigns
+            .filter((c: any) => c.status === 'ACTIVE')
+            .sort((a: any, b: any) => b.stats.spend - a.stats.spend)
+            .map((c: any) => ({
+                id: c.id,
+                name: c.name,
+                objective: c.objective,
+                status: c.status,
+                startTime: c.start_time,
+                endTime: c.end_time,
+                stats: c.stats
+            }));
+
+        // Top campaigns by impressions (active + paused)
+        const topCampaigns = enrichedCampaigns
+            .sort((a: any, b: any) => b.stats.impressions - a.stats.impressions)
+            .slice(0, 5)
+            .map((c: any) => ({
+                id: c.id,
+                name: c.name,
+                objective: c.objective,
+                status: c.status,
+                stats: c.stats
+            }));
+
+        // Targeting overview from active ad squads
+        const activeSquads = adSquads.filter((s: any) => s.status === 'ACTIVE');
+        let targetingOverview: any = null;
+        if (activeSquads.length > 0) {
+            const sq = activeSquads[0];
+            const demo = sq.targeting?.demographics?.[0] || {};
+            const geos = sq.targeting?.geos || [];
+            targetingOverview = {
+                ageMin: demo.min_age,
+                ageMax: demo.max_age,
+                countries: geos.filter((g: any) => g.operation === 'INCLUDE').map((g: any) => g.country_code.toUpperCase()),
+                dailyBudget: (sq.daily_budget_micro || 0) / 1_000_000,
+                optimizationGoal: sq.optimization_goal,
+                bidStrategy: sq.bid_strategy,
+                endTime: sq.end_time
+            };
+        }
+
+        return {
+            totals: { ...totals, frequency },
+            campaignCount: enrichedCampaigns.length,
+            activeCampaignCount: activeCampaigns.length,
+            objectiveBreakdown,
+            activeCampaigns,
+            topCampaigns,
+            targeting: targetingOverview
+        };
     }
 
-    /**
-     * Refresh an expired access token using the stored refresh token.
-     */
+    /** @deprecated use getFullAccountData */
+    async getAdAccountStats(adAccountId: string) {
+        const data = await this.getFullAccountData(adAccountId);
+        return { ...data.totals, campaignCount: data.campaignCount };
+    }
+
     static async refreshAccessToken(refreshToken: string): Promise<{ access_token: string; expires_in: number }> {
         const res = await fetch('https://accounts.snapchat.com/accounts/oauth2/token', {
             method: 'POST',
