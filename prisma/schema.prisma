@@ -587,3 +587,13 @@ model ApprovalRequest {
   @@index([mmId, status])
   @@index([creatorRole, status])
 }
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  email     String
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([email])
+}
