@@ -190,6 +190,28 @@ export class MetaAPI {
     }
 
     /**
+     * Exchange a user access token for a long-lived token (or re-extend an existing one).
+     * Facebook long-lived tokens last ~60 days. Re-extending before expiry resets the clock.
+     * Returns null if extension fails (token truly expired — user must reconnect).
+     */
+    static async extendToken(currentToken: string): Promise<{ access_token: string; expires_in: number } | null> {
+        try {
+            const url = new URL('https://graph.facebook.com/v19.0/oauth/access_token');
+            url.searchParams.set('grant_type', 'fb_exchange_token');
+            url.searchParams.set('client_id', process.env.FACEBOOK_CLIENT_ID!);
+            url.searchParams.set('client_secret', process.env.FACEBOOK_CLIENT_SECRET!);
+            url.searchParams.set('fb_exchange_token', currentToken);
+            const res = await fetch(url.toString());
+            const data = await res.json();
+            if (!data.access_token) return null;
+            // Facebook returns expires_in in seconds (~5184000 = 60 days)
+            return { access_token: data.access_token, expires_in: data.expires_in || 5184000 };
+        } catch {
+            return null;
+        }
+    }
+
+    /**
      * Fetch all pages associated with the token (with pagination loop)
      */
     async getPages() {

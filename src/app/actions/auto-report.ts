@@ -306,7 +306,29 @@ async function fetchMetaData(
     since: string,
     until: string
 ): Promise<{ facebook?: any; instagram?: any }> {
-    const meta = new MetaAPI(connection.accessToken);
+    // Extend Meta token if expired or expiring within 7 days (Facebook has no standard refresh)
+    let accessToken = connection.accessToken;
+    const expiresAt = connection.expiresAt ? new Date(connection.expiresAt) : null;
+    const soonThreshold = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    if (!expiresAt || expiresAt <= soonThreshold) {
+        try {
+            const extended = await MetaAPI.extendToken(accessToken);
+            if (extended) {
+                accessToken = extended.access_token;
+                await (prisma as any).socialConnection.update({
+                    where: { id: connection.id },
+                    data: {
+                        accessToken: extended.access_token,
+                        expiresAt: new Date(Date.now() + extended.expires_in * 1000)
+                    }
+                });
+            }
+        } catch (e) {
+            console.error('[auto-report] Meta token extension failed:', e);
+        }
+    }
+
+    const meta = new MetaAPI(accessToken);
     const result: { facebook?: any; instagram?: any } = {};
 
     // Helper: extract value from a page/ig insights response row.
@@ -539,6 +561,7 @@ async function fetchYouTubeData(
         try {
             const refreshed = await YouTubeAPI.refreshAccessToken(connection.refreshToken);
             accessToken = refreshed.access_token;
+            connection.accessToken = refreshed.access_token; // update in-place so fetchGoogleAdsData uses fresh token
             await (prisma as any).socialConnection.update({
                 where: { id: connection.id },
                 data: {

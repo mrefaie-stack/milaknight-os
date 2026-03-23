@@ -51,8 +51,10 @@ export async function GET(request: Request) {
         // Get ad accounts from metadata
         let adAccounts: { id: string; name: string }[] = [];
         if (connection.metadata) {
-            const meta = JSON.parse(connection.metadata);
-            if (meta.adAccounts?.length > 0) adAccounts = meta.adAccounts;
+            try {
+                const meta = JSON.parse(connection.metadata);
+                if (meta.adAccounts?.length > 0) adAccounts = meta.adAccounts;
+            } catch { /* ignore corrupt metadata, will fetch live */ }
         }
         if (adAccounts.length === 0) {
             const data = await snap.getAdAccounts(orgId).catch(() => ({ adaccounts: [] }));

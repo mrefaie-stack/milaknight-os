@@ -39,7 +39,11 @@ export function LiveMetrics() {
             if (period === '30d') url += `?start=${toIso(daysAgo(30))}&end=${toIso(now)}`;
             if (period === '90d') url += `?start=${toIso(daysAgo(90))}&end=${toIso(now)}`;
             if (period === 'custom' && customStart && customEnd) {
-                url += `?start=${new Date(customStart).toISOString()}&end=${new Date(customEnd + 'T23:59:59').toISOString()}`;
+                const startDate = new Date(customStart + 'T00:00:00');
+                const endDate = new Date(customEnd + 'T23:59:59');
+                if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
+                    url += `?start=${startDate.toISOString()}&end=${endDate.toISOString()}`;
+                }
             }
             const res = await fetch(url);
             if (res.ok) setSnapData(await res.json());
