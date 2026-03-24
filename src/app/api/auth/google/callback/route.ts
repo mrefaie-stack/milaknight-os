@@ -85,10 +85,17 @@ export async function GET(request: Request) {
                         }
                     }
                 );
-                const adsData = await adsRes.json();
-                adsCustomerIds = (adsData.resourceNames || []).map(
-                    (r: string) => r.replace('customers/', '')
-                );
+                const adsText = await adsRes.text();
+                console.log('Google Ads callback status:', adsRes.status);
+                console.log('Google Ads callback body:', adsText.slice(0, 300));
+                try {
+                    const adsData = JSON.parse(adsText);
+                    adsCustomerIds = (adsData.resourceNames || []).map(
+                        (r: string) => r.replace('customers/', '')
+                    );
+                } catch {
+                    console.error('Google Ads callback: response is not JSON (HTML redirect?)');
+                }
             } catch (e) {
                 console.error('Google callback: Ads customers fetch failed:', e);
             }
