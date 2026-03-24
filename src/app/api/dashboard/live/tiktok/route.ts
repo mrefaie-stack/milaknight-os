@@ -63,7 +63,7 @@ export async function GET(request: Request) {
         console.log(`TikTok Live stats: spend=${stats.spend}, impressions=${stats.impressions}, campaigns=${campaigns.length}, identities=${identities.length}`);
 
         // Fetch organic profile + videos for first linked identity
-        let businessProfile = null;
+        let businessProfile: any = null;
         let businessVideos: any[] = [];
         if (identities.length > 0 && identities[0].id) {
             const [profileResult, videosResult] = await Promise.allSettled([
