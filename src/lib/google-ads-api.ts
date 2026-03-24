@@ -1,4 +1,4 @@
-const GADS_BASE = 'https://googleads.googleapis.com/v19';
+const GADS_BASE = 'https://googleads.googleapis.com/v20';
 
 export interface GoogleAdsCampaign {
     id: string;
@@ -35,7 +35,7 @@ export class GoogleAdsAPI {
         try {
             const res = await fetch(`${GADS_BASE}/customers/${customerId}/googleAds:search`, {
                 method: 'POST',
-                headers: this.headers(),
+                headers: this.headers(customerId),
                 body: JSON.stringify({ query })
             });
             if (!res.ok) return null;
@@ -90,7 +90,7 @@ export class GoogleAdsAPI {
 
         const res = await fetch(`${GADS_BASE}/customers/${customerId}/googleAds:search`, {
             method: 'POST',
-            headers: this.headers(),
+            headers: this.headers(customerId),
             body: JSON.stringify({ query })
         });
 
