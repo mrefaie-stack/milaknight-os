@@ -92,6 +92,50 @@ export async function GET(req: NextRequest) {
         }
     });
 
+    // Auto-save linked organic identity
+    try {
+        const tiktokClient = new TikTokAPI(accessToken);
+        const identities = await tiktokClient.getTikTokIdentities(primaryId);
+        if (identities.length > 0) {
+            const identity = identities[0];
+            const organicMeta = JSON.stringify({
+                displayName: identity.displayName,
+                profileImage: identity.profileImage,
+                type: identity.type,
+                advertiserId: primaryId,
+                allIdentities: identities
+            });
+            await (prisma as any).socialConnection.upsert({
+                where: {
+                    userId_platform_platformAccountId: {
+                        userId: session.user.id,
+                        platform: 'TIKTOK_ORGANIC',
+                        platformAccountId: identity.id
+                    }
+                },
+                update: {
+                    accessToken,
+                    isActive: true,
+                    platformAccountName: identity.displayName || undefined,
+                    clientId: clientRecord?.id || undefined,
+                    metadata: organicMeta
+                },
+                create: {
+                    userId: session.user.id,
+                    platform: 'TIKTOK_ORGANIC',
+                    platformAccountId: identity.id,
+                    platformAccountName: identity.displayName || null,
+                    accessToken,
+                    isActive: true,
+                    clientId: clientRecord?.id || null,
+                    metadata: organicMeta
+                }
+            });
+        }
+    } catch (e) {
+        console.error('TikTok organic auto-link failed:', e);
+    }
+
     const needsSelect = advertiserIds.length > 1;
     return NextResponse.redirect(`${appUrl}${returnUrl}?success=tiktok${needsSelect ? '&select=1' : ''}`);
 }

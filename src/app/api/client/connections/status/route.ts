@@ -25,10 +25,17 @@ export async function GET() {
     });
 
     const platforms = connections.map((c: any) => c.platform);
+
+    const organicConn = connections.find((c: any) => c.platform === 'TIKTOK_ORGANIC');
+    const organicMeta = organicConn?.metadata ? JSON.parse(organicConn.metadata) : {};
+
     return NextResponse.json({
         facebook: platforms.includes('FACEBOOK'),
         snapchat: platforms.includes('SNAPCHAT'),
         tiktok: platforms.includes('TIKTOK'),
+        tiktokOrganic: platforms.includes('TIKTOK_ORGANIC'),
+        tiktokOrganicName: organicConn?.platformAccountName || organicMeta.displayName || null,
+        tiktokOrganicImage: organicMeta.profileImage || null,
         linkedin: platforms.includes('LINKEDIN'),
         x: platforms.includes('X'),
         salla: platforms.includes('SALLA'),
