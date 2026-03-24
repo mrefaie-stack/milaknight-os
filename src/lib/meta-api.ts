@@ -98,6 +98,14 @@ export class MetaAPI {
         return this.fetch(`/${pageId}/insights`, params);
     }
 
+    async getAdAccountInfo(adAccountId: string): Promise<{ currency: string } | null> {
+        try {
+            return await this.fetch(`/${adAccountId}`, { fields: 'currency' });
+        } catch {
+            return null;
+        }
+    }
+
     /**
      * Fetch basic page info
      */

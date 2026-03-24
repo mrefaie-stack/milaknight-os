@@ -32,6 +32,15 @@ export class SnapchatAPI {
         return this.fetch(`/organizations/${orgId}/adaccounts`);
     }
 
+    async getAdAccountDetails(adAccountId: string): Promise<{ currency?: string } | null> {
+        try {
+            const data = await this.fetch(`/adaccounts/${adAccountId}`);
+            return data.adaccount || null;
+        } catch {
+            return null;
+        }
+    }
+
     async getCampaigns(adAccountId: string) {
         const data = await this.fetch(`/adaccounts/${adAccountId}/campaigns`);
         return (data.campaigns || []).map((c: any) => c.campaign).filter(Boolean);
