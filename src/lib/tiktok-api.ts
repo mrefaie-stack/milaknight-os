@@ -34,54 +34,92 @@ export class TikTokAPI {
     async getAdvertiserInfo(advertiserIds: string[]) {
         return this.get('/advertiser/info/', {
             advertiser_ids: JSON.stringify(advertiserIds),
-            fields: JSON.stringify(['name', 'currency', 'timezone', 'status', 'balance', 'industry', 'advertiser_id'])
+            fields: JSON.stringify(['name', 'currency', 'timezone', 'status', 'balance', 'industry', 'advertiser_id', 'description', 'country'])
         });
     }
 
+    /**
+     * Fetch ad account stats split into 4 independent groups.
+     * If a group fails (metrics unavailable for this account), the rest still work.
+     */
     async getAdAccountStats(advertiserId: string, since: string, until: string) {
-        const data = await this.post('/report/integrated/get/', {
+        const base = {
             advertiser_id: advertiserId,
             report_type: 'BASIC',
             data_level: 'AUCTION_ADVERTISER',
             dimensions: ['advertiser_id'],
-            metrics: [
-                'spend', 'impressions', 'clicks', 'reach', 'frequency',
-                'ctr', 'cpm', 'cpc',
-                'video_play_actions', 'video_watched_2s', 'video_watched_6s',
-                'video_views_p25', 'video_views_p50', 'video_views_p75', 'video_views_p100',
-                'profile_visits', 'follows', 'likes', 'comments', 'shares',
-                'conversion', 'cost_per_conversion', 'purchase_roas'
-            ],
             start_date: since,
             end_date: until,
-            page_size: 10
-        });
+            page_size: 1
+        };
 
-        const row = data?.list?.[0]?.metrics || {};
+        // Group 1: Core — always available
+        let core: any = {};
+        try {
+            const d = await this.post('/report/integrated/get/', {
+                ...base,
+                metrics: ['spend', 'impressions', 'clicks', 'reach', 'frequency', 'ctr', 'cpm', 'cpc']
+            });
+            core = d?.list?.[0]?.metrics || {};
+        } catch (e) {
+            console.error('TikTok core metrics failed:', (e as Error).message);
+        }
+
+        // Group 2: Video — available for video ad accounts
+        let video: any = {};
+        try {
+            const d = await this.post('/report/integrated/get/', {
+                ...base,
+                metrics: ['video_play_actions', 'video_watched_2s', 'video_watched_6s',
+                    'video_views_p25', 'video_views_p50', 'video_views_p75', 'video_views_p100']
+            });
+            video = d?.list?.[0]?.metrics || {};
+        } catch { /* not a video account */ }
+
+        // Group 3: Engagement — available when identity is linked
+        let eng: any = {};
+        try {
+            const d = await this.post('/report/integrated/get/', {
+                ...base,
+                metrics: ['profile_visits', 'follows', 'likes', 'comments', 'shares']
+            });
+            eng = d?.list?.[0]?.metrics || {};
+        } catch { /* identity not linked */ }
+
+        // Group 4: Conversion — available when pixel is set up
+        let conv: any = {};
+        try {
+            const d = await this.post('/report/integrated/get/', {
+                ...base,
+                metrics: ['conversion', 'cost_per_conversion', 'purchase_roas']
+            });
+            conv = d?.list?.[0]?.metrics || {};
+        } catch { /* no pixel */ }
+
         return {
-            spend: Number(row.spend) || 0,
-            impressions: Number(row.impressions) || 0,
-            clicks: Number(row.clicks) || 0,
-            reach: Number(row.reach) || 0,
-            frequency: Number(row.frequency) || 0,
-            ctr: Number(row.ctr) || 0,
-            cpm: Number(row.cpm) || 0,
-            cpc: Number(row.cpc) || 0,
-            videoViews: Number(row.video_play_actions) || 0,
-            video2s: Number(row.video_watched_2s) || 0,
-            video6s: Number(row.video_watched_6s) || 0,
-            videoP25: Number(row.video_views_p25) || 0,
-            videoP50: Number(row.video_views_p50) || 0,
-            videoP75: Number(row.video_views_p75) || 0,
-            videoP100: Number(row.video_views_p100) || 0,
-            profileVisits: Number(row.profile_visits) || 0,
-            follows: Number(row.follows) || 0,
-            likes: Number(row.likes) || 0,
-            comments: Number(row.comments) || 0,
-            shares: Number(row.shares) || 0,
-            conversions: Number(row.conversion) || 0,
-            costPerConversion: Number(row.cost_per_conversion) || 0,
-            roas: Number(row.purchase_roas) || 0
+            spend: Number(core.spend) || 0,
+            impressions: Number(core.impressions) || 0,
+            clicks: Number(core.clicks) || 0,
+            reach: Number(core.reach) || 0,
+            frequency: Number(core.frequency) || 0,
+            ctr: Number(core.ctr) || 0,
+            cpm: Number(core.cpm) || 0,
+            cpc: Number(core.cpc) || 0,
+            videoViews: Number(video.video_play_actions) || 0,
+            video2s: Number(video.video_watched_2s) || 0,
+            video6s: Number(video.video_watched_6s) || 0,
+            videoP25: Number(video.video_views_p25) || 0,
+            videoP50: Number(video.video_views_p50) || 0,
+            videoP75: Number(video.video_views_p75) || 0,
+            videoP100: Number(video.video_views_p100) || 0,
+            profileVisits: Number(eng.profile_visits) || 0,
+            follows: Number(eng.follows) || 0,
+            likes: Number(eng.likes) || 0,
+            comments: Number(eng.comments) || 0,
+            shares: Number(eng.shares) || 0,
+            conversions: Number(conv.conversion) || 0,
+            costPerConversion: Number(conv.cost_per_conversion) || 0,
+            roas: Number(conv.purchase_roas) || 0
         };
     }
 
@@ -94,7 +132,10 @@ export class TikTokAPI {
                 page_size: '20'
             });
             campaigns = data?.list || [];
-        } catch { return []; }
+        } catch (e) {
+            console.error('TikTok campaigns list failed:', (e as Error).message);
+            return [];
+        }
 
         if (campaigns.length === 0) return [];
 
@@ -113,7 +154,7 @@ export class TikTokAPI {
             for (const s of (report?.list || [])) {
                 statsMap[s.dimensions?.campaign_id] = s.metrics || {};
             }
-        } catch { /* ignore */ }
+        } catch { /* ignore — show campaigns without stats */ }
 
         return campaigns.map((c: any) => {
             const m = statsMap[c.campaign_id] || {};
@@ -158,6 +199,28 @@ export class TikTokAPI {
                 ctr: Number(item.metrics?.ctr) || 0,
                 videoViews: Number(item.metrics?.video_play_actions) || 0,
                 reach: Number(item.metrics?.reach) || 0
+            }));
+        } catch (e) {
+            console.error('TikTok top ads failed:', (e as Error).message);
+            return [];
+        }
+    }
+
+    /**
+     * Get TikTok identities (organic accounts) linked to an advertiser account.
+     * Returns display_name, profile_image_url, etc.
+     */
+    async getTikTokIdentities(advertiserId: string) {
+        try {
+            const data = await this.get('/tiktok_account/get/', {
+                advertiser_id: advertiserId,
+                page_size: '10'
+            });
+            return (data?.list || []).map((a: any) => ({
+                id: a.tiktok_account_id,
+                displayName: a.display_name || '',
+                profileImage: a.profile_image_url || '',
+                type: a.type || ''
             }));
         } catch { return []; }
     }
