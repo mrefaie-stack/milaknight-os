@@ -1,4 +1,4 @@
-const GADS_BASE = 'https://googleads.googleapis.com/v18';
+const GADS_BASE = 'https://googleads.googleapis.com/v19';
 
 export interface GoogleAdsCampaign {
     id: string;
