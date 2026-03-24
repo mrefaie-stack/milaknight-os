@@ -12,14 +12,17 @@ import { toast } from 'sonner';
 
 export default function ClientConnectionsPage() {
     const searchParams = useSearchParams();
-    const [connections, setConnections] = useState<{ facebook: boolean; snapchat: boolean; tiktok: boolean; linkedin: boolean; x: boolean; salla: boolean; google: boolean; googleAds: boolean }>({
-        facebook: false, snapchat: false, tiktok: false, linkedin: false, x: false, salla: false, google: false, googleAds: false
+    const [connections, setConnections] = useState<{ facebook: boolean; snapchat: boolean; tiktok: boolean; tiktokOrganic: boolean; tiktokOrganicName: string | null; tiktokOrganicImage: string | null; linkedin: boolean; x: boolean; salla: boolean; google: boolean; googleAds: boolean }>({
+        facebook: false, snapchat: false, tiktok: false, tiktokOrganic: false, tiktokOrganicName: null, tiktokOrganicImage: null, linkedin: false, x: false, salla: false, google: false, googleAds: false
     });
     const [metaPages, setMetaPages] = useState<any[]>([]);
     const [metaAccounts, setMetaAccounts] = useState<any[]>([]);
     const [snapAdAccounts, setSnapAdAccounts] = useState<any[]>([]);
     const [tiktokAccounts, setTiktokAccounts] = useState<any[]>([]);
     const [selectedTiktokAccount, setSelectedTiktokAccount] = useState('');
+    const [tiktokIdentities, setTiktokIdentities] = useState<any[]>([]);
+    const [selectedTiktokIdentity, setSelectedTiktokIdentity] = useState('');
+    const [showOrganicSelector, setShowOrganicSelector] = useState(false);
     const [linkedinPages, setLinkedinPages] = useState<any[]>([]);
     const [selectedPage, setSelectedPage] = useState('');
     const [selectedAccount, setSelectedAccount] = useState('');
@@ -50,6 +53,7 @@ export default function ClientConnectionsPage() {
         } else if (success === 'tiktok') {
             toast.success('TikTok connected!');
             loadTiktokSetup();
+            loadTiktokIdentities();
         } else if (success === 'x') {
             toast.success('X (Twitter) account connected!');
         } else if (success === 'salla') {
@@ -149,6 +153,44 @@ export default function ClientConnectionsPage() {
             setTiktokAccounts([]);
         } catch {
             toast.error('Failed to save TikTok account');
+        } finally {
+            setSaving(null);
+        }
+    };
+
+    const loadTiktokIdentities = async () => {
+        const res = await fetch('/api/client/tiktok/identities');
+        if (res.ok) {
+            const data = await res.json();
+            if (data.identities?.length > 0) {
+                setTiktokIdentities(data.identities);
+                setSelectedTiktokIdentity(data.selected || data.identities[0]?.id || '');
+                setShowOrganicSelector(true);
+            }
+        }
+    };
+
+    const handleSaveTiktokOrganic = async () => {
+        if (!selectedTiktokIdentity) return;
+        setSaving('tiktok-organic');
+        try {
+            const identity = tiktokIdentities.find(i => i.id === selectedTiktokIdentity);
+            const res = await fetch('/api/client/tiktok/select-organic', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    identityId: identity?.id,
+                    displayName: identity?.displayName,
+                    profileImage: identity?.profileImage
+                })
+            });
+            if (!res.ok) throw new Error('Failed');
+            toast.success('TikTok account linked!');
+            setConnections(p => ({ ...p, tiktokOrganic: true, tiktokOrganicName: identity?.displayName || null, tiktokOrganicImage: identity?.profileImage || null }));
+            setShowOrganicSelector(false);
+            setTiktokIdentities([]);
+        } catch {
+            toast.error('Failed to link TikTok account');
         } finally {
             setSaving(null);
         }
@@ -444,7 +486,7 @@ export default function ClientConnectionsPage() {
                     </CardContent>
                 </Card>
 
-                {/* TikTok */}
+                {/* TikTok Ads */}
                 <Card className={connections.tiktok ? 'border-green-500/30 bg-green-500/5' : 'border-border'}>
                     <CardHeader>
                         <div className="flex items-center justify-between">
@@ -464,14 +506,14 @@ export default function ClientConnectionsPage() {
                             )}
                         </div>
                         <CardTitle className="mt-4">TikTok Ads</CardTitle>
-                        <CardDescription>Connect your TikTok For Business Ad Account.</CardDescription>
+                        <CardDescription>Connect your TikTok For Business advertiser account to track campaigns and ad performance.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <Button
                             onClick={handleConnectTikTok}
                             className="w-full bg-black hover:bg-black/80 text-white font-semibold py-5 rounded-xl"
                         >
-                            {connections.tiktok ? 'Reconnect TikTok' : 'Connect TikTok'}
+                            {connections.tiktok ? 'Reconnect TikTok Ads' : 'Connect TikTok Ads'}
                         </Button>
 
                         {tiktokAccounts.length > 0 && (
@@ -484,7 +526,7 @@ export default function ClientConnectionsPage() {
                                     <SelectContent>
                                         {tiktokAccounts.map(a => (
                                             <SelectItem key={a.id} value={a.id}>
-                                                {a.name} ({a.currency})
+                                                {a.name} ({a.currency}) — ID: {a.id}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
@@ -509,6 +551,91 @@ export default function ClientConnectionsPage() {
                             >
                                 Change Ad Account
                             </Button>
+                        )}
+                    </CardContent>
+                </Card>
+
+                {/* TikTok Account (Organic) */}
+                <Card className={connections.tiktokOrganic ? 'border-green-500/30 bg-green-500/5' : 'border-border'}>
+                    <CardHeader>
+                        <div className="flex items-center justify-between">
+                            <div className="p-2 bg-[#ff0050]/10 rounded-lg">
+                                <div className="w-8 h-8 bg-[#ff0050] rounded-full flex items-center justify-center">
+                                    <svg viewBox="0 0 32 32" className="w-5 h-5 fill-white" aria-hidden="true">
+                                        <path d="M21.6 6.4A5.6 5.6 0 0 0 27.2 12v4.8a10.4 10.4 0 0 1-5.6-1.6v7.2A8 8 0 1 1 13.6 14v4.96A3.2 3.2 0 1 0 16 22.4V6.4h5.6z"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            {connections.tiktokOrganic ? (
+                                <span className="flex items-center gap-1 px-2 py-1 bg-green-500/10 text-green-500 text-xs rounded-full border border-green-500/20">
+                                    <CheckCircle className="w-3 h-3" /> Linked
+                                </span>
+                            ) : (
+                                <span className="flex items-center gap-1 px-2 py-1 bg-yellow-500/10 text-yellow-500 text-xs rounded-full border border-yellow-500/20">
+                                    <AlertCircle className="w-3 h-3" /> Not Linked
+                                </span>
+                            )}
+                        </div>
+                        <CardTitle className="mt-4">TikTok Account</CardTitle>
+                        <CardDescription>Link your TikTok organic account to track followers, video views, and engagement.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        {connections.tiktokOrganic && (
+                            <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-xl border border-border">
+                                {connections.tiktokOrganicImage && (
+                                    <img src={connections.tiktokOrganicImage} alt="" className="w-10 h-10 rounded-full object-cover" />
+                                )}
+                                <div className="min-w-0">
+                                    <p className="text-sm font-semibold truncate">{connections.tiktokOrganicName || 'TikTok Account'}</p>
+                                    <p className="text-[10px] text-muted-foreground">Organic account linked</p>
+                                </div>
+                            </div>
+                        )}
+
+                        {!connections.tiktok ? (
+                            <p className="text-xs text-muted-foreground text-center py-2">Connect TikTok Ads first to link your account.</p>
+                        ) : (
+                            <>
+                                {!showOrganicSelector && (
+                                    <Button
+                                        onClick={loadTiktokIdentities}
+                                        variant={connections.tiktokOrganic ? 'outline' : 'default'}
+                                        className={`w-full font-semibold py-5 rounded-xl ${!connections.tiktokOrganic ? 'bg-[#ff0050] hover:bg-[#ff0050]/90 text-white' : ''}`}
+                                    >
+                                        {connections.tiktokOrganic ? 'Change Account' : 'Link TikTok Account'}
+                                    </Button>
+                                )}
+
+                                {showOrganicSelector && tiktokIdentities.length > 0 && (
+                                    <div className="space-y-3 pt-2 border-t border-border">
+                                        <p className="text-xs text-muted-foreground font-medium">Select your TikTok account:</p>
+                                        <Select value={selectedTiktokIdentity} onValueChange={setSelectedTiktokIdentity}>
+                                            <SelectTrigger className="w-full">
+                                                <SelectValue placeholder="Select account" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {tiktokIdentities.map(i => (
+                                                    <SelectItem key={i.id} value={i.id}>
+                                                        {i.displayName || i.id}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        <Button
+                                            onClick={handleSaveTiktokOrganic}
+                                            disabled={saving === 'tiktok-organic' || !selectedTiktokIdentity}
+                                            className="w-full bg-[#ff0050] hover:bg-[#ff0050]/90 text-white"
+                                            size="sm"
+                                        >
+                                            {saving === 'tiktok-organic' ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Link Account'}
+                                        </Button>
+                                    </div>
+                                )}
+
+                                {showOrganicSelector && tiktokIdentities.length === 0 && (
+                                    <p className="text-xs text-yellow-500 text-center py-2">No linked TikTok accounts found. Make sure your TikTok account is linked in TikTok For Business.</p>
+                                )}
+                            </>
                         )}
                     </CardContent>
                 </Card>

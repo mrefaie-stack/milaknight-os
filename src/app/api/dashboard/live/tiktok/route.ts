@@ -32,12 +32,17 @@ export async function GET(request: Request) {
 
         const api = new TikTokAPI(connection.accessToken);
 
-        const [infoResult, statsResult, campaignsResult, topAdsResult, identitiesResult] = await Promise.allSettled([
+        // Fetch organic connection separately
+        const organicConnection = await (prisma as any).socialConnection.findFirst({
+            where: { clientId: clientProfile.id, platform: 'TIKTOK_ORGANIC', isActive: true },
+            orderBy: { updatedAt: 'desc' }
+        });
+
+        const [infoResult, statsResult, campaignsResult, topAdsResult] = await Promise.allSettled([
             api.getAdvertiserInfo(advertiserIds),
             api.getAdAccountStats(primaryId, since, until),
             api.getCampaigns(primaryId, since, until),
-            api.getTopAds(primaryId, since, until),
-            api.getTikTokIdentities(primaryId)
+            api.getTopAds(primaryId, since, until)
         ]);
 
         if (infoResult.status === 'rejected') console.error('TikTok info failed:', infoResult.reason);
@@ -58,17 +63,17 @@ export async function GET(request: Request) {
         const stats = statsResult.status === 'fulfilled' ? statsResult.value : emptyStats;
         const campaigns: any[] = campaignsResult.status === 'fulfilled' ? campaignsResult.value : [];
         const topAds: any[] = topAdsResult.status === 'fulfilled' ? topAdsResult.value : [];
-        const identities: any[] = identitiesResult.status === 'fulfilled' ? identitiesResult.value : [];
 
-        console.log(`TikTok Live stats: spend=${stats.spend}, impressions=${stats.impressions}, campaigns=${campaigns.length}, identities=${identities.length}`);
+        console.log(`TikTok Live stats: spend=${stats.spend}, impressions=${stats.impressions}, campaigns=${campaigns.length}, organic=${organicConnection?.platformAccountId || 'none'}`);
 
-        // Fetch organic profile + videos for first linked identity
+        // Fetch organic profile + videos from dedicated TIKTOK_ORGANIC connection
         let businessProfile: any = null;
         let businessVideos: any[] = [];
-        if (identities.length > 0 && identities[0].id) {
+        const organicId = organicConnection?.platformAccountId;
+        if (organicId) {
             const [profileResult, videosResult] = await Promise.allSettled([
-                api.getBusinessProfile(identities[0].id),
-                api.getBusinessVideos(identities[0].id)
+                api.getBusinessProfile(organicId),
+                api.getBusinessVideos(organicId)
             ]);
             if (profileResult.status === 'fulfilled') businessProfile = profileResult.value;
             else console.error('TikTok business profile failed:', profileResult.reason);
@@ -100,7 +105,9 @@ export async function GET(request: Request) {
             campaigns: campaigns.slice(0, 10),
             topAds,
             objectiveBreakdown,
-            identities,
+            identities: [],
+            organicAccountId: organicId || null,
+            organicAccountName: organicConnection?.platformAccountName || null,
             businessProfile,
             businessVideos,
             since,
