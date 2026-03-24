@@ -26,7 +26,7 @@ export async function GET(request: Request) {
 
         const meta = connection.metadata ? JSON.parse(connection.metadata) : {};
         const advertiserIds: string[] = meta.advertiserIds || [connection.platformAccountId];
-        const primaryId = advertiserIds[0];
+        const primaryId = meta.selectedAdvertiserId || advertiserIds[0];
 
         const api = new TikTokAPI(connection.accessToken);
 
@@ -38,7 +38,7 @@ export async function GET(request: Request) {
         ]);
 
         const infoList = infoResult.status === 'fulfilled' ? (infoResult.value?.list || []) : [];
-        const info = infoList[0] || null;
+        const info = infoList.find((i: any) => i.advertiser_id === primaryId) || infoList[0] || null;
 
         const emptyStats = {
             spend: 0, impressions: 0, clicks: 0, reach: 0, frequency: 0,
@@ -53,6 +53,8 @@ export async function GET(request: Request) {
         const topAds: any[] = topAdsResult.status === 'fulfilled' ? topAdsResult.value : [];
 
         const currency = info?.currency || 'USD';
+        const timezone = info?.timezone || '';
+        const industryName = info?.industry || '';
         const activeCampaigns = campaigns.filter((c: any) => c.status === 'ENABLE');
 
         const objectiveBreakdown: Record<string, number> = {};
@@ -63,10 +65,10 @@ export async function GET(request: Request) {
 
         return NextResponse.json({
             platform: 'TIKTOK',
-            accountName: info?.advertiser_name || connection.platformAccountName || 'TikTok',
+            accountName: info?.name || connection.platformAccountName || 'TikTok',
             currency,
-            timezone: info?.timezone || '',
-            industryName: info?.industry_name || '',
+            timezone,
+            industryName,
             stats,
             campaignCount: campaigns.length,
             activeCampaignCount: activeCampaigns.length,

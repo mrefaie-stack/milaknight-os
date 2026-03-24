@@ -34,7 +34,7 @@ export class TikTokAPI {
     async getAdvertiserInfo(advertiserIds: string[]) {
         return this.get('/advertiser/info/', {
             advertiser_ids: JSON.stringify(advertiserIds),
-            fields: JSON.stringify(['advertiser_name', 'currency', 'timezone', 'status', 'balance', 'industry_name'])
+            fields: JSON.stringify(['name', 'currency', 'timezone', 'status', 'balance', 'industry', 'advertiser_id'])
         });
     }
 

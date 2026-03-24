@@ -18,6 +18,8 @@ export default function ClientConnectionsPage() {
     const [metaPages, setMetaPages] = useState<any[]>([]);
     const [metaAccounts, setMetaAccounts] = useState<any[]>([]);
     const [snapAdAccounts, setSnapAdAccounts] = useState<any[]>([]);
+    const [tiktokAccounts, setTiktokAccounts] = useState<any[]>([]);
+    const [selectedTiktokAccount, setSelectedTiktokAccount] = useState('');
     const [linkedinPages, setLinkedinPages] = useState<any[]>([]);
     const [selectedPage, setSelectedPage] = useState('');
     const [selectedAccount, setSelectedAccount] = useState('');
@@ -47,6 +49,7 @@ export default function ClientConnectionsPage() {
             if (needsSelect) loadSnapchatSetup();
         } else if (success === 'tiktok') {
             toast.success('TikTok connected!');
+            loadTiktokSetup();
         } else if (success === 'x') {
             toast.success('X (Twitter) account connected!');
         } else if (success === 'salla') {
@@ -117,6 +120,38 @@ export default function ClientConnectionsPage() {
 
     const handleConnectSnapchat = () => {
         window.location.href = '/api/auth/snapchat';
+    };
+
+    const loadTiktokSetup = async () => {
+        const res = await fetch('/api/client/tiktok/ad-accounts');
+        if (res.ok) {
+            const data = await res.json();
+            if (data.accounts?.length > 0) {
+                setTiktokAccounts(data.accounts);
+                setSelectedTiktokAccount(data.selectedAdvertiserId || data.accounts[0]?.id || '');
+            }
+        }
+    };
+
+    const handleSaveTiktok = async () => {
+        if (!selectedTiktokAccount) { toast.error('Please select an Ad Account'); return; }
+        setSaving('tiktok');
+        try {
+            const account = tiktokAccounts.find(a => a.id === selectedTiktokAccount);
+            const res = await fetch('/api/client/tiktok/select-account', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ advertiserId: account?.id, advertiserName: account?.name })
+            });
+            if (!res.ok) throw new Error('Failed');
+            toast.success('TikTok Ad Account selected!');
+            setConnections(p => ({ ...p, tiktok: true }));
+            setTiktokAccounts([]);
+        } catch {
+            toast.error('Failed to save TikTok account');
+        } finally {
+            setSaving(null);
+        }
     };
 
     const handleConnectTikTok = () => {
@@ -431,13 +466,50 @@ export default function ClientConnectionsPage() {
                         <CardTitle className="mt-4">TikTok Ads</CardTitle>
                         <CardDescription>Connect your TikTok For Business Ad Account.</CardDescription>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="space-y-4">
                         <Button
                             onClick={handleConnectTikTok}
                             className="w-full bg-black hover:bg-black/80 text-white font-semibold py-5 rounded-xl"
                         >
                             {connections.tiktok ? 'Reconnect TikTok' : 'Connect TikTok'}
                         </Button>
+
+                        {tiktokAccounts.length > 0 && (
+                            <div className="space-y-3 pt-2 border-t border-border">
+                                <p className="text-xs text-muted-foreground font-medium">Select your Ad Account:</p>
+                                <Select value={selectedTiktokAccount} onValueChange={setSelectedTiktokAccount}>
+                                    <SelectTrigger className="w-full">
+                                        <SelectValue placeholder="Select Ad Account" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {tiktokAccounts.map(a => (
+                                            <SelectItem key={a.id} value={a.id}>
+                                                {a.name} ({a.currency})
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <Button
+                                    onClick={handleSaveTiktok}
+                                    disabled={saving === 'tiktok' || !selectedTiktokAccount}
+                                    className="w-full bg-black hover:bg-black/80 text-white"
+                                    size="sm"
+                                >
+                                    {saving === 'tiktok' ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save Ad Account'}
+                                </Button>
+                            </div>
+                        )}
+
+                        {connections.tiktok && tiktokAccounts.length === 0 && (
+                            <Button
+                                onClick={loadTiktokSetup}
+                                variant="outline"
+                                size="sm"
+                                className="w-full"
+                            >
+                                Change Ad Account
+                            </Button>
+                        )}
                     </CardContent>
                 </Card>
 
