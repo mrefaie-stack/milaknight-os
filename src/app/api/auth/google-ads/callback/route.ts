@@ -50,36 +50,6 @@ export async function GET(request: Request) {
 
         const { access_token, refresh_token, expires_in } = tokenData;
 
-        // Fetch accessible customer IDs
-        let adsCustomerIds: string[] = [];
-        const developerToken = process.env.GOOGLE_ADS_DEVELOPER_TOKEN;
-        if (developerToken) {
-            try {
-                const adsRes = await fetch(
-                    'https://googleads.googleapis.com/v19/customers:listAccessibleCustomers',
-                    {
-                        headers: {
-                            Authorization: `Bearer ${access_token}`,
-                            'developer-token': developerToken
-                        }
-                    }
-                );
-                const adsText = await adsRes.text();
-                console.log('Google Ads callback status:', adsRes.status);
-                console.log('Google Ads callback body:', adsText.slice(0, 500));
-                try {
-                    const adsData = JSON.parse(adsText);
-                    adsCustomerIds = (adsData.resourceNames || []).map(
-                        (r: string) => r.replace('customers/', '')
-                    );
-                } catch {
-                    console.error('Google Ads callback: response not JSON');
-                }
-            } catch (e) {
-                console.error('Google Ads callback: fetch failed:', e);
-            }
-        }
-
         const clientProfile = await (prisma as any).client.findFirst({
             where: { userId: session.user.id }
         });
@@ -89,10 +59,11 @@ export async function GET(request: Request) {
 
         const existingConn = await (prisma as any).socialConnection.findFirst({
             where: { clientId: clientProfile.id, platform: 'GOOGLE_ADS', isActive: true },
-            select: { id: true }
+            select: { id: true, metadata: true }
         });
 
-        const primaryCustomerId = adsCustomerIds[0] || session.user.id;
+        // Preserve existing selectedAdsCustomerId if present
+        const existingMeta = existingConn?.metadata ? JSON.parse(existingConn.metadata) : {};
 
         await (prisma as any).socialConnection.upsert({
             where: { id: existingConn?.id ?? 'new' },
@@ -100,30 +71,30 @@ export async function GET(request: Request) {
                 userId: session.user.id,
                 clientId: clientProfile.id,
                 platform: 'GOOGLE_ADS',
-                platformAccountId: primaryCustomerId,
+                platformAccountId: session.user.id,
                 platformAccountName: 'Google Ads',
                 accessToken: access_token,
                 refreshToken: refresh_token ?? null,
                 expiresAt: expires_in ? new Date(Date.now() + expires_in * 1000) : null,
                 isActive: true,
-                metadata: JSON.stringify({ adsCustomerIds })
+                metadata: JSON.stringify({})
             },
             update: {
-                platformAccountId: primaryCustomerId,
-                platformAccountName: 'Google Ads',
+                platformAccountId: existingMeta.selectedAdsCustomerId || session.user.id,
                 accessToken: access_token,
                 refreshToken: refresh_token ?? null,
                 expiresAt: expires_in ? new Date(Date.now() + expires_in * 1000) : null,
                 isActive: true,
-                metadata: JSON.stringify({ adsCustomerIds })
+                metadata: JSON.stringify({ selectedAdsCustomerId: existingMeta.selectedAdsCustomerId })
             }
         });
 
         cookieStore.delete('gads_state');
         cookieStore.delete('gads_code_verifier');
 
-        const needsSelect = adsCustomerIds.length > 1;
-        return NextResponse.redirect(`${base}/client/connections?success=google_ads${needsSelect ? '&select=1' : ''}`);
+        // Always ask user to enter/confirm their Customer ID
+        const alreadyHasId = !!existingMeta.selectedAdsCustomerId;
+        return NextResponse.redirect(`${base}/client/connections?success=google_ads${alreadyHasId ? '' : '&enter_id=1'}`);
     } catch (e: any) {
         console.error('Google Ads callback error:', e);
         return NextResponse.redirect(`${base}/client/connections?error=google_ads_error`);

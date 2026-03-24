@@ -26,47 +26,8 @@ export async function GET() {
 
     try {
         const meta = connection.metadata ? JSON.parse(connection.metadata) : {};
-        let customerIds: string[] = meta.adsCustomerIds || [];
-
-        // If no IDs stored yet, try to discover them live
-        if (customerIds.length === 0) {
-            try {
-                const api = new GoogleAdsAPI(connection.accessToken, developerToken);
-                customerIds = await api.listAccessibleCustomers();
-                if (customerIds.length > 0) {
-                    await (prisma as any).socialConnection.update({
-                        where: { id: connection.id },
-                        data: { metadata: JSON.stringify({ ...meta, adsCustomerIds: customerIds, adsCustomers: undefined }) }
-                    });
-                }
-            } catch (e) {
-                console.error('ad-accounts: listAccessibleCustomers failed:', e);
-            }
-        }
-
-        if (customerIds.length === 0) return NextResponse.json({ accounts: [] });
-
-        // If we already have names stored, return them
-        if (meta.adsCustomers?.length > 0) {
-            return NextResponse.json({ accounts: meta.adsCustomers, selected: meta.selectedAdsCustomerId || null });
-        }
-
-        // Fetch names from Google Ads API
-        const api = new GoogleAdsAPI(connection.accessToken, developerToken);
-        const accounts = (await Promise.all(
-            customerIds.map(id => api.getCustomerInfo(id))
-        )).filter(Boolean) as { id: string; name: string; currencyCode: string }[];
-
-        // Cache the names in metadata
-        if (accounts.length > 0) {
-            await (prisma as any).socialConnection.update({
-                where: { id: connection.id },
-                data: { metadata: JSON.stringify({ ...meta, adsCustomerIds: customerIds, adsCustomers: accounts }) }
-            });
-        }
-
-        return NextResponse.json({ accounts, selected: meta.selectedAdsCustomerId || null });
+        return NextResponse.json({ selected: meta.selectedAdsCustomerId || null });
     } catch {
-        return NextResponse.json({ accounts: [] });
+        return NextResponse.json({ selected: null });
     }
 }

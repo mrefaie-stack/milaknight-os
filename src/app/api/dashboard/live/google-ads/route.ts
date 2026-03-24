@@ -46,44 +46,21 @@ export async function GET() {
             }
         }
 
-        // Get customer IDs from stored metadata or live API
+        // Get customer ID from stored metadata (must be set manually by user)
         let customerIds: string[] = [];
         if (connection.metadata) {
             try {
                 const meta = JSON.parse(connection.metadata);
-                // If client selected a specific account, use only that one
                 if (meta.selectedAdsCustomerId) {
-                    customerIds = [meta.selectedAdsCustomerId];
-                } else if (meta.adsCustomerIds?.length > 0) {
-                    customerIds = meta.adsCustomerIds;
+                    // Strip dashes in case user entered XXX-XXX-XXXX format
+                    customerIds = [meta.selectedAdsCustomerId.replace(/-/g, '')];
                 }
             } catch { /* ignore */ }
         }
 
-        const api = new GoogleAdsAPI(accessToken, developerToken);
-
-        if (customerIds.length === 0) {
-            try {
-                customerIds = await api.listAccessibleCustomers();
-                // Update metadata with the discovered customer IDs
-                if (customerIds.length > 0 && connection.metadata) {
-                    const meta = JSON.parse(connection.metadata);
-                    await (prisma as any).socialConnection.update({
-                        where: { id: connection.id },
-                        data: { metadata: JSON.stringify({ ...meta, adsCustomerIds: customerIds }) }
-                    });
-                }
-            } catch (e: any) {
-                console.error('Google Ads: listAccessibleCustomers failed:', e?.message || e);
-                return NextResponse.json({
-                    error: `Google Ads API error: ${e?.message || 'Unknown error'}. Make sure your Google account has Google Ads access.`
-                }, { status: 502 });
-            }
-        }
-
         if (customerIds.length === 0) {
             return NextResponse.json({
-                error: 'No Google Ads accounts found on this Google account. Make sure you are signed in with the correct Google account that has Google Ads.'
+                error: 'No Google Ads Customer ID set. Go to Connections and enter your Customer ID (found in Google Ads top-right corner).'
             }, { status: 404 });
         }
 
