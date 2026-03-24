@@ -15,6 +15,8 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const code = searchParams.get('auth_code');
     const error = searchParams.get('error');
+    const state = searchParams.get('state') || '';
+    const isOrganicFlow = state.startsWith('organic_');
 
     if (error || !code) {
         return NextResponse.redirect(`${appUrl}${returnUrl}?error=tiktok_denied`);
@@ -26,14 +28,74 @@ export async function GET(req: NextRequest) {
     try {
         const result = await TikTokAPI.exchangeCode(code);
         accessToken = result.access_token;
-        advertiserIds = result.advertiser_ids;
+        advertiserIds = result.advertiser_ids || [];
     } catch (e) {
         console.error('TikTok token exchange failed:', e);
         return NextResponse.redirect(`${appUrl}${returnUrl}?error=tiktok_token`);
     }
 
-    if (!accessToken || advertiserIds.length === 0) {
-        console.error('TikTok: no access token or advertiser IDs');
+    if (!accessToken) {
+        console.error('TikTok: no access token');
+        return NextResponse.redirect(`${appUrl}${returnUrl}?error=tiktok_no_account`);
+    }
+
+    let clientRecord: any = null;
+    if (isClient) {
+        clientRecord = await (prisma as any).client.findFirst({ where: { userId: session.user.id } });
+    }
+
+    // ── Organic-only flow ──────────────────────────────────────────────────────
+    if (isOrganicFlow) {
+        const primaryId = advertiserIds[0] || 'organic';
+        try {
+            const tiktokClient = new TikTokAPI(accessToken);
+            const identities = await tiktokClient.getTikTokIdentities(primaryId);
+            if (identities.length > 0) {
+                const identity = identities[0];
+                const organicMeta = JSON.stringify({
+                    displayName: identity.displayName,
+                    profileImage: identity.profileImage,
+                    type: identity.type,
+                    advertiserId: primaryId,
+                    allIdentities: identities
+                });
+                await (prisma as any).socialConnection.upsert({
+                    where: {
+                        userId_platform_platformAccountId: {
+                            userId: session.user.id,
+                            platform: 'TIKTOK_ORGANIC',
+                            platformAccountId: identity.id
+                        }
+                    },
+                    update: {
+                        accessToken,
+                        isActive: true,
+                        platformAccountName: identity.displayName || undefined,
+                        clientId: clientRecord?.id || undefined,
+                        metadata: organicMeta
+                    },
+                    create: {
+                        userId: session.user.id,
+                        platform: 'TIKTOK_ORGANIC',
+                        platformAccountId: identity.id,
+                        platformAccountName: identity.displayName || null,
+                        accessToken,
+                        isActive: true,
+                        clientId: clientRecord?.id || null,
+                        metadata: organicMeta
+                    }
+                });
+            }
+        } catch (e) {
+            console.error('TikTok organic flow failed:', e);
+            return NextResponse.redirect(`${appUrl}${returnUrl}?error=tiktok_organic_failed`);
+        }
+        return NextResponse.redirect(`${appUrl}${returnUrl}?success=tiktok_organic`);
+    }
+
+    // ── Ads flow ───────────────────────────────────────────────────────────────
+    if (advertiserIds.length === 0) {
+        console.error('TikTok: no advertiser IDs');
         return NextResponse.redirect(`${appUrl}${returnUrl}?error=tiktok_no_account`);
     }
 
@@ -47,13 +109,7 @@ export async function GET(req: NextRequest) {
         console.error('TikTok advertiser info failed:', e);
     }
 
-    // Use first advertiser as the primary account
     const primaryId = advertiserIds[0];
-
-    let clientRecord: any = null;
-    if (isClient) {
-        clientRecord = await (prisma as any).client.findFirst({ where: { userId: session.user.id } });
-    }
 
     // Preserve selectedAdvertiserId if it's still valid in the new advertiserIds list
     const existing = await (prisma as any).socialConnection.findFirst({
@@ -91,50 +147,6 @@ export async function GET(req: NextRequest) {
             metadata: newMeta
         }
     });
-
-    // Auto-save linked organic identity
-    try {
-        const tiktokClient = new TikTokAPI(accessToken);
-        const identities = await tiktokClient.getTikTokIdentities(primaryId);
-        if (identities.length > 0) {
-            const identity = identities[0];
-            const organicMeta = JSON.stringify({
-                displayName: identity.displayName,
-                profileImage: identity.profileImage,
-                type: identity.type,
-                advertiserId: primaryId,
-                allIdentities: identities
-            });
-            await (prisma as any).socialConnection.upsert({
-                where: {
-                    userId_platform_platformAccountId: {
-                        userId: session.user.id,
-                        platform: 'TIKTOK_ORGANIC',
-                        platformAccountId: identity.id
-                    }
-                },
-                update: {
-                    accessToken,
-                    isActive: true,
-                    platformAccountName: identity.displayName || undefined,
-                    clientId: clientRecord?.id || undefined,
-                    metadata: organicMeta
-                },
-                create: {
-                    userId: session.user.id,
-                    platform: 'TIKTOK_ORGANIC',
-                    platformAccountId: identity.id,
-                    platformAccountName: identity.displayName || null,
-                    accessToken,
-                    isActive: true,
-                    clientId: clientRecord?.id || null,
-                    metadata: organicMeta
-                }
-            });
-        }
-    } catch (e) {
-        console.error('TikTok organic auto-link failed:', e);
-    }
 
     const needsSelect = advertiserIds.length > 1;
     return NextResponse.redirect(`${appUrl}${returnUrl}?success=tiktok${needsSelect ? '&select=1' : ''}`);

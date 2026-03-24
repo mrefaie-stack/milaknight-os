@@ -53,6 +53,9 @@ export default function ClientConnectionsPage() {
         } else if (success === 'tiktok') {
             toast.success('TikTok Ads connected! Select your ad account below.');
             loadTiktokSetup();
+        } else if (success === 'tiktok_organic') {
+            toast.success('TikTok Account connected!');
+            loadStatus();
         } else if (success === 'x') {
             toast.success('X (Twitter) account connected!');
         } else if (success === 'salla') {
@@ -202,6 +205,10 @@ export default function ClientConnectionsPage() {
 
     const handleConnectTikTok = () => {
         window.location.href = '/api/auth/tiktok';
+    };
+
+    const handleConnectTikTokOrganic = () => {
+        window.location.href = '/api/auth/tiktok-organic';
     };
 
     const handleConnectLinkedIn = () => {
@@ -596,54 +603,13 @@ export default function ClientConnectionsPage() {
                             </div>
                         )}
 
-                        {!connections.tiktok ? (
-                            <p className="text-xs text-muted-foreground text-center py-2">Connect TikTok Ads first to link your account.</p>
-                        ) : (
-                            <>
-                                {!showOrganicSelector && (
-                                    <Button
-                                        onClick={loadTiktokIdentities}
-                                        disabled={saving === 'tiktok-organic-load'}
-                                        variant={connections.tiktokOrganic ? 'outline' : 'default'}
-                                        className={`w-full font-semibold py-5 rounded-xl ${!connections.tiktokOrganic ? 'bg-[#ff0050] hover:bg-[#ff0050]/90 text-white' : ''}`}
-                                    >
-                                        {saving === 'tiktok-organic-load'
-                                            ? <Loader2 className="w-4 h-4 animate-spin" />
-                                            : connections.tiktokOrganic ? 'Change Account' : 'Link TikTok Account'}
-                                    </Button>
-                                )}
-
-                                {showOrganicSelector && tiktokIdentities.length > 0 && (
-                                    <div className="space-y-3 pt-2 border-t border-border">
-                                        <p className="text-xs text-muted-foreground font-medium">Select your TikTok account:</p>
-                                        <Select value={selectedTiktokIdentity} onValueChange={setSelectedTiktokIdentity}>
-                                            <SelectTrigger className="w-full">
-                                                <SelectValue placeholder="Select account" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {tiktokIdentities.map(i => (
-                                                    <SelectItem key={i.id} value={i.id}>
-                                                        {i.displayName || i.id}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                        <Button
-                                            onClick={handleSaveTiktokOrganic}
-                                            disabled={saving === 'tiktok-organic' || !selectedTiktokIdentity}
-                                            className="w-full bg-[#ff0050] hover:bg-[#ff0050]/90 text-white"
-                                            size="sm"
-                                        >
-                                            {saving === 'tiktok-organic' ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Link Account'}
-                                        </Button>
-                                    </div>
-                                )}
-
-                                {showOrganicSelector && tiktokIdentities.length === 0 && (
-                                    <p className="text-xs text-yellow-500 text-center py-2">No linked TikTok accounts found. Make sure your TikTok account is linked in TikTok For Business.</p>
-                                )}
-                            </>
-                        )}
+                        <Button
+                            onClick={handleConnectTikTokOrganic}
+                            variant={connections.tiktokOrganic ? 'outline' : 'default'}
+                            className={`w-full font-semibold py-5 rounded-xl ${!connections.tiktokOrganic ? 'bg-[#ff0050] hover:bg-[#ff0050]/90 text-white' : ''}`}
+                        >
+                            {connections.tiktokOrganic ? 'Reconnect TikTok Account' : 'Connect TikTok Account'}
+                        </Button>
                     </CardContent>
                 </Card>
 
