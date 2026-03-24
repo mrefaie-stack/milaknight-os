@@ -44,6 +44,7 @@ export class YouTubeAPI {
         views: number;
         estimatedMinutesWatched: number;
         averageViewDuration: number;
+        averageViewPercentage: number;
         subscribersGained: number;
         subscribersLost: number;
         likes: number;
