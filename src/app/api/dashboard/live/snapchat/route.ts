@@ -121,13 +121,16 @@ export async function GET(request: Request) {
         });
         aggregated.topAds = aggregated.topAds.slice(0, 8);
 
+        const totals = aggregated.totals;
+        const cpm = totals.impressions > 0 ? (totals.spend / totals.impressions) * 1000 : 0;
+
         return NextResponse.json({
             platform: 'SNAPCHAT',
             accountName: connection.platformAccountName || 'Snapchat',
             currency,
             username: 'milaknight.mk',
             adAccountsCount: adAccounts.length,
-            stats: aggregated.totals,
+            stats: { ...totals, cpm: Math.round(cpm * 100) / 100 },
             campaignCount: aggregated.campaignCount,
             activeCampaignCount: aggregated.activeCampaignCount,
             adCount: aggregated.adCount,

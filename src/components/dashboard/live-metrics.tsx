@@ -1,700 +1,1036 @@
 'use client';
 
 import { useState, useEffect, cloneElement } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart, DollarSign, Eye, LineChart, MousePointer2, PlaySquare, TrendingUp, Activity, Smartphone, Hash, Users, MapPin, Search, CalendarDays, ExternalLink, RefreshCw, AlertCircle, Sparkles, Plus, Image as ImageIcon, MessageCircle, Heart, Share2, Info, Facebook, Instagram, Loader2, Ghost, Linkedin, Twitter, ShoppingCart, ShoppingBag, Package, Clock, Youtube, Megaphone } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import {
+    BarChart, DollarSign, Eye, MousePointer2, PlaySquare, TrendingUp, Activity,
+    Hash, Users, CalendarDays, RefreshCw, AlertCircle, MessageCircle, Heart,
+    Share2, Info, Facebook, Instagram, Loader2, Ghost, Linkedin, Twitter,
+    ShoppingCart, ShoppingBag, Package, Clock, Youtube, Megaphone, Smartphone,
+    Monitor, Tablet, Search
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/contexts/language-context';
 import { cn } from '@/lib/utils';
-import { Badge } from '@/components/ui/badge';
 
-type SnapPeriod = 'all' | '7d' | '30d' | '90d' | 'custom';
+// ─── Types ───────────────────────────────────────────────────────────────────
+type Period = 'all' | '7d' | '30d' | '90d' | 'custom';
 
-function toIso(date: Date) { return date.toISOString(); }
-function daysAgo(n: number) { const d = new Date(); d.setDate(d.getDate() - n); d.setHours(0,0,0,0); return d; }
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+function toIso(d: Date) { return d.toISOString(); }
+function daysAgo(n: number) { const d = new Date(); d.setDate(d.getDate() - n); d.setHours(0, 0, 0, 0); return d; }
 
+function buildUrl(base: string, period: Period, since: string, until: string) {
+    if (period === 'custom' && since && until) return `${base}?since=${since}&until=${until}`;
+    if (period === 'all') return base;
+    const days = ({ '7d': 7, '30d': 30, '90d': 90 } as Record<string, number>)[period] ?? 30;
+    const u = new Date().toISOString().slice(0, 10);
+    const s = new Date(Date.now() - days * 86400000).toISOString().slice(0, 10);
+    return `${base}?since=${s}&until=${u}`;
+}
+
+function buildSnapUrl(period: Period, since: string, until: string) {
+    const base = '/api/dashboard/live/snapchat';
+    if (period === 'custom' && since && until) {
+        return `${base}?start=${new Date(since + 'T00:00:00').toISOString()}&end=${new Date(until + 'T23:59:59').toISOString()}`;
+    }
+    if (period === 'all') return base;
+    const days = ({ '7d': 7, '30d': 30, '90d': 90 } as Record<string, number>)[period] ?? 30;
+    const now = new Date(); now.setHours(23, 59, 59, 999);
+    return `${base}?start=${daysAgo(days).toISOString()}&end=${now.toISOString()}`;
+}
+
+function fmt(n: number | string | undefined, decimals = 0) {
+    const num = Number(n) || 0;
+    return num.toLocaleString('en', { maximumFractionDigits: decimals });
+}
+
+// ─── Sub-components ───────────────────────────────────────────────────────────
+function SectionHeader({ color, label }: { color: string; label: string }) {
+    return (
+        <div className="flex items-center gap-2">
+            <div className={`h-3 w-0.5 rounded-full ${color}`} />
+            <p className="section-label text-muted-foreground">{label}</p>
+        </div>
+    );
+}
+
+function StatCard({ label, value, color, icon, sub }: {
+    label: string; value: string | number; color: string; icon: React.ReactNode; sub?: string;
+}) {
+    return (
+        <Card className="hover:bg-muted/30 transition-colors">
+            <CardContent className="p-4">
+                <div className="flex items-center justify-between mb-2">
+                    <div className={cn('p-1.5 rounded-md bg-muted', color)}>{icon}</div>
+                    <TrendingUp className="w-3 h-3 text-muted-foreground/30" />
+                </div>
+                <p className="section-label text-muted-foreground line-clamp-1">{label}</p>
+                <h5 className={cn('text-xl font-bold mt-1 leading-tight', color)}>{value}</h5>
+                {sub && <p className="text-[10px] text-muted-foreground mt-0.5">{sub}</p>}
+            </CardContent>
+        </Card>
+    );
+}
+
+function PeriodBar({
+    period, since, until, loading, color, onApply, supportsAll = false, isRtl
+}: {
+    period: Period; since: string; until: string; loading: boolean; color: string;
+    onApply: (p: Period, s: string, u: string) => void; supportsAll?: boolean; isRtl: boolean;
+}) {
+    const [localSince, setLocalSince] = useState(since);
+    const [localUntil, setLocalUntil] = useState(until);
+
+    const presets: { value: Period; label: string }[] = [
+        ...(supportsAll ? [{ value: 'all' as Period, label: isRtl ? 'كل الوقت' : 'All Time' }] : []),
+        { value: '7d', label: isRtl ? '٧أ' : '7D' },
+        { value: '30d', label: isRtl ? '٣٠ي' : '30D' },
+        { value: '90d', label: isRtl ? '٩٠ي' : '90D' },
+        { value: 'custom', label: isRtl ? 'مخصص' : 'Custom' }
+    ];
+
+    return (
+        <div className="flex flex-wrap items-center gap-2 p-3 rounded-lg bg-muted/30 border border-border">
+            <CalendarDays className="w-4 h-4 text-muted-foreground shrink-0" />
+            {presets.map(p => (
+                <button
+                    key={p.value}
+                    disabled={loading}
+                    onClick={() => {
+                        if (p.value !== 'custom') onApply(p.value, '', '');
+                        else onApply('custom', '', '');
+                    }}
+                    className={cn(
+                        'px-3 py-1 rounded-md text-xs font-medium transition-colors disabled:opacity-50',
+                        period === p.value ? 'text-white' : 'bg-muted hover:bg-muted/80 text-muted-foreground'
+                    )}
+                    style={period === p.value ? { backgroundColor: color } : {}}
+                >{p.label}</button>
+            ))}
+            {period === 'custom' && (
+                <div className="flex items-center gap-2 flex-wrap">
+                    <input type="date" value={localSince} onChange={e => setLocalSince(e.target.value)}
+                        className="text-xs bg-background border border-border rounded px-2 py-1 text-foreground" />
+                    <span className="text-xs text-muted-foreground">→</span>
+                    <input type="date" value={localUntil} onChange={e => setLocalUntil(e.target.value)}
+                        className="text-xs bg-background border border-border rounded px-2 py-1 text-foreground" />
+                    <button onClick={() => onApply('custom', localSince, localUntil)}
+                        disabled={!localSince || !localUntil || loading}
+                        className="px-3 py-1 rounded-md text-xs font-medium bg-primary text-primary-foreground disabled:opacity-40"
+                    >{isRtl ? 'تطبيق' : 'Apply'}</button>
+                </div>
+            )}
+            {loading && <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />}
+        </div>
+    );
+}
+
+// ─── Main Component ───────────────────────────────────────────────────────────
 export function LiveMetrics() {
     const { isRtl } = useLanguage();
+
+    // Platform data
     const [metaData, setMetaData] = useState<any>(null);
     const [snapData, setSnapData] = useState<any>(null);
-    const [snapLoading, setSnapLoading] = useState(false);
     const [linkedinData, setLinkedinData] = useState<any>(null);
     const [xData, setXData] = useState<any>(null);
     const [sallaData, setSallaData] = useState<any>(null);
     const [youtubeData, setYoutubeData] = useState<any>(null);
     const [googleAdsData, setGoogleAdsData] = useState<any>(null);
     const [googleAdsError, setGoogleAdsError] = useState<string | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-    const [activeTab, setActiveTab] = useState('facebook');
-    const [snapPeriod, setSnapPeriod] = useState<SnapPeriod>('all');
-    const [snapCustomStart, setSnapCustomStart] = useState('');
-    const [snapCustomEnd, setSnapCustomEnd] = useState('');
 
-    const fetchSnap = async (period: SnapPeriod, customStart?: string, customEnd?: string) => {
-        setSnapLoading(true);
+    // UI state
+    const [loading, setLoading] = useState(true);
+    const [metaError, setMetaError] = useState<string | null>(null);
+    const [activeTab, setActiveTab] = useState('facebook');
+
+    // Loading states per platform
+    const [metaLoading, setMetaLoading] = useState(false);
+    const [snapLoading, setSnapLoading] = useState(false);
+    const [gadsLoading, setGadsLoading] = useState(false);
+    const [ytLoading, setYtLoading] = useState(false);
+    const [sallaLoading, setSallaLoading] = useState(false);
+    const [liLoading, setLiLoading] = useState(false);
+
+    // Period state per platform
+    const [metaPeriod, setMetaPeriod] = useState<Period>('30d');
+    const [metaSince, setMetaSince] = useState('');
+    const [metaUntil, setMetaUntil] = useState('');
+
+    const [snapPeriod, setSnapPeriod] = useState<Period>('all');
+    const [snapSince, setSnapSince] = useState('');
+    const [snapUntil, setSnapUntil] = useState('');
+
+    const [gadsPeriod, setGadsPeriod] = useState<Period>('30d');
+    const [gadsSince, setGadsSince] = useState('');
+    const [gadsUntil, setGadsUntil] = useState('');
+
+    const [ytPeriod, setYtPeriod] = useState<Period>('30d');
+    const [ytSince, setYtSince] = useState('');
+    const [ytUntil, setYtUntil] = useState('');
+
+    const [sallaPeriod, setSallaPeriod] = useState<Period>('30d');
+    const [sallaSince, setSallaSince] = useState('');
+    const [sallaUntil, setSallaUntil] = useState('');
+
+    const [liPeriod, setLiPeriod] = useState<Period>('30d');
+    const [liSince, setLiSince] = useState('');
+    const [liUntil, setLiUntil] = useState('');
+
+    // ── Fetch functions ──────────────────────────────────────────────────────
+    const fetchMeta = async (p: Period, s: string, u: string) => {
+        setMetaLoading(true); setMetaPeriod(p); setMetaSince(s); setMetaUntil(u);
         try {
-            let url = '/api/dashboard/live/snapchat';
-            const now = new Date(); now.setHours(23,59,59,999);
-            if (period === '7d')  url += `?start=${toIso(daysAgo(7))}&end=${toIso(now)}`;
-            if (period === '30d') url += `?start=${toIso(daysAgo(30))}&end=${toIso(now)}`;
-            if (period === '90d') url += `?start=${toIso(daysAgo(90))}&end=${toIso(now)}`;
-            if (period === 'custom' && customStart && customEnd) {
-                const startDate = new Date(customStart + 'T00:00:00');
-                const endDate = new Date(customEnd + 'T23:59:59');
-                if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
-                    url += `?start=${startDate.toISOString()}&end=${endDate.toISOString()}`;
-                }
-            }
-            const res = await fetch(url);
-            if (res.ok) setSnapData(await res.json());
-        } finally {
-            setSnapLoading(false);
-        }
+            const res = await fetch(buildUrl('/api/dashboard/live/meta', p, s, u));
+            const json = await res.json();
+            if (res.ok) { setMetaData(json); setMetaError(null); }
+            else setMetaError(json.error || 'Meta error');
+        } finally { setMetaLoading(false); }
     };
 
+    const fetchSnap = async (p: Period, s: string, u: string) => {
+        setSnapLoading(true); setSnapPeriod(p); setSnapSince(s); setSnapUntil(u);
+        try {
+            const res = await fetch(buildSnapUrl(p, s, u));
+            if (res.ok) setSnapData(await res.json());
+        } finally { setSnapLoading(false); }
+    };
+
+    const fetchGads = async (p: Period, s: string, u: string) => {
+        setGadsLoading(true); setGadsPeriod(p); setGadsSince(s); setGadsUntil(u);
+        setGoogleAdsError(null);
+        try {
+            const res = await fetch(buildUrl('/api/dashboard/live/google-ads', p, s, u));
+            const json = await res.json();
+            if (res.ok) setGoogleAdsData(json);
+            else setGoogleAdsError(json.error || 'Google Ads error');
+        } finally { setGadsLoading(false); }
+    };
+
+    const fetchYt = async (p: Period, s: string, u: string) => {
+        setYtLoading(true); setYtPeriod(p); setYtSince(s); setYtUntil(u);
+        try {
+            const res = await fetch(buildUrl('/api/dashboard/live/youtube', p, s, u));
+            if (res.ok) setYoutubeData(await res.json());
+        } finally { setYtLoading(false); }
+    };
+
+    const fetchSalla = async (p: Period, s: string, u: string) => {
+        setSallaLoading(true); setSallaPeriod(p); setSallaSince(s); setSallaUntil(u);
+        try {
+            const res = await fetch(buildUrl('/api/dashboard/live/salla', p, s, u));
+            if (res.ok) setSallaData(await res.json());
+        } finally { setSallaLoading(false); }
+    };
+
+    const fetchLi = async (p: Period, s: string, u: string) => {
+        setLiLoading(true); setLiPeriod(p); setLiSince(s); setLiUntil(u);
+        try {
+            const res = await fetch(buildUrl('/api/dashboard/live/linkedin', p, s, u));
+            if (res.ok) setLinkedinData(await res.json());
+        } finally { setLiLoading(false); }
+    };
+
+    // ── Initial load ─────────────────────────────────────────────────────────
     useEffect(() => {
-        async function fetchData() {
+        async function fetchAll() {
             setLoading(true);
-            try {
-                const [metaRes, snapRes, linkedinRes, xRes, sallaRes, youtubeRes, googleAdsRes] = await Promise.allSettled([
-                    fetch('/api/dashboard/live/meta'),
-                    fetch('/api/dashboard/live/snapchat'),
-                    fetch('/api/dashboard/live/linkedin'),
-                    fetch('/api/dashboard/live/x'),
-                    fetch('/api/dashboard/live/salla'),
-                    fetch('/api/dashboard/live/youtube'),
-                    fetch('/api/dashboard/live/google-ads')
-                ]);
-
-                if (metaRes.status === 'fulfilled') {
-                    const json = await metaRes.value.json();
-                    if (metaRes.value.ok) setMetaData(json);
-                    else setError(json.error || 'Meta fetch failed');
-                }
-
-                if (snapRes.status === 'fulfilled' && snapRes.value.ok) {
-                    setSnapData(await snapRes.value.json());
-                }
-
-                if (linkedinRes.status === 'fulfilled' && linkedinRes.value.ok) {
-                    setLinkedinData(await linkedinRes.value.json());
-                }
-
-                if (xRes.status === 'fulfilled' && xRes.value.ok) {
-                    setXData(await xRes.value.json());
-                }
-
-                if (sallaRes.status === 'fulfilled' && sallaRes.value.ok) {
-                    setSallaData(await sallaRes.value.json());
-                }
-
-                if (youtubeRes.status === 'fulfilled' && youtubeRes.value.ok) {
-                    setYoutubeData(await youtubeRes.value.json());
-                }
-
-                if (googleAdsRes.status === 'fulfilled') {
-                    if (googleAdsRes.value.ok) {
-                        setGoogleAdsData(await googleAdsRes.value.json());
-                    } else {
-                        const errJson = await googleAdsRes.value.json().catch(() => ({}));
-                        setGoogleAdsError(errJson.error || 'Google Ads error');
-                    }
-                }
-            } catch (err: any) {
-                setError(err.message);
-            } finally {
-                setLoading(false);
+            const [metaRes, snapRes, liRes, xRes, sallaRes, ytRes, gadsRes] = await Promise.allSettled([
+                fetch(buildUrl('/api/dashboard/live/meta', '30d', '', '')),
+                fetch('/api/dashboard/live/snapchat'),
+                fetch('/api/dashboard/live/linkedin'),
+                fetch('/api/dashboard/live/x'),
+                fetch(buildUrl('/api/dashboard/live/salla', '30d', '', '')),
+                fetch(buildUrl('/api/dashboard/live/youtube', '30d', '', '')),
+                fetch(buildUrl('/api/dashboard/live/google-ads', '30d', '', ''))
+            ]);
+            if (metaRes.status === 'fulfilled') {
+                const j = await metaRes.value.json();
+                if (metaRes.value.ok) setMetaData(j); else setMetaError(j.error);
             }
+            if (snapRes.status === 'fulfilled' && snapRes.value.ok) setSnapData(await snapRes.value.json());
+            if (liRes.status === 'fulfilled' && liRes.value.ok) setLinkedinData(await liRes.value.json());
+            if (xRes.status === 'fulfilled' && xRes.value.ok) setXData(await xRes.value.json());
+            if (sallaRes.status === 'fulfilled' && sallaRes.value.ok) setSallaData(await sallaRes.value.json());
+            if (ytRes.status === 'fulfilled' && ytRes.value.ok) setYoutubeData(await ytRes.value.json());
+            if (gadsRes.status === 'fulfilled') {
+                const j = await gadsRes.value.json().catch(() => ({}));
+                if (gadsRes.value.ok) setGoogleAdsData(j);
+                else setGoogleAdsError(j.error || 'Google Ads error');
+            }
+            setLoading(false);
         }
-        fetchData();
+        fetchAll();
     }, []);
 
+    // ── Tab definitions ───────────────────────────────────────────────────────
+    const tabs = [
+        { id: 'facebook', name: 'Facebook', icon: <Facebook className="w-5 h-5" />, color: '#1877F2', isLive: !metaError && !!metaData },
+        { id: 'instagram', name: 'Instagram', icon: <Instagram className="w-5 h-5" />, color: '#E4405F', isLive: !metaError && !!metaData?.organicMetrics?.ig?.connected },
+        { id: 'snapchat', name: 'Snapchat', icon: <Ghost className="w-5 h-5" />, color: '#FFFC00', textColor: 'text-black', isLive: !!snapData },
+        { id: 'google-ads', name: 'Google Ads', icon: <Megaphone className="w-5 h-5" />, color: '#4285F4', isLive: !!googleAdsData },
+        { id: 'youtube', name: 'YouTube', icon: <Youtube className="w-5 h-5" />, color: '#FF0000', isLive: !!youtubeData },
+        { id: 'salla', name: 'Salla', icon: <ShoppingBag className="w-5 h-5" />, color: '#7C3AED', isLive: !!sallaData },
+        { id: 'linkedin', name: 'LinkedIn', icon: <Linkedin className="w-5 h-5" />, color: '#0077B5', isLive: !!linkedinData },
+        { id: 'x', name: 'X', icon: <Twitter className="w-5 h-5" />, color: '#000000', isLive: !!xData },
+        { id: 'tiktok', name: 'TikTok', icon: <PlaySquare className="w-5 h-5" />, color: '#010101', isLive: false }
+    ];
+    const currentTab = tabs.find(t => t.id === activeTab) || tabs[0];
+
+    // ── Errors per platform ───────────────────────────────────────────────────
+    const platformError: Record<string, string | null> = {
+        facebook: metaError || (!metaData ? (isRtl ? 'حساب فيسبوك غير مربوط' : 'Facebook not connected') : null),
+        instagram: metaError || (!metaData?.organicMetrics?.ig?.connected ? (isRtl ? 'حساب إنستجرام غير مربوط بهذه الصفحة' : 'Instagram not linked to this page') : null),
+        snapchat: !snapData ? (isRtl ? 'حساب سناب شات غير مربوط' : 'Snapchat not connected') : null,
+        'google-ads': googleAdsError || (!googleAdsData ? (isRtl ? 'جوجل أدز غير مربوط' : 'Google Ads not connected') : null),
+        youtube: !youtubeData ? (isRtl ? 'يوتيوب غير مربوط' : 'YouTube not connected') : null,
+        salla: !sallaData ? (isRtl ? 'متجر سلة غير مربوط' : 'Salla store not connected') : null,
+        linkedin: !linkedinData ? (isRtl ? 'لينكد إن غير مربوط' : 'LinkedIn not connected') : null,
+        x: !xData ? (isRtl ? 'حساب X غير مربوط' : 'X not connected') : null,
+        tiktok: isRtl ? 'تيك توك غير مربوط — قريباً' : 'TikTok not connected — coming soon'
+    };
+
+    // ─────────────────────────────────────────────────────────────────────────
     if (loading) {
         return (
             <div className="h-[60vh] flex flex-col items-center justify-center gap-4">
                 <Loader2 className="w-8 h-8 text-primary animate-spin" />
                 <div className="text-center">
-                    <p className="text-sm font-medium text-primary">
-                        {isRtl ? "جاري مزامنة البيانات الحية..." : "Syncing Live Data..."}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                        {isRtl ? "يرجى الانتظار قليلاً" : "Please wait a moment"}
-                    </p>
+                    <p className="text-sm font-medium text-primary">{isRtl ? 'جاري مزامنة البيانات الحية...' : 'Syncing Live Data...'}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{isRtl ? 'يرجى الانتظار قليلاً' : 'Please wait a moment'}</p>
                 </div>
             </div>
         );
     }
 
-    const platforms = [
-        {
-            id: 'facebook',
-            name: 'Facebook',
-            accountName: metaData?.accountName || 'Facebook Page',
-            icon: <Facebook className="w-5 h-5" />,
-            color: '#1877F2',
-            isLive: !error && metaData,
-            error: error,
-            organicMetrics: [
-                { label: isRtl ? "المتابعون" : "Followers", value: metaData?.organicMetrics?.fb?.followers?.toLocaleString() || '0', color: "text-blue-400", icon: <Users className="w-4 h-4" /> },
-                { label: isRtl ? "الوصول" : "Reach", value: metaData?.organicMetrics?.fb?.reach?.toLocaleString() || '0', color: "text-emerald-500", icon: <Activity className="w-4 h-4" /> },
-                { label: isRtl ? "التفاعل" : "Engagement", value: metaData?.organicMetrics?.fb?.engagement?.toLocaleString() || '0', color: "text-primary", icon: <TrendingUp className="w-4 h-4" /> },
-                { label: isRtl ? "بينات الصفحة" : "Page Views", value: 'Live', color: "text-purple-400", icon: <Eye className="w-4 h-4" /> },
-            ],
-            adMetrics: metaData ? [
-                { label: isRtl ? "الإنفاق" : "Spend", value: `${metaData.currency || 'SAR'} ${metaData.metrics.spend}`, color: "text-orange-500", icon: <DollarSign className="w-4 h-4" /> },
-                { label: isRtl ? "الظهور" : "Impressions", value: metaData.metrics.impressions?.toLocaleString() || '0', color: "text-primary", icon: <Eye className="w-4 h-4" /> },
-                { label: isRtl ? "النقرات" : "Link Clicks", value: metaData.metrics.clicks?.toLocaleString() || '0', color: "text-emerald-500", icon: <MousePointer2 className="w-4 h-4" /> },
-                { label: isRtl ? "تكلفة النقرة" : "Avg. CPC", value: `${metaData.currency || 'SAR'} ${metaData.metrics.cpc}`, color: "text-blue-500", icon: <BarChart className="w-4 h-4" /> },
-            ] : [],
-            activeAds: metaData?.activeAds || []
-        },
-        {
-            id: 'instagram',
-            name: 'Instagram',
-            accountName: metaData?.accountName || 'Instagram Business',
-            icon: <Instagram className="w-5 h-5" />,
-            color: '#E4405F',
-            isLive: !error && metaData?.organicMetrics?.ig?.connected,
-            error: !metaData?.organicMetrics?.ig?.connected ? (isRtl ? "حساب إنستجرام غير مربوط بهذه الصفحة" : "Instagram account not linked to this page") : error,
-            organicMetrics: [
-                { label: isRtl ? "المتابعون" : "Followers", value: metaData?.organicMetrics?.ig?.followers?.toLocaleString() || '0', color: "text-rose-400", icon: <Users className="w-4 h-4" /> },
-                { label: isRtl ? "الوصول" : "Reach", value: metaData?.organicMetrics?.ig?.reach?.toLocaleString() || '0', color: "text-emerald-500", icon: <Activity className="w-4 h-4" /> },
-                { label: isRtl ? "مشاهدات الفيديو" : "Video Views", value: metaData?.organicMetrics?.ig?.videoViews?.toLocaleString() || '0', color: "text-primary", icon: <PlaySquare className="w-4 h-4" /> },
-                { label: isRtl ? "التفاعلات" : "Interactions", value: metaData?.organicMetrics?.ig?.interactions?.toLocaleString() || '0', color: "text-rose-500", icon: <Heart className="w-4 h-4" /> },
-            ],
-            adMetrics: metaData ? [
-                { label: isRtl ? "الإنفاق" : "Spend", value: `${metaData.currency || 'SAR'} ${metaData.metrics.spend}`, color: "text-orange-500", icon: <DollarSign className="w-4 h-4" /> },
-                { label: isRtl ? "الظهور" : "Impressions", value: metaData.metrics.impressions?.toLocaleString() || '0', color: "text-primary", icon: <Eye className="w-4 h-4" /> },
-                { label: isRtl ? "النقرات" : "Link Clicks", value: metaData.metrics.clicks?.toLocaleString() || '0', color: "text-emerald-500", icon: <MousePointer2 className="w-4 h-4" /> },
-                { label: isRtl ? "تكلفة النقرة" : "Avg. CPC", value: `${metaData.currency || 'SAR'} ${metaData.metrics.cpc}`, color: "text-blue-500", icon: <BarChart className="w-4 h-4" /> },
-            ] : [],
-            activeAds: metaData?.activeAds || []
-        },
-        {
-            id: 'tiktok',
-            name: 'TikTok',
-            accountName: 'TikTok Business',
-            icon: <PlaySquare className="w-5 h-5" />,
-            color: '#000000',
-            isLive: false,
-            error: isRtl ? "حساب تيك توك غير مربوط" : "TikTok not connected",
-            organicMetrics: [],
-            adMetrics: [],
-            activeAds: []
-        },
-        {
-            id: 'snapchat',
-            name: 'Snapchat',
-            accountName: snapData?.accountName || 'Snapchat Ads',
-            icon: <Ghost className="w-5 h-5" />,
-            color: '#FFFC00',
-            textColor: 'text-black',
-            isLive: !!snapData,
-            error: !snapData ? (isRtl ? "حساب سناب شات غير مربوط" : "Snapchat not connected") : null,
-            organicMetrics: [
-                { label: isRtl ? "إجمالي الظهور" : "Impressions", value: snapData?.stats?.impressions?.toLocaleString() ?? '—', color: "text-blue-400", icon: <Eye className="w-4 h-4" /> },
-                { label: isRtl ? "مشاهدات الفيديو" : "Video Views", value: snapData?.stats?.videoViews?.toLocaleString() ?? '—', color: "text-rose-500", icon: <PlaySquare className="w-4 h-4" /> },
-                { label: isRtl ? "سحب للأعلى" : "Swipe Ups", value: snapData?.stats?.swipes?.toLocaleString() ?? '—', color: "text-emerald-500", icon: <MousePointer2 className="w-4 h-4" /> },
-                { label: isRtl ? "إجمالي الإنفاق" : "Total Spend", value: snapData?.stats?.spend != null ? `${snapData.currency || 'SAR'} ${snapData.stats.spend.toFixed(2)}` : '—', color: "text-orange-500", icon: <DollarSign className="w-4 h-4" /> },
-            ],
-            adMetrics: snapData ? [
-                { label: isRtl ? "إجمالي الإنفاق" : "Total Spend", value: `${snapData.currency || 'SAR'} ${snapData.stats.spend?.toFixed(2) ?? '0.00'}`, color: "text-orange-500", icon: <DollarSign className="w-4 h-4" /> },
-                { label: isRtl ? "الظهور" : "Impressions", value: snapData.stats.impressions?.toLocaleString() ?? '0', color: "text-primary", icon: <Eye className="w-4 h-4" /> },
-                { label: isRtl ? "سحب للأعلى" : "Swipe Ups", value: snapData.stats.swipes?.toLocaleString() ?? '0', color: "text-emerald-500", icon: <MousePointer2 className="w-4 h-4" /> },
-                { label: isRtl ? "إعلانات نشطة" : "Live Ads", value: isRtl ? `${snapData.adCount ?? 0} / ${snapData.validAdCount ?? 0}` : `${snapData.validAdCount ?? 0} / ${snapData.adCount ?? 0}`, color: "text-blue-500", icon: <Hash className="w-4 h-4" /> },
-            ] : [],
-            activeAds: snapData ? (snapData.topAds || []).map((a: any) => ({
-                id: a.id,
-                name: a.name,
-                status: a.isValid ? 'active' : 'paused',
-                spend: `${snapData.currency || 'SAR'} ${a.stats?.spend?.toFixed(2) ?? '0.00'}`,
-                results: `${a.stats?.impressions?.toLocaleString() ?? '0'} ${isRtl ? 'ظهور' : 'impr'}`
-            })) : []
-        },
-        {
-            id: 'x',
-            name: 'X',
-            accountName: xData ? `@${xData.username}` : 'X Account',
-            icon: <Twitter className="w-5 h-5" />,
-            color: '#000000',
-            isLive: !!xData,
-            error: !xData ? (isRtl ? "حساب X غير مربوط" : "X not connected") : null,
-            organicMetrics: [
-                { label: isRtl ? "المتابعون" : "Followers", value: xData?.stats?.followers?.toLocaleString() ?? '—', color: "text-blue-400", icon: <Users className="w-4 h-4" /> },
-                { label: isRtl ? "يتابع" : "Following", value: xData?.stats?.following?.toLocaleString() ?? '—', color: "text-emerald-500", icon: <Activity className="w-4 h-4" /> },
-                { label: isRtl ? "التغريدات" : "Tweets", value: xData?.stats?.tweets?.toLocaleString() ?? '—', color: "text-primary", icon: <MessageCircle className="w-4 h-4" /> },
-                { label: isRtl ? "الإعجابات المُعطاة" : "Likes Given", value: xData?.stats?.likes?.toLocaleString() ?? '—', color: "text-rose-500", icon: <Heart className="w-4 h-4" /> },
-            ],
-            adMetrics: xData ? [
-                { label: isRtl ? "القوائم" : "Listed In", value: xData.stats.listed?.toLocaleString() ?? '0', color: "text-purple-500", icon: <Hash className="w-4 h-4" /> },
-                { label: isRtl ? "المتابعون" : "Followers", value: xData.stats.followers?.toLocaleString() ?? '0', color: "text-blue-400", icon: <Users className="w-4 h-4" /> },
-                { label: isRtl ? "التغريدات" : "Total Tweets", value: xData.stats.tweets?.toLocaleString() ?? '0', color: "text-primary", icon: <MessageCircle className="w-4 h-4" /> },
-                { label: isRtl ? "يتابع" : "Following", value: xData.stats.following?.toLocaleString() ?? '0', color: "text-emerald-500", icon: <Activity className="w-4 h-4" /> },
-            ] : [],
-            activeAds: []
-        },
-        {
-            id: 'linkedin',
-            name: 'LinkedIn',
-            accountName: linkedinData?.accountName || 'LinkedIn Company Page',
-            icon: <Linkedin className="w-5 h-5" />,
-            color: '#0077B5',
-            isLive: !!linkedinData,
-            error: !linkedinData ? (isRtl ? "حساب لينكد إن غير مربوط" : "LinkedIn not connected") : null,
-            organicMetrics: [
-                { label: isRtl ? "المتابعون" : "Followers", value: linkedinData?.stats?.followers?.toLocaleString() ?? '—', color: "text-blue-400", icon: <Users className="w-4 h-4" /> },
-                { label: isRtl ? "زوار الصفحة" : "Unique Visitors", value: linkedinData?.stats?.uniqueVisitors?.toLocaleString() ?? '—', color: "text-emerald-500", icon: <Activity className="w-4 h-4" /> },
-                { label: isRtl ? "مشاهدات الصفحة" : "Page Views", value: linkedinData?.stats?.pageViews?.toLocaleString() ?? '—', color: "text-primary", icon: <Eye className="w-4 h-4" /> },
-                { label: isRtl ? "الظهور" : "Post Impressions", value: linkedinData?.stats?.impressions?.toLocaleString() ?? '—', color: "text-purple-400", icon: <TrendingUp className="w-4 h-4" /> },
-            ],
-            adMetrics: linkedinData ? [
-                { label: isRtl ? "النقرات" : "Post Clicks", value: linkedinData.stats.clicks?.toLocaleString() ?? '0', color: "text-emerald-500", icon: <MousePointer2 className="w-4 h-4" /> },
-                { label: isRtl ? "الظهور" : "Impressions", value: linkedinData.stats.impressions?.toLocaleString() ?? '0', color: "text-primary", icon: <Eye className="w-4 h-4" /> },
-                { label: isRtl ? "المشاركات" : "Shares", value: linkedinData.stats.shares?.toLocaleString() ?? '0', color: "text-blue-500", icon: <Share2 className="w-4 h-4" /> },
-                { label: isRtl ? "التفاعل" : "Engagement", value: linkedinData.stats.engagement?.toFixed(4) ?? '0', color: "text-orange-500", icon: <TrendingUp className="w-4 h-4" /> },
-            ] : [],
-            activeAds: []
-        },
-        {
-            id: 'salla',
-            name: 'Salla',
-            accountName: sallaData?.storeName || (sallaData?.domain ? sallaData.domain : 'Salla Store'),
-            icon: <ShoppingBag className="w-5 h-5" />,
-            color: '#7C3AED',
-            isLive: !!sallaData,
-            error: !sallaData ? (isRtl ? "متجر سلة غير مربوط" : "Salla store not connected") : null,
-            organicMetrics: [
-                { label: isRtl ? "إجمالي الطلبات" : "Total Orders", value: sallaData?.stats?.totalOrders?.toLocaleString() ?? '—', color: "text-violet-400", icon: <ShoppingCart className="w-4 h-4" /> },
-                { label: isRtl ? "الإيرادات" : "Revenue", value: sallaData?.stats?.revenue != null ? `${sallaData.currency || 'SAR'} ${sallaData.stats.revenue.toLocaleString()}` : '—', color: "text-emerald-500", icon: <DollarSign className="w-4 h-4" /> },
-                { label: isRtl ? "إجمالي العملاء" : "Total Customers", value: sallaData?.stats?.totalCustomers?.toLocaleString() ?? '—', color: "text-blue-400", icon: <Users className="w-4 h-4" /> },
-                { label: isRtl ? "إجمالي المنتجات" : "Total Products", value: sallaData?.stats?.totalProducts?.toLocaleString() ?? '—', color: "text-orange-400", icon: <Package className="w-4 h-4" /> },
-            ],
-            adMetrics: sallaData ? [
-                { label: isRtl ? "متوسط قيمة الطلب" : "Avg Order Value", value: `${sallaData.currency || 'SAR'} ${sallaData.stats.avgOrderValue?.toLocaleString() ?? '0'}`, color: "text-violet-500", icon: <TrendingUp className="w-4 h-4" /> },
-                { label: isRtl ? "طلبات معلقة" : "Pending Orders", value: sallaData.stats.pendingOrders?.toLocaleString() ?? '0', color: "text-yellow-500", icon: <Clock className="w-4 h-4" /> },
-                { label: isRtl ? "سلال متروكة" : "Abandoned Carts", value: sallaData.stats.abandonedCarts?.toLocaleString() ?? '0', color: "text-rose-500", icon: <ShoppingCart className="w-4 h-4" /> },
-                { label: isRtl ? "العملاء" : "Customers", value: sallaData.stats.totalCustomers?.toLocaleString() ?? '0', color: "text-blue-400", icon: <Users className="w-4 h-4" /> },
-            ] : [],
-            activeAds: sallaData ? (sallaData.recentOrders || []).map((o: any) => ({
-                id: o.id,
-                name: `${o.id} — ${o.customer}`,
-                status: o.statusSlug === 'complete' ? 'active' : (o.statusSlug || 'pending'),
-                spend: `${o.currency || sallaData.currency || 'SAR'} ${o.total?.toLocaleString() ?? '0'}`,
-                results: o.status
-            })) : []
-        },
-        {
-            id: 'youtube',
-            name: 'YouTube',
-            accountName: youtubeData?.accountName || 'YouTube Channel',
-            icon: <Youtube className="w-5 h-5" />,
-            color: '#FF0000',
-            isLive: !!youtubeData,
-            error: !youtubeData ? (isRtl ? "حساب يوتيوب غير مربوط" : "YouTube not connected") : null,
-            organicMetrics: [
-                { label: isRtl ? "المشتركون" : "Subscribers", value: youtubeData?.stats?.subscribers?.toLocaleString() ?? '—', color: "text-red-500", icon: <Users className="w-4 h-4" /> },
-                { label: isRtl ? "إجمالي المشاهدات" : "Total Views", value: youtubeData?.stats?.totalViews?.toLocaleString() ?? '—', color: "text-emerald-500", icon: <Eye className="w-4 h-4" /> },
-                { label: isRtl ? "مشاهدات (28 يوم)" : "Views (28d)", value: youtubeData?.stats?.recentViews?.toLocaleString() ?? '—', color: "text-primary", icon: <TrendingUp className="w-4 h-4" /> },
-                { label: isRtl ? "عدد الفيديوهات" : "Videos", value: youtubeData?.stats?.videoCount?.toLocaleString() ?? '—', color: "text-orange-400", icon: <PlaySquare className="w-4 h-4" /> },
-            ],
-            adMetrics: youtubeData ? [
-                { label: isRtl ? "وقت المشاهدة (دقيقة)" : "Watch Time (min)", value: youtubeData.stats.watchTimeMinutes?.toLocaleString() ?? '0', color: "text-red-400", icon: <Clock className="w-4 h-4" /> },
-                { label: isRtl ? "متوسط مدة المشاهدة" : "Avg View Duration", value: `${Math.round(youtubeData.stats.avgViewDuration ?? 0)}s`, color: "text-primary", icon: <Activity className="w-4 h-4" /> },
-                { label: isRtl ? "مشتركون جدد" : "New Subscribers", value: youtubeData.stats.subscribersGained?.toLocaleString() ?? '0', color: "text-emerald-500", icon: <Users className="w-4 h-4" /> },
-                { label: isRtl ? "الإعجابات" : "Likes", value: youtubeData.stats.likes?.toLocaleString() ?? '0', color: "text-rose-500", icon: <Heart className="w-4 h-4" /> },
-            ] : [],
-            activeAds: youtubeData ? (youtubeData.recentVideos || []).map((v: any) => ({
-                id: v.id,
-                name: v.title,
-                status: 'active',
-                spend: `${v.views?.toLocaleString() ?? '0'} ${isRtl ? 'مشاهدة' : 'views'}`,
-                results: `${v.likes?.toLocaleString() ?? '0'} ${isRtl ? 'إعجاب' : 'likes'}`
-            })) : []
-        },
-        {
-            id: 'google-ads',
-            name: 'Google Ads',
-            accountName: googleAdsData?.accountName || 'Google Ads',
-            icon: <Megaphone className="w-5 h-5" />,
-            color: '#4285F4',
-            isLive: !!googleAdsData,
-            error: !googleAdsData ? (googleAdsError || (isRtl ? "حساب جوجل أدز غير مربوط" : "Google Ads not connected")) : null,
-            organicMetrics: [
-                { label: isRtl ? "الظهور" : "Impressions", value: googleAdsData?.stats?.totalImpressions?.toLocaleString() ?? '—', color: "text-blue-400", icon: <Eye className="w-4 h-4" /> },
-                { label: isRtl ? "النقرات" : "Clicks", value: googleAdsData?.stats?.totalClicks?.toLocaleString() ?? '—', color: "text-emerald-500", icon: <MousePointer2 className="w-4 h-4" /> },
-                { label: isRtl ? "الإنفاق" : "Spend", value: googleAdsData?.stats?.totalCost != null ? `${googleAdsData.currency || 'USD'} ${googleAdsData.stats.totalCost.toLocaleString()}` : '—', color: "text-orange-500", icon: <DollarSign className="w-4 h-4" /> },
-                { label: isRtl ? "التحويلات" : "Conversions", value: googleAdsData?.stats?.totalConversions?.toLocaleString() ?? '—', color: "text-primary", icon: <TrendingUp className="w-4 h-4" /> },
-            ],
-            adMetrics: googleAdsData ? [
-                { label: isRtl ? "متوسط النقر (%)" : "Avg CTR (%)", value: `${googleAdsData.stats.avgCtr ?? '0'}%`, color: "text-blue-400", icon: <Activity className="w-4 h-4" /> },
-                { label: isRtl ? "تكلفة النقرة" : "Avg CPC", value: `${googleAdsData.currency || 'USD'} ${googleAdsData.stats.avgCpc ?? '0'}`, color: "text-orange-500", icon: <BarChart className="w-4 h-4" /> },
-                { label: isRtl ? "معدل التحويل" : "Conv. Rate (%)", value: `${googleAdsData.stats.conversionRate ?? '0'}%`, color: "text-emerald-500", icon: <TrendingUp className="w-4 h-4" /> },
-                { label: isRtl ? "الحسابات" : "Accounts", value: googleAdsData.customerCount?.toString() ?? '0', color: "text-primary", icon: <Hash className="w-4 h-4" /> },
-            ] : [],
-            activeAds: googleAdsData ? (googleAdsData.campaigns || []).map((c: any) => ({
-                id: c.id,
-                name: c.name,
-                status: c.status === 'ENABLED' ? 'active' : 'paused',
-                spend: `${googleAdsData.currency || 'USD'} ${c.cost?.toFixed(2) ?? '0.00'}`,
-                results: `${c.impressions?.toLocaleString() ?? '0'} ${isRtl ? 'ظهور' : 'impr'}`
-            })) : []
-        }
-    ];
-
-    const currentPlatform = platforms.find(p => p.id === activeTab) || platforms[0];
+    const cur = (d: any) => d?.currency || 'USD';
+    const sc = (d: any) => d?.currency || 'SAR';
 
     return (
         <div className="space-y-6">
             {/* Tab Switcher */}
             <div className="flex flex-wrap items-center gap-1.5 p-1 bg-muted/40 rounded-lg border border-border w-fit">
-                {platforms.map((platform) => (
-                    <button
-                        key={platform.id}
-                        onClick={() => setActiveTab(platform.id)}
-                        className={cn(
-                            "flex items-center gap-2 px-4 py-2 rounded-md transition-all duration-200 relative",
-                            activeTab === platform.id
-                                ? "text-white shadow-sm"
-                                : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                        )}
-                    >
-                        {activeTab === platform.id && (
-                            <motion.div
-                                layoutId="activeTab"
-                                className="absolute inset-0 z-0 rounded-md"
-                                style={{ backgroundColor: platform.color }}
-                            />
-                        )}
-                        <span className={cn(
-                            "relative z-10 transition-colors",
-                            activeTab === platform.id && platform.id === 'snapchat' ? 'text-black' : ''
+                {tabs.map(tab => (
+                    <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+                        className={cn('flex items-center gap-2 px-4 py-2 rounded-md transition-all duration-200 relative',
+                            activeTab === tab.id ? 'text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                         )}>
-                            {platform.icon}
+                        {activeTab === tab.id && (
+                            <motion.div layoutId="activeTab" className="absolute inset-0 z-0 rounded-md" style={{ backgroundColor: tab.color }} />
+                        )}
+                        <span className={cn('relative z-10 transition-colors', activeTab === tab.id && tab.id === 'snapchat' ? 'text-black' : '')}>
+                            {tab.icon}
                         </span>
-                        <span className={cn(
-                            "relative z-10 text-xs font-medium transition-colors",
-                            activeTab === platform.id && platform.id === 'snapchat' ? 'text-black' : ''
-                        )}>
-                            {platform.name}
+                        <span className={cn('relative z-10 text-xs font-medium', activeTab === tab.id && tab.id === 'snapchat' ? 'text-black' : '')}>
+                            {tab.name}
                         </span>
+                        {tab.isLive && (
+                            <span className={cn('relative z-10 w-1.5 h-1.5 rounded-full bg-emerald-500', tab.id === 'snapchat' ? '' : '')} />
+                        )}
                     </button>
                 ))}
             </div>
 
             <AnimatePresence mode="wait">
-                <motion.div
-                    key={activeTab}
-                    initial={{ opacity: 0, x: 10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -10 }}
-                    transition={{ duration: 0.2 }}
-                    className="space-y-6"
-                >
-                    {/* Platform Stats Header */}
+                <motion.div key={activeTab} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.2 }} className="space-y-5">
+
+                    {/* Platform Header */}
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-xl border border-border bg-card">
                         <div className="flex items-center gap-4">
-                            <div
-                                className="w-12 h-12 rounded-lg flex items-center justify-center shrink-0"
-                                style={{ backgroundColor: currentPlatform.color }}
-                            >
-                                <div className={currentPlatform.textColor}>
-                                    {currentPlatform.icon && typeof currentPlatform.icon === 'object' && 'type' in (currentPlatform.icon as any)
-                                        ? cloneElement(currentPlatform.icon as any, { className: 'w-6 h-6' })
-                                        : currentPlatform.icon
-                                    }
-                                </div>
+                            <div className="w-12 h-12 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: currentTab.color }}>
+                                <span className={currentTab.textColor || 'text-white'}>
+                                    {cloneElement(currentTab.icon as any, { className: 'w-6 h-6' })}
+                                </span>
                             </div>
                             <div>
-                                <h3 className="text-base font-semibold">{currentPlatform.name}</h3>
+                                <h3 className="text-base font-semibold">{currentTab.name}</h3>
                                 <p className="text-xs text-muted-foreground flex items-center gap-1.5 mt-0.5">
-                                    <Activity className="w-3 h-3" /> {currentPlatform.accountName}
+                                    <Activity className="w-3 h-3" />
+                                    {activeTab === 'facebook' ? (metaData?.accountName || 'Facebook Page')
+                                        : activeTab === 'instagram' ? (metaData?.accountName || 'Instagram Business')
+                                        : activeTab === 'snapchat' ? (snapData?.accountName || 'Snapchat Ads')
+                                        : activeTab === 'google-ads' ? (googleAdsData?.accountName || 'Google Ads')
+                                        : activeTab === 'youtube' ? (youtubeData?.accountName || 'YouTube Channel')
+                                        : activeTab === 'salla' ? (sallaData?.storeName || sallaData?.domain || 'Salla Store')
+                                        : activeTab === 'linkedin' ? (linkedinData?.accountName || 'LinkedIn Page')
+                                        : activeTab === 'x' ? (xData ? `@${xData.username}` : 'X Account')
+                                        : 'TikTok'}
                                 </p>
                             </div>
                         </div>
-
                         <div className="flex items-center gap-3">
                             <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-muted border border-border">
-                                <span className={cn("w-1.5 h-1.5 rounded-full", currentPlatform.isLive ? "bg-emerald-500" : "bg-muted-foreground/40")} />
-                                <span className="section-label text-muted-foreground">
-                                    {currentPlatform.isLive ? "Live" : "Placeholder"}
-                                </span>
+                                <span className={cn('w-1.5 h-1.5 rounded-full', currentTab.isLive ? 'bg-emerald-500' : 'bg-muted-foreground/40')} />
+                                <span className="section-label text-muted-foreground">{currentTab.isLive ? 'Live' : 'Offline'}</span>
                             </div>
-                            {!currentPlatform.error && (
-                                <>
-                                    <Badge variant="outline" className="text-xs">
-                                        {activeTab === 'snapchat'
-                                            ? ({ all: isRtl ? 'كل الوقت' : 'All Time', '7d': isRtl ? 'آخر ٧ أيام' : 'Last 7 Days', '30d': isRtl ? 'آخر ٣٠ يوم' : 'Last 30 Days', '90d': isRtl ? 'آخر ٩٠ يوم' : 'Last 90 Days', custom: isRtl ? 'نطاق مخصص' : 'Custom Range' } as Record<SnapPeriod,string>)[snapPeriod]
-                                            : activeTab === 'salla'
-                                            ? (isRtl ? 'آخر ٥٠ طلب' : 'Last 50 Orders')
-                                            : isRtl ? 'آخر ٣٠ يوم' : 'Last 30 Days'}
-                                    </Badge>
-                                    <Badge variant="success" className="text-xs">Optimized</Badge>
-                                </>
-                            )}
+                            {currentTab.isLive && <Badge variant="success" className="text-xs">Optimized</Badge>}
                         </div>
                     </div>
 
-                    {/* Snapchat Date Range Picker */}
-                    {activeTab === 'snapchat' && !currentPlatform.error && (
-                        <div className="flex flex-wrap items-center gap-2 p-3 rounded-lg bg-muted/30 border border-border">
-                            <CalendarDays className="w-4 h-4 text-muted-foreground shrink-0" />
-                            <span className="text-xs text-muted-foreground shrink-0">{isRtl ? 'الفترة:' : 'Period:'}</span>
-                            {(['all', '7d', '30d', '90d'] as SnapPeriod[]).map((p) => {
-                                const labels: Record<string, string> = { all: isRtl ? 'كل الوقت' : 'All Time', '7d': isRtl ? '٧ أيام' : '7 Days', '30d': isRtl ? '٣٠ يوم' : '30 Days', '90d': isRtl ? '٩٠ يوم' : '90 Days' };
-                                return (
-                                    <button
-                                        key={p}
-                                        onClick={() => { setSnapPeriod(p); fetchSnap(p); }}
-                                        disabled={snapLoading}
-                                        className={cn(
-                                            "px-3 py-1 rounded-md text-xs font-medium transition-colors",
-                                            snapPeriod === p ? "bg-[#FFFC00] text-black" : "bg-muted hover:bg-muted/80 text-muted-foreground"
-                                        )}
-                                    >{labels[p]}</button>
-                                );
-                            })}
-                            <button
-                                onClick={() => setSnapPeriod('custom')}
-                                className={cn(
-                                    "px-3 py-1 rounded-md text-xs font-medium transition-colors",
-                                    snapPeriod === 'custom' ? "bg-[#FFFC00] text-black" : "bg-muted hover:bg-muted/80 text-muted-foreground"
-                                )}
-                            >{isRtl ? 'مخصص' : 'Custom'}</button>
-                            {snapPeriod === 'custom' && (
-                                <div className="flex items-center gap-2 flex-wrap">
-                                    <input
-                                        type="date"
-                                        value={snapCustomStart}
-                                        onChange={e => setSnapCustomStart(e.target.value)}
-                                        className="text-xs bg-background border border-border rounded px-2 py-1 text-foreground"
-                                    />
-                                    <span className="text-xs text-muted-foreground">→</span>
-                                    <input
-                                        type="date"
-                                        value={snapCustomEnd}
-                                        onChange={e => setSnapCustomEnd(e.target.value)}
-                                        className="text-xs bg-background border border-border rounded px-2 py-1 text-foreground"
-                                    />
-                                    <button
-                                        onClick={() => fetchSnap('custom', snapCustomStart, snapCustomEnd)}
-                                        disabled={!snapCustomStart || !snapCustomEnd || snapLoading}
-                                        className="px-3 py-1 rounded-md text-xs font-medium bg-primary text-primary-foreground disabled:opacity-40"
-                                    >{isRtl ? 'تطبيق' : 'Apply'}</button>
-                                </div>
-                            )}
-                            {snapLoading && <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />}
-                        </div>
-                    )}
-
-                    {currentPlatform.error ? (
+                    {/* Error state */}
+                    {platformError[activeTab] ? (
                         <div className="flex items-center gap-3 bg-destructive/10 border border-destructive/20 px-4 py-3 rounded-lg">
                             <AlertCircle className="w-5 h-5 text-destructive shrink-0" />
-                            <p className="text-xs text-destructive/80">{currentPlatform.error}</p>
+                            <p className="text-xs text-destructive/80">{platformError[activeTab]}</p>
                         </div>
                     ) : (
-                        <div className="grid lg:grid-cols-12 gap-6">
-                            {/* Main Metrics Content */}
-                            <div className="lg:col-span-8 space-y-6">
-                                {/* Organic Grid */}
-                                <div className="space-y-3">
-                                    <div className="flex items-center gap-2">
-                                        <div className="h-3 w-0.5 bg-primary rounded-full" />
-                                        <p className="section-label text-muted-foreground">
-                                            {activeTab === 'salla'
-                                                ? (isRtl ? "إحصائيات المتجر" : "Store Overview")
-                                                : (isRtl ? "الأداء العضوي" : "Organic Growth")}
-                                        </p>
-                                    </div>
-                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                                        {currentPlatform.organicMetrics.map((metric, i) => (
-                                            <Card key={i} className="hover:bg-muted/30 transition-colors">
-                                                <CardContent className="p-4">
-                                                    <div className="flex items-center justify-between mb-3">
-                                                        <div className={cn("p-1.5 rounded-md bg-muted", metric.color)}>
-                                                            {metric.icon}
-                                                        </div>
-                                                        <TrendingUp className="w-3 h-3 text-muted-foreground/30" />
-                                                    </div>
-                                                    <p className="section-label text-muted-foreground line-clamp-1">{metric.label}</p>
-                                                    <h5 className={cn("text-2xl font-bold mt-1", metric.color)}>{metric.value}</h5>
-                                                </CardContent>
-                                            </Card>
-                                        ))}
-                                    </div>
-                                </div>
 
-                                {/* Ads Performance Grid */}
-                                <div className="space-y-3">
-                                    <div className="flex items-center gap-2">
-                                        <div className="h-3 w-0.5 bg-orange-500 rounded-full" />
-                                        <p className="section-label text-orange-500/70">
-                                            {activeTab === 'salla'
-                                                ? (isRtl ? "تفاصيل إضافية" : "Store Details")
-                                                : (isRtl ? "أداء الميزانية" : "Ad Reach & ROI")}
-                                        </p>
-                                    </div>
-                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                                        {currentPlatform.adMetrics.map((metric, i) => (
-                                            <Card key={i} className="hover:bg-muted/30 transition-colors">
-                                                <CardContent className="p-4">
-                                                    <div className="mb-3">
-                                                        <div className={cn("p-1.5 rounded-md bg-muted w-fit", metric.color)}>
-                                                            {metric.icon}
-                                                        </div>
-                                                    </div>
-                                                    <p className="section-label text-muted-foreground line-clamp-1">{metric.label}</p>
-                                                    <h5 className={cn("text-2xl font-bold mt-1", metric.color)}>{metric.value}</h5>
-                                                </CardContent>
-                                            </Card>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
+                    /* ═══ PLATFORM CONTENT ════════════════════════════════════════════ */
+                    <div className="space-y-5">
 
-                            {/* Active Ads Side Panel */}
-                            <div className="lg:col-span-4 space-y-4">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-2">
-                                        <div className="h-3 w-0.5 bg-emerald-500 rounded-full" />
-                                        <p className="section-label text-muted-foreground">
-                                            {activeTab === 'salla'
-                                                ? (isRtl ? "آخر الطلبات" : "Recent Orders")
-                                                : (isRtl ? "الإعلانات النشطة" : "Active Creatives")}
-                                        </p>
-                                    </div>
-                                    <Badge variant="success" className="text-[9px]">Live</Badge>
-                                </div>
+                        {/* ── FACEBOOK ──────────────────────────────────────────────────── */}
+                        {activeTab === 'facebook' && metaData && (
+                            <>
+                                <PeriodBar period={metaPeriod} since={metaSince} until={metaUntil} loading={metaLoading} color="#1877F2"
+                                    onApply={(p, s, u) => fetchMeta(p, s, u)} isRtl={isRtl} />
 
-                                <div className="space-y-2">
-                                    {currentPlatform.activeAds.length > 0 ? (
-                                        currentPlatform.activeAds.map((ad, i) => (
-                                            <Card key={i} className="hover:bg-muted/30 transition-colors">
-                                                <CardContent className="p-3.5">
-                                                    <div className="flex items-start justify-between gap-3">
-                                                        <div className="flex items-center gap-3">
-                                                            <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center shrink-0">
-                                                                <ImageIcon className="w-5 h-5 text-muted-foreground/40" />
+                                <div className="grid lg:grid-cols-12 gap-5">
+                                    <div className="lg:col-span-8 space-y-5">
+                                        <div className="space-y-3">
+                                            <SectionHeader color="bg-blue-500" label={isRtl ? 'الأداء العضوي — فيسبوك' : 'Organic Performance — Facebook'} />
+                                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                                <StatCard label={isRtl ? 'المتابعون' : 'Page Followers'} value={fmt(metaData.organicMetrics?.fb?.followers)} color="text-blue-400" icon={<Users className="w-4 h-4" />} />
+                                                <StatCard label={isRtl ? 'الوصول' : 'Reach'} value={fmt(metaData.organicMetrics?.fb?.reach)} color="text-emerald-500" icon={<Activity className="w-4 h-4" />} />
+                                                <StatCard label={isRtl ? 'التفاعل' : 'Engagement'} value={fmt(metaData.organicMetrics?.fb?.engagement)} color="text-primary" icon={<TrendingUp className="w-4 h-4" />} />
+                                                <StatCard label={isRtl ? 'متابعون جدد' : 'New Followers'} value={fmt(metaData.organicMetrics?.fb?.newFollowers)} color="text-violet-400" icon={<Users className="w-4 h-4" />} />
+                                                <StatCard label={isRtl ? 'مشاهدات الفيديو' : 'Video Views'} value={fmt(metaData.organicMetrics?.fb?.videoViews)} color="text-rose-400" icon={<PlaySquare className="w-4 h-4" />} />
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-3">
+                                            <SectionHeader color="bg-orange-500" label={isRtl ? 'أداء الإعلانات' : 'Ad Performance'} />
+                                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                                <StatCard label={isRtl ? 'الإنفاق' : 'Spend'} value={`${cur(metaData)} ${metaData.metrics.spend}`} color="text-orange-500" icon={<DollarSign className="w-4 h-4" />} />
+                                                <StatCard label={isRtl ? 'الظهور' : 'Impressions'} value={fmt(metaData.metrics.impressions)} color="text-primary" icon={<Eye className="w-4 h-4" />} />
+                                                <StatCard label={isRtl ? 'النقرات' : 'Clicks'} value={fmt(metaData.metrics.clicks)} color="text-emerald-500" icon={<MousePointer2 className="w-4 h-4" />} />
+                                                <StatCard label={isRtl ? 'نسبة النقر' : 'CTR'} value={`${metaData.metrics.ctr}%`} color="text-blue-400" icon={<BarChart className="w-4 h-4" />} />
+                                                <StatCard label={isRtl ? 'تكلفة النقرة' : 'CPC'} value={`${cur(metaData)} ${metaData.metrics.cpc}`} color="text-blue-500" icon={<BarChart className="w-4 h-4" />} />
+                                                <StatCard label={isRtl ? 'الوصول (إعلان)' : 'Ad Reach'} value={fmt(metaData.metrics.reach)} color="text-cyan-500" icon={<Activity className="w-4 h-4" />} />
+                                                <StatCard label={isRtl ? 'التكرار' : 'Frequency'} value={metaData.metrics.frequency} color="text-yellow-500" icon={<Hash className="w-4 h-4" />} />
+                                                <StatCard label={isRtl ? 'التحويلات' : 'Conversions'} value={fmt(metaData.metrics.conversions)} color="text-green-500" icon={<TrendingUp className="w-4 h-4" />} />
+                                            </div>
+                                        </div>
+
+                                        {/* Campaign breakdown */}
+                                        {metaData.campaigns?.length > 0 && (
+                                            <div className="space-y-3">
+                                                <SectionHeader color="bg-violet-500" label={isRtl ? 'تفاصيل الحملات' : 'Campaign Breakdown'} />
+                                                <div className="rounded-lg border border-border overflow-hidden">
+                                                    <table className="w-full text-xs">
+                                                        <thead><tr className="bg-muted/50 text-muted-foreground">
+                                                            <th className="text-left px-3 py-2 font-medium">{isRtl ? 'الحملة' : 'Campaign'}</th>
+                                                            <th className="text-right px-3 py-2 font-medium">{isRtl ? 'الإنفاق' : 'Spend'}</th>
+                                                            <th className="text-right px-3 py-2 font-medium">{isRtl ? 'ظهور' : 'Impr.'}</th>
+                                                            <th className="text-right px-3 py-2 font-medium">CTR%</th>
+                                                            <th className="text-right px-3 py-2 font-medium">{isRtl ? 'وصول' : 'Reach'}</th>
+                                                        </tr></thead>
+                                                        <tbody>
+                                                            {metaData.campaigns.slice(0, 6).map((c: any, i: number) => (
+                                                                <tr key={i} className="border-t border-border hover:bg-muted/30">
+                                                                    <td className="px-3 py-2">
+                                                                        <div className="font-medium truncate max-w-[160px]">{c.name}</div>
+                                                                        <div className="text-muted-foreground text-[10px]">{c.objective?.replace(/_/g, ' ')}</div>
+                                                                    </td>
+                                                                    <td className="px-3 py-2 text-right text-orange-500 font-medium">{cur(metaData)} {parseFloat(c.spend || '0').toFixed(2)}</td>
+                                                                    <td className="px-3 py-2 text-right">{fmt(c.impressions)}</td>
+                                                                    <td className="px-3 py-2 text-right">{c.ctr}%</td>
+                                                                    <td className="px-3 py-2 text-right">{fmt(c.reach)}</td>
+                                                                </tr>
+                                                            ))}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Active Ads Sidebar */}
+                                    <div className="lg:col-span-4 space-y-3">
+                                        <SectionHeader color="bg-emerald-500" label={isRtl ? 'الإعلانات النشطة' : 'Active Ads'} />
+                                        {(metaData.activeAds || []).length > 0 ? (
+                                            <div className="space-y-2">
+                                                {metaData.activeAds.map((ad: any, i: number) => (
+                                                    <Card key={i} className="hover:bg-muted/30 transition-colors">
+                                                        <CardContent className="p-3">
+                                                            <p className="text-sm font-medium truncate">{ad.name}</p>
+                                                            <div className="flex justify-between items-center mt-1.5 text-xs text-muted-foreground">
+                                                                <span className="text-orange-500 font-medium">{ad.spend}</span>
+                                                                <span>{ad.results}</span>
                                                             </div>
+                                                        </CardContent>
+                                                    </Card>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <div className="py-8 flex flex-col items-center justify-center text-center rounded-lg border border-dashed border-border">
+                                                <PlaySquare className="w-8 h-8 mb-2 text-muted-foreground/30" />
+                                                <p className="text-xs text-muted-foreground">{isRtl ? 'لا توجد إعلانات نشطة' : 'No active ads'}</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </>
+                        )}
+
+                        {/* ── INSTAGRAM ─────────────────────────────────────────────────── */}
+                        {activeTab === 'instagram' && metaData && (
+                            <>
+                                <PeriodBar period={metaPeriod} since={metaSince} until={metaUntil} loading={metaLoading} color="#E4405F"
+                                    onApply={(p, s, u) => fetchMeta(p, s, u)} isRtl={isRtl} />
+
+                                <div className="grid lg:grid-cols-12 gap-5">
+                                    <div className="lg:col-span-8 space-y-5">
+                                        <div className="space-y-3">
+                                            <SectionHeader color="bg-rose-500" label={isRtl ? 'الأداء العضوي — إنستجرام' : 'Organic Performance — Instagram'} />
+                                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                                <StatCard label={isRtl ? 'المتابعون' : 'Followers'} value={fmt(metaData.organicMetrics?.ig?.followers)} color="text-rose-400" icon={<Users className="w-4 h-4" />} />
+                                                <StatCard label={isRtl ? 'الوصول' : 'Reach'} value={fmt(metaData.organicMetrics?.ig?.reach)} color="text-emerald-500" icon={<Activity className="w-4 h-4" />} />
+                                                <StatCard label={isRtl ? 'مشاهدات الفيديو' : 'Video Views'} value={fmt(metaData.organicMetrics?.ig?.videoViews)} color="text-primary" icon={<PlaySquare className="w-4 h-4" />} />
+                                                <StatCard label={isRtl ? 'التفاعلات' : 'Interactions'} value={fmt(metaData.organicMetrics?.ig?.interactions)} color="text-rose-500" icon={<Heart className="w-4 h-4" />} />
+                                                <StatCard label={isRtl ? 'زيارات الملف' : 'Profile Views'} value={fmt(metaData.organicMetrics?.ig?.profileViews)} color="text-purple-400" icon={<Eye className="w-4 h-4" />} />
+                                                <StatCard label={isRtl ? 'نقرات الموقع' : 'Website Clicks'} value={fmt(metaData.organicMetrics?.ig?.websiteClicks)} color="text-cyan-500" icon={<MousePointer2 className="w-4 h-4" />} />
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-3">
+                                            <SectionHeader color="bg-orange-500" label={isRtl ? 'أداء الإعلانات (مشترك)' : 'Ad Performance (Shared Account)'} />
+                                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                                <StatCard label={isRtl ? 'الإنفاق' : 'Spend'} value={`${cur(metaData)} ${metaData.metrics.spend}`} color="text-orange-500" icon={<DollarSign className="w-4 h-4" />} />
+                                                <StatCard label={isRtl ? 'الظهور' : 'Impressions'} value={fmt(metaData.metrics.impressions)} color="text-primary" icon={<Eye className="w-4 h-4" />} />
+                                                <StatCard label={isRtl ? 'النقرات' : 'Clicks'} value={fmt(metaData.metrics.clicks)} color="text-emerald-500" icon={<MousePointer2 className="w-4 h-4" />} />
+                                                <StatCard label={isRtl ? 'نسبة النقر' : 'CTR'} value={`${metaData.metrics.ctr}%`} color="text-blue-400" icon={<BarChart className="w-4 h-4" />} />
+                                                <StatCard label={isRtl ? 'تكلفة النقرة' : 'CPC'} value={`${cur(metaData)} ${metaData.metrics.cpc}`} color="text-blue-500" icon={<BarChart className="w-4 h-4" />} />
+                                                <StatCard label={isRtl ? 'الوصول' : 'Reach'} value={fmt(metaData.metrics.reach)} color="text-cyan-500" icon={<Activity className="w-4 h-4" />} />
+                                                <StatCard label={isRtl ? 'التكرار' : 'Frequency'} value={metaData.metrics.frequency} color="text-yellow-500" icon={<Hash className="w-4 h-4" />} />
+                                                <StatCard label={isRtl ? 'التحويلات' : 'Conversions'} value={fmt(metaData.metrics.conversions)} color="text-green-500" icon={<TrendingUp className="w-4 h-4" />} />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="lg:col-span-4 space-y-3">
+                                        <SectionHeader color="bg-emerald-500" label={isRtl ? 'الإعلانات النشطة' : 'Active Ads'} />
+                                        {(metaData.activeAds || []).length > 0 ? (
+                                            <div className="space-y-2">
+                                                {metaData.activeAds.map((ad: any, i: number) => (
+                                                    <Card key={i} className="hover:bg-muted/30">
+                                                        <CardContent className="p-3">
+                                                            <p className="text-sm font-medium truncate">{ad.name}</p>
+                                                            <div className="flex justify-between items-center mt-1.5 text-xs text-muted-foreground">
+                                                                <span className="text-orange-500 font-medium">{ad.spend}</span>
+                                                                <span>{ad.results}</span>
+                                                            </div>
+                                                        </CardContent>
+                                                    </Card>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <div className="py-8 flex flex-col items-center justify-center rounded-lg border border-dashed border-border">
+                                                <PlaySquare className="w-8 h-8 mb-2 text-muted-foreground/30" />
+                                                <p className="text-xs text-muted-foreground">{isRtl ? 'لا توجد إعلانات' : 'No active ads'}</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </>
+                        )}
+
+                        {/* ── SNAPCHAT ───────────────────────────────────────────────────── */}
+                        {activeTab === 'snapchat' && snapData && (
+                            <>
+                                <PeriodBar period={snapPeriod} since={snapSince} until={snapUntil} loading={snapLoading} color="#FFFC00"
+                                    onApply={(p, s, u) => fetchSnap(p, s, u)} supportsAll isRtl={isRtl} />
+
+                                <div className="grid lg:grid-cols-12 gap-5">
+                                    <div className="lg:col-span-8 space-y-5">
+                                        <div className="space-y-3">
+                                            <SectionHeader color="bg-yellow-400" label={isRtl ? 'أداء الإعلانات' : 'Ad Performance'} />
+                                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                                <StatCard label={isRtl ? 'الظهور' : 'Impressions'} value={fmt(snapData.stats?.impressions)} color="text-blue-400" icon={<Eye className="w-4 h-4" />} />
+                                                <StatCard label={isRtl ? 'مشاهدات الفيديو' : 'Video Views'} value={fmt(snapData.stats?.videoViews)} color="text-rose-500" icon={<PlaySquare className="w-4 h-4" />} />
+                                                <StatCard label={isRtl ? 'سحب للأعلى' : 'Swipe Ups'} value={fmt(snapData.stats?.swipes)} color="text-emerald-500" icon={<MousePointer2 className="w-4 h-4" />} />
+                                                <StatCard label={isRtl ? 'إجمالي الإنفاق' : 'Total Spend'} value={snapData.stats?.spend != null ? `${sc(snapData)} ${snapData.stats.spend.toFixed(2)}` : '—'} color="text-orange-500" icon={<DollarSign className="w-4 h-4" />} />
+                                                <StatCard label={isRtl ? 'الوصول (تقريبي)' : 'Reach (est.)'} value={fmt(snapData.stats?.reach)} color="text-cyan-500" icon={<Activity className="w-4 h-4" />} />
+                                                <StatCard label={isRtl ? 'CPM' : 'CPM'} value={snapData.stats?.cpm != null ? `${sc(snapData)} ${snapData.stats.cpm.toFixed(2)}` : '—'} color="text-yellow-500" icon={<BarChart className="w-4 h-4" />} />
+                                                <StatCard label={isRtl ? 'حملات نشطة' : 'Active Campaigns'} value={snapData.activeCampaignCount ?? 0} color="text-primary" icon={<Megaphone className="w-4 h-4" />} />
+                                                <StatCard label={isRtl ? 'إعلانات نشطة / كل' : 'Valid / Total Ads'} value={`${snapData.validAdCount ?? 0} / ${snapData.adCount ?? 0}`} color="text-blue-500" icon={<Hash className="w-4 h-4" />} />
+                                            </div>
+                                        </div>
+
+                                        {/* Objective breakdown */}
+                                        {snapData.objectiveBreakdown && Object.keys(snapData.objectiveBreakdown).length > 0 && (
+                                            <div className="space-y-3">
+                                                <SectionHeader color="bg-yellow-400" label={isRtl ? 'أهداف الحملات' : 'Campaign Objectives'} />
+                                                <div className="flex flex-wrap gap-2">
+                                                    {Object.entries(snapData.objectiveBreakdown).map(([obj, count]) => (
+                                                        <div key={obj} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-muted border border-border">
+                                                            <span className="w-1.5 h-1.5 rounded-full bg-yellow-400" />
+                                                            <span className="text-xs font-medium">{obj.replace(/_/g, ' ')}</span>
+                                                            <span className="text-xs text-muted-foreground">({count as number})</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Top Campaigns */}
+                                        {snapData.topCampaigns?.length > 0 && (
+                                            <div className="space-y-3">
+                                                <SectionHeader color="bg-emerald-500" label={isRtl ? 'أفضل الحملات' : 'Top Campaigns'} />
+                                                <div className="rounded-lg border border-border overflow-hidden">
+                                                    <table className="w-full text-xs">
+                                                        <thead><tr className="bg-muted/50 text-muted-foreground">
+                                                            <th className="text-left px-3 py-2 font-medium">{isRtl ? 'الحملة' : 'Campaign'}</th>
+                                                            <th className="text-right px-3 py-2 font-medium">{isRtl ? 'الإنفاق' : 'Spend'}</th>
+                                                            <th className="text-right px-3 py-2 font-medium">{isRtl ? 'ظهور' : 'Impr.'}</th>
+                                                            <th className="text-right px-3 py-2 font-medium">{isRtl ? 'سحب' : 'Swipes'}</th>
+                                                        </tr></thead>
+                                                        <tbody>
+                                                            {snapData.topCampaigns.map((c: any, i: number) => (
+                                                                <tr key={i} className="border-t border-border hover:bg-muted/30">
+                                                                    <td className="px-3 py-2">
+                                                                        <div className="font-medium truncate max-w-[160px]">{c.name}</div>
+                                                                        <div className="text-muted-foreground text-[10px]">{c.objective?.replace(/_/g, ' ')}</div>
+                                                                    </td>
+                                                                    <td className="px-3 py-2 text-right text-orange-500">{sc(snapData)} {c.stats?.spend?.toFixed(2)}</td>
+                                                                    <td className="px-3 py-2 text-right">{fmt(c.stats?.impressions)}</td>
+                                                                    <td className="px-3 py-2 text-right">{fmt(c.stats?.swipes)}</td>
+                                                                </tr>
+                                                            ))}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Targeting Info */}
+                                        {snapData.targeting && (
+                                            <div className="space-y-3">
+                                                <SectionHeader color="bg-emerald-500" label={isRtl ? 'استهداف الحملة النشطة' : 'Active Campaign Targeting'} />
+                                                <Card><CardContent className="p-4">
+                                                    <div className="grid grid-cols-2 gap-2 text-xs">
+                                                        {(snapData.targeting.ageMin || snapData.targeting.ageMax) && (
+                                                            <div className="flex justify-between"><span className="text-muted-foreground">{isRtl ? 'الفئة العمرية' : 'Age Range'}</span><span className="font-medium">{snapData.targeting.ageMin ?? '—'} – {snapData.targeting.ageMax ?? '—'}</span></div>
+                                                        )}
+                                                        {snapData.targeting.countries?.length > 0 && (
+                                                            <div className="flex justify-between"><span className="text-muted-foreground">{isRtl ? 'الدول' : 'Countries'}</span><span className="font-medium">{snapData.targeting.countries.join(', ')}</span></div>
+                                                        )}
+                                                        {snapData.targeting.dailyBudget > 0 && (
+                                                            <div className="flex justify-between"><span className="text-muted-foreground">{isRtl ? 'ميزانية يومية' : 'Daily Budget'}</span><span className="font-medium">{sc(snapData)} {snapData.targeting.dailyBudget.toFixed(2)}</span></div>
+                                                        )}
+                                                        {snapData.targeting.optimizationGoal && (
+                                                            <div className="flex justify-between"><span className="text-muted-foreground">{isRtl ? 'هدف التحسين' : 'Optimization'}</span><span className="font-medium">{snapData.targeting.optimizationGoal.replace(/_/g, ' ')}</span></div>
+                                                        )}
+                                                    </div>
+                                                </CardContent></Card>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Top Ads Sidebar */}
+                                    <div className="lg:col-span-4 space-y-3">
+                                        <SectionHeader color="bg-yellow-400" label={isRtl ? 'أفضل الإعلانات' : 'Top Ads'} />
+                                        {(snapData.topAds || []).length > 0 ? (
+                                            <div className="space-y-2">
+                                                {snapData.topAds.map((a: any, i: number) => (
+                                                    <Card key={i} className="hover:bg-muted/30">
+                                                        <CardContent className="p-3">
+                                                            <div className="flex items-center gap-2 mb-1">
+                                                                <span className={cn('w-1.5 h-1.5 rounded-full shrink-0', a.isValid ? 'bg-emerald-500' : 'bg-muted-foreground/40')} />
+                                                                <p className="text-xs font-medium truncate">{a.name}</p>
+                                                            </div>
+                                                            <div className="flex justify-between text-xs text-muted-foreground">
+                                                                <span className="text-orange-500">{sc(snapData)} {a.stats?.spend?.toFixed(2) ?? '0.00'}</span>
+                                                                <span>{fmt(a.stats?.impressions)} {isRtl ? 'ظهور' : 'impr'}</span>
+                                                            </div>
+                                                        </CardContent>
+                                                    </Card>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <div className="py-8 flex flex-col items-center justify-center rounded-lg border border-dashed border-border">
+                                                <Ghost className="w-8 h-8 mb-2 text-muted-foreground/30" />
+                                                <p className="text-xs text-muted-foreground">{isRtl ? 'لا توجد إعلانات' : 'No ads found'}</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </>
+                        )}
+
+                        {/* ── GOOGLE ADS ────────────────────────────────────────────────── */}
+                        {activeTab === 'google-ads' && googleAdsData && (
+                            <>
+                                <PeriodBar period={gadsPeriod} since={gadsSince} until={gadsUntil} loading={gadsLoading} color="#4285F4"
+                                    onApply={(p, s, u) => fetchGads(p, s, u)} isRtl={isRtl} />
+
+                                <div className="grid lg:grid-cols-12 gap-5">
+                                    <div className="lg:col-span-8 space-y-5">
+                                        {/* Overview */}
+                                        <div className="space-y-3">
+                                            <SectionHeader color="bg-blue-500" label={isRtl ? 'نظرة عامة على الحساب' : 'Account Overview'} />
+                                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                                <StatCard label={isRtl ? 'الظهور' : 'Impressions'} value={fmt(googleAdsData.stats?.totalImpressions)} color="text-blue-400" icon={<Eye className="w-4 h-4" />} />
+                                                <StatCard label={isRtl ? 'النقرات' : 'Clicks'} value={fmt(googleAdsData.stats?.totalClicks)} color="text-emerald-500" icon={<MousePointer2 className="w-4 h-4" />} />
+                                                <StatCard label={isRtl ? 'التحويلات' : 'Conversions'} value={fmt(googleAdsData.stats?.totalConversions, 1)} color="text-green-500" icon={<TrendingUp className="w-4 h-4" />} />
+                                                <StatCard label={isRtl ? 'الإنفاق الكلي' : 'Total Cost'} value={`${cur(googleAdsData)} ${fmt(googleAdsData.stats?.totalCost, 2)}`} color="text-orange-500" icon={<DollarSign className="w-4 h-4" />} />
+                                                <StatCard label={isRtl ? 'نسبة النقر' : 'Avg CTR'} value={`${googleAdsData.stats?.avgCtr ?? 0}%`} color="text-blue-400" icon={<Activity className="w-4 h-4" />} />
+                                                <StatCard label={isRtl ? 'تكلفة النقرة' : 'Avg CPC'} value={`${cur(googleAdsData)} ${googleAdsData.stats?.avgCpc ?? 0}`} color="text-orange-500" icon={<BarChart className="w-4 h-4" />} />
+                                                <StatCard label={isRtl ? 'معدل التحويل' : 'Conv. Rate'} value={`${googleAdsData.stats?.conversionRate ?? 0}%`} color="text-emerald-500" icon={<TrendingUp className="w-4 h-4" />} />
+                                                <StatCard label={isRtl ? 'تكلفة التحويل' : 'Cost/Conv.'} value={`${cur(googleAdsData)} ${googleAdsData.stats?.costPerConversion ?? 0}`} color="text-purple-500" icon={<DollarSign className="w-4 h-4" />} />
+                                            </div>
+                                        </div>
+
+                                        {/* Campaign Type Breakdown */}
+                                        {googleAdsData.campaignTypeBreakdown && Object.keys(googleAdsData.campaignTypeBreakdown).length > 0 && (
+                                            <div className="space-y-3">
+                                                <SectionHeader color="bg-blue-400" label={isRtl ? 'أنواع الحملات' : 'Campaign Types'} />
+                                                <div className="flex flex-wrap gap-2">
+                                                    {Object.entries(googleAdsData.campaignTypeBreakdown).map(([type, data]: [string, any]) => (
+                                                        <div key={type} className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted border border-border">
+                                                            <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
                                                             <div>
-                                                                <p className="text-sm font-medium leading-tight">{ad.name}</p>
-                                                                <div className="flex items-center gap-1.5 mt-1">
-                                                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                                                                    <span className="section-label text-muted-foreground">{ad.status}</span>
+                                                                <div className="text-xs font-medium">{type.replace(/_/g, ' ')}</div>
+                                                                <div className="text-[10px] text-muted-foreground">{data.count} {isRtl ? 'حملة' : 'campaigns'} · {cur(googleAdsData)} {data.spend.toFixed(2)}</div>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Device Breakdown */}
+                                        {googleAdsData.deviceBreakdown && Object.keys(googleAdsData.deviceBreakdown).length > 0 && (
+                                            <div className="space-y-3">
+                                                <SectionHeader color="bg-cyan-500" label={isRtl ? 'توزيع الأجهزة' : 'Device Breakdown'} />
+                                                <div className="grid grid-cols-3 gap-3">
+                                                    {Object.entries(googleAdsData.deviceBreakdown).map(([device, data]: [string, any]) => {
+                                                        const totalImpr = Object.values(googleAdsData.deviceBreakdown).reduce((s: number, d: any) => s + (d.impressions || 0), 0);
+                                                        const pct = totalImpr > 0 ? Math.round((data.impressions / totalImpr) * 100) : 0;
+                                                        const icon = device === 'MOBILE' ? <Smartphone className="w-4 h-4" /> : device === 'DESKTOP' ? <Monitor className="w-4 h-4" /> : <Tablet className="w-4 h-4" />;
+                                                        return (
+                                                            <Card key={device} className="hover:bg-muted/30">
+                                                                <CardContent className="p-3 text-center">
+                                                                    <div className="flex justify-center mb-1 text-muted-foreground">{icon}</div>
+                                                                    <div className="text-lg font-bold">{pct}%</div>
+                                                                    <div className="text-[10px] text-muted-foreground">{device}</div>
+                                                                    <div className="text-[10px] text-muted-foreground">{fmt(data.impressions)} {isRtl ? 'ظهور' : 'impr'}</div>
+                                                                </CardContent>
+                                                            </Card>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Top Keywords */}
+                                        {googleAdsData.topKeywords?.length > 0 && (
+                                            <div className="space-y-3">
+                                                <SectionHeader color="bg-green-500" label={isRtl ? 'أفضل الكلمات المفتاحية' : 'Top Keywords'} />
+                                                <div className="rounded-lg border border-border overflow-hidden">
+                                                    <table className="w-full text-xs">
+                                                        <thead><tr className="bg-muted/50 text-muted-foreground">
+                                                            <th className="text-left px-3 py-2">{isRtl ? 'الكلمة' : 'Keyword'}</th>
+                                                            <th className="text-right px-3 py-2">{isRtl ? 'ظهور' : 'Impr.'}</th>
+                                                            <th className="text-right px-3 py-2">{isRtl ? 'نقرات' : 'Clicks'}</th>
+                                                            <th className="text-right px-3 py-2">{isRtl ? 'تكلفة' : 'Cost'}</th>
+                                                        </tr></thead>
+                                                        <tbody>
+                                                            {googleAdsData.topKeywords.map((kw: any, i: number) => (
+                                                                <tr key={i} className="border-t border-border hover:bg-muted/30">
+                                                                    <td className="px-3 py-2">
+                                                                        <div className="font-medium flex items-center gap-1"><Search className="w-3 h-3 text-muted-foreground" />{kw.keyword}</div>
+                                                                        <div className="text-[10px] text-muted-foreground">{kw.matchType}</div>
+                                                                    </td>
+                                                                    <td className="px-3 py-2 text-right">{fmt(kw.impressions)}</td>
+                                                                    <td className="px-3 py-2 text-right">{fmt(kw.clicks)}</td>
+                                                                    <td className="px-3 py-2 text-right text-orange-500">{cur(googleAdsData)} {kw.cost.toFixed(2)}</td>
+                                                                </tr>
+                                                            ))}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Campaigns Sidebar */}
+                                    <div className="lg:col-span-4 space-y-3">
+                                        <SectionHeader color="bg-blue-400" label={isRtl ? 'أفضل الحملات' : 'Top Campaigns'} />
+                                        {(googleAdsData.campaigns || []).length > 0 ? (
+                                            <div className="space-y-2">
+                                                {googleAdsData.campaigns.slice(0, 8).map((c: any, i: number) => (
+                                                    <Card key={i} className="hover:bg-muted/30">
+                                                        <CardContent className="p-3">
+                                                            <div className="flex items-center gap-1.5 mb-1">
+                                                                <span className={cn('w-1.5 h-1.5 rounded-full shrink-0', c.status === 'ENABLED' ? 'bg-emerald-500' : 'bg-yellow-500')} />
+                                                                <p className="text-xs font-medium truncate">{c.name}</p>
+                                                            </div>
+                                                            <div className="text-[10px] text-muted-foreground mb-1">{c.channelType?.replace(/_/g, ' ')}</div>
+                                                            <div className="flex justify-between text-xs">
+                                                                <span className="text-orange-500 font-medium">{cur(googleAdsData)} {c.cost?.toFixed(2) ?? '0.00'}</span>
+                                                                <span className="text-muted-foreground">{fmt(c.impressions)} {isRtl ? 'ظهور' : 'impr'}</span>
+                                                            </div>
+                                                        </CardContent>
+                                                    </Card>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <div className="py-8 flex flex-col items-center justify-center rounded-lg border border-dashed border-border">
+                                                <Megaphone className="w-8 h-8 mb-2 text-muted-foreground/30" />
+                                                <p className="text-xs text-muted-foreground">{isRtl ? 'لا توجد حملات' : 'No campaigns in range'}</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </>
+                        )}
+
+                        {/* ── YOUTUBE ───────────────────────────────────────────────────── */}
+                        {activeTab === 'youtube' && youtubeData && (
+                            <>
+                                <PeriodBar period={ytPeriod} since={ytSince} until={ytUntil} loading={ytLoading} color="#FF0000"
+                                    onApply={(p, s, u) => fetchYt(p, s, u)} isRtl={isRtl} />
+
+                                <div className="grid lg:grid-cols-12 gap-5">
+                                    <div className="lg:col-span-8 space-y-5">
+                                        <div className="space-y-3">
+                                            <SectionHeader color="bg-red-500" label={isRtl ? 'إحصائيات القناة' : 'Channel Overview'} />
+                                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                                <StatCard label={isRtl ? 'المشتركون' : 'Subscribers'} value={fmt(youtubeData.stats?.subscribers)} color="text-red-500" icon={<Users className="w-4 h-4" />} />
+                                                <StatCard label={isRtl ? 'إجمالي المشاهدات' : 'Total Views'} value={fmt(youtubeData.stats?.totalViews)} color="text-emerald-500" icon={<Eye className="w-4 h-4" />} />
+                                                <StatCard label={isRtl ? 'عدد الفيديوهات' : 'Videos'} value={fmt(youtubeData.stats?.videoCount)} color="text-orange-400" icon={<PlaySquare className="w-4 h-4" />} />
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-3">
+                                            <SectionHeader color="bg-red-400" label={isRtl ? `تحليلات الفترة (${youtubeData.period})` : `Period Analytics (${youtubeData.period})`} />
+                                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                                <StatCard label={isRtl ? 'المشاهدات' : 'Views'} value={fmt(youtubeData.stats?.recentViews)} color="text-primary" icon={<Eye className="w-4 h-4" />} />
+                                                <StatCard label={isRtl ? 'دقائق المشاهدة' : 'Watch Time (min)'} value={fmt(youtubeData.stats?.watchTimeMinutes)} color="text-red-400" icon={<Clock className="w-4 h-4" />} />
+                                                <StatCard label={isRtl ? 'متوسط المدة (ث)' : 'Avg Duration (s)'} value={`${Math.round(youtubeData.stats?.avgViewDuration ?? 0)}s`} color="text-primary" icon={<Activity className="w-4 h-4" />} />
+                                                <StatCard label={isRtl ? 'معدل الاحتفاظ' : 'Avg View %'} value={`${youtubeData.stats?.avgViewPercentage ?? 0}%`} color="text-cyan-500" icon={<TrendingUp className="w-4 h-4" />} />
+                                                <StatCard label={isRtl ? 'مشتركون جدد' : 'New Subscribers'} value={fmt(youtubeData.stats?.subscribersGained)} color="text-emerald-500" icon={<Users className="w-4 h-4" />} />
+                                                <StatCard label={isRtl ? 'إلغاء اشتراك' : 'Unsubscribes'} value={fmt(youtubeData.stats?.subscribersLost)} color="text-rose-500" icon={<Users className="w-4 h-4" />} />
+                                                <StatCard label={isRtl ? 'الإعجابات' : 'Likes'} value={fmt(youtubeData.stats?.likes)} color="text-rose-500" icon={<Heart className="w-4 h-4" />} />
+                                                <StatCard label={isRtl ? 'التعليقات' : 'Comments'} value={fmt(youtubeData.stats?.comments)} color="text-blue-400" icon={<MessageCircle className="w-4 h-4" />} />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Recent Videos Sidebar */}
+                                    <div className="lg:col-span-4 space-y-3">
+                                        <SectionHeader color="bg-red-400" label={isRtl ? 'أحدث الفيديوهات' : 'Recent Videos'} />
+                                        {(youtubeData.recentVideos || []).length > 0 ? (
+                                            <div className="space-y-2">
+                                                {youtubeData.recentVideos.map((v: any, i: number) => (
+                                                    <Card key={i} className="hover:bg-muted/30">
+                                                        <CardContent className="p-3">
+                                                            <p className="text-xs font-medium line-clamp-2 mb-1.5">{v.title}</p>
+                                                            <div className="flex gap-3 text-[10px] text-muted-foreground">
+                                                                <span className="flex items-center gap-0.5"><Eye className="w-3 h-3" /> {fmt(v.views)}</span>
+                                                                <span className="flex items-center gap-0.5"><Heart className="w-3 h-3" /> {fmt(v.likes)}</span>
+                                                                <span className="flex items-center gap-0.5"><MessageCircle className="w-3 h-3" /> {fmt(v.comments)}</span>
+                                                            </div>
+                                                        </CardContent>
+                                                    </Card>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <div className="py-8 flex flex-col items-center justify-center rounded-lg border border-dashed border-border">
+                                                <Youtube className="w-8 h-8 mb-2 text-muted-foreground/30" />
+                                                <p className="text-xs text-muted-foreground">{isRtl ? 'لا توجد فيديوهات' : 'No videos found'}</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </>
+                        )}
+
+                        {/* ── SALLA ─────────────────────────────────────────────────────── */}
+                        {activeTab === 'salla' && sallaData && (
+                            <>
+                                <PeriodBar period={sallaPeriod} since={sallaSince} until={sallaUntil} loading={sallaLoading} color="#7C3AED"
+                                    onApply={(p, s, u) => fetchSalla(p, s, u)} isRtl={isRtl} />
+
+                                <div className="grid lg:grid-cols-12 gap-5">
+                                    <div className="lg:col-span-8 space-y-5">
+                                        <div className="space-y-3">
+                                            <SectionHeader color="bg-violet-500" label={isRtl ? 'نظرة عامة على المتجر' : 'Store Overview'} />
+                                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                                <StatCard label={isRtl ? 'إجمالي الطلبات' : 'Total Orders'} value={fmt(sallaData.stats?.totalOrders)} color="text-violet-400" icon={<ShoppingCart className="w-4 h-4" />} />
+                                                <StatCard label={isRtl ? 'الإيرادات' : 'Revenue'} value={`${sc(sallaData)} ${fmt(sallaData.stats?.revenue, 2)}`} color="text-emerald-500" icon={<DollarSign className="w-4 h-4" />} />
+                                                <StatCard label={isRtl ? 'متوسط قيمة الطلب' : 'Avg Order Value'} value={`${sc(sallaData)} ${fmt(sallaData.stats?.avgOrderValue, 2)}`} color="text-violet-500" icon={<TrendingUp className="w-4 h-4" />} />
+                                                <StatCard label={isRtl ? 'طلبات معلقة' : 'Pending'} value={fmt(sallaData.stats?.pendingOrders)} color="text-yellow-500" icon={<Clock className="w-4 h-4" />} />
+                                                <StatCard label={isRtl ? 'إجمالي المنتجات' : 'Products'} value={fmt(sallaData.stats?.totalProducts)} color="text-orange-400" icon={<Package className="w-4 h-4" />} />
+                                                <StatCard label={isRtl ? 'إجمالي العملاء' : 'Customers'} value={fmt(sallaData.stats?.totalCustomers)} color="text-blue-400" icon={<Users className="w-4 h-4" />} />
+                                                <StatCard label={isRtl ? 'سلال متروكة' : 'Abandoned Carts'} value={fmt(sallaData.stats?.abandonedCarts)} color="text-rose-500" icon={<ShoppingCart className="w-4 h-4" />} />
+                                            </div>
+                                        </div>
+
+                                        {/* Order Status Breakdown */}
+                                        {sallaData.orderStatusBreakdown && Object.keys(sallaData.orderStatusBreakdown).length > 0 && (
+                                            <div className="space-y-3">
+                                                <SectionHeader color="bg-violet-400" label={isRtl ? 'توزيع حالات الطلبات' : 'Order Status Breakdown'} />
+                                                <div className="flex flex-wrap gap-2">
+                                                    {Object.entries(sallaData.orderStatusBreakdown).map(([status, count]) => (
+                                                        <div key={status} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-muted border border-border">
+                                                            <span className="w-1.5 h-1.5 rounded-full bg-violet-400" />
+                                                            <span className="text-xs font-medium">{status.replace(/_/g, ' ')}</span>
+                                                            <span className="text-xs text-muted-foreground">({count as number})</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Top Products */}
+                                        {sallaData.topProducts?.length > 0 && (
+                                            <div className="space-y-3">
+                                                <SectionHeader color="bg-orange-400" label={isRtl ? 'المنتجات (حديثة)' : 'Products (Recent)'} />
+                                                <div className="rounded-lg border border-border overflow-hidden">
+                                                    <table className="w-full text-xs">
+                                                        <thead><tr className="bg-muted/50 text-muted-foreground">
+                                                            <th className="text-left px-3 py-2 font-medium">{isRtl ? 'المنتج' : 'Product'}</th>
+                                                            <th className="text-right px-3 py-2 font-medium">{isRtl ? 'السعر' : 'Price'}</th>
+                                                            <th className="text-right px-3 py-2 font-medium">{isRtl ? 'الحالة' : 'Status'}</th>
+                                                        </tr></thead>
+                                                        <tbody>
+                                                            {sallaData.topProducts.map((p: any, i: number) => (
+                                                                <tr key={i} className="border-t border-border hover:bg-muted/30">
+                                                                    <td className="px-3 py-2">
+                                                                        <div className="font-medium truncate max-w-[180px]">{p.name || `Product #${p.id}`}</div>
+                                                                        {p.sku && <div className="text-[10px] text-muted-foreground">SKU: {p.sku}</div>}
+                                                                    </td>
+                                                                    <td className="px-3 py-2 text-right text-emerald-500 font-medium">{p.currency || sc(sallaData)} {p.price}</td>
+                                                                    <td className="px-3 py-2 text-right"><Badge variant="outline" className="text-[10px]">{p.status}</Badge></td>
+                                                                </tr>
+                                                            ))}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Recent Orders Sidebar */}
+                                    <div className="lg:col-span-4 space-y-3">
+                                        <SectionHeader color="bg-emerald-500" label={isRtl ? 'آخر الطلبات' : 'Recent Orders'} />
+                                        {(sallaData.recentOrders || []).length > 0 ? (
+                                            <div className="space-y-2">
+                                                {sallaData.recentOrders.map((o: any, i: number) => (
+                                                    <Card key={i} className="hover:bg-muted/30">
+                                                        <CardContent className="p-3">
+                                                            <div className="flex justify-between items-start">
+                                                                <div>
+                                                                    <p className="text-xs font-medium">{o.id}</p>
+                                                                    <p className="text-[10px] text-muted-foreground truncate max-w-[100px]">{o.customer}</p>
+                                                                </div>
+                                                                <div className="text-right">
+                                                                    <p className="text-xs font-medium text-emerald-500">{o.currency || sc(sallaData)} {o.total?.toLocaleString() ?? '0'}</p>
+                                                                    <p className="text-[10px] text-muted-foreground">{o.status}</p>
                                                                 </div>
                                                             </div>
-                                                        </div>
-                                                        <div className="text-right shrink-0">
-                                                            <p className="text-xs font-medium">{ad.spend}</p>
-                                                            <p className="section-label text-muted-foreground mt-0.5">{ad.results}</p>
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="mt-3 h-1 w-full bg-muted rounded-full overflow-hidden">
-                                                        <motion.div
-                                                            initial={{ width: 0 }}
-                                                            animate={{ width: '70%' }}
-                                                            className="h-full bg-primary rounded-full"
-                                                        />
-                                                    </div>
-                                                </CardContent>
-                                            </Card>
-                                        ))
-                                    ) : (
-                                        <div className="py-12 flex flex-col items-center justify-center text-center rounded-lg border border-dashed border-border">
-                                            {activeTab === 'salla'
-                                                ? <ShoppingCart className="w-8 h-8 mb-3 text-muted-foreground/30" />
-                                                : <PlaySquare className="w-8 h-8 mb-3 text-muted-foreground/30" />
-                                            }
-                                            <p className="text-xs text-muted-foreground">
-                                                {activeTab === 'salla'
-                                                    ? (isRtl ? "لا توجد طلبات حديثة" : "No recent orders")
-                                                    : (isRtl ? "لا توجد حملات حية حالياً" : "No active campaigns at the moment")}
-                                            </p>
-                                        </div>
-                                    )}
+                                                        </CardContent>
+                                                    </Card>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <div className="py-8 flex flex-col items-center justify-center rounded-lg border border-dashed border-border">
+                                                <ShoppingCart className="w-8 h-8 mb-2 text-muted-foreground/30" />
+                                                <p className="text-xs text-muted-foreground">{isRtl ? 'لا توجد طلبات' : 'No recent orders'}</p>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
+                            </>
+                        )}
 
-                                <button className="w-full py-2.5 rounded-lg border border-border text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors">
-                                    {isRtl ? "عرض جميع الإعلانات" : "View Analytics Report"}
-                                </button>
+                        {/* ── LINKEDIN ──────────────────────────────────────────────────── */}
+                        {activeTab === 'linkedin' && linkedinData && (
+                            <>
+                                <PeriodBar period={liPeriod} since={liSince} until={liUntil} loading={liLoading} color="#0077B5"
+                                    onApply={(p, s, u) => fetchLi(p, s, u)} isRtl={isRtl} />
+
+                                <div className="space-y-3">
+                                    <SectionHeader color="bg-blue-600" label={isRtl ? 'أداء الصفحة' : 'Page Performance'} />
+                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                        <StatCard label={isRtl ? 'المتابعون' : 'Followers'} value={fmt(linkedinData.stats?.followers)} color="text-blue-400" icon={<Users className="w-4 h-4" />} />
+                                        <StatCard label={isRtl ? 'زوار فريدون' : 'Unique Visitors'} value={fmt(linkedinData.stats?.uniqueVisitors)} color="text-emerald-500" icon={<Activity className="w-4 h-4" />} />
+                                        <StatCard label={isRtl ? 'مشاهدات الصفحة' : 'Page Views'} value={fmt(linkedinData.stats?.pageViews)} color="text-primary" icon={<Eye className="w-4 h-4" />} />
+                                        <StatCard label={isRtl ? 'الظهور' : 'Post Impressions'} value={fmt(linkedinData.stats?.impressions)} color="text-purple-400" icon={<TrendingUp className="w-4 h-4" />} />
+                                        <StatCard label={isRtl ? 'النقرات' : 'Post Clicks'} value={fmt(linkedinData.stats?.clicks)} color="text-emerald-500" icon={<MousePointer2 className="w-4 h-4" />} />
+                                        <StatCard label={isRtl ? 'المشاركات' : 'Shares'} value={fmt(linkedinData.stats?.shares)} color="text-blue-500" icon={<Share2 className="w-4 h-4" />} />
+                                        <StatCard label={isRtl ? 'التفاعل' : 'Engagement Rate'} value={(Number(linkedinData.stats?.engagement || 0) * 100).toFixed(2) + '%'} color="text-orange-500" icon={<TrendingUp className="w-4 h-4" />} />
+                                    </div>
+                                </div>
+                            </>
+                        )}
+
+                        {/* ── X (TWITTER) ───────────────────────────────────────────────── */}
+                        {activeTab === 'x' && xData && (
+                            <>
+                                <div className="grid lg:grid-cols-12 gap-5">
+                                    <div className="lg:col-span-8 space-y-5">
+                                        <div className="space-y-3">
+                                            <SectionHeader color="bg-gray-700" label={isRtl ? 'إحصائيات الحساب' : 'Account Stats'} />
+                                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                                <StatCard label={isRtl ? 'المتابعون' : 'Followers'} value={fmt(xData.stats?.followers)} color="text-blue-400" icon={<Users className="w-4 h-4" />} />
+                                                <StatCard label={isRtl ? 'يتابع' : 'Following'} value={fmt(xData.stats?.following)} color="text-emerald-500" icon={<Activity className="w-4 h-4" />} />
+                                                <StatCard label={isRtl ? 'إجمالي التغريدات' : 'Total Tweets'} value={fmt(xData.stats?.tweets)} color="text-primary" icon={<MessageCircle className="w-4 h-4" />} />
+                                                <StatCard label={isRtl ? 'الإعجابات المُعطاة' : 'Likes Given'} value={fmt(xData.stats?.likes)} color="text-rose-500" icon={<Heart className="w-4 h-4" />} />
+                                                <StatCard label={isRtl ? 'القوائم' : 'Listed In'} value={fmt(xData.stats?.listed)} color="text-purple-500" icon={<Hash className="w-4 h-4" />} />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Recent Tweets */}
+                                    <div className="lg:col-span-4 space-y-3">
+                                        <SectionHeader color="bg-gray-700" label={isRtl ? 'أحدث التغريدات' : 'Recent Tweets'} />
+                                        {(xData.recentTweets || []).length > 0 ? (
+                                            <div className="space-y-2">
+                                                {xData.recentTweets.map((t: any, i: number) => (
+                                                    <Card key={i} className="hover:bg-muted/30">
+                                                        <CardContent className="p-3">
+                                                            <p className="text-xs line-clamp-2 mb-2">{t.text}</p>
+                                                            <div className="flex flex-wrap gap-2 text-[10px] text-muted-foreground">
+                                                                <span className="flex items-center gap-0.5"><Heart className="w-3 h-3" /> {fmt(t.likes)}</span>
+                                                                <span className="flex items-center gap-0.5"><Share2 className="w-3 h-3" /> {fmt(t.retweets)}</span>
+                                                                <span className="flex items-center gap-0.5"><MessageCircle className="w-3 h-3" /> {fmt(t.replies)}</span>
+                                                                {t.impressions > 0 && <span className="flex items-center gap-0.5"><Eye className="w-3 h-3" /> {fmt(t.impressions)}</span>}
+                                                            </div>
+                                                        </CardContent>
+                                                    </Card>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <div className="py-8 flex flex-col items-center justify-center rounded-lg border border-dashed border-border">
+                                                <Twitter className="w-8 h-8 mb-2 text-muted-foreground/30" />
+                                                <p className="text-xs text-muted-foreground">{isRtl ? 'لا توجد تغريدات حديثة' : 'No recent tweets'}</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </>
+                        )}
+
+                        {/* ── TIKTOK ────────────────────────────────────────────────────── */}
+                        {activeTab === 'tiktok' && (
+                            <div className="flex items-center gap-3 bg-muted/30 border border-border px-4 py-3 rounded-lg">
+                                <Info className="w-5 h-5 text-muted-foreground shrink-0" />
+                                <p className="text-xs text-muted-foreground">{isRtl ? 'سيتم إضافة تيك توك قريباً بعد الموافقة على الوصول' : 'TikTok integration coming soon — pending API access approval'}</p>
                             </div>
-                        </div>
+                        )}
+
+                    </div>
+                    /* ═══════════════════════════════════════════════════════════════════ */
                     )}
 
-                    {/* Snapchat Extras: Targeting + Objective Breakdown */}
-                    {activeTab === 'snapchat' && snapData && (
-                        <div className="grid md:grid-cols-2 gap-4">
-                            {/* Objective Breakdown */}
-                            {snapData.objectiveBreakdown && Object.keys(snapData.objectiveBreakdown).length > 0 && (
-                                <Card>
-                                    <CardContent className="p-4">
-                                        <div className="flex items-center gap-2 mb-3">
-                                            <div className="h-3 w-0.5 bg-yellow-400 rounded-full" />
-                                            <p className="section-label text-muted-foreground">{isRtl ? "تفاصيل الأهداف" : "Campaign Objectives"}</p>
-                                        </div>
-                                        <div className="flex flex-wrap gap-2">
-                                            {Object.entries(snapData.objectiveBreakdown).map(([obj, count]) => (
-                                                <div key={obj} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-muted border border-border">
-                                                    <span className="w-1.5 h-1.5 rounded-full bg-yellow-400" />
-                                                    <span className="text-xs font-medium">{obj.replace(/_/g, ' ')}</span>
-                                                    <span className="text-xs text-muted-foreground">({count as number})</span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            )}
-
-                            {/* Targeting Overview */}
-                            {snapData.targeting && (
-                                <Card>
-                                    <CardContent className="p-4">
-                                        <div className="flex items-center gap-2 mb-3">
-                                            <div className="h-3 w-0.5 bg-emerald-500 rounded-full" />
-                                            <p className="section-label text-muted-foreground">{isRtl ? "استهداف الحملة النشطة" : "Active Campaign Targeting"}</p>
-                                        </div>
-                                        <div className="space-y-2">
-                                            {(snapData.targeting.ageMin || snapData.targeting.ageMax) && (
-                                                <div className="flex items-center justify-between text-xs">
-                                                    <span className="text-muted-foreground">{isRtl ? "الفئة العمرية" : "Age Range"}</span>
-                                                    <span className="font-medium">{snapData.targeting.ageMin ?? '—'} – {snapData.targeting.ageMax ?? '—'}</span>
-                                                </div>
-                                            )}
-                                            {snapData.targeting.countries?.length > 0 && (
-                                                <div className="flex items-center justify-between text-xs">
-                                                    <span className="text-muted-foreground">{isRtl ? "الدول" : "Countries"}</span>
-                                                    <span className="font-medium">{snapData.targeting.countries.join(', ')}</span>
-                                                </div>
-                                            )}
-                                            {snapData.targeting.dailyBudget > 0 && (
-                                                <div className="flex items-center justify-between text-xs">
-                                                    <span className="text-muted-foreground">{isRtl ? "الميزانية اليومية" : "Daily Budget"}</span>
-                                                    <span className="font-medium">{snapData.currency || 'SAR'} {snapData.targeting.dailyBudget.toFixed(2)}</span>
-                                                </div>
-                                            )}
-                                            {snapData.targeting.optimizationGoal && (
-                                                <div className="flex items-center justify-between text-xs">
-                                                    <span className="text-muted-foreground">{isRtl ? "هدف التحسين" : "Optimization Goal"}</span>
-                                                    <span className="font-medium">{snapData.targeting.optimizationGoal.replace(/_/g, ' ')}</span>
-                                                </div>
-                                            )}
-                                            {snapData.targeting.bidStrategy && (
-                                                <div className="flex items-center justify-between text-xs">
-                                                    <span className="text-muted-foreground">{isRtl ? "استراتيجية المزايدة" : "Bid Strategy"}</span>
-                                                    <span className="font-medium">{snapData.targeting.bidStrategy.replace(/_/g, ' ')}</span>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            )}
-                        </div>
-                    )}
                 </motion.div>
             </AnimatePresence>
 
-            {/* Footer Notice */}
+            {/* Footer */}
             <div className="pt-6 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4 text-muted-foreground/60">
                 <div className="flex items-center gap-3">
                     <div className="p-1.5 rounded-md bg-muted">
@@ -702,8 +1038,8 @@ export function LiveMetrics() {
                     </div>
                     <p className="text-[10px] max-w-sm leading-relaxed">
                         {isRtl
-                            ? "يتم جلب البيانات الحقيقية فقط للمنصات المفعلة. المنصات الأخرى تظهر أغراض التوضيح وسوف يتم تفعيلها فور الربط."
-                            : "Real-time metrics are synced only for connected platforms. Other platforms show simulation data for visualization."}
+                            ? 'يتم جلب البيانات الحقيقية فقط للمنصات المفعلة. استخدم محدد التاريخ لتحليل أي فترة زمنية.'
+                            : 'Real-time metrics synced for connected platforms. Use the date picker to analyze any time period.'}
                     </p>
                 </div>
                 <p className="text-[9px] shrink-0">Last sync: {new Date().toLocaleTimeString()}</p>

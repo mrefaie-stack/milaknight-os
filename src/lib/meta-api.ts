@@ -41,7 +41,7 @@ export class MetaAPI {
      */
     async getAdAccountInsights(adAccountId: string, datePreset: string = 'last_30d', since?: string, until?: string) {
         const params: Record<string, string> = {
-            fields: 'spend,impressions,clicks,cpc,ctr,reach'
+            fields: 'spend,impressions,clicks,cpc,ctr,reach,frequency,cpp,actions'
         };
         if (since && until) {
             params.time_range = JSON.stringify({ since, until });
@@ -52,13 +52,49 @@ export class MetaAPI {
     }
 
     /**
+     * Fetch campaign-level insights for the ad account
+     */
+    async getCampaignInsights(adAccountId: string, since?: string, until?: string) {
+        const dateParam = since && until
+            ? `time_range({"since":"${since}","until":"${until}"})`
+            : 'date_preset(last_30d)';
+        try {
+            const data = await this.fetch(`/${adAccountId}/campaigns`, {
+                fields: `id,name,status,objective,insights.${dateParam}{spend,impressions,clicks,ctr,reach,frequency,cpp}`,
+                limit: '10'
+            });
+            return ((data as any).data || []).map((c: any) => {
+                const ins = c.insights?.data?.[0] || {};
+                return {
+                    id: c.id,
+                    name: c.name,
+                    status: c.status,
+                    objective: c.objective || '',
+                    spend: ins.spend || '0',
+                    impressions: Number(ins.impressions) || 0,
+                    clicks: Number(ins.clicks) || 0,
+                    ctr: parseFloat(ins.ctr || '0').toFixed(2),
+                    reach: Number(ins.reach) || 0,
+                    frequency: parseFloat(ins.frequency || '0').toFixed(2),
+                    cpp: ins.cpp || '0'
+                };
+            }).filter((c: any) => c.impressions > 0 || parseFloat(c.spend) > 0);
+        } catch {
+            return [];
+        }
+    }
+
+    /**
      * Fetch active ads for a specific ad account
      */
-    async getActiveAds(adAccountId: string) {
+    async getActiveAds(adAccountId: string, since?: string, until?: string) {
+        const insightParam = since && until
+            ? `insights.time_range({"since":"${since}","until":"${until}"})`
+            : 'insights.date_preset(last_30d)';
         return this.fetch(`/${adAccountId}/ads`, {
-            fields: 'name,status,insights.date_preset(last_30d){spend,impressions,clicks}',
+            fields: `name,status,${insightParam}{spend,impressions,clicks}`,
             filtering: '[{"field":"effective_status","operator":"IN","value":["ACTIVE"]}]',
-            limit: '5'
+            limit: '8'
         });
     }
 

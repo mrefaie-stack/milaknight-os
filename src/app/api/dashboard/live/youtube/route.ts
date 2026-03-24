@@ -4,11 +4,15 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { YouTubeAPI } from '@/lib/youtube-api';
 
-export async function GET() {
+export async function GET(request: Request) {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    const { searchParams } = new URL(request.url);
+    const until = searchParams.get('until') || new Date().toISOString().slice(0, 10);
+    const since = searchParams.get('since') || new Date(Date.now() - 28 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
     try {
         const clientProfile = await (prisma as any).client.findFirst({
@@ -42,18 +46,13 @@ export async function GET() {
 
         const api = new YouTubeAPI(accessToken);
 
-        // Channel stats (always available)
         const channelStats = await api.getChannelStats();
         if (!channelStats) {
             return NextResponse.json({ error: 'No YouTube channel found on this account' }, { status: 404 });
         }
 
-        // Analytics for last 28 days
-        const until = new Date().toISOString().slice(0, 10);
-        const since = new Date(Date.now() - 28 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
-
         let analytics = {
-            views: 0, estimatedMinutesWatched: 0, averageViewDuration: 0,
+            views: 0, estimatedMinutesWatched: 0, averageViewDuration: 0, averageViewPercentage: 0,
             subscribersGained: 0, subscribersLost: 0, likes: 0, comments: 0, shares: 0
         };
         try {
@@ -62,10 +61,9 @@ export async function GET() {
             console.error('YouTube analytics fetch failed:', e);
         }
 
-        // Recent videos
         let recentVideos: any[] = [];
         try {
-            recentVideos = await api.getRecentVideos(6);
+            recentVideos = await api.getRecentVideos(8);
         } catch (e) {
             console.error('YouTube recent videos fetch failed:', e);
         }
@@ -79,11 +77,12 @@ export async function GET() {
                 subscribers: channelStats.subscribers,
                 totalViews: channelStats.totalViews,
                 videoCount: channelStats.videoCount,
-                // Last 28d analytics
                 recentViews: analytics.views,
                 watchTimeMinutes: analytics.estimatedMinutesWatched,
                 avgViewDuration: analytics.averageViewDuration,
+                avgViewPercentage: Math.round(analytics.averageViewPercentage * 10) / 10,
                 subscribersGained: analytics.subscribersGained,
+                subscribersLost: analytics.subscribersLost,
                 likes: analytics.likes,
                 comments: analytics.comments,
                 shares: analytics.shares

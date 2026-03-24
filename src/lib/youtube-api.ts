@@ -54,7 +54,7 @@ export class YouTubeAPI {
             ids: `channel==${channelId}`,
             startDate,
             endDate,
-            metrics: 'views,estimatedMinutesWatched,averageViewDuration,subscribersGained,subscribersLost,likes,comments,shares'
+            metrics: 'views,estimatedMinutesWatched,averageViewDuration,averageViewPercentage,subscribersGained,subscribersLost,likes,comments,shares'
         });
 
         const res = await fetch(`${YT_ANALYTICS}/reports?${params}`, {
@@ -76,6 +76,7 @@ export class YouTubeAPI {
             views: get('views'),
             estimatedMinutesWatched: get('estimatedMinutesWatched'),
             averageViewDuration: get('averageViewDuration'),
+            averageViewPercentage: get('averageViewPercentage'),
             subscribersGained: get('subscribersGained'),
             subscribersLost: get('subscribersLost'),
             likes: get('likes'),
