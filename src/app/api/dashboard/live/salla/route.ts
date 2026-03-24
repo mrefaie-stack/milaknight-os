@@ -4,11 +4,15 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { SallaApi, refreshSallaToken } from '@/lib/salla-api';
 
-export async function GET() {
+export async function GET(request: Request) {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    const { searchParams } = new URL(request.url);
+    const since = searchParams.get('since') || undefined;
+    const until = searchParams.get('until') || undefined;
 
     try {
         const clientProfile = await (prisma as any).client.findFirst({
@@ -45,28 +49,37 @@ export async function GET() {
 
         const api = new SallaApi(accessToken);
 
-        const [ordersResult, productsResult, customersResult, abandonedResult] = await Promise.allSettled([
-            api.getOrdersSummary(),
+        const [ordersResult, productsCountResult, customersResult, abandonedResult, storeInfoResult, topProductsResult] = await Promise.allSettled([
+            api.getOrdersSummary(since, until),
             api.getProductsCount(),
             api.getCustomersCount(),
-            api.getAbandonedCartsCount()
+            api.getAbandonedCartsCount(),
+            api.getStoreInfo(),
+            api.getTopProducts(8)
         ]);
 
         const ordersData = ordersResult.status === 'fulfilled' ? ordersResult.value : { orders: [], total: 0 };
-        const totalProducts = productsResult.status === 'fulfilled' ? productsResult.value : 0;
+        const totalProducts = productsCountResult.status === 'fulfilled' ? productsCountResult.value : 0;
         const totalCustomers = customersResult.status === 'fulfilled' ? customersResult.value : 0;
         const abandonedCarts = abandonedResult.status === 'fulfilled' ? abandonedResult.value : 0;
+        const storeInfo = storeInfoResult.status === 'fulfilled' ? storeInfoResult.value : {};
+        const topProducts = topProductsResult.status === 'fulfilled' ? topProductsResult.value : [];
 
         // Aggregate order stats
         let revenue = 0;
         let pendingOrders = 0;
+        const orderStatusBreakdown: Record<string, number> = {};
         const recentOrders: any[] = [];
 
         for (const order of (ordersData.orders as any[])) {
             const amount = parseFloat(order.amounts?.total?.amount ?? order.total ?? 0);
             revenue += isNaN(amount) ? 0 : amount;
-            if (order.status?.slug === 'pending' || order.status?.slug === 'under_review') pendingOrders++;
-            if (recentOrders.length < 6) {
+
+            const statusSlug = order.status?.slug || 'unknown';
+            if (statusSlug === 'pending' || statusSlug === 'under_review') pendingOrders++;
+            orderStatusBreakdown[statusSlug] = (orderStatusBreakdown[statusSlug] || 0) + 1;
+
+            if (recentOrders.length < 8) {
                 recentOrders.push({
                     id: order.reference_id || `#${order.id}`,
                     customer: order.customer?.first_name
@@ -75,17 +88,19 @@ export async function GET() {
                     total: parseFloat(order.amounts?.total?.amount ?? order.total ?? 0),
                     currency: order.currency || 'SAR',
                     status: order.status?.name || order.status?.slug || 'unknown',
-                    statusSlug: order.status?.slug || '',
+                    statusSlug,
                     date: order.created_at
                 });
             }
         }
 
+        const currency = (ordersData.orders as any[])[0]?.currency
+            || (storeInfo as any).currency
+            || 'SAR';
+
         const avgOrderValue = ordersData.orders.length > 0
             ? Math.round((revenue / ordersData.orders.length) * 100) / 100
             : 0;
-
-        const currency = (ordersData.orders as any[])[0]?.currency || 'SAR';
 
         const meta = connection.metadata ? JSON.parse(connection.metadata) : {};
 
@@ -103,7 +118,10 @@ export async function GET() {
                 totalCustomers,
                 abandonedCarts
             },
+            orderStatusBreakdown,
             recentOrders,
+            topProducts,
+            period: since && until ? `${since} → ${until}` : 'Latest 50 Orders',
             status: 'success'
         });
     } catch (error: any) {

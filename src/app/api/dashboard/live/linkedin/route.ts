@@ -4,9 +4,13 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { LinkedInAPI } from '@/lib/linkedin-api';
 
-export async function GET() {
+export async function GET(request: Request) {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const { searchParams } = new URL(request.url);
+    const sinceParam = searchParams.get('since');
+    const untilParam = searchParams.get('until');
 
     try {
         const clientProfile = await (prisma as any).client.findFirst({
@@ -82,10 +86,10 @@ export async function GET() {
                 console.error('LinkedIn page stats failed:', e);
             }
 
-            // Get share/post stats for last 30 days
+            // Get share/post stats for the given period
             try {
-                const since = Date.now() - 30 * 24 * 60 * 60 * 1000;
-                const until = Date.now();
+                const since = sinceParam ? new Date(sinceParam).getTime() : Date.now() - 30 * 24 * 60 * 60 * 1000;
+                const until = untilParam ? new Date(untilParam).getTime() : Date.now();
                 const shareData = await li.getOrganizationShareStats(orgId, since, until);
                 const elements = shareData.elements || [];
                 stats.impressions = elements.reduce((s: number, e: any) => s + (e.totalShareStatistics?.impressionCount || 0), 0);

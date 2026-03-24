@@ -71,11 +71,37 @@ export async function GET() {
 
         const user = userData.data;
 
+        // Fetch recent tweets with metrics
+        let recentTweets: any[] = [];
+        if (user?.id) {
+            try {
+                const tweetsRes = await fetch(
+                    `https://api.twitter.com/2/users/${user.id}/tweets?max_results=10&tweet.fields=public_metrics,created_at,text&exclude=retweets,replies`,
+                    { headers: { Authorization: `Bearer ${accessToken}` } }
+                );
+                if (tweetsRes.ok) {
+                    const tweetsData = await tweetsRes.json();
+                    recentTweets = (tweetsData.data || []).map((t: any) => ({
+                        id: t.id,
+                        text: t.text?.slice(0, 140) || '',
+                        createdAt: t.created_at,
+                        likes: t.public_metrics?.like_count ?? 0,
+                        retweets: t.public_metrics?.retweet_count ?? 0,
+                        replies: t.public_metrics?.reply_count ?? 0,
+                        quotes: t.public_metrics?.quote_count ?? 0,
+                        impressions: t.public_metrics?.impression_count ?? 0,
+                        bookmarks: t.public_metrics?.bookmark_count ?? 0
+                    }));
+                }
+            } catch { /* ignore */ }
+        }
+
         return NextResponse.json({
             platform: 'X',
             accountName: user?.name || connection.platformAccountName || 'X Account',
             username: user?.username || meta.username,
             profileImageUrl: user?.profile_image_url,
+            description: user?.description || '',
             stats: {
                 followers: user?.public_metrics?.followers_count ?? 0,
                 following: user?.public_metrics?.following_count ?? 0,
@@ -83,6 +109,7 @@ export async function GET() {
                 likes: user?.public_metrics?.like_count ?? 0,
                 listed: user?.public_metrics?.listed_count ?? 0,
             },
+            recentTweets,
             status: 'success'
         });
     } catch (error: any) {

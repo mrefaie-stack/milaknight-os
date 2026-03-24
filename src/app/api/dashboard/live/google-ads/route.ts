@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma';
 import { GoogleAdsAPI } from '@/lib/google-ads-api';
 import { YouTubeAPI } from '@/lib/youtube-api';
 
-export async function GET() {
+export async function GET(request: Request) {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -15,6 +15,10 @@ export async function GET() {
     if (!developerToken) {
         return NextResponse.json({ error: 'Google Ads developer token not configured' }, { status: 503 });
     }
+
+    const { searchParams } = new URL(request.url);
+    const until = searchParams.get('until') || new Date().toISOString().slice(0, 10);
+    const since = searchParams.get('since') || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
     try {
         const clientProfile = await (prisma as any).client.findFirst({
@@ -46,13 +50,12 @@ export async function GET() {
             }
         }
 
-        // Get customer ID from stored metadata (must be set manually by user)
+        // Get customer ID from stored metadata
         let customerIds: string[] = [];
         if (connection.metadata) {
             try {
                 const meta = JSON.parse(connection.metadata);
                 if (meta.selectedAdsCustomerId) {
-                    // Strip dashes in case user entered XXX-XXX-XXXX format
                     customerIds = [meta.selectedAdsCustomerId.replace(/-/g, '')];
                 }
             } catch { /* ignore */ }
@@ -66,18 +69,14 @@ export async function GET() {
 
         const api = new GoogleAdsAPI(accessToken, developerToken);
 
-        // Fetch currency from first customer account
+        // Fetch currency from first customer
         let currency = 'USD';
         try {
             const info = await api.getCustomerInfo(customerIds[0]);
             if (info?.currencyCode) currency = info.currencyCode;
         } catch { /* ignore */ }
 
-        // Last 30 days
-        const until = new Date().toISOString().slice(0, 10);
-        const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
-
-        // Aggregate across all accessible customer accounts
+        // Aggregate across all customer accounts
         const aggregated = {
             totalImpressions: 0,
             totalClicks: 0,
@@ -99,8 +98,33 @@ export async function GET() {
             }
         }));
 
-        // Sort by impressions
+        // Sort campaigns by impressions
         aggregated.campaigns.sort((a, b) => b.impressions - a.impressions);
+
+        // Campaign type breakdown
+        const campaignTypeBreakdown: Record<string, { count: number; spend: number; impressions: number }> = {};
+        for (const c of aggregated.campaigns) {
+            const type = c.channelType || 'UNKNOWN';
+            if (!campaignTypeBreakdown[type]) campaignTypeBreakdown[type] = { count: 0, spend: 0, impressions: 0 };
+            campaignTypeBreakdown[type].count++;
+            campaignTypeBreakdown[type].spend += c.cost || 0;
+            campaignTypeBreakdown[type].impressions += c.impressions || 0;
+        }
+
+        // Device breakdown (first customer only for now)
+        let deviceBreakdown: Record<string, { impressions: number; clicks: number; cost: number }> = {};
+        try {
+            deviceBreakdown = await api.getDeviceBreakdown(customerIds[0], since, until);
+        } catch { /* ignore */ }
+
+        // Top keywords for search campaigns (best-effort)
+        let topKeywords: any[] = [];
+        const hasSearchCampaigns = campaignTypeBreakdown['SEARCH'] || campaignTypeBreakdown['SEARCH_AND_DISPLAY'];
+        if (hasSearchCampaigns) {
+            try {
+                topKeywords = await api.getTopKeywords(customerIds[0], since, until);
+            } catch { /* ignore */ }
+        }
 
         const avgCtr = aggregated.totalImpressions > 0
             ? (aggregated.totalClicks / aggregated.totalImpressions) * 100
@@ -110,6 +134,9 @@ export async function GET() {
             : 0;
         const conversionRate = aggregated.totalClicks > 0
             ? (aggregated.totalConversions / aggregated.totalClicks) * 100
+            : 0;
+        const costPerConversion = aggregated.totalConversions > 0
+            ? aggregated.totalCost / aggregated.totalConversions
             : 0;
 
         return NextResponse.json({
@@ -124,9 +151,13 @@ export async function GET() {
                 totalConversions: Math.round(aggregated.totalConversions * 10) / 10,
                 avgCtr: Math.round(avgCtr * 100) / 100,
                 avgCpc: Math.round(avgCpc * 100) / 100,
-                conversionRate: Math.round(conversionRate * 100) / 100
+                conversionRate: Math.round(conversionRate * 100) / 100,
+                costPerConversion: Math.round(costPerConversion * 100) / 100
             },
             campaigns: aggregated.campaigns.slice(0, 10),
+            campaignTypeBreakdown,
+            deviceBreakdown,
+            topKeywords,
             period: `${since} → ${until}`,
             status: 'success'
         });

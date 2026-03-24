@@ -29,12 +29,31 @@ export class SallaApi {
         return (data as any).data || {};
     }
 
-    async getOrdersSummary() {
-        const data = await this.fetch('/orders', { per_page: '50', sort: 'created_at', order: 'desc' });
+    async getOrdersSummary(since?: string, until?: string) {
+        const params: Record<string, string> = { per_page: '50', sort: 'created_at', order: 'desc' };
+        if (since) params['date_from'] = since;
+        if (until) params['date_to'] = until;
+        const data = await this.fetch('/orders', params);
         return {
             orders: (data as any).data || [],
             total: (data as any).pagination?.total || 0
         };
+    }
+
+    async getTopProducts(limit = 8) {
+        try {
+            const data = await this.fetch('/products', { per_page: String(limit) });
+            return ((data as any).data || []).map((p: any) => ({
+                id: p.id,
+                name: typeof p.name === 'object' ? (p.name?.ar || p.name?.en || '') : (p.name || ''),
+                price: p.price?.amount || 0,
+                currency: p.price?.currency || 'SAR',
+                status: p.status || 'active',
+                sku: p.sku || ''
+            }));
+        } catch {
+            return [];
+        }
     }
 
     async getProductsCount() {

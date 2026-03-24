@@ -12,6 +12,7 @@ export interface GoogleAdsCampaign {
     conversions: number;
     ctr: number;
     avgCpc: number;
+    costPerConversion: number;
 }
 
 export class GoogleAdsAPI {
@@ -64,6 +65,73 @@ export class GoogleAdsAPI {
         return (data.resourceNames || []).map((r: string) => r.replace('customers/', ''));
     }
 
+    async getDeviceBreakdown(customerId: string, since: string, until: string): Promise<Record<string, { impressions: number; clicks: number; cost: number }>> {
+        const query = `
+            SELECT segments.device, metrics.impressions, metrics.clicks, metrics.cost_micros
+            FROM campaign
+            WHERE segments.date BETWEEN '${since}' AND '${until}'
+            ORDER BY metrics.impressions DESC
+        `.trim();
+        try {
+            const res = await fetch(`${GADS_BASE}/customers/${customerId}/googleAds:search`, {
+                method: 'POST',
+                headers: this.headers(customerId),
+                body: JSON.stringify({ query })
+            });
+            if (!res.ok) return {};
+            const data = await res.json();
+            const map: Record<string, { impressions: number; clicks: number; cost: number }> = {};
+            for (const r of (data.results || [])) {
+                const dev = r.segments?.device || 'UNKNOWN';
+                if (!map[dev]) map[dev] = { impressions: 0, clicks: 0, cost: 0 };
+                map[dev].impressions += Number(r.metrics?.impressions) || 0;
+                map[dev].clicks += Number(r.metrics?.clicks) || 0;
+                map[dev].cost += (Number(r.metrics?.costMicros) || 0) / 1_000_000;
+            }
+            return map;
+        } catch {
+            return {};
+        }
+    }
+
+    async getTopKeywords(customerId: string, since: string, until: string): Promise<any[]> {
+        const query = `
+            SELECT
+                ad_group_criterion.keyword.text,
+                ad_group_criterion.keyword.match_type,
+                metrics.impressions,
+                metrics.clicks,
+                metrics.cost_micros,
+                metrics.conversions,
+                metrics.average_cpc
+            FROM keyword_view
+            WHERE segments.date BETWEEN '${since}' AND '${until}'
+              AND ad_group_criterion.status != 'REMOVED'
+            ORDER BY metrics.impressions DESC
+            LIMIT 10
+        `.trim();
+        try {
+            const res = await fetch(`${GADS_BASE}/customers/${customerId}/googleAds:search`, {
+                method: 'POST',
+                headers: this.headers(customerId),
+                body: JSON.stringify({ query })
+            });
+            if (!res.ok) return [];
+            const data = await res.json();
+            return (data.results || []).map((r: any) => ({
+                keyword: r.adGroupCriterion?.keyword?.text || '',
+                matchType: r.adGroupCriterion?.keyword?.matchType || '',
+                impressions: Number(r.metrics?.impressions) || 0,
+                clicks: Number(r.metrics?.clicks) || 0,
+                cost: (Number(r.metrics?.costMicros) || 0) / 1_000_000,
+                conversions: Number(r.metrics?.conversions) || 0,
+                avgCpc: (Number(r.metrics?.averageCpc) || 0) / 1_000_000
+            }));
+        } catch {
+            return [];
+        }
+    }
+
     async getCampaigns(
         customerId: string,
         since: string,
@@ -81,7 +149,8 @@ export class GoogleAdsAPI {
                 metrics.cost_micros,
                 metrics.conversions,
                 metrics.ctr,
-                metrics.average_cpc
+                metrics.average_cpc,
+                metrics.cost_per_conversion
             FROM campaign
             WHERE segments.date BETWEEN '${since}' AND '${until}'
             ORDER BY metrics.impressions DESC
@@ -115,7 +184,8 @@ export class GoogleAdsAPI {
                 cost: costMicros / 1_000_000,
                 conversions: Number(r.metrics?.conversions) || 0,
                 ctr: Number(r.metrics?.ctr) || 0,
-                avgCpc: (Number(r.metrics?.averageCpc) || 0) / 1_000_000
+                avgCpc: (Number(r.metrics?.averageCpc) || 0) / 1_000_000,
+                costPerConversion: (Number(r.metrics?.costPerConversion) || 0) / 1_000_000
             };
         });
     }

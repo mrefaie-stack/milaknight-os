@@ -139,7 +139,7 @@ export class SnapchatAPI {
             .map((r: any) => r.value);
 
         // Sum ad-level stats for totals
-        const totals = { impressions: 0, swipes: 0, spend: 0, videoViews: 0 };
+        const totals = { impressions: 0, swipes: 0, spend: 0, videoViews: 0, reach: 0 };
         for (const a of enrichedAds) {
             totals.impressions += a.stats.impressions;
             totals.swipes += a.stats.swipes;
@@ -159,6 +159,11 @@ export class SnapchatAPI {
         const enrichedCampaigns = campaignResults
             .filter(r => r.status === 'fulfilled')
             .map((r: any) => r.value);
+
+        // Sum reach from campaign stats (approximate — campaigns may share audiences)
+        for (const c of enrichedCampaigns) {
+            totals.reach += c.stats.reach || 0;
+        }
 
         // Objective breakdown
         const objectiveBreakdown: Record<string, number> = {};
