@@ -159,14 +159,17 @@ export default function ClientConnectionsPage() {
     };
 
     const loadTiktokIdentities = async () => {
-        const res = await fetch('/api/client/tiktok/identities');
-        if (res.ok) {
-            const data = await res.json();
-            if (data.identities?.length > 0) {
-                setTiktokIdentities(data.identities);
-                setSelectedTiktokIdentity(data.selected || data.identities[0]?.id || '');
-                setShowOrganicSelector(true);
-            }
+        setSaving('tiktok-organic-load');
+        try {
+            const res = await fetch('/api/client/tiktok/identities');
+            const data = res.ok ? await res.json() : { identities: [] };
+            setTiktokIdentities(data.identities || []);
+            setSelectedTiktokIdentity(data.selected || data.identities?.[0]?.id || '');
+        } catch {
+            setTiktokIdentities([]);
+        } finally {
+            setSaving(null);
+            setShowOrganicSelector(true);
         }
     };
 
@@ -599,10 +602,13 @@ export default function ClientConnectionsPage() {
                                 {!showOrganicSelector && (
                                     <Button
                                         onClick={loadTiktokIdentities}
+                                        disabled={saving === 'tiktok-organic-load'}
                                         variant={connections.tiktokOrganic ? 'outline' : 'default'}
                                         className={`w-full font-semibold py-5 rounded-xl ${!connections.tiktokOrganic ? 'bg-[#ff0050] hover:bg-[#ff0050]/90 text-white' : ''}`}
                                     >
-                                        {connections.tiktokOrganic ? 'Change Account' : 'Link TikTok Account'}
+                                        {saving === 'tiktok-organic-load'
+                                            ? <Loader2 className="w-4 h-4 animate-spin" />
+                                            : connections.tiktokOrganic ? 'Change Account' : 'Link TikTok Account'}
                                     </Button>
                                 )}
 
