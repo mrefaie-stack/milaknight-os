@@ -1132,6 +1132,65 @@ export function LiveMetrics() {
                                         </CardContent>
                                     </Card>
 
+                                    {/* Organic Profile (if available) */}
+                                    {tiktokData.businessProfile && (
+                                        <div className="space-y-3">
+                                            <SectionHeader color="bg-pink-600" label={isRtl ? 'الحساب العضوي' : 'Organic Account'} />
+                                            <Card className="border-border">
+                                                <CardContent className="p-4">
+                                                    <div className="flex items-center gap-4 mb-4">
+                                                        {tiktokData.businessProfile.profileImage ? (
+                                                            <img src={tiktokData.businessProfile.profileImage} alt="avatar" className="w-14 h-14 rounded-full object-cover ring-2 ring-pink-500/30" />
+                                                        ) : (
+                                                            <div className="w-14 h-14 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center">
+                                                                <PlaySquare className="w-6 h-6 text-white" />
+                                                            </div>
+                                                        )}
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="font-semibold text-sm">{tiktokData.businessProfile.displayName}</p>
+                                                            {tiktokData.businessProfile.username && <p className="text-xs text-muted-foreground">@{tiktokData.businessProfile.username}</p>}
+                                                            {tiktokData.businessProfile.bio && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{tiktokData.businessProfile.bio}</p>}
+                                                        </div>
+                                                    </div>
+                                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                                        <StatCard label={isRtl ? 'المتابعون' : 'Followers'} value={fmt(tiktokData.businessProfile.followers)} color="text-pink-500" icon={<Users className="w-4 h-4" />} />
+                                                        <StatCard label={isRtl ? 'يتابع' : 'Following'} value={fmt(tiktokData.businessProfile.following)} color="text-violet-400" icon={<Activity className="w-4 h-4" />} />
+                                                        <StatCard label={isRtl ? 'الإعجابات' : 'Total Likes'} value={fmt(tiktokData.businessProfile.likes)} color="text-rose-500" icon={<Heart className="w-4 h-4" />} />
+                                                        <StatCard label={isRtl ? 'عدد الفيديوهات' : 'Videos'} value={fmt(tiktokData.businessProfile.videoCount)} color="text-emerald-500" icon={<PlaySquare className="w-4 h-4" />} />
+                                                    </div>
+                                                </CardContent>
+                                            </Card>
+
+                                            {/* Recent Videos */}
+                                            {(tiktokData.businessVideos || []).length > 0 && (
+                                                <div className="space-y-2">
+                                                    <p className="text-xs font-medium text-muted-foreground">{isRtl ? 'أحدث الفيديوهات' : 'Recent Videos'}</p>
+                                                    <div className="grid sm:grid-cols-2 gap-3">
+                                                        {tiktokData.businessVideos.slice(0, 6).map((v: any, i: number) => (
+                                                            <Card key={i} className="hover:bg-muted/30 transition-colors overflow-hidden">
+                                                                <CardContent className="p-3 flex gap-3">
+                                                                    {v.coverImage && (
+                                                                        <img src={v.coverImage} alt="cover" className="w-12 h-16 object-cover rounded shrink-0" />
+                                                                    )}
+                                                                    <div className="flex-1 min-w-0">
+                                                                        {v.createdAt && <p className="text-[10px] text-muted-foreground/60 mb-1">{new Date(v.createdAt * 1000).toLocaleDateString(isRtl ? 'ar' : 'en', { day: 'numeric', month: 'short' })}</p>}
+                                                                        <div className="flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-muted-foreground">
+                                                                            <span className="flex items-center gap-0.5"><Eye className="w-3 h-3 text-sky-400" /> {fmt(v.views)}</span>
+                                                                            <span className="flex items-center gap-0.5"><Heart className="w-3 h-3 text-rose-400" /> {fmt(v.likes)}</span>
+                                                                            <span className="flex items-center gap-0.5"><MessageCircle className="w-3 h-3 text-amber-400" /> {fmt(v.comments)}</span>
+                                                                            <span className="flex items-center gap-0.5"><Share2 className="w-3 h-3 text-emerald-400" /> {fmt(v.shares)}</span>
+                                                                        </div>
+                                                                        {v.duration > 0 && <p className="text-[10px] text-muted-foreground mt-1">{Math.floor(v.duration / 60)}:{String(v.duration % 60).padStart(2, '0')}</p>}
+                                                                    </div>
+                                                                </CardContent>
+                                                            </Card>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
                                     {/* Ad Performance */}
                                     <div className="space-y-3">
                                         <SectionHeader color="bg-gray-800" label={isRtl ? 'أداء الإعلانات' : 'Ad Performance'} />

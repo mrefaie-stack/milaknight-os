@@ -60,7 +60,21 @@ export async function GET(request: Request) {
         const topAds: any[] = topAdsResult.status === 'fulfilled' ? topAdsResult.value : [];
         const identities: any[] = identitiesResult.status === 'fulfilled' ? identitiesResult.value : [];
 
-        console.log(`TikTok Live stats: spend=${stats.spend}, impressions=${stats.impressions}, campaigns=${campaigns.length}`);
+        console.log(`TikTok Live stats: spend=${stats.spend}, impressions=${stats.impressions}, campaigns=${campaigns.length}, identities=${identities.length}`);
+
+        // Fetch organic profile + videos for first linked identity
+        let businessProfile = null;
+        let businessVideos: any[] = [];
+        if (identities.length > 0 && identities[0].id) {
+            const [profileResult, videosResult] = await Promise.allSettled([
+                api.getBusinessProfile(identities[0].id),
+                api.getBusinessVideos(identities[0].id)
+            ]);
+            if (profileResult.status === 'fulfilled') businessProfile = profileResult.value;
+            else console.error('TikTok business profile failed:', profileResult.reason);
+            if (videosResult.status === 'fulfilled') businessVideos = videosResult.value;
+            else console.error('TikTok business videos failed:', videosResult.reason);
+        }
 
         const currency = info?.currency || 'USD';
         const activeCampaigns = campaigns.filter((c: any) => c.status === 'ENABLE');
@@ -87,6 +101,8 @@ export async function GET(request: Request) {
             topAds,
             objectiveBreakdown,
             identities,
+            businessProfile,
+            businessVideos,
             since,
             until,
             status: 'success'
