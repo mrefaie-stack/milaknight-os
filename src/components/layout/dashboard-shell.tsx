@@ -41,7 +41,7 @@ export function DashboardShell({ role, user, children }: Props) {
             <NotificationToaster />
             <AiChatWidget
                 user={{ name: user.name || "User", role: user.role, id: user.id }}
-                mobileOpen={mobileAiOpen}
+                mobileOpen={mobileAiOpen || undefined}
                 onMobileClose={() => setMobileAiOpen(false)}
             />
         </div>
