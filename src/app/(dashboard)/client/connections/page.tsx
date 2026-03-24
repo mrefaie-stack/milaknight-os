@@ -49,13 +49,8 @@ export default function ClientConnectionsPage() {
         } else if (success === 'salla') {
             toast.success('Salla store connected!');
         } else if (success === 'google') {
-            const needsSelect = searchParams?.get('select') === '1';
-            if (needsSelect) {
-                toast.success('Google connected! Select your Google Ads account below.');
-                loadGoogleAdsAccounts();
-            } else {
-                toast.success('Google account connected! YouTube and Google Ads are now live.');
-            }
+            toast.success('Google connected! Loading your Google Ads accounts...');
+            loadGoogleAdsAccounts();
         } else if (success === 'linkedin') {
             const select = searchParams?.get('select') === '1';
             const noPages = searchParams?.get('no_pages') === '1';
@@ -134,7 +129,7 @@ export default function ClientConnectionsPage() {
         const res = await fetch('/api/client/google/ad-accounts');
         if (res.ok) {
             const data = await res.json();
-            if (data.accounts?.length > 1) {
+            if (data.accounts?.length >= 1) {
                 setGoogleAdsAccounts(data.accounts);
                 if (data.selected) setSelectedGoogleAdsAccount(data.selected);
             }
@@ -570,15 +565,17 @@ export default function ClientConnectionsPage() {
                         </Button>
 
                         {connections.google && googleAdsAccounts.length === 0 && (
-                            <button
+                            <Button
+                                variant="outline"
+                                size="sm"
                                 onClick={loadGoogleAdsAccounts}
-                                className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
+                                className="w-full h-9 rounded-xl text-xs border-border"
                             >
-                                Change Google Ads account
-                            </button>
+                                Change Google Ads Account
+                            </Button>
                         )}
 
-                        {googleAdsAccounts.length > 1 && (
+                        {googleAdsAccounts.length >= 1 && (
                             <div className="space-y-3 pt-2 border-t border-border">
                                 <p className="text-xs text-muted-foreground font-medium">Select your Google Ads account:</p>
                                 <Select value={selectedGoogleAdsAccount} onValueChange={setSelectedGoogleAdsAccount}>

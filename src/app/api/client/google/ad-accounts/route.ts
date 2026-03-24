@@ -26,7 +26,23 @@ export async function GET() {
 
     try {
         const meta = connection.metadata ? JSON.parse(connection.metadata) : {};
-        const customerIds: string[] = meta.adsCustomerIds || [];
+        let customerIds: string[] = meta.adsCustomerIds || [];
+
+        // If no IDs stored yet, try to discover them live
+        if (customerIds.length === 0) {
+            try {
+                const api = new GoogleAdsAPI(connection.accessToken, developerToken);
+                customerIds = await api.listAccessibleCustomers();
+                if (customerIds.length > 0) {
+                    await (prisma as any).socialConnection.update({
+                        where: { id: connection.id },
+                        data: { metadata: JSON.stringify({ ...meta, adsCustomerIds: customerIds, adsCustomers: undefined }) }
+                    });
+                }
+            } catch (e) {
+                console.error('ad-accounts: listAccessibleCustomers failed:', e);
+            }
+        }
 
         if (customerIds.length === 0) return NextResponse.json({ accounts: [] });
 
@@ -45,7 +61,7 @@ export async function GET() {
         if (accounts.length > 0) {
             await (prisma as any).socialConnection.update({
                 where: { id: connection.id },
-                data: { metadata: JSON.stringify({ ...meta, adsCustomers: accounts }) }
+                data: { metadata: JSON.stringify({ ...meta, adsCustomerIds: customerIds, adsCustomers: accounts }) }
             });
         }
 
