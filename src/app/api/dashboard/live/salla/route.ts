@@ -85,12 +85,15 @@ export async function GET() {
             ? Math.round((revenue / ordersData.orders.length) * 100) / 100
             : 0;
 
+        const currency = (ordersData.orders as any[])[0]?.currency || 'SAR';
+
         const meta = connection.metadata ? JSON.parse(connection.metadata) : {};
 
         return NextResponse.json({
             platform: 'SALLA',
             storeName: connection.platformAccountName,
             domain: meta.domain,
+            currency,
             stats: {
                 totalOrders: ordersData.total,
                 revenue: Math.round(revenue * 100) / 100,

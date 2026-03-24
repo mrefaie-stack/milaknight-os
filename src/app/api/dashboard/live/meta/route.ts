@@ -59,6 +59,13 @@ export async function GET() {
 
         const meta = new MetaAPI(accessToken);
 
+        // Fetch ad account currency
+        let currency = 'SAR';
+        try {
+            const acctInfo = await meta.getAdAccountInfo(clientConnection.platformAccountId);
+            if (acctInfo?.currency) currency = acctInfo.currency;
+        } catch { /* ignore */ }
+
         // 3. Fetch Insights for the specific Ad Account mapped to this client
         let adInsights: any;
         try {
@@ -76,7 +83,7 @@ export async function GET() {
                     id: ad.id,
                     name: ad.name,
                     status: 'active',
-                    spend: `${adInsights.spend || '0.00'} SAR`,
+                    spend: `${adInsights.spend || '0.00'} ${currency}`,
                     results: `${adInsights.impressions || '0'} Imp`
                 };
             });
@@ -162,6 +169,7 @@ export async function GET() {
         return NextResponse.json({
             platform: 'META',
             accountName: clientConnection.platformAccountName || 'Linked Account',
+            currency,
             metrics: {
                 spend: insightData.spend || '0.00',
                 impressions: insightData.impressions || 0,

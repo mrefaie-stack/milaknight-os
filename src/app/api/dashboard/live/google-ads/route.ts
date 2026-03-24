@@ -66,6 +66,13 @@ export async function GET() {
 
         const api = new GoogleAdsAPI(accessToken, developerToken);
 
+        // Fetch currency from first customer account
+        let currency = 'USD';
+        try {
+            const info = await api.getCustomerInfo(customerIds[0]);
+            if (info?.currencyCode) currency = info.currencyCode;
+        } catch { /* ignore */ }
+
         // Last 30 days
         const until = new Date().toISOString().slice(0, 10);
         const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
@@ -108,6 +115,7 @@ export async function GET() {
         return NextResponse.json({
             platform: 'GOOGLE_ADS',
             accountName: connection.platformAccountName || 'Google Ads',
+            currency,
             customerCount: customerIds.length,
             stats: {
                 totalImpressions: aggregated.totalImpressions,

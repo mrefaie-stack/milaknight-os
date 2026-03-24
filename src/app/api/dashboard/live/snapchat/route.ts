@@ -64,6 +64,15 @@ export async function GET(request: Request) {
                 .map((a: any) => ({ id: a.id, name: a.name }));
         }
 
+        // Fetch currency from first ad account
+        let currency = 'SAR';
+        if (adAccounts.length > 0) {
+            try {
+                const acctDetails = await snap.getAdAccountDetails(adAccounts[0].id);
+                if (acctDetails?.currency) currency = acctDetails.currency;
+            } catch { /* ignore */ }
+        }
+
         // Fetch full data for ALL ad accounts and merge
         const aggregated = {
             totals: { impressions: 0, swipes: 0, spend: 0, videoViews: 0 },
@@ -115,6 +124,7 @@ export async function GET(request: Request) {
         return NextResponse.json({
             platform: 'SNAPCHAT',
             accountName: connection.platformAccountName || 'Snapchat',
+            currency,
             username: 'milaknight.mk',
             adAccountsCount: adAccounts.length,
             stats: aggregated.totals,

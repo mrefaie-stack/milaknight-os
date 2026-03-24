@@ -142,10 +142,10 @@ export function LiveMetrics() {
                 { label: isRtl ? "بينات الصفحة" : "Page Views", value: 'Live', color: "text-purple-400", icon: <Eye className="w-4 h-4" /> },
             ],
             adMetrics: metaData ? [
-                { label: isRtl ? "الإنفاق" : "Spend", value: `SAR ${metaData.metrics.spend}`, color: "text-orange-500", icon: <DollarSign className="w-4 h-4" /> },
+                { label: isRtl ? "الإنفاق" : "Spend", value: `${metaData.currency || 'SAR'} ${metaData.metrics.spend}`, color: "text-orange-500", icon: <DollarSign className="w-4 h-4" /> },
                 { label: isRtl ? "الظهور" : "Impressions", value: metaData.metrics.impressions?.toLocaleString() || '0', color: "text-primary", icon: <Eye className="w-4 h-4" /> },
                 { label: isRtl ? "النقرات" : "Link Clicks", value: metaData.metrics.clicks?.toLocaleString() || '0', color: "text-emerald-500", icon: <MousePointer2 className="w-4 h-4" /> },
-                { label: isRtl ? "تكلفة النقرة" : "Avg. CPC", value: `SAR ${metaData.metrics.cpc}`, color: "text-blue-500", icon: <BarChart className="w-4 h-4" /> },
+                { label: isRtl ? "تكلفة النقرة" : "Avg. CPC", value: `${metaData.currency || 'SAR'} ${metaData.metrics.cpc}`, color: "text-blue-500", icon: <BarChart className="w-4 h-4" /> },
             ] : [],
             activeAds: metaData?.activeAds || []
         },
@@ -164,10 +164,10 @@ export function LiveMetrics() {
                 { label: isRtl ? "التفاعلات" : "Interactions", value: metaData?.organicMetrics?.ig?.interactions?.toLocaleString() || '0', color: "text-rose-500", icon: <Heart className="w-4 h-4" /> },
             ],
             adMetrics: metaData ? [
-                { label: isRtl ? "الإنفاق" : "Spend", value: `SAR ${metaData.metrics.spend}`, color: "text-orange-500", icon: <DollarSign className="w-4 h-4" /> },
+                { label: isRtl ? "الإنفاق" : "Spend", value: `${metaData.currency || 'SAR'} ${metaData.metrics.spend}`, color: "text-orange-500", icon: <DollarSign className="w-4 h-4" /> },
                 { label: isRtl ? "الظهور" : "Impressions", value: metaData.metrics.impressions?.toLocaleString() || '0', color: "text-primary", icon: <Eye className="w-4 h-4" /> },
                 { label: isRtl ? "النقرات" : "Link Clicks", value: metaData.metrics.clicks?.toLocaleString() || '0', color: "text-emerald-500", icon: <MousePointer2 className="w-4 h-4" /> },
-                { label: isRtl ? "تكلفة النقرة" : "Avg. CPC", value: `SAR ${metaData.metrics.cpc}`, color: "text-blue-500", icon: <BarChart className="w-4 h-4" /> },
+                { label: isRtl ? "تكلفة النقرة" : "Avg. CPC", value: `${metaData.currency || 'SAR'} ${metaData.metrics.cpc}`, color: "text-blue-500", icon: <BarChart className="w-4 h-4" /> },
             ] : [],
             activeAds: metaData?.activeAds || []
         },
@@ -196,10 +196,10 @@ export function LiveMetrics() {
                 { label: isRtl ? "إجمالي الظهور" : "Impressions", value: snapData?.stats?.impressions?.toLocaleString() ?? '—', color: "text-blue-400", icon: <Eye className="w-4 h-4" /> },
                 { label: isRtl ? "مشاهدات الفيديو" : "Video Views", value: snapData?.stats?.videoViews?.toLocaleString() ?? '—', color: "text-rose-500", icon: <PlaySquare className="w-4 h-4" /> },
                 { label: isRtl ? "سحب للأعلى" : "Swipe Ups", value: snapData?.stats?.swipes?.toLocaleString() ?? '—', color: "text-emerald-500", icon: <MousePointer2 className="w-4 h-4" /> },
-                { label: isRtl ? "إجمالي الإنفاق" : "Total Spend", value: snapData?.stats?.spend != null ? `SAR ${snapData.stats.spend.toFixed(2)}` : '—', color: "text-orange-500", icon: <DollarSign className="w-4 h-4" /> },
+                { label: isRtl ? "إجمالي الإنفاق" : "Total Spend", value: snapData?.stats?.spend != null ? `${snapData.currency || 'SAR'} ${snapData.stats.spend.toFixed(2)}` : '—', color: "text-orange-500", icon: <DollarSign className="w-4 h-4" /> },
             ],
             adMetrics: snapData ? [
-                { label: isRtl ? "إجمالي الإنفاق" : "Total Spend", value: `SAR ${snapData.stats.spend?.toFixed(2) ?? '0.00'}`, color: "text-orange-500", icon: <DollarSign className="w-4 h-4" /> },
+                { label: isRtl ? "إجمالي الإنفاق" : "Total Spend", value: `${snapData.currency || 'SAR'} ${snapData.stats.spend?.toFixed(2) ?? '0.00'}`, color: "text-orange-500", icon: <DollarSign className="w-4 h-4" /> },
                 { label: isRtl ? "الظهور" : "Impressions", value: snapData.stats.impressions?.toLocaleString() ?? '0', color: "text-primary", icon: <Eye className="w-4 h-4" /> },
                 { label: isRtl ? "سحب للأعلى" : "Swipe Ups", value: snapData.stats.swipes?.toLocaleString() ?? '0', color: "text-emerald-500", icon: <MousePointer2 className="w-4 h-4" /> },
                 { label: isRtl ? "إعلانات نشطة" : "Live Ads", value: isRtl ? `${snapData.adCount ?? 0} / ${snapData.validAdCount ?? 0}` : `${snapData.validAdCount ?? 0} / ${snapData.adCount ?? 0}`, color: "text-blue-500", icon: <Hash className="w-4 h-4" /> },
@@ -208,7 +208,7 @@ export function LiveMetrics() {
                 id: a.id,
                 name: a.name,
                 status: a.isValid ? 'active' : 'paused',
-                spend: `SAR ${a.stats?.spend?.toFixed(2) ?? '0.00'}`,
+                spend: `${snapData.currency || 'SAR'} ${a.stats?.spend?.toFixed(2) ?? '0.00'}`,
                 results: `${a.stats?.impressions?.toLocaleString() ?? '0'} ${isRtl ? 'ظهور' : 'impr'}`
             })) : []
         },
@@ -266,12 +266,12 @@ export function LiveMetrics() {
             error: !sallaData ? (isRtl ? "متجر سلة غير مربوط" : "Salla store not connected") : null,
             organicMetrics: [
                 { label: isRtl ? "إجمالي الطلبات" : "Total Orders", value: sallaData?.stats?.totalOrders?.toLocaleString() ?? '—', color: "text-violet-400", icon: <ShoppingCart className="w-4 h-4" /> },
-                { label: isRtl ? "الإيرادات" : "Revenue", value: sallaData?.stats?.revenue != null ? `SAR ${sallaData.stats.revenue.toLocaleString()}` : '—', color: "text-emerald-500", icon: <DollarSign className="w-4 h-4" /> },
+                { label: isRtl ? "الإيرادات" : "Revenue", value: sallaData?.stats?.revenue != null ? `${sallaData.currency || 'SAR'} ${sallaData.stats.revenue.toLocaleString()}` : '—', color: "text-emerald-500", icon: <DollarSign className="w-4 h-4" /> },
                 { label: isRtl ? "إجمالي العملاء" : "Total Customers", value: sallaData?.stats?.totalCustomers?.toLocaleString() ?? '—', color: "text-blue-400", icon: <Users className="w-4 h-4" /> },
                 { label: isRtl ? "إجمالي المنتجات" : "Total Products", value: sallaData?.stats?.totalProducts?.toLocaleString() ?? '—', color: "text-orange-400", icon: <Package className="w-4 h-4" /> },
             ],
             adMetrics: sallaData ? [
-                { label: isRtl ? "متوسط قيمة الطلب" : "Avg Order Value", value: `SAR ${sallaData.stats.avgOrderValue?.toLocaleString() ?? '0'}`, color: "text-violet-500", icon: <TrendingUp className="w-4 h-4" /> },
+                { label: isRtl ? "متوسط قيمة الطلب" : "Avg Order Value", value: `${sallaData.currency || 'SAR'} ${sallaData.stats.avgOrderValue?.toLocaleString() ?? '0'}`, color: "text-violet-500", icon: <TrendingUp className="w-4 h-4" /> },
                 { label: isRtl ? "طلبات معلقة" : "Pending Orders", value: sallaData.stats.pendingOrders?.toLocaleString() ?? '0', color: "text-yellow-500", icon: <Clock className="w-4 h-4" /> },
                 { label: isRtl ? "سلال متروكة" : "Abandoned Carts", value: sallaData.stats.abandonedCarts?.toLocaleString() ?? '0', color: "text-rose-500", icon: <ShoppingCart className="w-4 h-4" /> },
                 { label: isRtl ? "العملاء" : "Customers", value: sallaData.stats.totalCustomers?.toLocaleString() ?? '0', color: "text-blue-400", icon: <Users className="w-4 h-4" /> },
@@ -280,7 +280,7 @@ export function LiveMetrics() {
                 id: o.id,
                 name: `${o.id} — ${o.customer}`,
                 status: o.statusSlug === 'complete' ? 'active' : (o.statusSlug || 'pending'),
-                spend: `SAR ${o.total?.toLocaleString() ?? '0'}`,
+                spend: `${o.currency || sallaData.currency || 'SAR'} ${o.total?.toLocaleString() ?? '0'}`,
                 results: o.status
             })) : []
         },
@@ -323,12 +323,12 @@ export function LiveMetrics() {
             organicMetrics: [
                 { label: isRtl ? "الظهور" : "Impressions", value: googleAdsData?.stats?.totalImpressions?.toLocaleString() ?? '—', color: "text-blue-400", icon: <Eye className="w-4 h-4" /> },
                 { label: isRtl ? "النقرات" : "Clicks", value: googleAdsData?.stats?.totalClicks?.toLocaleString() ?? '—', color: "text-emerald-500", icon: <MousePointer2 className="w-4 h-4" /> },
-                { label: isRtl ? "الإنفاق" : "Spend", value: googleAdsData?.stats?.totalCost != null ? `SAR ${googleAdsData.stats.totalCost.toLocaleString()}` : '—', color: "text-orange-500", icon: <DollarSign className="w-4 h-4" /> },
+                { label: isRtl ? "الإنفاق" : "Spend", value: googleAdsData?.stats?.totalCost != null ? `${googleAdsData.currency || 'USD'} ${googleAdsData.stats.totalCost.toLocaleString()}` : '—', color: "text-orange-500", icon: <DollarSign className="w-4 h-4" /> },
                 { label: isRtl ? "التحويلات" : "Conversions", value: googleAdsData?.stats?.totalConversions?.toLocaleString() ?? '—', color: "text-primary", icon: <TrendingUp className="w-4 h-4" /> },
             ],
             adMetrics: googleAdsData ? [
                 { label: isRtl ? "متوسط النقر (%)" : "Avg CTR (%)", value: `${googleAdsData.stats.avgCtr ?? '0'}%`, color: "text-blue-400", icon: <Activity className="w-4 h-4" /> },
-                { label: isRtl ? "تكلفة النقرة" : "Avg CPC", value: `SAR ${googleAdsData.stats.avgCpc ?? '0'}`, color: "text-orange-500", icon: <BarChart className="w-4 h-4" /> },
+                { label: isRtl ? "تكلفة النقرة" : "Avg CPC", value: `${googleAdsData.currency || 'USD'} ${googleAdsData.stats.avgCpc ?? '0'}`, color: "text-orange-500", icon: <BarChart className="w-4 h-4" /> },
                 { label: isRtl ? "معدل التحويل" : "Conv. Rate (%)", value: `${googleAdsData.stats.conversionRate ?? '0'}%`, color: "text-emerald-500", icon: <TrendingUp className="w-4 h-4" /> },
                 { label: isRtl ? "الحسابات" : "Accounts", value: googleAdsData.customerCount?.toString() ?? '0', color: "text-primary", icon: <Hash className="w-4 h-4" /> },
             ] : [],
@@ -336,7 +336,7 @@ export function LiveMetrics() {
                 id: c.id,
                 name: c.name,
                 status: c.status === 'ENABLED' ? 'active' : 'paused',
-                spend: `SAR ${c.cost?.toFixed(2) ?? '0.00'}`,
+                spend: `${googleAdsData.currency || 'USD'} ${c.cost?.toFixed(2) ?? '0.00'}`,
                 results: `${c.impressions?.toLocaleString() ?? '0'} ${isRtl ? 'ظهور' : 'impr'}`
             })) : []
         }
@@ -670,7 +670,7 @@ export function LiveMetrics() {
                                             {snapData.targeting.dailyBudget > 0 && (
                                                 <div className="flex items-center justify-between text-xs">
                                                     <span className="text-muted-foreground">{isRtl ? "الميزانية اليومية" : "Daily Budget"}</span>
-                                                    <span className="font-medium">SAR {snapData.targeting.dailyBudget.toFixed(2)}</span>
+                                                    <span className="font-medium">{snapData.currency || 'SAR'} {snapData.targeting.dailyBudget.toFixed(2)}</span>
                                                 </div>
                                             )}
                                             {snapData.targeting.optimizationGoal && (
