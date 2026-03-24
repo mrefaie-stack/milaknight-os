@@ -140,6 +140,7 @@ export function LiveMetrics() {
     const [youtubeData, setYoutubeData] = useState<any>(null);
     const [googleAdsData, setGoogleAdsData] = useState<any>(null);
     const [googleAdsError, setGoogleAdsError] = useState<string | null>(null);
+    const [tiktokData, setTiktokData] = useState<any>(null);
 
     // UI state
     const [loading, setLoading] = useState(true);
@@ -153,6 +154,7 @@ export function LiveMetrics() {
     const [ytLoading, setYtLoading] = useState(false);
     const [sallaLoading, setSallaLoading] = useState(false);
     const [liLoading, setLiLoading] = useState(false);
+    const [tiktokLoading, setTiktokLoading] = useState(false);
 
     // Period state per platform
     const [metaPeriod, setMetaPeriod] = useState<Period>('30d');
@@ -178,6 +180,10 @@ export function LiveMetrics() {
     const [liPeriod, setLiPeriod] = useState<Period>('30d');
     const [liSince, setLiSince] = useState('');
     const [liUntil, setLiUntil] = useState('');
+
+    const [tiktokPeriod, setTiktokPeriod] = useState<Period>('30d');
+    const [tiktokSince, setTiktokSince] = useState('');
+    const [tiktokUntil, setTiktokUntil] = useState('');
 
     // ── Fetch functions ──────────────────────────────────────────────────────
     const fetchMeta = async (p: Period, s: string, u: string) => {
@@ -233,18 +239,27 @@ export function LiveMetrics() {
         } finally { setLiLoading(false); }
     };
 
+    const fetchTiktok = async (p: Period, s: string, u: string) => {
+        setTiktokLoading(true); setTiktokPeriod(p); setTiktokSince(s); setTiktokUntil(u);
+        try {
+            const res = await fetch(buildUrl('/api/dashboard/live/tiktok', p, s, u));
+            if (res.ok) setTiktokData(await res.json());
+        } finally { setTiktokLoading(false); }
+    };
+
     // ── Initial load ─────────────────────────────────────────────────────────
     useEffect(() => {
         async function fetchAll() {
             setLoading(true);
-            const [metaRes, snapRes, liRes, xRes, sallaRes, ytRes, gadsRes] = await Promise.allSettled([
+            const [metaRes, snapRes, liRes, xRes, sallaRes, ytRes, gadsRes, tiktokRes] = await Promise.allSettled([
                 fetch(buildUrl('/api/dashboard/live/meta', '30d', '', '')),
                 fetch('/api/dashboard/live/snapchat'),
                 fetch('/api/dashboard/live/linkedin'),
                 fetch('/api/dashboard/live/x'),
                 fetch(buildUrl('/api/dashboard/live/salla', '30d', '', '')),
                 fetch(buildUrl('/api/dashboard/live/youtube', '30d', '', '')),
-                fetch(buildUrl('/api/dashboard/live/google-ads', '30d', '', ''))
+                fetch(buildUrl('/api/dashboard/live/google-ads', '30d', '', '')),
+                fetch(buildUrl('/api/dashboard/live/tiktok', '30d', '', ''))
             ]);
             if (metaRes.status === 'fulfilled') {
                 const j = await metaRes.value.json();
@@ -260,6 +275,7 @@ export function LiveMetrics() {
                 if (gadsRes.value.ok) setGoogleAdsData(j);
                 else setGoogleAdsError(j.error || 'Google Ads error');
             }
+            if (tiktokRes.status === 'fulfilled' && tiktokRes.value.ok) setTiktokData(await tiktokRes.value.json());
             setLoading(false);
         }
         fetchAll();
@@ -275,7 +291,7 @@ export function LiveMetrics() {
         { id: 'salla', name: 'Salla', icon: <ShoppingBag className="w-5 h-5" />, color: '#7C3AED', isLive: !!sallaData },
         { id: 'linkedin', name: 'LinkedIn', icon: <Linkedin className="w-5 h-5" />, color: '#0077B5', isLive: !!linkedinData },
         { id: 'x', name: 'X', icon: <Twitter className="w-5 h-5" />, color: '#000000', isLive: !!xData },
-        { id: 'tiktok', name: 'TikTok', icon: <PlaySquare className="w-5 h-5" />, color: '#010101', isLive: false }
+        { id: 'tiktok', name: 'TikTok', icon: <PlaySquare className="w-5 h-5" />, color: '#010101', isLive: !!tiktokData }
     ];
     const currentTab = tabs.find(t => t.id === activeTab) || tabs[0];
 
@@ -289,7 +305,7 @@ export function LiveMetrics() {
         salla: !sallaData ? (isRtl ? 'متجر سلة غير مربوط' : 'Salla store not connected') : null,
         linkedin: !linkedinData ? (isRtl ? 'لينكد إن غير مربوط' : 'LinkedIn not connected') : null,
         x: !xData ? (isRtl ? 'حساب X غير مربوط' : 'X not connected') : null,
-        tiktok: isRtl ? 'تيك توك غير مربوط — قريباً' : 'TikTok not connected — coming soon'
+        tiktok: !tiktokData ? (isRtl ? 'تيك توك غير مربوط' : 'TikTok not connected') : null
     };
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -1063,11 +1079,172 @@ export function LiveMetrics() {
                         })()}
 
                         {/* ── TIKTOK ────────────────────────────────────────────────────── */}
-                        {activeTab === 'tiktok' && (
-                            <div className="flex items-center gap-3 bg-muted/30 border border-border px-4 py-3 rounded-lg">
-                                <Info className="w-5 h-5 text-muted-foreground shrink-0" />
-                                <p className="text-xs text-muted-foreground">{isRtl ? 'سيتم إضافة تيك توك قريباً بعد الموافقة على الوصول' : 'TikTok integration coming soon — pending API access approval'}</p>
-                            </div>
+                        {activeTab === 'tiktok' && tiktokData && (
+                            <>
+                                <PeriodBar period={tiktokPeriod} since={tiktokSince} until={tiktokUntil} loading={tiktokLoading} color="#010101"
+                                    onApply={(p, s, u) => fetchTiktok(p, s, u)} isRtl={isRtl} />
+
+                                <div className="space-y-5">
+                                    {/* Ad Performance */}
+                                    <div className="space-y-3">
+                                        <SectionHeader color="bg-gray-800" label={isRtl ? 'أداء الإعلانات' : 'Ad Performance'} />
+                                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                            <StatCard label={isRtl ? 'الإنفاق' : 'Spend'} value={`${tiktokData.currency} ${fmt(tiktokData.stats?.spend, 2)}`} color="text-emerald-500" icon={<DollarSign className="w-4 h-4" />} />
+                                            <StatCard label={isRtl ? 'الانطباعات' : 'Impressions'} value={fmt(tiktokData.stats?.impressions)} color="text-blue-400" icon={<Eye className="w-4 h-4" />} />
+                                            <StatCard label={isRtl ? 'النقرات' : 'Clicks'} value={fmt(tiktokData.stats?.clicks)} color="text-primary" icon={<MousePointer2 className="w-4 h-4" />} />
+                                            <StatCard label={isRtl ? 'الوصول' : 'Reach'} value={fmt(tiktokData.stats?.reach)} color="text-violet-400" icon={<Users className="w-4 h-4" />} />
+                                            <StatCard label="CTR" value={`${fmt(tiktokData.stats?.ctr, 2)}%`} color="text-amber-500" icon={<TrendingUp className="w-4 h-4" />} />
+                                            <StatCard label="CPM" value={`${tiktokData.currency} ${fmt(tiktokData.stats?.cpm, 2)}`} color="text-rose-500" icon={<BarChart className="w-4 h-4" />} />
+                                            <StatCard label="CPC" value={`${tiktokData.currency} ${fmt(tiktokData.stats?.cpc, 2)}`} color="text-sky-400" icon={<DollarSign className="w-4 h-4" />} />
+                                            <StatCard label={isRtl ? 'التكرار' : 'Frequency'} value={fmt(tiktokData.stats?.frequency, 2)} color="text-orange-400" icon={<Activity className="w-4 h-4" />} />
+                                        </div>
+                                    </div>
+
+                                    {/* Video Stats */}
+                                    <div className="space-y-3">
+                                        <SectionHeader color="bg-gray-800" label={isRtl ? 'أداء الفيديو' : 'Video Performance'} />
+                                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                            <StatCard label={isRtl ? 'مشاهدات الفيديو' : 'Video Views'} value={fmt(tiktokData.stats?.videoViews)} color="text-pink-500" icon={<PlaySquare className="w-4 h-4" />} />
+                                            <StatCard label={isRtl ? 'شاهد ٢ ث' : 'Watched 2s'} value={fmt(tiktokData.stats?.video2s)} color="text-fuchsia-400" icon={<Eye className="w-4 h-4" />} />
+                                            <StatCard label={isRtl ? 'شاهد ٦ ث' : 'Watched 6s'} value={fmt(tiktokData.stats?.video6s)} color="text-purple-400" icon={<Eye className="w-4 h-4" />} />
+                                            <StatCard label={isRtl ? 'اكتمال ١٠٠٪' : '100% Complete'} value={fmt(tiktokData.stats?.videoP100)} color="text-emerald-400" icon={<TrendingUp className="w-4 h-4" />} />
+                                        </div>
+                                        {/* Video completion bar */}
+                                        {tiktokData.stats?.videoViews > 0 && (
+                                            <Card className="border-border">
+                                                <CardContent className="p-4">
+                                                    <p className="text-xs text-muted-foreground mb-3">{isRtl ? 'نسب إتمام مشاهدة الفيديو' : 'Video Completion Rates'}</p>
+                                                    {[
+                                                        { label: '25%', val: tiktokData.stats?.videoP25 },
+                                                        { label: '50%', val: tiktokData.stats?.videoP50 },
+                                                        { label: '75%', val: tiktokData.stats?.videoP75 },
+                                                        { label: '100%', val: tiktokData.stats?.videoP100 }
+                                                    ].map(({ label, val }) => {
+                                                        const pct = tiktokData.stats?.videoViews > 0 ? Math.round(val / tiktokData.stats.videoViews * 100) : 0;
+                                                        return (
+                                                            <div key={label} className="flex items-center gap-3 mb-2">
+                                                                <span className="text-[10px] text-muted-foreground w-8 shrink-0">{label}</span>
+                                                                <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+                                                                    <div className="h-full bg-pink-500 rounded-full" style={{ width: `${pct}%` }} />
+                                                                </div>
+                                                                <span className="text-[10px] text-muted-foreground w-10 text-right">{pct}%</span>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </CardContent>
+                                            </Card>
+                                        )}
+                                    </div>
+
+                                    {/* Engagement & Conversion */}
+                                    <div className="grid sm:grid-cols-2 gap-5">
+                                        <div className="space-y-3">
+                                            <SectionHeader color="bg-gray-800" label={isRtl ? 'التفاعل' : 'Engagement'} />
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <StatCard label={isRtl ? 'زيارات البروفايل' : 'Profile Visits'} value={fmt(tiktokData.stats?.profileVisits)} color="text-sky-400" icon={<Users className="w-4 h-4" />} />
+                                                <StatCard label={isRtl ? 'متابعون جدد' : 'New Follows'} value={fmt(tiktokData.stats?.follows)} color="text-emerald-500" icon={<TrendingUp className="w-4 h-4" />} />
+                                                <StatCard label={isRtl ? 'الإعجابات' : 'Likes'} value={fmt(tiktokData.stats?.likes)} color="text-rose-500" icon={<Heart className="w-4 h-4" />} />
+                                                <StatCard label={isRtl ? 'التعليقات' : 'Comments'} value={fmt(tiktokData.stats?.comments)} color="text-amber-500" icon={<MessageCircle className="w-4 h-4" />} />
+                                                <StatCard label={isRtl ? 'المشاركات' : 'Shares'} value={fmt(tiktokData.stats?.shares)} color="text-violet-400" icon={<Share2 className="w-4 h-4" />} />
+                                            </div>
+                                        </div>
+                                        <div className="space-y-3">
+                                            <SectionHeader color="bg-gray-800" label={isRtl ? 'التحويلات' : 'Conversions'} />
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <StatCard label={isRtl ? 'التحويلات' : 'Conversions'} value={fmt(tiktokData.stats?.conversions)} color="text-emerald-500" icon={<TrendingUp className="w-4 h-4" />} />
+                                                <StatCard label={isRtl ? 'تكلفة/تحويل' : 'Cost/Conv.'} value={`${tiktokData.currency} ${fmt(tiktokData.stats?.costPerConversion, 2)}`} color="text-amber-500" icon={<DollarSign className="w-4 h-4" />} />
+                                                <StatCard label="ROAS" value={fmt(tiktokData.stats?.roas, 2)} color="text-blue-400" icon={<BarChart className="w-4 h-4" />} />
+                                                <StatCard label={isRtl ? 'الحملات النشطة' : 'Active Campaigns'} value={fmt(tiktokData.activeCampaignCount)} color="text-green-400" icon={<Megaphone className="w-4 h-4" />} />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Objective Breakdown */}
+                                    {Object.keys(tiktokData.objectiveBreakdown || {}).length > 0 && (
+                                        <div className="flex flex-wrap gap-2">
+                                            {Object.entries(tiktokData.objectiveBreakdown).map(([obj, cnt]: any) => (
+                                                <Badge key={obj} variant="outline" className="text-[10px] gap-1">
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-pink-500 inline-block" />
+                                                    {obj.replace(/_/g, ' ')}: {cnt}
+                                                </Badge>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {/* Campaigns + Top Ads */}
+                                    <div className="grid lg:grid-cols-12 gap-5">
+                                        {/* Campaigns Table */}
+                                        <div className="lg:col-span-8 space-y-3">
+                                            <SectionHeader color="bg-gray-800" label={isRtl ? 'الحملات' : 'Campaigns'} />
+                                            {(tiktokData.campaigns || []).length > 0 ? (
+                                                <div className="overflow-x-auto rounded-lg border border-border">
+                                                    <table className="w-full text-xs">
+                                                        <thead className="bg-muted/50">
+                                                            <tr>
+                                                                <th className="text-left p-2 text-muted-foreground font-medium">{isRtl ? 'الحملة' : 'Campaign'}</th>
+                                                                <th className="text-center p-2 text-muted-foreground font-medium">{isRtl ? 'الهدف' : 'Objective'}</th>
+                                                                <th className="text-center p-2 text-muted-foreground font-medium">{isRtl ? 'الحالة' : 'Status'}</th>
+                                                                <th className="text-right p-2 text-muted-foreground font-medium">{isRtl ? 'الإنفاق' : 'Spend'}</th>
+                                                                <th className="text-right p-2 text-muted-foreground font-medium">{isRtl ? 'الانطباعات' : 'Impr.'}</th>
+                                                                <th className="text-right p-2 text-muted-foreground font-medium">CTR</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {tiktokData.campaigns.map((c: any, i: number) => (
+                                                                <tr key={i} className="border-t border-border hover:bg-muted/30 transition-colors">
+                                                                    <td className="p-2 font-medium max-w-[160px] truncate">{c.name}</td>
+                                                                    <td className="p-2 text-center text-muted-foreground">{(c.objective || '').replace(/_/g, ' ')}</td>
+                                                                    <td className="p-2 text-center">
+                                                                        <Badge variant="outline" className={cn('text-[9px]', c.status === 'ENABLE' ? 'text-emerald-500 border-emerald-500/30' : 'text-muted-foreground')}>
+                                                                            {c.status === 'ENABLE' ? (isRtl ? 'نشطة' : 'Active') : (isRtl ? 'متوقفة' : 'Paused')}
+                                                                        </Badge>
+                                                                    </td>
+                                                                    <td className="p-2 text-right">{fmt(c.stats?.spend, 2)}</td>
+                                                                    <td className="p-2 text-right">{fmt(c.stats?.impressions)}</td>
+                                                                    <td className="p-2 text-right">{fmt(c.stats?.ctr, 2)}%</td>
+                                                                </tr>
+                                                            ))}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            ) : (
+                                                <div className="py-8 text-center text-xs text-muted-foreground border border-dashed border-border rounded-lg">
+                                                    {isRtl ? 'لا توجد حملات' : 'No campaigns found'}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Top Ads */}
+                                        <div className="lg:col-span-4 space-y-3">
+                                            <SectionHeader color="bg-gray-800" label={isRtl ? 'أفضل الإعلانات (إنفاقاً)' : 'Top Ads by Spend'} />
+                                            {(tiktokData.topAds || []).length > 0 ? (
+                                                <div className="space-y-2">
+                                                    {tiktokData.topAds.map((ad: any, i: number) => (
+                                                        <Card key={i} className="hover:bg-muted/30 transition-colors">
+                                                            <CardContent className="p-3">
+                                                                <div className="flex justify-between items-center mb-1">
+                                                                    <span className="text-[10px] text-muted-foreground">Ad {ad.id?.slice(-6)}</span>
+                                                                    <span className="text-xs font-semibold text-emerald-500">{tiktokData.currency} {fmt(ad.spend, 2)}</span>
+                                                                </div>
+                                                                <div className="flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-muted-foreground">
+                                                                    <span className="flex items-center gap-0.5"><Eye className="w-3 h-3" /> {fmt(ad.impressions)}</span>
+                                                                    <span className="flex items-center gap-0.5"><MousePointer2 className="w-3 h-3" /> {fmt(ad.clicks)}</span>
+                                                                    <span className="flex items-center gap-0.5"><PlaySquare className="w-3 h-3" /> {fmt(ad.videoViews)}</span>
+                                                                    <span className="flex items-center gap-0.5"><TrendingUp className="w-3 h-3" /> {fmt(ad.ctr, 2)}%</span>
+                                                                </div>
+                                                            </CardContent>
+                                                        </Card>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <div className="py-8 text-center text-xs text-muted-foreground border border-dashed border-border rounded-lg">
+                                                    {isRtl ? 'لا توجد إعلانات' : 'No ads data'}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </>
                         )}
 
                     </div>
