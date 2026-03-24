@@ -68,13 +68,18 @@ export async function GET() {
                         data: { metadata: JSON.stringify({ ...meta, adsCustomerIds: customerIds }) }
                     });
                 }
-            } catch (e) {
-                console.error('Google Ads: listAccessibleCustomers failed:', e);
+            } catch (e: any) {
+                console.error('Google Ads: listAccessibleCustomers failed:', e?.message || e);
+                return NextResponse.json({
+                    error: `Google Ads API error: ${e?.message || 'Unknown error'}. Make sure your Google account has Google Ads access.`
+                }, { status: 502 });
             }
         }
 
         if (customerIds.length === 0) {
-            return NextResponse.json({ error: 'No Google Ads accounts found' }, { status: 404 });
+            return NextResponse.json({
+                error: 'No Google Ads accounts found on this Google account. Make sure you are signed in with the correct Google account that has Google Ads.'
+            }, { status: 404 });
         }
 
         // Last 30 days
