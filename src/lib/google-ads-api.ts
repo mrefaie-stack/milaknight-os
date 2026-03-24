@@ -100,6 +100,8 @@ export class GoogleAdsAPI {
         }
 
         const data = await res.json();
+        console.log('Google Ads raw results count:', data.results?.length ?? 0);
+        if (data.results?.length > 0) console.log('Google Ads first row sample:', JSON.stringify(data.results[0]));
         return (data.results || []).map((r: any) => {
             const costMicros = Number(r.metrics?.costMicros) || 0;
             return {
