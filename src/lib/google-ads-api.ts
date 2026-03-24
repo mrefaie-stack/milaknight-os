@@ -30,6 +30,28 @@ export class GoogleAdsAPI {
         return h;
     }
 
+    async getCustomerInfo(customerId: string): Promise<{ id: string; name: string; currencyCode: string } | null> {
+        const query = `SELECT customer.id, customer.descriptive_name, customer.currency_code FROM customer LIMIT 1`;
+        try {
+            const res = await fetch(`${GADS_BASE}/customers/${customerId}/googleAds:search`, {
+                method: 'POST',
+                headers: this.headers(),
+                body: JSON.stringify({ query })
+            });
+            if (!res.ok) return null;
+            const data = await res.json();
+            const row = data.results?.[0];
+            if (!row) return null;
+            return {
+                id: String(row.customer?.id || customerId),
+                name: row.customer?.descriptiveName || `Account ${customerId}`,
+                currencyCode: row.customer?.currencyCode || 'USD'
+            };
+        } catch {
+            return null;
+        }
+    }
+
     async listAccessibleCustomers(): Promise<string[]> {
         const res = await fetch(`${GADS_BASE}/customers:listAccessibleCustomers`, {
             headers: this.headers()

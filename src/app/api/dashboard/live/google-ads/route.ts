@@ -51,7 +51,12 @@ export async function GET() {
         if (connection.metadata) {
             try {
                 const meta = JSON.parse(connection.metadata);
-                if (meta.adsCustomerIds?.length > 0) customerIds = meta.adsCustomerIds;
+                // If client selected a specific account, use only that one
+                if (meta.selectedAdsCustomerId) {
+                    customerIds = [meta.selectedAdsCustomerId];
+                } else if (meta.adsCustomerIds?.length > 0) {
+                    customerIds = meta.adsCustomerIds;
+                }
             } catch { /* ignore */ }
         }
 
