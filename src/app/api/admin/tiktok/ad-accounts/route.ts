@@ -24,7 +24,7 @@ export async function GET() {
         const info = await tiktok.getAdvertiserInfo(advertiserIds);
         const accounts = (info?.list || []).map((a: any) => ({
             id: a.advertiser_id,
-            name: a.advertiser_name,
+            name: a.name || a.advertiser_id,
             status: a.status
         }));
 
