@@ -32,6 +32,7 @@ export async function GET() {
         linkedin: platforms.includes('LINKEDIN'),
         x: platforms.includes('X'),
         salla: platforms.includes('SALLA'),
-        google: platforms.includes('GOOGLE')
+        google: platforms.includes('GOOGLE'),
+        googleAds: platforms.includes('GOOGLE_ADS')
     });
 }

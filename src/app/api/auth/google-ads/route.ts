@@ -11,25 +11,21 @@ export async function GET() {
     }
 
     const clientId = process.env.GOOGLE_CLIENT_ID!;
-    const redirectUri = `${process.env.NEXTAUTH_URL}/api/auth/google/callback`;
+    const redirectUri = `${process.env.NEXTAUTH_URL}/api/auth/google-ads/callback`;
 
-    // PKCE
     const codeVerifier = crypto.randomBytes(32).toString('base64url');
     const codeChallenge = crypto.createHash('sha256').update(codeVerifier).digest('base64url');
     const state = crypto.randomBytes(16).toString('hex');
 
     const cookieStore = await cookies();
-    cookieStore.set('google_code_verifier', codeVerifier, { httpOnly: true, secure: true, maxAge: 600, sameSite: 'lax', path: '/' });
-    cookieStore.set('google_state', state, { httpOnly: true, secure: true, maxAge: 600, sameSite: 'lax', path: '/' });
+    cookieStore.set('gads_code_verifier', codeVerifier, { httpOnly: true, secure: true, maxAge: 600, sameSite: 'lax', path: '/' });
+    cookieStore.set('gads_state', state, { httpOnly: true, secure: true, maxAge: 600, sameSite: 'lax', path: '/' });
 
     const params = new URLSearchParams({
         response_type: 'code',
         client_id: clientId,
         redirect_uri: redirectUri,
-        scope: [
-            'https://www.googleapis.com/auth/youtube.readonly',
-            'https://www.googleapis.com/auth/yt-analytics.readonly'
-        ].join(' '),
+        scope: 'https://www.googleapis.com/auth/adwords',
         state,
         code_challenge: codeChallenge,
         code_challenge_method: 'S256',

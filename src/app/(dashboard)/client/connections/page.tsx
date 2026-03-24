@@ -11,8 +11,8 @@ import { toast } from 'sonner';
 
 export default function ClientConnectionsPage() {
     const searchParams = useSearchParams();
-    const [connections, setConnections] = useState<{ facebook: boolean; snapchat: boolean; tiktok: boolean; linkedin: boolean; x: boolean; salla: boolean; google: boolean }>({
-        facebook: false, snapchat: false, tiktok: false, linkedin: false, x: false, salla: false, google: false
+    const [connections, setConnections] = useState<{ facebook: boolean; snapchat: boolean; tiktok: boolean; linkedin: boolean; x: boolean; salla: boolean; google: boolean; googleAds: boolean }>({
+        facebook: false, snapchat: false, tiktok: false, linkedin: false, x: false, salla: false, google: false, googleAds: false
     });
     const [metaPages, setMetaPages] = useState<any[]>([]);
     const [metaAccounts, setMetaAccounts] = useState<any[]>([]);
@@ -49,8 +49,16 @@ export default function ClientConnectionsPage() {
         } else if (success === 'salla') {
             toast.success('Salla store connected!');
         } else if (success === 'google') {
-            toast.success('Google connected! Loading your Google Ads accounts...');
-            loadGoogleAdsAccounts();
+            toast.success('YouTube account connected!');
+        } else if (success === 'google_ads') {
+            const needsSelect = searchParams?.get('select') === '1';
+            if (needsSelect) {
+                toast.success('Google Ads connected! Select your account below.');
+                loadGoogleAdsAccounts();
+            } else {
+                toast.success('Google Ads connected!');
+                loadGoogleAdsAccounts();
+            }
         } else if (success === 'linkedin') {
             const select = searchParams?.get('select') === '1';
             const noPages = searchParams?.get('no_pages') === '1';
@@ -158,6 +166,10 @@ export default function ClientConnectionsPage() {
 
     const handleConnectGoogle = () => {
         window.location.href = '/api/auth/google';
+    };
+
+    const handleConnectGoogleAds = () => {
+        window.location.href = '/api/auth/google-ads';
     };
 
     const loadLinkedinPages = async () => {
@@ -547,8 +559,8 @@ export default function ClientConnectionsPage() {
                                 </span>
                             )}
                         </div>
-                        <CardTitle className="mt-4">Google (YouTube + Ads)</CardTitle>
-                        <CardDescription>Connect your Google account to track YouTube channel stats and Google Ads campaigns.</CardDescription>
+                        <CardTitle className="mt-4">YouTube</CardTitle>
+                        <CardDescription>Connect your Google account to track YouTube channel stats and analytics.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <Button
@@ -561,10 +573,48 @@ export default function ClientConnectionsPage() {
                                 <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
                                 <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
                             </svg>
-                            {connections.google ? 'Reconnect Google' : 'Connect with Google'}
+                            {connections.google ? 'Reconnect YouTube' : 'Connect YouTube'}
+                        </Button>
+                    </CardContent>
+                </Card>
+
+                {/* Google Ads */}
+                <Card className={connections.googleAds ? 'border-green-500/30 bg-green-500/5' : 'border-[#4285F4]/20 bg-[#4285F4]/5'}>
+                    <CardHeader>
+                        <div className="flex items-center justify-between">
+                            <div className="p-2 bg-[#4285F4]/10 rounded-lg">
+                                <div className="w-8 h-8 bg-[#4285F4] rounded-lg flex items-center justify-center">
+                                    <span className="text-white font-bold text-xs">Ads</span>
+                                </div>
+                            </div>
+                            {connections.googleAds ? (
+                                <span className="flex items-center gap-1 px-2 py-1 bg-green-500/10 text-green-500 text-xs rounded-full border border-green-500/20">
+                                    <CheckCircle className="w-3 h-3" /> Connected
+                                </span>
+                            ) : (
+                                <span className="flex items-center gap-1 px-2 py-1 bg-yellow-500/10 text-yellow-500 text-xs rounded-full border border-yellow-500/20">
+                                    <AlertCircle className="w-3 h-3" /> Not Connected
+                                </span>
+                            )}
+                        </div>
+                        <CardTitle className="mt-4">Google Ads</CardTitle>
+                        <CardDescription>Connect your Google Ads account to track campaigns, impressions, clicks, and cost.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <Button
+                            onClick={handleConnectGoogleAds}
+                            className="w-full bg-[#4285F4] hover:bg-[#4285F4]/90 text-white font-semibold py-5 rounded-xl"
+                        >
+                            <svg className="w-4 h-4 mr-2" viewBox="0 0 48 48" aria-hidden="true">
+                                <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                                <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                                <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                                <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                            </svg>
+                            {connections.googleAds ? 'Reconnect Google Ads' : 'Connect Google Ads'}
                         </Button>
 
-                        {connections.google && googleAdsAccounts.length === 0 && (
+                        {connections.googleAds && googleAdsAccounts.length === 0 && (
                             <Button
                                 variant="outline"
                                 size="sm"
@@ -594,7 +644,7 @@ export default function ClientConnectionsPage() {
                                     size="sm"
                                     onClick={handleSaveGoogleAds}
                                     disabled={saving === 'google-ads'}
-                                    className="w-full h-9 rounded-xl font-bold text-xs"
+                                    className="w-full h-9 rounded-xl bg-[#4285F4] text-white font-bold text-xs"
                                 >
                                     {saving === 'google-ads' ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save Selection'}
                                 </Button>
