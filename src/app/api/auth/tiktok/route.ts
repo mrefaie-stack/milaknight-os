@@ -14,6 +14,7 @@ export async function GET() {
     authUrl.searchParams.set('app_id', appId);
     authUrl.searchParams.set('redirect_uri', redirectUri);
     authUrl.searchParams.set('state', state);
+    authUrl.searchParams.set('scope', 'advertiser.read,campaign.read,adgroup.read,ad.read,report.read');
 
     return NextResponse.redirect(authUrl.toString());
 }
