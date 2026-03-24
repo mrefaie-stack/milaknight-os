@@ -23,6 +23,7 @@ export function LiveMetrics() {
     const [sallaData, setSallaData] = useState<any>(null);
     const [youtubeData, setYoutubeData] = useState<any>(null);
     const [googleAdsData, setGoogleAdsData] = useState<any>(null);
+    const [googleAdsError, setGoogleAdsError] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState('facebook');
@@ -92,8 +93,13 @@ export function LiveMetrics() {
                     setYoutubeData(await youtubeRes.value.json());
                 }
 
-                if (googleAdsRes.status === 'fulfilled' && googleAdsRes.value.ok) {
-                    setGoogleAdsData(await googleAdsRes.value.json());
+                if (googleAdsRes.status === 'fulfilled') {
+                    if (googleAdsRes.value.ok) {
+                        setGoogleAdsData(await googleAdsRes.value.json());
+                    } else {
+                        const errJson = await googleAdsRes.value.json().catch(() => ({}));
+                        setGoogleAdsError(errJson.error || 'Google Ads error');
+                    }
                 }
             } catch (err: any) {
                 setError(err.message);
@@ -313,7 +319,7 @@ export function LiveMetrics() {
             icon: <Megaphone className="w-5 h-5" />,
             color: '#4285F4',
             isLive: !!googleAdsData,
-            error: !googleAdsData ? (isRtl ? "حساب جوجل أدز غير مربوط" : "Google Ads not connected") : null,
+            error: !googleAdsData ? (googleAdsError || (isRtl ? "حساب جوجل أدز غير مربوط" : "Google Ads not connected")) : null,
             organicMetrics: [
                 { label: isRtl ? "الظهور" : "Impressions", value: googleAdsData?.stats?.totalImpressions?.toLocaleString() ?? '—', color: "text-blue-400", icon: <Eye className="w-4 h-4" /> },
                 { label: isRtl ? "النقرات" : "Clicks", value: googleAdsData?.stats?.totalClicks?.toLocaleString() ?? '—', color: "text-emerald-500", icon: <MousePointer2 className="w-4 h-4" /> },
