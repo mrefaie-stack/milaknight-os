@@ -64,6 +64,8 @@ export async function GET() {
             }, { status: 404 });
         }
 
+        const api = new GoogleAdsAPI(accessToken, developerToken);
+
         // Last 30 days
         const until = new Date().toISOString().slice(0, 10);
         const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
