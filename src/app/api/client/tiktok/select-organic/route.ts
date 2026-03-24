@@ -10,15 +10,21 @@ export async function POST(req: NextRequest) {
     const { identityId, displayName, profileImage } = await req.json();
     if (!identityId) return NextResponse.json({ error: 'identityId required' }, { status: 400 });
 
-    const clientProfile = await (prisma as any).client.findFirst({ where: { userId: session.user.id } });
-    if (!clientProfile) return NextResponse.json({ error: 'Client not found' }, { status: 404 });
-
+    // Find TIKTOK ads connection by userId (most reliable)
     const adsConn = await (prisma as any).socialConnection.findFirst({
-        where: { clientId: clientProfile.id, platform: 'TIKTOK', isActive: true }
+        where: { userId: session.user.id, platform: 'TIKTOK', isActive: true },
+        orderBy: { updatedAt: 'desc' }
     });
     if (!adsConn) return NextResponse.json({ error: 'TikTok Ads not connected' }, { status: 404 });
 
-    const meta = JSON.stringify({ displayName, profileImage, advertiserId: adsConn.platformAccountId });
+    // Get clientId from the ads connection (already set during OAuth)
+    const clientId = adsConn.clientId || null;
+
+    const meta = JSON.stringify({
+        displayName,
+        profileImage,
+        advertiserId: adsConn.platformAccountId
+    });
 
     await (prisma as any).socialConnection.upsert({
         where: {
@@ -32,7 +38,7 @@ export async function POST(req: NextRequest) {
             accessToken: adsConn.accessToken,
             isActive: true,
             platformAccountName: displayName || undefined,
-            clientId: clientProfile.id,
+            clientId: clientId || undefined,
             metadata: meta
         },
         create: {
@@ -42,7 +48,7 @@ export async function POST(req: NextRequest) {
             platformAccountName: displayName || null,
             accessToken: adsConn.accessToken,
             isActive: true,
-            clientId: clientProfile.id,
+            clientId,
             metadata: meta
         }
     });

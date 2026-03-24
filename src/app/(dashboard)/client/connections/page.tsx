@@ -51,9 +51,8 @@ export default function ClientConnectionsPage() {
             const needsSelect = searchParams?.get('select') === '1';
             if (needsSelect) loadSnapchatSetup();
         } else if (success === 'tiktok') {
-            toast.success('TikTok connected!');
+            toast.success('TikTok Ads connected! Select your ad account below.');
             loadTiktokSetup();
-            loadTiktokIdentities();
         } else if (success === 'x') {
             toast.success('X (Twitter) account connected!');
         } else if (success === 'salla') {
@@ -127,13 +126,15 @@ export default function ClientConnectionsPage() {
     };
 
     const loadTiktokSetup = async () => {
-        const res = await fetch('/api/client/tiktok/ad-accounts');
-        if (res.ok) {
-            const data = await res.json();
-            if (data.accounts?.length > 0) {
-                setTiktokAccounts(data.accounts);
-                setSelectedTiktokAccount(data.selectedAdvertiserId || data.accounts[0]?.id || '');
+        try {
+            const res = await fetch('/api/client/tiktok/ad-accounts');
+            if (res.ok) {
+                const data = await res.json();
+                setTiktokAccounts(data.accounts || []);
+                setSelectedTiktokAccount(data.selectedAdvertiserId || data.accounts?.[0]?.id || '');
             }
+        } catch (e) {
+            console.error('loadTiktokSetup error:', e);
         }
     };
 
@@ -149,8 +150,8 @@ export default function ClientConnectionsPage() {
             });
             if (!res.ok) throw new Error('Failed');
             toast.success('TikTok Ad Account selected!');
-            setConnections(p => ({ ...p, tiktok: true }));
             setTiktokAccounts([]);
+            await loadStatus(); // refresh to pick up tiktokOrganic state too
         } catch {
             toast.error('Failed to save TikTok account');
         } finally {

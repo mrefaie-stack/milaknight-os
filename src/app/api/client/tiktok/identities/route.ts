@@ -8,11 +8,9 @@ export async function GET() {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const clientProfile = await (prisma as any).client.findFirst({ where: { userId: session.user.id } });
-    if (!clientProfile) return NextResponse.json({ error: 'Client not found' }, { status: 404 });
-
+    // Find TIKTOK connection by userId directly (most reliable)
     const adsConn = await (prisma as any).socialConnection.findFirst({
-        where: { clientId: clientProfile.id, platform: 'TIKTOK', isActive: true },
+        where: { userId: session.user.id, platform: 'TIKTOK', isActive: true },
         orderBy: { updatedAt: 'desc' }
     });
     if (!adsConn) return NextResponse.json({ identities: [], selected: null });
@@ -20,8 +18,9 @@ export async function GET() {
     const adsMeta = adsConn.metadata ? JSON.parse(adsConn.metadata) : {};
     const primaryId = adsMeta.selectedAdvertiserId || adsMeta.advertiserIds?.[0] || adsConn.platformAccountId;
 
+    // Find current organic connection by userId directly
     const organicConn = await (prisma as any).socialConnection.findFirst({
-        where: { clientId: clientProfile.id, platform: 'TIKTOK_ORGANIC', isActive: true },
+        where: { userId: session.user.id, platform: 'TIKTOK_ORGANIC', isActive: true },
         orderBy: { updatedAt: 'desc' }
     });
 
@@ -30,8 +29,9 @@ export async function GET() {
         const api = new TikTokAPI(adsConn.accessToken);
         identities = await api.getTikTokIdentities(primaryId);
     } catch {
-        // fall back to cached in metadata
-        identities = adsMeta.allIdentities || [];
+        // Fall back to any cached identities in the organic metadata
+        const organicMeta = organicConn?.metadata ? JSON.parse(organicConn.metadata) : {};
+        identities = organicMeta.allIdentities || adsMeta.allIdentities || [];
     }
 
     return NextResponse.json({

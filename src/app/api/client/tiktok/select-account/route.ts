@@ -21,10 +21,12 @@ export async function POST(req: NextRequest) {
     const meta = connection.metadata ? JSON.parse(connection.metadata) : {};
     meta.selectedAdvertiserId = advertiserId;
 
+    // Do NOT change platformAccountId — it must stay as the original OAuth primary ID
+    // to avoid breaking the unique constraint on reconnect.
+    // selectedAdvertiserId in metadata is what the live route uses.
     await (prisma as any).socialConnection.update({
         where: { id: connection.id },
         data: {
-            platformAccountId: advertiserId,
             platformAccountName: advertiserName || advertiserId,
             metadata: JSON.stringify(meta)
         }

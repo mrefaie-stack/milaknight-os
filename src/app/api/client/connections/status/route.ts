@@ -21,7 +21,7 @@ export async function GET() {
 
     const connections = await (prisma as any).socialConnection.findMany({
         where: { clientId: clientProfile.id, isActive: true },
-        select: { platform: true }
+        select: { platform: true, metadata: true, platformAccountName: true }
     });
 
     const platforms = connections.map((c: any) => c.platform);
