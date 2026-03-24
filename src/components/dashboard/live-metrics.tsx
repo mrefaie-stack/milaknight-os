@@ -172,21 +172,10 @@ export function LiveMetrics() {
             icon: <PlaySquare className="w-5 h-5" />,
             color: '#000000',
             isLive: false,
-            organicMetrics: [
-                { label: isRtl ? "المتابعون" : "Followers", value: '312K', color: "text-blue-400", icon: <TrendingUp className="w-4 h-4" /> },
-                { label: isRtl ? "الإعجابات" : "Total Likes", value: '4.5M', color: "text-rose-500", icon: <Heart className="w-4 h-4" /> },
-                { label: isRtl ? "المشاركات" : "Shares", value: '88K', color: "text-emerald-500", icon: <Share2 className="w-4 h-4" /> },
-                { label: isRtl ? "مشاهدات الفيديو" : "Profile Views", value: '1.2M', color: "text-purple-500", icon: <Eye className="w-4 h-4" /> },
-            ],
-            adMetrics: [
-                { label: isRtl ? "الإنفاق" : "Spend", value: `SAR 520`, color: "text-orange-500", icon: <DollarSign className="w-4 h-4" /> },
-                { label: isRtl ? "مشاهدات الإعلان" : "Ad Video Views", value: '45,000', color: "text-primary", icon: <Eye className="w-4 h-4" /> },
-                { label: isRtl ? "النقرات" : "Clicks", value: '1,200', color: "text-emerald-500", icon: <MousePointer2 className="w-4 h-4" /> },
-                { label: isRtl ? "تكلفة النقرة" : "Avg. CPC", value: `SAR 0.43`, color: "text-blue-500", icon: <BarChart className="w-4 h-4" /> },
-            ],
-            activeAds: [
-                { id: '4', name: isRtl ? "تحدي تيك توك" : "Hashtag Challenge", status: 'active', spend: '400 SAR', results: '22k Views' }
-            ]
+            error: isRtl ? "حساب تيك توك غير مربوط" : "TikTok not connected",
+            organicMetrics: [],
+            adMetrics: [],
+            activeAds: []
         },
         {
             id: 'snapchat',

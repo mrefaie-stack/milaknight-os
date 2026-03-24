@@ -9,8 +9,18 @@ export async function GET() {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Look up client profile to find admin-linked connections (which have userId = admin's ID)
+    const clientProfile = await (prisma as any).client.findFirst({
+        where: { userId: session.user.id },
+        select: { id: true }
+    });
+
+    if (!clientProfile) {
+        return NextResponse.json({ error: 'Client profile not found' }, { status: 404 });
+    }
+
     const connections = await (prisma as any).socialConnection.findMany({
-        where: { userId: session.user.id, isActive: true },
+        where: { clientId: clientProfile.id, isActive: true },
         select: { platform: true }
     });
 
