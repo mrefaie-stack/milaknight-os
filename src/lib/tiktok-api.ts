@@ -208,7 +208,6 @@ export class TikTokAPI {
 
     /**
      * Get TikTok identities (organic accounts) linked to an advertiser account.
-     * Returns display_name, profile_image_url, etc.
      */
     async getTikTokIdentities(advertiserId: string) {
         try {
@@ -221,6 +220,61 @@ export class TikTokAPI {
                 displayName: a.display_name || '',
                 profileImage: a.profile_image_url || '',
                 type: a.type || ''
+            }));
+        } catch { return []; }
+    }
+
+    /**
+     * Get organic TikTok Business account profile data.
+     * businessId = tiktok_account_id from getTikTokIdentities.
+     */
+    async getBusinessProfile(businessId: string) {
+        try {
+            const data = await this.get('/business/get/', {
+                business_id: businessId,
+                fields: JSON.stringify(['display_name', 'profile_image', 'followers_count',
+                    'following_count', 'likes_count', 'video_count', 'bio_description',
+                    'username', 'profile_link'])
+            });
+            if (!data) return null;
+            return {
+                username: data.username || '',
+                displayName: data.display_name || '',
+                profileImage: data.profile_image || '',
+                bio: data.bio_description || '',
+                profileLink: data.profile_link || '',
+                followers: Number(data.followers_count) || 0,
+                following: Number(data.following_count) || 0,
+                likes: Number(data.likes_count) || 0,
+                videoCount: Number(data.video_count) || 0
+            };
+        } catch { return null; }
+    }
+
+    /**
+     * Get list of videos from a TikTok business account.
+     */
+    async getBusinessVideos(businessId: string) {
+        try {
+            const data = await this.post('/business/video/list/', {
+                business_id: businessId,
+                fields: ['item_id', 'create_time', 'cover_image_url', 'share_url',
+                    'video_views', 'likes', 'comments', 'shares', 'reach',
+                    'video_duration', 'embed_link'],
+                max_count: 10
+            });
+            return (data?.videos || []).map((v: any) => ({
+                id: v.item_id,
+                coverImage: v.cover_image_url || '',
+                shareUrl: v.share_url || '',
+                embedLink: v.embed_link || '',
+                views: Number(v.video_views) || 0,
+                likes: Number(v.likes) || 0,
+                comments: Number(v.comments) || 0,
+                shares: Number(v.shares) || 0,
+                reach: Number(v.reach) || 0,
+                duration: Number(v.video_duration) || 0,
+                createdAt: v.create_time || ''
             }));
         } catch { return []; }
     }
