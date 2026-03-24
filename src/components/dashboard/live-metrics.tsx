@@ -969,51 +969,98 @@ export function LiveMetrics() {
                         )}
 
                         {/* ── X (TWITTER) ───────────────────────────────────────────────── */}
-                        {activeTab === 'x' && xData && (
-                            <>
-                                <div className="grid lg:grid-cols-12 gap-5">
-                                    <div className="lg:col-span-8 space-y-5">
-                                        <div className="space-y-3">
-                                            <SectionHeader color="bg-gray-700" label={isRtl ? 'إحصائيات الحساب' : 'Account Stats'} />
-                                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                                                <StatCard label={isRtl ? 'المتابعون' : 'Followers'} value={fmt(xData.stats?.followers)} color="text-blue-400" icon={<Users className="w-4 h-4" />} />
-                                                <StatCard label={isRtl ? 'يتابع' : 'Following'} value={fmt(xData.stats?.following)} color="text-emerald-500" icon={<Activity className="w-4 h-4" />} />
-                                                <StatCard label={isRtl ? 'إجمالي التغريدات' : 'Total Tweets'} value={fmt(xData.stats?.tweets)} color="text-primary" icon={<MessageCircle className="w-4 h-4" />} />
-                                                <StatCard label={isRtl ? 'الإعجابات المُعطاة' : 'Likes Given'} value={fmt(xData.stats?.likes)} color="text-rose-500" icon={<Heart className="w-4 h-4" />} />
-                                                <StatCard label={isRtl ? 'القوائم' : 'Listed In'} value={fmt(xData.stats?.listed)} color="text-purple-500" icon={<Hash className="w-4 h-4" />} />
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Recent Tweets */}
-                                    <div className="lg:col-span-4 space-y-3">
-                                        <SectionHeader color="bg-gray-700" label={isRtl ? 'أحدث التغريدات' : 'Recent Tweets'} />
-                                        {(xData.recentTweets || []).length > 0 ? (
-                                            <div className="space-y-2">
-                                                {xData.recentTweets.map((t: any, i: number) => (
-                                                    <Card key={i} className="hover:bg-muted/30">
-                                                        <CardContent className="p-3">
-                                                            <p className="text-xs line-clamp-2 mb-2">{t.text}</p>
-                                                            <div className="flex flex-wrap gap-2 text-[10px] text-muted-foreground">
-                                                                <span className="flex items-center gap-0.5"><Heart className="w-3 h-3" /> {fmt(t.likes)}</span>
-                                                                <span className="flex items-center gap-0.5"><Share2 className="w-3 h-3" /> {fmt(t.retweets)}</span>
-                                                                <span className="flex items-center gap-0.5"><MessageCircle className="w-3 h-3" /> {fmt(t.replies)}</span>
-                                                                {t.impressions > 0 && <span className="flex items-center gap-0.5"><Eye className="w-3 h-3" /> {fmt(t.impressions)}</span>}
-                                                            </div>
-                                                        </CardContent>
-                                                    </Card>
-                                                ))}
-                                            </div>
+                        {activeTab === 'x' && xData && (() => {
+                            const tweets: any[] = xData.recentTweets || [];
+                            const totalImp = tweets.reduce((s: number, t: any) => s + (t.impressions || 0), 0);
+                            const totalLikes = tweets.reduce((s: number, t: any) => s + (t.likes || 0), 0);
+                            const totalRt = tweets.reduce((s: number, t: any) => s + (t.retweets || 0), 0);
+                            const totalReplies = tweets.reduce((s: number, t: any) => s + (t.replies || 0), 0);
+                            const engRate = totalImp > 0 ? ((totalLikes + totalRt + totalReplies) / totalImp * 100).toFixed(2) : '0.00';
+                            return (
+                            <div className="space-y-5">
+                                {/* Profile Card */}
+                                <Card className="border-border">
+                                    <CardContent className="p-4 flex items-center gap-4">
+                                        {xData.profileImageUrl ? (
+                                            <img src={xData.profileImageUrl} alt="profile" className="w-14 h-14 rounded-full object-cover ring-2 ring-gray-700" />
                                         ) : (
-                                            <div className="py-8 flex flex-col items-center justify-center rounded-lg border border-dashed border-border">
-                                                <Twitter className="w-8 h-8 mb-2 text-muted-foreground/30" />
-                                                <p className="text-xs text-muted-foreground">{isRtl ? 'لا توجد تغريدات حديثة' : 'No recent tweets'}</p>
+                                            <div className="w-14 h-14 rounded-full bg-gray-800 flex items-center justify-center">
+                                                <Twitter className="w-6 h-6 text-gray-400" />
                                             </div>
                                         )}
+                                        <div className="flex-1 min-w-0">
+                                            <p className="font-semibold text-sm">{xData.accountName}</p>
+                                            <p className="text-xs text-muted-foreground">@{xData.username}</p>
+                                            {xData.description && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{xData.description}</p>}
+                                        </div>
+                                        <div className="text-right shrink-0">
+                                            <p className="text-lg font-bold">{fmt(xData.stats?.followers)}</p>
+                                            <p className="text-[10px] text-muted-foreground">{isRtl ? 'متابع' : 'Followers'}</p>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+
+                                {/* Account Stats */}
+                                <div className="space-y-3">
+                                    <SectionHeader color="bg-gray-700" label={isRtl ? 'إحصائيات الحساب' : 'Account Stats'} />
+                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                        <StatCard label={isRtl ? 'المتابعون' : 'Followers'} value={fmt(xData.stats?.followers)} color="text-blue-400" icon={<Users className="w-4 h-4" />} />
+                                        <StatCard label={isRtl ? 'يتابع' : 'Following'} value={fmt(xData.stats?.following)} color="text-emerald-500" icon={<Activity className="w-4 h-4" />} />
+                                        <StatCard label={isRtl ? 'إجمالي التغريدات' : 'Total Posts'} value={fmt(xData.stats?.tweets)} color="text-primary" icon={<MessageCircle className="w-4 h-4" />} />
+                                        <StatCard label={isRtl ? 'القوائم' : 'Listed In'} value={fmt(xData.stats?.listed)} color="text-purple-500" icon={<Hash className="w-4 h-4" />} />
                                     </div>
                                 </div>
-                            </>
-                        )}
+
+                                {/* Tweet Engagement Aggregate */}
+                                {tweets.length > 0 && (
+                                    <div className="space-y-3">
+                                        <SectionHeader color="bg-gray-700" label={isRtl ? 'أداء آخر ١٠ تغريدات' : 'Last 10 Posts Performance'} />
+                                        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                                            <StatCard label={isRtl ? 'إجمالي المشاهدات' : 'Total Impressions'} value={fmt(totalImp)} color="text-sky-400" icon={<Eye className="w-4 h-4" />} />
+                                            <StatCard label={isRtl ? 'إجمالي الإعجابات' : 'Total Likes'} value={fmt(totalLikes)} color="text-rose-500" icon={<Heart className="w-4 h-4" />} />
+                                            <StatCard label={isRtl ? 'إعادة النشر' : 'Retweets'} value={fmt(totalRt)} color="text-emerald-500" icon={<Share2 className="w-4 h-4" />} />
+                                            <StatCard label={isRtl ? 'الردود' : 'Replies'} value={fmt(totalReplies)} color="text-amber-500" icon={<MessageCircle className="w-4 h-4" />} />
+                                            <StatCard label={isRtl ? 'معدل التفاعل' : 'Eng. Rate'} value={`${engRate}%`} color="text-violet-400" icon={<TrendingUp className="w-4 h-4" />} />
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Recent Tweets */}
+                                <div className="space-y-3">
+                                    <SectionHeader color="bg-gray-700" label={isRtl ? 'أحدث التغريدات' : 'Recent Posts'} />
+                                    {tweets.length > 0 ? (
+                                        <div className="grid sm:grid-cols-2 gap-3">
+                                            {tweets.map((t: any, i: number) => (
+                                                <Card key={i} className="hover:bg-muted/30 transition-colors">
+                                                    <CardContent className="p-3 space-y-2">
+                                                        <p className="text-xs line-clamp-3 leading-relaxed">{t.text}</p>
+                                                        {t.createdAt && (
+                                                            <p className="text-[10px] text-muted-foreground/60">
+                                                                {new Date(t.createdAt).toLocaleDateString(isRtl ? 'ar' : 'en', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                                            </p>
+                                                        )}
+                                                        <div className="flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-muted-foreground pt-1 border-t border-border">
+                                                            <span className="flex items-center gap-0.5"><Heart className="w-3 h-3 text-rose-400" /> {fmt(t.likes)}</span>
+                                                            <span className="flex items-center gap-0.5"><Share2 className="w-3 h-3 text-emerald-400" /> {fmt(t.retweets)}</span>
+                                                            <span className="flex items-center gap-0.5"><MessageCircle className="w-3 h-3 text-amber-400" /> {fmt(t.replies)}</span>
+                                                            {t.quotes > 0 && <span className="flex items-center gap-0.5"><Hash className="w-3 h-3 text-blue-400" /> {fmt(t.quotes)}</span>}
+                                                            {t.impressions > 0 && <span className="flex items-center gap-0.5 ml-auto"><Eye className="w-3 h-3 text-sky-400" /> {fmt(t.impressions)}</span>}
+                                                            {t.bookmarks > 0 && <span className="flex items-center gap-0.5"><CalendarDays className="w-3 h-3 text-violet-400" /> {fmt(t.bookmarks)}</span>}
+                                                        </div>
+                                                    </CardContent>
+                                                </Card>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div className="py-8 flex flex-col items-center justify-center rounded-lg border border-dashed border-border">
+                                            <Twitter className="w-8 h-8 mb-2 text-muted-foreground/30" />
+                                            <p className="text-xs text-muted-foreground">{isRtl ? 'لا توجد تغريدات حديثة' : 'No recent posts'}</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                            );
+                        })()}
 
                         {/* ── TIKTOK ────────────────────────────────────────────────────── */}
                         {activeTab === 'tiktok' && (
