@@ -7,6 +7,7 @@ import { Facebook, CheckCircle, AlertCircle, Loader2, Linkedin } from 'lucide-re
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 
 export default function ClientConnectionsPage() {
@@ -25,6 +26,8 @@ export default function ClientConnectionsPage() {
     const [linkedinNeedsApproval, setLinkedinNeedsApproval] = useState(false);
     const [googleAdsAccounts, setGoogleAdsAccounts] = useState<{ id: string; name: string; currencyCode: string }[]>([]);
     const [selectedGoogleAdsAccount, setSelectedGoogleAdsAccount] = useState('');
+    const [manualCustomerId, setManualCustomerId] = useState('');
+    const [showCustomerIdInput, setShowCustomerIdInput] = useState(false);
     const [saving, setSaving] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
 
@@ -51,13 +54,12 @@ export default function ClientConnectionsPage() {
         } else if (success === 'google') {
             toast.success('YouTube account connected!');
         } else if (success === 'google_ads') {
-            const needsSelect = searchParams?.get('select') === '1';
-            if (needsSelect) {
-                toast.success('Google Ads connected! Select your account below.');
-                loadGoogleAdsAccounts();
+            const needsId = searchParams?.get('enter_id') === '1';
+            if (needsId) {
+                toast.success('Google Ads connected! Please enter your Customer ID below.');
+                setShowCustomerIdInput(true);
             } else {
                 toast.success('Google Ads connected!');
-                loadGoogleAdsAccounts();
             }
         } else if (success === 'linkedin') {
             const select = searchParams?.get('select') === '1';
@@ -137,32 +139,33 @@ export default function ClientConnectionsPage() {
         const res = await fetch('/api/client/google/ad-accounts');
         if (res.ok) {
             const data = await res.json();
-            if (data.accounts?.length >= 1) {
-                setGoogleAdsAccounts(data.accounts);
-                if (data.selected) setSelectedGoogleAdsAccount(data.selected);
-            }
+            if (data.selected) setManualCustomerId(data.selected);
         }
     };
 
-    const handleSaveGoogleAds = async () => {
-        if (!selectedGoogleAdsAccount) { toast.error('Please select a Google Ads account'); return; }
+    const handleSaveCustomerId = async () => {
+        const id = manualCustomerId.replace(/-/g, '').trim();
+        if (!id || !/^\d+$/.test(id)) { toast.error('Please enter a valid numeric Customer ID (e.g. 1234567890)'); return; }
         setSaving('google-ads');
         try {
-            const account = googleAdsAccounts.find(a => a.id === selectedGoogleAdsAccount);
             const res = await fetch('/api/client/google/select-account', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ customerId: account?.id, customerName: account?.name })
+                body: JSON.stringify({ customerId: id, customerName: 'Google Ads' })
             });
             if (!res.ok) throw new Error('Failed');
-            toast.success('Google Ads account selected!');
-            setGoogleAdsAccounts([]);
+            toast.success('Google Ads Customer ID saved!');
+            setShowCustomerIdInput(false);
+            setConnections(p => ({ ...p, googleAds: true }));
         } catch {
-            toast.error('Failed to save Google Ads account');
+            toast.error('Failed to save Customer ID');
         } finally {
             setSaving(null);
         }
     };
+
+    // kept for backward compat — unused now
+    const handleSaveGoogleAds = handleSaveCustomerId;
 
     const handleConnectGoogle = () => {
         window.location.href = '/api/auth/google';
@@ -614,39 +617,38 @@ export default function ClientConnectionsPage() {
                             {connections.googleAds ? 'Reconnect Google Ads' : 'Connect Google Ads'}
                         </Button>
 
-                        {connections.googleAds && googleAdsAccounts.length === 0 && (
+                        {connections.googleAds && !showCustomerIdInput && (
                             <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={loadGoogleAdsAccounts}
+                                onClick={() => setShowCustomerIdInput(true)}
                                 className="w-full h-9 rounded-xl text-xs border-border"
                             >
-                                Change Google Ads Account
+                                Change Customer ID
                             </Button>
                         )}
 
-                        {googleAdsAccounts.length >= 1 && (
+                        {(!connections.googleAds || showCustomerIdInput) && (
                             <div className="space-y-3 pt-2 border-t border-border">
-                                <p className="text-xs text-muted-foreground font-medium">Select your Google Ads account:</p>
-                                <Select value={selectedGoogleAdsAccount} onValueChange={setSelectedGoogleAdsAccount}>
-                                    <SelectTrigger className="bg-muted/30 border-border rounded-xl text-xs h-9">
-                                        <SelectValue placeholder="Select Google Ads account" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {googleAdsAccounts.map(a => (
-                                            <SelectItem key={a.id} value={a.id} className="text-xs">
-                                                {a.name} ({a.currencyCode})
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                                <div className="space-y-1">
+                                    <p className="text-xs font-medium">Google Ads Customer ID</p>
+                                    <p className="text-[10px] text-muted-foreground">
+                                        Find it in Google Ads → top-right corner (format: 123-456-7890)
+                                    </p>
+                                </div>
+                                <Input
+                                    value={manualCustomerId}
+                                    onChange={e => setManualCustomerId(e.target.value)}
+                                    placeholder="e.g. 123-456-7890"
+                                    className="bg-muted/30 border-border rounded-xl text-xs h-9"
+                                />
                                 <Button
                                     size="sm"
-                                    onClick={handleSaveGoogleAds}
+                                    onClick={handleSaveCustomerId}
                                     disabled={saving === 'google-ads'}
                                     className="w-full h-9 rounded-xl bg-[#4285F4] text-white font-bold text-xs"
                                 >
-                                    {saving === 'google-ads' ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save Selection'}
+                                    {saving === 'google-ads' ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save Customer ID'}
                                 </Button>
                             </div>
                         )}
