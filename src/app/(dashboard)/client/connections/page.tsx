@@ -23,6 +23,8 @@ export default function ClientConnectionsPage() {
     const [selectedSnapAccount, setSelectedSnapAccount] = useState('');
     const [selectedLinkedinPage, setSelectedLinkedinPage] = useState('');
     const [linkedinNeedsApproval, setLinkedinNeedsApproval] = useState(false);
+    const [googleAdsAccounts, setGoogleAdsAccounts] = useState<{ id: string; name: string; currencyCode: string }[]>([]);
+    const [selectedGoogleAdsAccount, setSelectedGoogleAdsAccount] = useState('');
     const [saving, setSaving] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
 
@@ -47,7 +49,13 @@ export default function ClientConnectionsPage() {
         } else if (success === 'salla') {
             toast.success('Salla store connected!');
         } else if (success === 'google') {
-            toast.success('Google account connected! YouTube and Google Ads are now live.');
+            const needsSelect = searchParams?.get('select') === '1';
+            if (needsSelect) {
+                toast.success('Google connected! Select your Google Ads account below.');
+                loadGoogleAdsAccounts();
+            } else {
+                toast.success('Google account connected! YouTube and Google Ads are now live.');
+            }
         } else if (success === 'linkedin') {
             const select = searchParams?.get('select') === '1';
             const noPages = searchParams?.get('no_pages') === '1';
@@ -120,6 +128,37 @@ export default function ClientConnectionsPage() {
 
     const handleConnectSalla = () => {
         window.location.href = '/api/auth/salla';
+    };
+
+    const loadGoogleAdsAccounts = async () => {
+        const res = await fetch('/api/client/google/ad-accounts');
+        if (res.ok) {
+            const data = await res.json();
+            if (data.accounts?.length > 1) {
+                setGoogleAdsAccounts(data.accounts);
+                if (data.selected) setSelectedGoogleAdsAccount(data.selected);
+            }
+        }
+    };
+
+    const handleSaveGoogleAds = async () => {
+        if (!selectedGoogleAdsAccount) { toast.error('Please select a Google Ads account'); return; }
+        setSaving('google-ads');
+        try {
+            const account = googleAdsAccounts.find(a => a.id === selectedGoogleAdsAccount);
+            const res = await fetch('/api/client/google/select-account', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ customerId: account?.id, customerName: account?.name })
+            });
+            if (!res.ok) throw new Error('Failed');
+            toast.success('Google Ads account selected!');
+            setGoogleAdsAccounts([]);
+        } catch {
+            toast.error('Failed to save Google Ads account');
+        } finally {
+            setSaving(null);
+        }
     };
 
     const handleConnectGoogle = () => {
@@ -516,7 +555,7 @@ export default function ClientConnectionsPage() {
                         <CardTitle className="mt-4">Google (YouTube + Ads)</CardTitle>
                         <CardDescription>Connect your Google account to track YouTube channel stats and Google Ads campaigns.</CardDescription>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="space-y-4">
                         <Button
                             onClick={handleConnectGoogle}
                             className="w-full bg-white hover:bg-gray-50 text-gray-800 border border-gray-200 font-semibold py-5 rounded-xl"
@@ -529,6 +568,41 @@ export default function ClientConnectionsPage() {
                             </svg>
                             {connections.google ? 'Reconnect Google' : 'Connect with Google'}
                         </Button>
+
+                        {connections.google && googleAdsAccounts.length === 0 && (
+                            <button
+                                onClick={loadGoogleAdsAccounts}
+                                className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
+                            >
+                                Change Google Ads account
+                            </button>
+                        )}
+
+                        {googleAdsAccounts.length > 1 && (
+                            <div className="space-y-3 pt-2 border-t border-border">
+                                <p className="text-xs text-muted-foreground font-medium">Select your Google Ads account:</p>
+                                <Select value={selectedGoogleAdsAccount} onValueChange={setSelectedGoogleAdsAccount}>
+                                    <SelectTrigger className="bg-muted/30 border-border rounded-xl text-xs h-9">
+                                        <SelectValue placeholder="Select Google Ads account" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {googleAdsAccounts.map(a => (
+                                            <SelectItem key={a.id} value={a.id} className="text-xs">
+                                                {a.name} ({a.currencyCode})
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <Button
+                                    size="sm"
+                                    onClick={handleSaveGoogleAds}
+                                    disabled={saving === 'google-ads'}
+                                    className="w-full h-9 rounded-xl font-bold text-xs"
+                                >
+                                    {saving === 'google-ads' ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save Selection'}
+                                </Button>
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
 

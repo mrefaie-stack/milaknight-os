@@ -137,7 +137,8 @@ export async function GET(request: Request) {
         cookieStore.delete('google_state');
         cookieStore.delete('google_code_verifier');
 
-        return NextResponse.redirect(`${base}/client/connections?success=google`);
+        const needsSelect = adsCustomerIds.length > 1;
+        return NextResponse.redirect(`${base}/client/connections?success=google${needsSelect ? '&select=1' : ''}`);
     } catch (e: any) {
         console.error('Google callback error:', e);
         return NextResponse.redirect(`${base}/client/connections?error=google_error`);
