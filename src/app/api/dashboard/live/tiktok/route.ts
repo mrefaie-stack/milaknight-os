@@ -28,14 +28,21 @@ export async function GET(request: Request) {
         const advertiserIds: string[] = meta.advertiserIds || [connection.platformAccountId];
         const primaryId = meta.selectedAdvertiserId || advertiserIds[0];
 
+        console.log(`TikTok Live: advertiserId=${primaryId}, since=${since}, until=${until}`);
+
         const api = new TikTokAPI(connection.accessToken);
 
-        const [infoResult, statsResult, campaignsResult, topAdsResult] = await Promise.allSettled([
+        const [infoResult, statsResult, campaignsResult, topAdsResult, identitiesResult] = await Promise.allSettled([
             api.getAdvertiserInfo(advertiserIds),
             api.getAdAccountStats(primaryId, since, until),
             api.getCampaigns(primaryId, since, until),
-            api.getTopAds(primaryId, since, until)
+            api.getTopAds(primaryId, since, until),
+            api.getTikTokIdentities(primaryId)
         ]);
+
+        if (infoResult.status === 'rejected') console.error('TikTok info failed:', infoResult.reason);
+        if (statsResult.status === 'rejected') console.error('TikTok stats failed:', statsResult.reason);
+        if (campaignsResult.status === 'rejected') console.error('TikTok campaigns failed:', campaignsResult.reason);
 
         const infoList = infoResult.status === 'fulfilled' ? (infoResult.value?.list || []) : [];
         const info = infoList.find((i: any) => i.advertiser_id === primaryId) || infoList[0] || null;
@@ -51,10 +58,11 @@ export async function GET(request: Request) {
         const stats = statsResult.status === 'fulfilled' ? statsResult.value : emptyStats;
         const campaigns: any[] = campaignsResult.status === 'fulfilled' ? campaignsResult.value : [];
         const topAds: any[] = topAdsResult.status === 'fulfilled' ? topAdsResult.value : [];
+        const identities: any[] = identitiesResult.status === 'fulfilled' ? identitiesResult.value : [];
+
+        console.log(`TikTok Live stats: spend=${stats.spend}, impressions=${stats.impressions}, campaigns=${campaigns.length}`);
 
         const currency = info?.currency || 'USD';
-        const timezone = info?.timezone || '';
-        const industryName = info?.industry || '';
         const activeCampaigns = campaigns.filter((c: any) => c.status === 'ENABLE');
 
         const objectiveBreakdown: Record<string, number> = {};
@@ -66,15 +74,19 @@ export async function GET(request: Request) {
         return NextResponse.json({
             platform: 'TIKTOK',
             accountName: info?.name || connection.platformAccountName || 'TikTok',
+            advertiserId: primaryId,
             currency,
-            timezone,
-            industryName,
+            timezone: info?.timezone || '',
+            country: info?.country || '',
+            industryName: info?.industry || '',
+            balance: info?.balance || 0,
             stats,
             campaignCount: campaigns.length,
             activeCampaignCount: activeCampaigns.length,
             campaigns: campaigns.slice(0, 10),
             topAds,
             objectiveBreakdown,
+            identities,
             since,
             until,
             status: 'success'

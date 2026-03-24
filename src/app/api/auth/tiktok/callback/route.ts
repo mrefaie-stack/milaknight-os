@@ -42,7 +42,7 @@ export async function GET(req: NextRequest) {
     try {
         const tiktok = new TikTokAPI(accessToken);
         const info = await tiktok.getAdvertiserInfo(advertiserIds);
-        advertiserName = info?.list?.[0]?.advertiser_name || '';
+        advertiserName = info?.list?.[0]?.name || '';
     } catch (e) {
         console.error('TikTok advertiser info failed:', e);
     }
@@ -54,6 +54,16 @@ export async function GET(req: NextRequest) {
     if (isClient) {
         clientRecord = await (prisma as any).client.findFirst({ where: { userId: session.user.id } });
     }
+
+    // Preserve selectedAdvertiserId if it's still valid in the new advertiserIds list
+    const existing = await (prisma as any).socialConnection.findFirst({
+        where: { userId: session.user.id, platform: 'TIKTOK' }
+    });
+    const existingMeta = existing?.metadata ? JSON.parse(existing.metadata) : {};
+    const preservedSelected = existingMeta.selectedAdvertiserId && advertiserIds.includes(existingMeta.selectedAdvertiserId)
+        ? existingMeta.selectedAdvertiserId : primaryId;
+
+    const newMeta = JSON.stringify({ advertiserIds, selectedAdvertiserId: preservedSelected });
 
     await (prisma as any).socialConnection.upsert({
         where: {
@@ -68,7 +78,7 @@ export async function GET(req: NextRequest) {
             isActive: true,
             platformAccountName: advertiserName || undefined,
             clientId: clientRecord?.id || undefined,
-            metadata: JSON.stringify({ advertiserIds })
+            metadata: newMeta
         },
         create: {
             userId: session.user.id,
@@ -78,7 +88,7 @@ export async function GET(req: NextRequest) {
             accessToken,
             isActive: true,
             clientId: clientRecord?.id || null,
-            metadata: JSON.stringify({ advertiserIds })
+            metadata: newMeta
         }
     });
 

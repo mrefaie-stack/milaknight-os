@@ -1085,6 +1085,53 @@ export function LiveMetrics() {
                                     onApply={(p, s, u) => fetchTiktok(p, s, u)} isRtl={isRtl} />
 
                                 <div className="space-y-5">
+                                    {/* Account Info Header */}
+                                    <Card className="border-border">
+                                        <CardContent className="p-4">
+                                            <div className="flex flex-wrap items-center gap-4">
+                                                <div className="flex items-center gap-3 flex-1 min-w-0">
+                                                    <div className="w-10 h-10 rounded-lg bg-black flex items-center justify-center shrink-0">
+                                                        <span className="text-white font-bold text-sm">TT</span>
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                        <p className="font-semibold text-sm truncate">{tiktokData.accountName}</p>
+                                                        <p className="text-[10px] text-muted-foreground">ID: {tiktokData.advertiserId}</p>
+                                                        {tiktokData.industryName && <p className="text-[10px] text-muted-foreground">{tiktokData.industryName}</p>}
+                                                    </div>
+                                                </div>
+                                                <div className="flex gap-4 text-center shrink-0">
+                                                    <div>
+                                                        <p className="text-sm font-bold text-emerald-500">{tiktokData.currency} {fmt(tiktokData.balance, 2)}</p>
+                                                        <p className="text-[10px] text-muted-foreground">{isRtl ? 'الرصيد' : 'Balance'}</p>
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-sm font-bold text-green-500">{tiktokData.activeCampaignCount}</p>
+                                                        <p className="text-[10px] text-muted-foreground">{isRtl ? 'حملات نشطة' : 'Active Campaigns'}</p>
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-sm font-bold">{tiktokData.campaignCount}</p>
+                                                        <p className="text-[10px] text-muted-foreground">{isRtl ? 'إجمالي الحملات' : 'Total Campaigns'}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {/* Linked TikTok identities */}
+                                            {(tiktokData.identities || []).length > 0 && (
+                                                <div className="mt-3 pt-3 border-t border-border">
+                                                    <p className="text-[10px] text-muted-foreground mb-2">{isRtl ? 'الحسابات المرتبطة' : 'Linked TikTok Accounts'}</p>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {tiktokData.identities.map((id: any) => (
+                                                            <div key={id.id} className="flex items-center gap-2 bg-muted/50 rounded-full px-3 py-1">
+                                                                {id.profileImage && <img src={id.profileImage} alt="" className="w-5 h-5 rounded-full object-cover" />}
+                                                                <span className="text-xs font-medium">{id.displayName || id.id}</span>
+                                                                {id.type && <Badge variant="outline" className="text-[9px] py-0">{id.type}</Badge>}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </CardContent>
+                                    </Card>
+
                                     {/* Ad Performance */}
                                     <div className="space-y-3">
                                         <SectionHeader color="bg-gray-800" label={isRtl ? 'أداء الإعلانات' : 'Ad Performance'} />
