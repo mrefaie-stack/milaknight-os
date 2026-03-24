@@ -82,5 +82,6 @@ export async function GET(req: NextRequest) {
         }
     });
 
-    return NextResponse.redirect(`${appUrl}${returnUrl}?success=tiktok`);
+    const needsSelect = advertiserIds.length > 1;
+    return NextResponse.redirect(`${appUrl}${returnUrl}?success=tiktok${needsSelect ? '&select=1' : ''}`);
 }
