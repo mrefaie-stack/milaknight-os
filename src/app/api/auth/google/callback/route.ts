@@ -72,35 +72,6 @@ export async function GET(request: Request) {
             console.error('Google callback: YouTube channel fetch failed:', e);
         }
 
-        // Fetch Google Ads accessible customers
-        let adsCustomerIds: string[] = [];
-        if (process.env.GOOGLE_ADS_DEVELOPER_TOKEN) {
-            try {
-                const adsRes = await fetch(
-                    'https://googleads.googleapis.com/v18/customers:listAccessibleCustomers',
-                    {
-                        headers: {
-                            Authorization: `Bearer ${access_token}`,
-                            'developer-token': process.env.GOOGLE_ADS_DEVELOPER_TOKEN
-                        }
-                    }
-                );
-                const adsText = await adsRes.text();
-                console.log('Google Ads callback status:', adsRes.status);
-                console.log('Google Ads callback body:', adsText.slice(0, 300));
-                try {
-                    const adsData = JSON.parse(adsText);
-                    adsCustomerIds = (adsData.resourceNames || []).map(
-                        (r: string) => r.replace('customers/', '')
-                    );
-                } catch {
-                    console.error('Google Ads callback: response is not JSON (HTML redirect?)');
-                }
-            } catch (e) {
-                console.error('Google callback: Ads customers fetch failed:', e);
-            }
-        }
-
         // Find client profile
         const clientProfile = await (prisma as any).client.findFirst({
             where: { userId: session.user.id }
@@ -127,7 +98,7 @@ export async function GET(request: Request) {
                 refreshToken: refresh_token ?? null,
                 expiresAt: expires_in ? new Date(Date.now() + expires_in * 1000) : null,
                 isActive: true,
-                metadata: JSON.stringify({ channelId, channelTitle, subscriberCount, adsCustomerIds })
+                metadata: JSON.stringify({ channelId, channelTitle, subscriberCount })
             },
             update: {
                 platformAccountId: channelId || session.user.id,
@@ -136,7 +107,7 @@ export async function GET(request: Request) {
                 refreshToken: refresh_token ?? null,
                 expiresAt: expires_in ? new Date(Date.now() + expires_in * 1000) : null,
                 isActive: true,
-                metadata: JSON.stringify({ channelId, channelTitle, subscriberCount, adsCustomerIds })
+                metadata: JSON.stringify({ channelId, channelTitle, subscriberCount })
             }
         });
 
@@ -144,8 +115,7 @@ export async function GET(request: Request) {
         cookieStore.delete('google_state');
         cookieStore.delete('google_code_verifier');
 
-        const needsSelect = adsCustomerIds.length > 1;
-        return NextResponse.redirect(`${base}/client/connections?success=google${needsSelect ? '&select=1' : ''}`);
+        return NextResponse.redirect(`${base}/client/connections?success=google`);
     } catch (e: any) {
         console.error('Google callback error:', e);
         return NextResponse.redirect(`${base}/client/connections?error=google_error`);

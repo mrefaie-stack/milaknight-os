@@ -23,10 +23,10 @@ export async function GET() {
         if (!clientProfile) return NextResponse.json({ error: 'Client profile not found' }, { status: 404 });
 
         const connection = await (prisma as any).socialConnection.findFirst({
-            where: { clientId: clientProfile.id, platform: 'GOOGLE', isActive: true },
+            where: { clientId: clientProfile.id, platform: 'GOOGLE_ADS', isActive: true },
             orderBy: { updatedAt: 'desc' }
         });
-        if (!connection) return NextResponse.json({ error: 'Google not connected' }, { status: 404 });
+        if (!connection) return NextResponse.json({ error: 'Google Ads not connected' }, { status: 404 });
 
         // Auto-refresh token if expired
         let accessToken = connection.accessToken;
