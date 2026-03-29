@@ -15,7 +15,7 @@ const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 export async function POST(req: Request) {
     try {
         const session = await getServerSession(authOptions);
-        if (!session || (session.user.role !== "SEO_TEAM" && session.user.role !== "SEO_LEAD" && session.user.role !== "ADMIN")) {
+        if (!session || session.user.role === "CLIENT") {
             return NextResponse.json({ error: "Unauthorized access" }, { status: 403 });
         }
 
@@ -76,7 +76,7 @@ Return ONLY a valid JSON object with the following structure:
 `;
 
         const msg = await anthropic.messages.create({
-            model: "claude-3-haiku-20240307",
+            model: "claude-3-5-sonnet",
             max_tokens: 1500,
             messages: [{ role: "user", content: claudePrompt }]
         });

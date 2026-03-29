@@ -51,11 +51,16 @@ export async function getNotifications() {
     const session = await getServerSession(authOptions);
     if (!session) throw new Error("Unauthorized");
 
-    return prisma.notification.findMany({
+    const raw = await prisma.notification.findMany({
         where: { userId: session.user.id },
         orderBy: { createdAt: "desc" },
         take: 50
     });
+    
+    return raw.map(n => ({
+        ...n,
+        createdAt: n.createdAt.toISOString()
+    }));
 }
 
 export async function markAsRead(notificationId: string) {
