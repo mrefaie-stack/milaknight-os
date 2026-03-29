@@ -64,6 +64,26 @@ model User {
   // Team Meetings
   organizedMeetings  TeamMeeting[]           @relation("MeetingOrganizer")
   meetingAttendances TeamMeetingAttendee[]   @relation("MeetingAttendee")
+
+  // SEO
+  seoHistory         SeoAnalysisHistory[]    @relation("UserSeoHistory")
+}
+
+model SeoAnalysisHistory {
+  id             String    @id @default(cuid())
+  userId         String
+  user           User      @relation("UserSeoHistory", fields: [userId], references: [id], onDelete: Cascade)
+  url            String
+  metaTitle      String?
+  metaDesc       String?
+  niche          String?
+  audience       String?
+  keywordsData   String    @db.Text // Storing JSON representation of keywords
+  
+  createdAt      DateTime  @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
 }
 
 model TeamMeeting {
