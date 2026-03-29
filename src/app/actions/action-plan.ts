@@ -772,7 +772,7 @@ export async function rejectActionPlanByMM(planId: string, feedback: string) {
 }
 export async function scheduleActionPlan(planId: string) {
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== "MODERATOR") throw new Error("Unauthorized");
+    if (!session || !["MODERATOR", "ADMIN", "AM"].includes(session.user.role)) throw new Error("Unauthorized");
 
     const plan = await prisma.actionPlan.update({
         where: { id: planId },
