@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import Anthropic from "@anthropic-ai/sdk";
 import * as cheerio from "cheerio";
-
+import { prisma } from "@/lib/prisma";
 const anthropic = new Anthropic();
 
 export async function POST(req: Request) {
@@ -101,10 +101,25 @@ Requirements for JSON output strictly (no markdown block if possible):
             else throw new Error("Could not parse AI response into JSON");
         }
 
-        return NextResponse.json({
+        const resultPayload = {
             rawMetrics: rawData,
             audit: parsed
-        });
+        };
+
+        try {
+            await prisma.seoToolHistory.create({
+                data: {
+                    userId: (session.user as any).id,
+                    toolName: "TECHNICAL_AUDIT",
+                    inputData: JSON.stringify({ url }),
+                    resultData: JSON.stringify(resultPayload)
+                }
+            });
+        } catch (historyErr) {
+            console.error("Failed to save SEO history:", historyErr);
+        }
+
+        return NextResponse.json(resultPayload);
 
     } catch (error: any) {
         console.error("Technical Audit Error:", error);

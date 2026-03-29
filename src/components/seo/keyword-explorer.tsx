@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { SeoHistoryViewer } from "./seo-history-viewer";
 
 interface KeywordIdea {
     keyword: string;
@@ -81,16 +82,26 @@ export function KeywordExplorer() {
 
     return (
         <div className="space-y-6">
-            <div>
-                <h1 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-amber-500 to-amber-700 bg-clip-text text-transparent flex items-center gap-2">
-                    <Key className="h-6 w-6 text-amber-500" />
-                    {isRtl ? "مستكشف الكلمات المفتاحية" : "Keyword Explorer"}
-                </h1>
-                <p className="text-muted-foreground mt-1 text-sm">
-                    {isRtl 
-                        ? "اكتب كلمة بحث للعثور على مئات الفرص والكلمات الذهبية من Google Ads مباشرة." 
-                        : "Enter a seed keyword to find hundreds of opportunities and golden keywords directly from Google Ads."}
-                </p>
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <h1 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-amber-500 to-amber-700 bg-clip-text text-transparent flex items-center gap-2">
+                        <Key className="h-6 w-6 text-amber-500" />
+                        {isRtl ? "مستكشف الكلمات المفتاحية" : "Keyword Explorer"}
+                    </h1>
+                    <p className="text-muted-foreground mt-1 text-sm">
+                        {isRtl 
+                            ? "اكتب كلمة بحث للعثور على مئات الفرص والكلمات الذهبية من Google Ads مباشرة." 
+                            : "Enter a seed keyword to find hundreds of opportunities and golden keywords directly from Google Ads."}
+                    </p>
+                </div>
+
+                <SeoHistoryViewer 
+                    toolName="KEYWORD_EXPLORER" 
+                    onSelect={(data, input) => {
+                        setResults(data);
+                        if (input && input.keyword) setSeed(input.keyword);
+                    }} 
+                />
             </div>
 
             <div className="bg-card border border-border rounded-xl p-6 shadow-sm">

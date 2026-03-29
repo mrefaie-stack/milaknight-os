@@ -6,6 +6,7 @@ import { Search, Loader2, ShieldCheck, CheckCircle2, AlertTriangle, XCircle, Glo
 import { useLanguage } from "@/contexts/language-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SeoHistoryViewer } from "./seo-history-viewer";
 
 interface AuditResult {
     rawMetrics: any;
@@ -55,16 +56,26 @@ export function TechnicalAuditor() {
 
     return (
         <div className="space-y-6">
-            <div>
-                <h1 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent flex items-center gap-2">
-                    <ShieldCheck className="h-6 w-6 text-emerald-500" />
-                    {isRtl ? "المدقق التقني السريع" : "Technical SEO Auditor"}
-                </h1>
-                <p className="text-muted-foreground mt-1 text-sm">
-                    {isRtl 
-                        ? "يفحص صحة الصفحة البرمجية ويقدم تقريراً تفصيلياً بالأخطاء التي تعيق التصدر." 
-                        : "Checks technical page health and provides a detailed report on ranking-blocking issues."}
-                </p>
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <h1 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent flex items-center gap-2">
+                        <ShieldCheck className="h-6 w-6 text-emerald-500" />
+                        {isRtl ? "المدقق التقني السريع" : "Technical SEO Auditor"}
+                    </h1>
+                    <p className="text-muted-foreground mt-1 text-sm">
+                        {isRtl 
+                            ? "يفحص صحة الصفحة البرمجية ويقدم تقريراً تفصيلياً بالأخطاء التي تعيق التصدر." 
+                            : "Checks technical page health and provides a detailed report on ranking-blocking issues."}
+                    </p>
+                </div>
+                
+                <SeoHistoryViewer 
+                    toolName="TECHNICAL_AUDIT" 
+                    onSelect={(data, input) => {
+                        setResult(data);
+                        if (input && input.url) setUrl(input.url);
+                    }} 
+                />
             </div>
 
             <div className="bg-card border border-border rounded-xl p-6 shadow-sm">

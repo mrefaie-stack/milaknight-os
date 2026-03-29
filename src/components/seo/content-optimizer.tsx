@@ -7,6 +7,7 @@ import { useLanguage } from "@/contexts/language-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { SeoHistoryViewer } from "./seo-history-viewer";
 
 interface OptimizerResult {
     seoScore: number;
@@ -51,16 +52,29 @@ export function ContentOptimizer() {
 
     return (
         <div className="space-y-6">
-            <div>
-                <h1 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-blue-500 to-indigo-600 bg-clip-text text-transparent flex items-center gap-2">
-                    <Activity className="h-6 w-6 text-blue-500" />
-                    {isRtl ? "مُقيّم ومحسن المحتوى" : "AI Content Optimizer"}
-                </h1>
-                <p className="text-muted-foreground mt-1 text-sm">
-                    {isRtl 
-                        ? "انسخ مقالك هنا قبل النشر وافحص توافقه مع الكلمة المستهدفة (Keyword Density and Readability)." 
-                        : "Paste your article before publishing to check its alignment with the target keyword."}
-                </p>
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <h1 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-blue-500 to-indigo-600 bg-clip-text text-transparent flex items-center gap-2">
+                        <Activity className="h-6 w-6 text-blue-500" />
+                        {isRtl ? "مُقيّم ومحسن المحتوى" : "AI Content Optimizer"}
+                    </h1>
+                    <p className="text-muted-foreground mt-1 text-sm">
+                        {isRtl 
+                            ? "انسخ مقالك هنا قبل النشر وافحص توافقه مع الكلمة المستهدفة (Keyword Density and Readability)." 
+                            : "Paste your article before publishing to check its alignment with the target keyword."}
+                    </p>
+                </div>
+                
+                <SeoHistoryViewer 
+                    toolName="CONTENT_OPTIMIZER" 
+                    onSelect={(data, input) => {
+                        setResult(data);
+                        if (input) {
+                            if (input.keyword) setKeyword(input.keyword);
+                            if (input.contentText) setContent(input.contentText);
+                        }
+                    }} 
+                />
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
