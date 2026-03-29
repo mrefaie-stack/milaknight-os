@@ -332,6 +332,22 @@ export async function getReportById(id: string) {
 }
 
 export async function getPreviousReport(clientId: string, currentMonth: string) {
+    const session = await getServerSession(authOptions);
+    if (!session) throw new Error("Unauthorized");
+
+    const client = await prisma.client.findUnique({ where: { id: clientId } });
+    if (!client) return null;
+
+    if (session.user.role === "CLIENT") {
+        if (client.userId !== session.user.id) throw new Error("Unauthorized Access");
+    } else if (session.user.role === "AM") {
+        if (client.amId !== session.user.id) throw new Error("Unauthorized Access");
+    } else if (session.user.role === "MARKETING_MANAGER") {
+        if ((client as any).mmId !== session.user.id) throw new Error("Unauthorized Access");
+    } else if (session.user.role !== "ADMIN" && session.user.role !== "MODERATOR" && session.user.role !== "SEO_LEAD") {
+        throw new Error("Unauthorized Access");
+    }
+
     // Get all reports for this client ordered by month descending
     const reports = await prisma.report.findMany({
         where: { clientId, status: "SENT" },
