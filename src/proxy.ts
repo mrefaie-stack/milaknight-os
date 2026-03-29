@@ -38,6 +38,33 @@ export default withAuth(
         if (req.nextUrl.pathname.startsWith("/moderator") && token?.role !== "MODERATOR" && token?.role !== "ADMIN") {
             return NextResponse.redirect(new URL("/", req.url));
         }
+        
+        // HR Protection
+        if (req.nextUrl.pathname.startsWith("/hr-manager") && token?.role !== "HR_MANAGER" && token?.role !== "ADMIN") {
+            return NextResponse.redirect(new URL("/", req.url));
+        }
+
+        // Teams Protection
+        if (req.nextUrl.pathname.startsWith("/seo-team") && token?.role !== "SEO_TEAM" && token?.role !== "SEO_LEAD" && token?.role !== "ADMIN") {
+            return NextResponse.redirect(new URL("/", req.url));
+        }
+        if (req.nextUrl.pathname.startsWith("/seo-lead") && token?.role !== "SEO_LEAD" && token?.role !== "ADMIN") {
+            return NextResponse.redirect(new URL("/", req.url));
+        }
+        
+        if (req.nextUrl.pathname.startsWith("/content-team") && token?.role !== "CONTENT_TEAM" && token?.role !== "CONTENT_LEADER" && token?.role !== "ADMIN") {
+            return NextResponse.redirect(new URL("/", req.url));
+        }
+        if (req.nextUrl.pathname.startsWith("/content-leader") && token?.role !== "CONTENT_LEADER" && token?.role !== "ADMIN") {
+            return NextResponse.redirect(new URL("/", req.url));
+        }
+
+        if (req.nextUrl.pathname.startsWith("/art-team") && token?.role !== "ART_TEAM" && token?.role !== "ART_LEADER" && token?.role !== "ADMIN") {
+            return NextResponse.redirect(new URL("/", req.url));
+        }
+        if (req.nextUrl.pathname.startsWith("/art-leader") && token?.role !== "ART_LEADER" && token?.role !== "ADMIN") {
+            return NextResponse.redirect(new URL("/", req.url));
+        }
     },
     {
         callbacks: {
@@ -49,5 +76,10 @@ export default withAuth(
 );
 
 export const config = {
-    matcher: ["/admin/:path*", "/am/:path*", "/client/:path*", "/moderator/:path*", "/login", "/messages", "/notifications", "/tasks"],
+    matcher: [
+        "/admin/:path*", "/am/:path*", "/client/:path*", "/moderator/:path*", 
+        "/hr-manager/:path*", "/seo-team/:path*", "/seo-lead/:path*", 
+        "/content-team/:path*", "/content-leader/:path*", "/art-team/:path*", "/art-leader/:path*",
+        "/login", "/messages", "/notifications", "/tasks"
+    ],
 };
