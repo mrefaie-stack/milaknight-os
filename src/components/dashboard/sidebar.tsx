@@ -191,8 +191,14 @@ export function DashboardSidebar({ role, user }: { role: string; user: any }) {
         ART_LEADER:     makeLeaderLinks("art-leader"),
         CONTENT_TEAM:   makeTeamLinks("content-team"),
         CONTENT_LEADER: makeLeaderLinks("content-leader"),
-        SEO_TEAM:       makeTeamLinks("seo-team"),
-        SEO_LEAD:       makeLeaderLinks("seo-lead"),
+        SEO_TEAM:       [
+            ...makeTeamLinks("seo-team"),
+            { href: "/seo-team/analysis", label: isRtl ? "أدوات السيو المتقدمة" : "Advanced SEO Analysis", icon: Target }
+        ],
+        SEO_LEAD:       [
+            ...makeLeaderLinks("seo-lead"),
+            { href: "/seo-lead/analysis", label: isRtl ? "أدوات السيو المتقدمة" : "Advanced SEO Analysis", icon: Target }
+        ],
     };
 
     const links: NavLink[] =
