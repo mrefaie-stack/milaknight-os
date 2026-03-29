@@ -161,6 +161,23 @@ Return ONLY a valid JSON object with the following structure:
             keywords: enrichedKeywords
         };
 
+        // 4. Save to History
+        try {
+            await (prisma as any).seoAnalysisHistory.create({
+                data: {
+                    userId: session.user.id,
+                    url: url,
+                    metaTitle: title,
+                    metaDesc: description,
+                    niche: seoPlan.niche,
+                    audience: seoPlan.audience,
+                    keywordsData: JSON.stringify(enrichedKeywords)
+                }
+            });
+        } catch (e) {
+            console.error("Failed to save SEO history", e);
+        }
+
         return NextResponse.json(finalAnalysis);
 
     } catch (error: any) {

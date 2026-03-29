@@ -1,12 +1,15 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, Search, ArrowRight, Loader2, Globe, FileText, Target, BarChart3, ChevronRight, Download } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import html2pdf from "html2pdf.js";
+import { getSeoHistory } from "@/app/actions/seo-history";
+import { formatDistanceToNow } from "date-fns";
+import { Clock, ExternalLink } from "lucide-react";
 
 export function AdvancedSEOAnalysis() {
     const { t, isRtl } = useLanguage();
@@ -14,7 +17,14 @@ export function AdvancedSEOAnalysis() {
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [progress, setProgress] = useState(0);
     const [analysisResult, setAnalysisResult] = useState<any>(null);
+    const [history, setHistory] = useState<any[]>([]);
+    const [activeTab, setActiveTab] = useState<"new" | "history">("new");
     const reportRef = useRef<HTMLDivElement>(null);
+
+    // Fetch history on mount
+    useEffect(() => {
+        getSeoHistory().then(setHistory).catch(console.error);
+    }, []);
 
     const exportToExcel = () => {
         if (!analysisResult?.keywords) return;
@@ -84,6 +94,7 @@ export function AdvancedSEOAnalysis() {
             setTimeout(() => {
                 setIsAnalyzing(false);
                 setAnalysisResult(data);
+                getSeoHistory().then(setHistory).catch(console.error); // refresh history
             }, 600);
 
         } catch (error) {
@@ -106,6 +117,71 @@ export function AdvancedSEOAnalysis() {
                 </p>
             </div>
 
+            <div className={`flex items-center gap-2 border-b border-border pb-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                <button
+                    onClick={() => setActiveTab("new")}
+                    className={`px-4 py-2 font-medium text-sm rounded-lg transition-colors ${activeTab === 'new' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted text-muted-foreground'}`}
+                >
+                    <div className="flex items-center gap-2">
+                        <Search className="h-4 w-4" />
+                        {isRtl ? "بحث جديد" : "New Analysis"}
+                    </div>
+                </button>
+                <button
+                    onClick={() => setActiveTab("history")}
+                    className={`px-4 py-2 font-medium text-sm rounded-lg transition-colors ${activeTab === 'history' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted text-muted-foreground'}`}
+                >
+                    <div className="flex items-center gap-2">
+                        <Clock className="h-4 w-4" />
+                        {isRtl ? "سجل السجل" : "History"}
+                    </div>
+                </button>
+            </div>
+
+            {activeTab === "history" && !isAnalyzing && !analysisResult ? (
+                <motion.div 
+                    initial={{ opacity: 0, y: 10 }} 
+                    animate={{ opacity: 1, y: 0 }}
+                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+                >
+                    {history.length === 0 ? (
+                        <div className="col-span-full py-16 text-center text-muted-foreground border rounded-xl border-dashed">
+                            <Clock className="h-10 w-10 mx-auto opacity-20 mb-3" />
+                            {isRtl ? "لا يوجد سجل بحث حتى الآن." : "No search history found."}
+                        </div>
+                    ) : (
+                        history.map((hItem) => (
+                            <div key={hItem.id} className="border border-border bg-card rounded-xl p-5 hover:border-primary/50 transition-colors flex flex-col gap-3">
+                                <div>
+                                    <div className="flex justify-between items-start gap-2 mb-1">
+                                        <h3 className="font-semibold text-lg line-clamp-1" dir="ltr">{hItem.url}</h3>
+                                        <span className="text-[10px] text-muted-foreground shrink-0">{formatDistanceToNow(new Date(hItem.createdAt), { addSuffix: true })}</span>
+                                    </div>
+                                    <p className="text-xs text-muted-foreground line-clamp-2">{hItem.metaTitle || (isRtl ? "موقع جديد" : "New site")}</p>
+                                </div>
+                                
+                                <div className="text-sm font-medium mt-auto border-t border-border pt-3">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-muted-foreground text-xs">{hItem.niche || 'General'}</span>
+                                        <Button size="sm" variant="secondary" className="h-8 shadow-sm" onClick={() => {
+                                            setAnalysisResult({
+                                                url: hItem.url,
+                                                meta: { title: hItem.metaTitle, description: hItem.metaDesc },
+                                                niche: hItem.niche,
+                                                audience: hItem.audience,
+                                                keywords: JSON.parse(hItem.keywordsData || "[]")
+                                            });
+                                            setActiveTab("new");
+                                        }}>
+                                            {isRtl ? "عرض التحليل" : "View Result"} <ExternalLink className="h-3 w-3 ml-1.5" />
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </motion.div>
+            ) : (
             <AnimatePresence mode="wait">
                 {!isAnalyzing && !analysisResult ? (
                     <motion.div 
@@ -306,6 +382,7 @@ export function AdvancedSEOAnalysis() {
                     </motion.div>
                 )}
             </AnimatePresence>
+            )}
         </div>
     );
 }
