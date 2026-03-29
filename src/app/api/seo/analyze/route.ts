@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import Anthropic from "@anthropic-ai/sdk";
+
+const anthropic = new Anthropic();
 // Configure Anthropic provider
 // Use exact import from vercel ai sdk for anthropic
 // import { anthropic } from '@ai-sdk/anthropic'; 
@@ -72,27 +75,13 @@ Return ONLY a valid JSON object with the following structure:
 }
 `;
 
-        const claudeRes = await fetch("https://api.anthropic.com/v1/messages", {
-            method: "POST",
-            headers: {
-                "x-api-key": ANTHROPIC_API_KEY || "",
-                "anthropic-version": "2023-06-01",
-                "content-type": "application/json"
-            },
-            body: JSON.stringify({
-                model: "claude-3-haiku-20240307",
-                max_tokens: 1500,
-                messages: [{ role: "user", content: claudePrompt }]
-            })
+        const msg = await anthropic.messages.create({
+            model: "claude-3-haiku-20240307",
+            max_tokens: 1500,
+            messages: [{ role: "user", content: claudePrompt }]
         });
 
-        if (!claudeRes.ok) {
-            console.error("Claude API Error", await claudeRes.text());
-            throw new Error("Failed to communicate with Claude AI");
-        }
-
-        const claudeData = await claudeRes.json();
-        const textContent = claudeData.content?.[0]?.text;
+        const textContent = msg.content[0].type === 'text' ? msg.content[0].text : "";
         
         let seoPlan;
         try {
