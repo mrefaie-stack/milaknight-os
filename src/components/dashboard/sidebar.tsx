@@ -8,7 +8,7 @@ import {
     MessageSquare, ShieldCheck, Trash2, Bell, Search,
     Sparkles, Plus, CalendarDays, Link2, Activity, CheckSquare,
     Layers, Newspaper, TrendingUp, Target,
-    ChevronLeft, ChevronRight,
+    ChevronLeft, ChevronRight, Key, FileText
 } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
 import { LanguageToggle } from "@/components/ui/language-toggle";
@@ -193,11 +193,19 @@ export function DashboardSidebar({ role, user }: { role: string; user: any }) {
         CONTENT_LEADER: makeLeaderLinks("content-leader"),
         SEO_TEAM:       [
             ...makeTeamLinks("seo-team"),
-            { href: "/seo-team/analysis", label: isRtl ? "أدوات السيو المتقدمة" : "Advanced SEO Analysis", icon: Target }
+            { href: "/seo-team/analysis", label: isRtl ? "تحليل المواقع" : "Site Analysis", icon: Target },
+            { href: "/seo-team/keyword-explorer", label: isRtl ? "مستكشف الكلمات" : "Keyword Explorer", icon: Key },
+            { href: "/seo-team/content-brief", label: isRtl ? "مولد خطط المحتوى" : "Content Briefs", icon: FileText },
+            { href: "/seo-team/technical-audit", label: isRtl ? "المدقق التقني" : "Technical Audit", icon: ShieldCheck },
+            { href: "/seo-team/content-optimizer", label: isRtl ? "مُقيّم المحتوى" : "Content Optimizer", icon: Activity }
         ],
         SEO_LEAD:       [
             ...makeLeaderLinks("seo-lead"),
-            { href: "/seo-lead/analysis", label: isRtl ? "أدوات السيو المتقدمة" : "Advanced SEO Analysis", icon: Target }
+            { href: "/seo-lead/analysis", label: isRtl ? "تحليل المواقع" : "Site Analysis", icon: Target },
+            { href: "/seo-lead/keyword-explorer", label: isRtl ? "مستكشف الكلمات" : "Keyword Explorer", icon: Key },
+            { href: "/seo-lead/content-brief", label: isRtl ? "مولد خطط المحتوى" : "Content Briefs", icon: FileText },
+            { href: "/seo-lead/technical-audit", label: isRtl ? "المدقق التقني" : "Technical Audit", icon: ShieldCheck },
+            { href: "/seo-lead/content-optimizer", label: isRtl ? "مُقيّم المحتوى" : "Content Optimizer", icon: Activity }
         ],
     };
 
