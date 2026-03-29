@@ -132,6 +132,30 @@ export class GoogleAdsAPI {
         }
     }
 
+    async generateKeywordIdeas(customerId: string, keywords: string[]): Promise<any[]> {
+        const payload = {
+            keywordSeed: { keywords: keywords.slice(0, 20) }, // Limit to 20 seed keywords
+            pageSize: 50
+        };
+        try {
+            const res = await fetch(`${GADS_BASE}/customers/${customerId}:generateKeywordIdeas`, {
+                method: 'POST',
+                headers: this.headers(customerId),
+                body: JSON.stringify(payload)
+            });
+            if (!res.ok) return [];
+            const data = await res.json();
+            return (data.results || []).map((r: any) => ({
+                keyword: r.keywordIdeaMetrics?.text || r.keywordIdea?.text || '',
+                volume: Number(r.keywordIdeaMetrics?.avgMonthlySearches) || 0,
+                competition: r.keywordIdeaMetrics?.competition || 'UNSPECIFIED',
+                cpc: (Number(r.keywordIdeaMetrics?.lowTopOfPageBidMicros) || 0) / 1_000_000
+            }));
+        } catch {
+            return [];
+        }
+    }
+
     async getCampaigns(
         customerId: string,
         since: string,

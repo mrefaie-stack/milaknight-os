@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import Anthropic from "@anthropic-ai/sdk";
+import { GoogleAdsAPI } from "@/lib/google-ads-api";
+import { prisma } from "@/lib/prisma";
 
 const anthropic = new Anthropic();
 // Configure Anthropic provider
@@ -76,7 +78,7 @@ Return ONLY a valid JSON object with the following structure:
 `;
 
         const msg = await anthropic.messages.create({
-            model: "claude-3-5-sonnet",
+            model: "claude-sonnet-4-6",
             max_tokens: 1500,
             messages: [{ role: "user", content: claudePrompt }]
         });
@@ -92,11 +94,52 @@ Return ONLY a valid JSON object with the following structure:
             seoPlan = { niche: "Unknown", audience: "Unknown", keywords: [] };
         }
 
-        // 3. Data Enrichment (Google Ads API Simulation for UI Demo if API lacks KeywordPlanIdeaService)
-        // Since KeywordPlanIdeaService requires extensive developer token setup & gRPC/REST mapping,
-        // we will simulate the stats based on intent & relevance for this MVP to complete the workflow.
-        const enrichedKeywords = (seoPlan.keywords || []).map((kw: any) => {
-            // Mock realistic data based on relevance
+        // 3. Data Enrichment (Real Google Ads API or Fallback)
+        let enrichedKeywords = seoPlan.keywords || [];
+        
+        try {
+            const devToken = process.env.GOOGLE_ADS_DEVELOPER_TOKEN;
+            const conn = await (prisma as any).socialConnection.findFirst({
+                where: { platform: 'GOOGLE_ADS', isActive: true },
+                select: { accessToken: true, metadata: true }
+            });
+            
+            if (devToken && conn?.accessToken) {
+                let customerId = '';
+                try {
+                    const meta = JSON.parse(conn.metadata || '{}');
+                    customerId = (meta.selectedAdsCustomerId || '').replace(/-/g, '');
+                } catch { /* ignore */ }
+                
+                if (customerId) {
+                    const api = new GoogleAdsAPI(conn.accessToken, devToken);
+                    const keywordsList = enrichedKeywords.map((k: any) => k.keyword).filter(Boolean);
+                    if (keywordsList.length > 0) {
+                        const realIdeas = await api.generateKeywordIdeas(customerId, keywordsList);
+                        // Map the real data to our keywords
+                        enrichedKeywords = enrichedKeywords.map((kw: any) => {
+                            const realData = realIdeas.find((r: any) => r.keyword.toLowerCase() === kw.keyword.toLowerCase());
+                            if (realData) {
+                                return {
+                                    ...kw,
+                                    volume: realData.volume,
+                                    competition: realData.competition,
+                                    cpc: realData.cpc.toFixed(2)
+                                };
+                            }
+                            return kw; // Keep original if not found
+                        });
+                    }
+                }
+            }
+        } catch (e) {
+            console.error("Failed to fetch real GAds data, falling back to mock", e);
+        }
+
+        // Fill any remaining empty metrics with standard simulation
+        enrichedKeywords = enrichedKeywords.map((kw: any) => {
+            if (kw.volume !== undefined) return kw; // Already filled by real API
+            
             const baseVol = kw.relevance === "High" ? 5000 : 1000;
             const variance = Math.floor(Math.random() * 2000);
             const competitionOptions = ["Low", "Medium", "High"];
