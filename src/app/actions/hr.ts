@@ -243,9 +243,9 @@ export async function createAnnouncement(data: {
         },
     });
 
-    // Notify all team members
+    // Notify all team members (excluding the sender)
     const targets = await prisma.user.findMany({
-        where: { role: { not: "CLIENT" }, NOT: { id: session.user.id } },
+        where: { role: { not: "CLIENT" }, id: { not: session.user.id } },
         select: { id: true },
     });
     for (const t of targets) {

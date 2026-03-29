@@ -305,7 +305,7 @@ export async function getClickupTaskByUrl(taskUrl: string) {
 
 export async function linkClickupTask(itemId: string, taskUrl: string) {
     const session = await getServerSession(authOptions);
-    if (!session || (session.user.role !== "AM" && session.user.role !== "ADMIN")) {
+    if (!session || session.user.role === "CLIENT") {
         throw new Error("Unauthorized");
     }
 

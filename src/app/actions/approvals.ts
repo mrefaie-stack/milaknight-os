@@ -57,7 +57,6 @@ export async function createApprovalRequest(data: {
         select: { id: true, name: true, mmId: true },
     });
     if (!client) throw new Error("Client not found");
-    if (!client.mmId) throw new Error("هذا العميل ليس لديه مدير تسويق معيّن — لا يمكن إرسال طلب الموافقة");
 
     const status = isLeader ? "PENDING_MM" : "PENDING_LEADER";
 
@@ -86,6 +85,12 @@ export async function createApprovalRequest(data: {
                 `New Approval Request – ${data.title}`,
                 `<p><b>${creatorName}</b> submitted an approval request for client <b>${client.name}</b>.</p><p><b>Title:</b> ${data.title}</p><p><a href="${baseUrl}${link}">View Request</a></p>`
             );
+        } else {
+            // Fallback: Notify Admins if no MM
+            const admins = await prisma.user.findMany({ where: { role: "ADMIN" }, select: { id: true, email: true } });
+            for (const admin of admins) {
+                await notify(admin.id, "طلب موافقة جديد (لا يوجد MM)", `${creatorName} أرسل طلب للعميل ${client.name}`, link);
+            }
         }
     } else {
         const leaderRole = TEAM_LEADER_ROLE[creatorRole];
@@ -105,7 +110,7 @@ export async function createApprovalRequest(data: {
 
 export async function leaderActOnApproval(id: string, action: "APPROVED" | "REJECTED", comment?: string) {
     const session = await getServerSession(authOptions);
-    if (!session || !LEADER_ROLES.has(session.user.role)) throw new Error("Unauthorized");
+    if (!session || (!LEADER_ROLES.has(session.user.role) && session.user.role !== "ADMIN")) throw new Error("Unauthorized");
 
     const [request, actingUser] = await Promise.all([
         prisma.approvalRequest.findUnique({
@@ -145,6 +150,12 @@ export async function leaderActOnApproval(id: string, action: "APPROVED" | "REJE
             await notifyByEmail(request.client.mmId, `Approval Awaiting Your Decision – ${request.title}`,
                 `<p>Leader approved <b>${request.title}</b> for client <b>${request.client.name}</b>. Your approval is needed.</p><p><a href="${baseUrl}${link}">Review</a></p>`
             );
+        } else {
+            // Notify Admins if no MM
+            const admins = await prisma.user.findMany({ where: { role: "ADMIN" }, select: { id: true } });
+            for (const admin of admins) {
+                await notify(admin.id, "طلب موافقة جاهز للاعتماد", `وافق الليدر على "${request.title}" بانتظار اعتماد الإدارة`, link);
+            }
         }
     } else {
         await prisma.approvalRequest.update({
@@ -170,11 +181,11 @@ export async function leaderActOnApproval(id: string, action: "APPROVED" | "REJE
 
 export async function mmActOnApproval(id: string, action: "APPROVED" | "REJECTED", comment?: string) {
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== "MARKETING_MANAGER") throw new Error("Unauthorized");
+    if (!session || (session.user.role !== "MARKETING_MANAGER" && session.user.role !== "ADMIN")) throw new Error("Unauthorized");
 
     const [request, actingUser] = await Promise.all([
         prisma.approvalRequest.findUnique({
-            where: { id, mmId: session.user.id },
+            where: { id },
             include: {
                 creator: { select: { id: true, firstName: true, lastName: true } },
                 leader: { select: { id: true, firstName: true, lastName: true } },
@@ -184,6 +195,11 @@ export async function mmActOnApproval(id: string, action: "APPROVED" | "REJECTED
         prisma.user.findUnique({ where: { id: session.user.id }, select: { firstName: true, lastName: true } }),
     ]);
     if (!request || request.status !== "PENDING_MM") throw new Error("Invalid request");
+    
+    // Strict MM check, unless Admin
+    if (session.user.role === "MARKETING_MANAGER" && request.mmId !== session.user.id) {
+        throw new Error("Unauthorized Access: Only the assigned MM or Admin can approve this.");
+    }
 
     const mmName = actingUser ? `${actingUser.firstName} ${actingUser.lastName}`.trim() : "Marketing Manager";
     const link = "/approvals";
