@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import Anthropic from "@anthropic-ai/sdk";
+import { prisma } from "@/lib/prisma";
 
 const anthropic = new Anthropic();
 
@@ -61,6 +62,19 @@ Return a JSON strictly formatted like this:
             const jsonMatch = rawText.match(/\{[\s\S]*\}/);
             if (jsonMatch) parsed = JSON.parse(jsonMatch[0]);
             else throw new Error("Could not parse AI response into JSON");
+        }
+
+        try {
+            await prisma.seoToolHistory.create({
+                data: {
+                    userId: (session.user as any).id,
+                    toolName: "CONTENT_OPTIMIZER",
+                    inputData: JSON.stringify({ keyword, contentText }),
+                    resultData: JSON.stringify(parsed)
+                }
+            });
+        } catch (historyErr) {
+            console.error("Failed to save SEO history:", historyErr);
         }
 
         return NextResponse.json(parsed);

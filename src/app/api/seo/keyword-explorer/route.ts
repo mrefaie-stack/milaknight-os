@@ -68,6 +68,19 @@ export async function POST(req: Request) {
         // Sort by golden score descending
         enriched.sort((a: any, b: any) => b.goldenScore - a.goldenScore);
 
+        try {
+            await prisma.seoToolHistory.create({
+                data: {
+                    userId: (session.user as any).id,
+                    toolName: "KEYWORD_EXPLORER",
+                    inputData: JSON.stringify({ keyword }),
+                    resultData: JSON.stringify(enriched.slice(0, 50))
+                }
+            });
+        } catch (historyErr) {
+            console.error("Failed to save SEO history:", historyErr);
+        }
+
         return NextResponse.json(enriched);
 
     } catch (error: any) {

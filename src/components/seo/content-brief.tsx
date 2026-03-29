@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { SeoHistoryViewer } from "./seo-history-viewer";
 
 interface ContentBrief {
     metaTitle: string;
@@ -71,16 +72,30 @@ export function ContentBriefGenerator() {
 
     return (
         <div className="space-y-6">
-            <div>
-                <h1 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-violet-500 to-indigo-500 bg-clip-text text-transparent flex items-center gap-2">
-                    <FileText className="h-6 w-6 text-violet-500" />
-                    {isRtl ? "مصمم خطط المحتوى" : "Content Brief Generator"}
-                </h1>
-                <p className="text-muted-foreground mt-1 text-sm">
-                    {isRtl 
-                        ? "قم بتوجيه الذكاء الاصطناعي لكتابة خطة محتوى شاملة وهيكل مقال متوافق تماماً مع قواعد الـ SEO." 
-                        : "Direct AI to write a comprehensive content brief and SEO-optimized article outline."}
-                </p>
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <h1 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-violet-500 to-indigo-500 bg-clip-text text-transparent flex items-center gap-2">
+                        <FileText className="h-6 w-6 text-violet-500" />
+                        {isRtl ? "مصمم خطط المحتوى" : "Content Brief Generator"}
+                    </h1>
+                    <p className="text-muted-foreground mt-1 text-sm">
+                        {isRtl 
+                            ? "قم بتوجيه الذكاء الاصطناعي لكتابة خطة محتوى شاملة وهيكل مقال متوافق تماماً مع قواعد الـ SEO." 
+                            : "Direct AI to write a comprehensive content brief and SEO-optimized article outline."}
+                    </p>
+                </div>
+                
+                <SeoHistoryViewer 
+                    toolName="CONTENT_BRIEF" 
+                    onSelect={(data, input) => {
+                        setBrief(data);
+                        if (input) {
+                            if (input.keyword) setKeyword(input.keyword);
+                            if (input.audience) setAudience(input.audience);
+                            if (input.tone) setTone(input.tone);
+                        }
+                    }} 
+                />
             </div>
 
             <div className="bg-card border border-border rounded-xl p-6 shadow-sm">

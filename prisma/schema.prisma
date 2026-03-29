@@ -67,6 +67,7 @@ model User {
 
   // SEO
   seoHistory         SeoAnalysisHistory[]    @relation("UserSeoHistory")
+  seoToolHistory     SeoToolHistory[]        @relation("UserSeoToolHistory")
 }
 
 model SeoAnalysisHistory {
@@ -84,6 +85,18 @@ model SeoAnalysisHistory {
 
   @@index([userId])
   @@index([createdAt])
+}
+
+model SeoToolHistory {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation("UserSeoToolHistory", fields: [userId], references: [id], onDelete: Cascade)
+  toolName    String   // "EXPLORER", "BRIEF", "AUDIT", "OPTIMIZER"
+  inputData   String   @db.Text
+  resultData  String   @db.Text
+  createdAt   DateTime @default(now())
+
+  @@index([userId, toolName])
 }
 
 model TeamMeeting {
