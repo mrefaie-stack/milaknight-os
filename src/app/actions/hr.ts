@@ -144,7 +144,15 @@ export async function createLeaveRequest(data: {
     const admins = await prisma.user.findMany({ where: { role: { in: ["ADMIN", "HR_MANAGER"] } }, select: { id: true } });
     const name = session.user.name || "A team member";
     for (const admin of admins) {
-        await sendReminder(admin.id, `📅 طلب إجازة جديد`, `${name} طلب إجازة من ${data.startDate} إلى ${data.endDate}`, "/admin/hr");
+        await prisma.notification.create({
+            data: {
+                userId: admin.id,
+                title: "📅 طلب إجازة جديد",
+                message: `${name} طلب إجازة من ${data.startDate} إلى ${data.endDate}`,
+                type: "REMINDER",
+                link: "/admin/hr"
+            }
+        });
     }
 
     revalidatePath("/hr/leaves");
@@ -163,12 +171,15 @@ export async function reviewLeave(id: string, status: "APPROVED" | "REJECTED", r
 
     // Notify employee
     const emoji = status === "APPROVED" ? "✅" : "❌";
-    await sendReminder(
-        leave.user.id,
-        `${emoji} طلب إجازتك ${status === "APPROVED" ? "تمت الموافقة عليه" : "تم رفضه"}`,
-        reviewNote ? `ملاحظة: ${reviewNote}` : "تحقق من تفاصيل الطلب.",
-        "/hr/leaves"
-    );
+    await (prisma as any).notification.create({
+        data: {
+            userId: leave.user.id,
+            title: `${emoji} طلب إجازتك ${status === "APPROVED" ? "تمت الموافقة عليه" : "تم رفضه"}`,
+            message: reviewNote ? `ملاحظة: ${reviewNote}` : "تحقق من تفاصيل الطلب.",
+            type: "REMINDER",
+            link: "/hr/leaves"
+        }
+    });
 
     revalidatePath("/admin/hr");
     revalidatePath("/hr/leaves");
@@ -200,12 +211,15 @@ export async function addPerformanceReview(userId: string, data: {
         },
     });
 
-    await sendReminder(
-        userId,
-        "📊 تقييم أداء جديد",
-        `تم إضافة تقييم أداء للفترة ${data.period} بدرجة ${data.score}/5.`,
-        "/hr/leaves"
-    );
+    await (prisma as any).notification.create({
+        data: {
+            userId,
+            title: "📊 تقييم أداء جديد",
+            message: `تم إضافة تقييم أداء للفترة ${data.period} بدرجة ${data.score}/5.`,
+            type: "REMINDER",
+            link: "/hr/leaves"
+        }
+    });
 
     revalidatePath(`/admin/hr/${userId}`);
     return review;
@@ -249,7 +263,15 @@ export async function createAnnouncement(data: {
         select: { id: true },
     });
     for (const t of targets) {
-        await sendReminder(t.id, `📢 ${data.title}`, data.content.slice(0, 120), "/hr/leaves");
+        await (prisma as any).notification.create({
+            data: {
+                userId: t.id,
+                title: `📢 ${data.title}`,
+                message: data.content.slice(0, 120),
+                type: "REMINDER",
+                link: "/hr/leaves"
+            }
+        });
     }
 
     revalidatePath("/admin/hr");

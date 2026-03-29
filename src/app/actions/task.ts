@@ -94,9 +94,9 @@ export async function updateTaskStatus(taskId: string, status: string) {
 
     if (!task) throw new Error("Task not found");
 
-    // Only receiver (MM) can update status to IN_PROGRESS or COMPLETED
-    if (session.user.role === "MARKETING_MANAGER" && task.receiverId !== session.user.id) {
-        throw new Error("Unauthorized Access");
+    // Only receiver or Admin can update status
+    if (session.user.role !== "ADMIN" && session.user.id !== task.receiverId) {
+        throw new Error("Unauthorized Access: Only the assigned receiver or Admin can update this task's status");
     }
 
     const updatedTask = await prisma.internalTask.update({
@@ -121,16 +121,17 @@ export async function updateTaskStatus(taskId: string, status: string) {
 
 export async function requestTaskFix(taskId: string, feedback: string) {
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== "MARKETING_MANAGER") {
-        throw new Error("Unauthorized");
-    }
+    if (!session) throw new Error("Unauthorized");
 
     const task = await prisma.internalTask.findUnique({
         where: { id: taskId },
         include: { client: true }
     });
 
-    if (!task || task.receiverId !== session.user.id) throw new Error("Unauthorized Access");
+    // Only the Sender or Admin can request a fix
+    if (!task || (task.senderId !== session.user.id && session.user.role !== "ADMIN")) {
+        throw new Error("Unauthorized Access: Only the sender or Admin can request a fix");
+    }
 
     const updatedTask = await prisma.internalTask.update({
         where: { id: taskId },
@@ -140,12 +141,12 @@ export async function requestTaskFix(taskId: string, feedback: string) {
         }
     });
 
-    // Notify Sender (AM)
+    // Notify Receiver (MM)
     await prisma.notification.create({
         data: {
-            userId: task.senderId,
+            userId: task.receiverId,
             title: "Fix Requested on Task",
-            message: `Marketing Manager requested fixes for task "${task.title}": ${feedback}`,
+            message: `Fix requested on task "${task.title}": ${feedback}`,
             type: "SYSTEM",
             link: "/tasks"
         }

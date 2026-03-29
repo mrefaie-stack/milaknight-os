@@ -7,7 +7,9 @@ import { revalidatePath } from "next/cache";
 
 export async function sendReminder(targetUserId: string, title: string, message: string, link?: string) {
     const session = await getServerSession(authOptions);
-    if (!session) throw new Error("Unauthorized");
+    if (!session || !["ADMIN", "HR_MANAGER"].includes(session.user.role)) {
+        throw new Error("Unauthorized: Only Admins or HR can trigger manual system reminders");
+    }
 
     await prisma.notification.create({
         data: {
@@ -24,15 +26,29 @@ export async function sendReminder(targetUserId: string, title: string, message:
 }
 
 export async function remindAMAboutReport(amId: string, clientName: string) {
-    return sendReminder(
-        amId,
-        "⚠️ موعد نهائي للتقرير",
-        `تذكير: يرجى إنهاء وإرسال تقرير الأداء الخاص بـ ${clientName}.`,
-        "/am/reports/create"
-    );
+    const session = await getServerSession(authOptions);
+    if (!session || !["ADMIN", "MARKETING_MANAGER"].includes(session.user.role)) {
+        throw new Error("Unauthorized");
+    }
+
+    return prisma.notification.create({
+        data: {
+            userId: amId,
+            title: "⚠️ موعد نهائي للتقرير",
+            message: `تذكير: يرجى إنهاء وإرسال تقرير الأداء الخاص بـ ${clientName}.`,
+            type: "REMINDER",
+            link: "/am/reports/create"
+        }
+    });
 }
 
+
 export async function remindClientAboutPlan(clientId: string, planId: string) {
+    const session = await getServerSession(authOptions);
+    if (!session || !["AM", "ADMIN", "MARKETING_MANAGER"].includes(session.user.role)) {
+        throw new Error("Unauthorized");
+    }
+
     const client = await prisma.client.findUnique({
         where: { id: clientId },
         include: { user: true }
@@ -40,11 +56,15 @@ export async function remindClientAboutPlan(clientId: string, planId: string) {
 
     if (!client?.userId) return;
 
-    return sendReminder(
-        client.userId,
-        "📅 خطة العمل بانتظار المراجعة",
-        "خطة المحتوى الشهرية الجديدة جاهزة للمراجعة والاعتماد من قبلك.",
-    );
+    return prisma.notification.create({
+        data: {
+            userId: client.userId,
+            title: "📅 خطة العمل بانتظار المراجعة",
+            message: "خطة المحتوى الشهرية الجديدة جاهزة للمراجعة والاعتماد من قبلك.",
+            type: "REMINDER",
+            link: `/client/action-plans/${planId}` // Fixed link
+        }
+    });
 }
 
 export async function getNotifications() {
