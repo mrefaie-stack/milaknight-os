@@ -1,0 +1,70 @@
+import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import Anthropic from "@anthropic-ai/sdk";
+
+const anthropic = new Anthropic();
+
+export async function POST(req: Request) {
+    try {
+        const session = await getServerSession(authOptions);
+        if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+        const { keyword, audience, tone = "Professional" } = await req.json();
+        
+        if (!keyword) {
+            return NextResponse.json({ error: "Keyword is required" }, { status: 400 });
+        }
+
+        const prompt = `You are a world-class SEO strategist and Content Director. 
+Your task is to create a highly optimized SEO Content Brief for writers.
+Target Keyword: "${keyword}"
+Target Audience: "${audience || 'General public'}"
+Tone of Voice: "${tone}"
+
+Provide the output strictly in this JSON format without any other text (no markdown wrapping if possible):
+{
+    "metaTitle": "Highly clickable meta title (max 60 chars)",
+    "metaDescription": "Compelling meta description with keyword (max 155 chars)",
+    "suggestedUrl": "The URL slug",
+    "primaryKeyword": "...",
+    "lsiKeywords": ["LSI 1", "LSI 2", "LSI 3", "LSI 4", "LSI 5", "LSI 6"],
+    "wordCountTarget": 1500,
+    "outline": [
+        { "type": "H1", "text": "...", "notes": "..." },
+        { "type": "H2", "text": "...", "notes": "..." },
+        { "type": "H3", "text": "...", "notes": "..." },
+        { "type": "H2", "text": "...", "notes": "..." }
+    ],
+    "writerInstructions": "Brief paragraph telling the content team exactly how to approach this piece for maximal SEO impact."
+}`;
+
+        const response = await anthropic.messages.create({
+            model: 'claude-sonnet-4-6',
+            max_tokens: 2000,
+            temperature: 0.7,
+            messages: [{ role: 'user', content: prompt }]
+        });
+
+        const rawText = (response.content[0] as any).text;
+        
+        // Try parsing JSON safely in case Claude added markdown backticks
+        let parsed = null;
+        try {
+            parsed = JSON.parse(rawText);
+        } catch {
+            const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+            if (jsonMatch) parsed = JSON.parse(jsonMatch[0]);
+            else throw new Error("Could not parse AI response into JSON");
+        }
+
+        return NextResponse.json(parsed);
+
+    } catch (error: any) {
+        console.error("Content Brief Error:", error);
+        return NextResponse.json({ 
+            error: "Failed to generate content brief",
+            details: error.message 
+        }, { status: 500 });
+    }
+}

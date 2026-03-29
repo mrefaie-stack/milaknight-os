@@ -7,7 +7,7 @@ import { ClickupDashboard } from "@/components/clickup/clickup-dashboard";
 
 export default async function ClickupPage() {
     const session = await getServerSession(authOptions);
-    if (!session || (session.user.role !== "AM" && session.user.role !== "MARKETING_MANAGER")) {
+    if (!session || session.user.role === "CLIENT") {
         redirect("/login");
     }
 

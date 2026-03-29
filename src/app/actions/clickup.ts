@@ -51,7 +51,7 @@ export async function getClickupAuthUrl(): Promise<string> {
 
 export async function connectClickup(token: string) {
     const session = await getServerSession(authOptions);
-    if (!session || (session.user.role !== "AM" && session.user.role !== "MARKETING_MANAGER")) {
+    if (!session || session.user.role === "CLIENT") {
         throw new Error("Unauthorized");
     }
 
