@@ -1,18 +1,9 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import Anthropic from "@anthropic-ai/sdk";
+import { geminiFlash } from "@/lib/ai/gemini";
 import { GoogleAdsAPI } from "@/lib/google-ads-api";
 import { prisma } from "@/lib/prisma";
-
-const anthropic = new Anthropic();
-// Configure Anthropic provider
-// Use exact import from vercel ai sdk for anthropic
-// import { anthropic } from '@ai-sdk/anthropic'; 
-// Assuming it might not be installed properly, we'll try a fallback REST fetch if needed, 
-// but let's assume ai and @anthropic-ai/sdk are good based on package.json
-
-const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 
 export async function POST(req: Request) {
     try {
@@ -77,13 +68,8 @@ Return ONLY a valid JSON object with the following structure:
 }
 `;
 
-        const msg = await anthropic.messages.create({
-            model: "claude-sonnet-4-6",
-            max_tokens: 1500,
-            messages: [{ role: "user", content: claudePrompt }]
-        });
-
-        const textContent = msg.content[0].type === 'text' ? msg.content[0].text : "";
+        const msg = await geminiFlash.generateContent(claudePrompt);
+        const textContent = msg.response.text();
         
         let seoPlan;
         try {

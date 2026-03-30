@@ -26,7 +26,9 @@ export default withAuth(
         }
 
         // Role-based protection
-        if (req.nextUrl.pathname.startsWith("/admin") && token?.role !== "ADMIN" && token?.role !== "MARKETING_MANAGER") {
+        if (req.nextUrl.pathname.startsWith("/admin/meetings") && token?.role === "CLIENT") {
+            return NextResponse.redirect(new URL("/", req.url));
+        } else if (req.nextUrl.pathname.startsWith("/admin") && !req.nextUrl.pathname.startsWith("/admin/meetings") && token?.role !== "ADMIN" && token?.role !== "MARKETING_MANAGER") {
             return NextResponse.redirect(new URL("/", req.url));
         }
         if (req.nextUrl.pathname.startsWith("/am") && token?.role !== "AM" && token?.role !== "ADMIN" && token?.role !== "MARKETING_MANAGER") {

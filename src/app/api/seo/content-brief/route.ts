@@ -1,10 +1,8 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import Anthropic from "@anthropic-ai/sdk";
+import { geminiFlash } from "@/lib/ai/gemini";
 import { prisma } from "@/lib/prisma";
-
-const anthropic = new Anthropic();
 
 export async function POST(req: Request) {
     try {
@@ -40,14 +38,12 @@ Provide the output strictly in this JSON format without any other text (no markd
     "writerInstructions": "Brief paragraph telling the content team exactly how to approach this piece for maximal SEO impact."
 }`;
 
-        const response = await anthropic.messages.create({
-            model: 'claude-sonnet-4-6',
-            max_tokens: 2000,
-            temperature: 0.7,
-            messages: [{ role: 'user', content: prompt }]
+        const response = await geminiFlash.generateContent({
+            contents: [{ role: 'user', parts: [{ text: prompt }] }],
+            generationConfig: { temperature: 0.7, maxOutputTokens: 2000 }
         });
 
-        const rawText = (response.content[0] as any).text;
+        const rawText = response.response.text();
         
         // Try parsing JSON safely in case Claude added markdown backticks
         let parsed = null;

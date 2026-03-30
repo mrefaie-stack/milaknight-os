@@ -3,9 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import Anthropic from "@anthropic-ai/sdk";
-
-const anthropic = new Anthropic();
+import { geminiFlash } from "@/lib/ai/gemini";
 const CACHE_HOURS = 12;
 
 export type InsightType = "INDUSTRY" | "TRENDING" | "COMPETITORS";
@@ -125,17 +123,15 @@ export async function generateAndSaveClientInsight(clientId: string, type: Insig
     if (!client) throw new Error("Client not found");
 
     const prompt = buildPrompt(type, client);
-    const response = await anthropic.messages.create({
-        model: "claude-sonnet-4-6",
-        max_tokens: 4096,
-        system: "You are a business intelligence analyst for a digital marketing agency in the Arab world. Generate structured JSON content based on client profiles. Always use grammatically correct Modern Standard Arabic (فصحى). Always respond with ONLY a valid JSON array. No markdown code blocks, no explanation, no preamble.",
-        messages: [{ role: "user", content: prompt }],
+    const systemInstruction = "You are a business intelligence analyst for a digital marketing agency in the Arab world. Generate structured JSON content based on client profiles. Always use grammatically correct Modern Standard Arabic (فصحى). Always respond with ONLY a valid JSON array. No markdown code blocks, no explanation, no preamble.";
+    
+    const result = await geminiFlash.generateContent({
+        contents: [
+            { role: "user", parts: [{ text: `${systemInstruction}\n\nTask:\n${prompt}` }] }
+        ]
     });
 
-    const rawText = response.content
-        .filter((b) => b.type === "text")
-        .map((b) => (b as any).text)
-        .join("");
+    const rawText = result.response.text();
 
     const cleaned = rawText.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
 
