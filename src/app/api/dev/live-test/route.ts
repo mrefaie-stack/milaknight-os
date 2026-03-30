@@ -27,16 +27,16 @@ export async function GET(request: Request) {
             try {
                 if (conn.platform === 'META' || conn.platform === 'FACEBOOK') {
                     const meta = new MetaAPI(conn.accessToken);
-                    const info = await meta.getAdAccountInfo(conn.platformAccountId);
+                    const info = await meta.getAdAccountInfo(conn.platformAccountId || "");
                     results[key] = { status: 'success', accountInfo: info };
                 } else if (conn.platform === 'TIKTOK') {
                     const api = new TikTokAPI(conn.accessToken);
-                    const info = await api.getBusinessProfile(conn.platformAccountId).catch(() => 'no organic');
-                    const advInfo = await api.getAdvertiserInfo([conn.platformAccountId]).catch((e) => e.message);
+                    const info = await api.getBusinessProfile(conn.platformAccountId || "").catch(() => 'no organic');
+                    const advInfo = await api.getAdvertiserInfo([conn.platformAccountId || ""]).catch((e) => e.message);
                     results[key] = { status: 'success', organic: info, advInfo };
                 } else if (conn.platform === 'SNAPCHAT') {
                     const api = new SnapchatAPI(conn.accessToken);
-                    const accounts = await api.getAdAccounts(conn.platformAccountId).catch(e => e.message);
+                    const accounts = await api.getAdAccounts(conn.platformAccountId || "").catch(e => e.message);
                     results[key] = { status: 'success', accountsData: accounts };
                 } else if (conn.platform === 'GOOGLE_ADS') {
                     const devToken = process.env.GOOGLE_ADS_DEVELOPER_TOKEN || '';
@@ -49,7 +49,7 @@ export async function GET(request: Request) {
                     results[key] = { status: 'success', customersData: cust };
                 } else if (conn.platform === 'YOUTUBE') {
                     const api = new YouTubeAPI(conn.accessToken);
-                    const channel = await api.getChannelInfo().catch(e => e.message);
+                    const channel = await api.getChannelStats().catch(e => e.message);
                     results[key] = { status: 'success', channelData: channel };
                 } else {
                     results[key] = { status: 'skipped', reason: 'Unrecognized / No test logic' };
