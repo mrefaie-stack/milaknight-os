@@ -29,6 +29,7 @@ export default async function ClientActionPlanPage({ params }: { params: Promise
     if (!session) redirect("/login");
     const client = await prisma.client.findUnique({ where: { userId: session.user.id } });
     if (!client || plan.clientId !== client.id) return notFound();
+    if (plan.status === "DRAFT") return notFound();
 
     return (
         <ClientActionPlanView plan={plan as any} items={(plan as any).items} />

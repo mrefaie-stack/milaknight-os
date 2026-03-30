@@ -31,6 +31,13 @@ export async function remindAMAboutReport(amId: string, clientName: string) {
         throw new Error("Unauthorized");
     }
 
+    if (session.user.role === "MARKETING_MANAGER") {
+        const verifyAM = await prisma.client.findFirst({
+            where: { amId, mmId: session.user.id }
+        });
+        if (!verifyAM) throw new Error("Unauthorized Access: This AM does not manage any of your clients.");
+    }
+
     return prisma.notification.create({
         data: {
             userId: amId,
@@ -55,6 +62,13 @@ export async function remindClientAboutPlan(clientId: string, planId: string) {
     });
 
     if (!client?.userId) return;
+
+    if (session.user.role === "AM" && client.amId !== session.user.id) {
+        throw new Error("Unauthorized Access");
+    }
+    if (session.user.role === "MARKETING_MANAGER" && client.mmId !== session.user.id) {
+        throw new Error("Unauthorized Access");
+    }
 
     return prisma.notification.create({
         data: {

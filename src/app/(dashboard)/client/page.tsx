@@ -13,6 +13,7 @@ export default async function ClientDashboardPage() {
         where: { userId: session.user.id },
         include: {
             actionPlans: {
+                where: { status: { not: "DRAFT" } },
                 orderBy: { month: "desc" },
                 take: 1,
             },

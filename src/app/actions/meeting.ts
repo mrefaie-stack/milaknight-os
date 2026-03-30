@@ -102,6 +102,13 @@ export async function updateMeetingStatus(id: string, status: string) {
     const session = await getServerSession(authOptions);
     if (!session || (session.user.role !== "AM" && session.user.role !== "ADMIN")) throw new Error("Unauthorized");
 
+    const existing = await prisma.meetingRequest.findUnique({
+        where: { id },
+        include: { client: true }
+    });
+    if (!existing) throw new Error("Meeting not found");
+    if (session.user.role === "AM" && existing.client.amId !== session.user.id) throw new Error("Unauthorized Access");
+
     const meeting = await prisma.meetingRequest.update({
         where: { id },
         data: { status },
@@ -122,6 +129,7 @@ export async function scheduleMeeting(id: string, scheduledAt: string) {
         include: { client: { include: { accountManager: true } } }
     });
     if (!existing) throw new Error("Meeting not found");
+    if (session.user.role === "AM" && existing.client.amId !== session.user.id) throw new Error("Unauthorized Access");
 
     let meetLink: string | null = null;
     let googleEventId: string | null = null;
