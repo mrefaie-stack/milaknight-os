@@ -66,6 +66,10 @@ export async function deleteTeamMember(id: string) {
     const session = await getServerSession(authOptions);
     if (session?.user?.role !== "ADMIN") throw new Error("Unauthorized");
 
+    if (id === session.user.id) {
+        throw new Error("You cannot delete your own account.");
+    }
+
     // Check if AM or MM has assigned clients
     const amClientCount = await prisma.client.count({ where: { amId: id } });
     const mmClientCount = await prisma.client.count({ where: { mmId: id } });

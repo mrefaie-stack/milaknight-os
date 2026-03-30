@@ -309,6 +309,15 @@ export async function linkClickupTask(itemId: string, taskUrl: string) {
         throw new Error("Unauthorized");
     }
 
+    const itemToSync = await prisma.contentItem.findUnique({
+        where: { id: itemId },
+        include: { plan: { include: { client: true } } }
+    });
+    
+    if (!itemToSync) throw new Error("Item not found");
+    if (session.user.role === "AM" && itemToSync.plan.client.amId !== session.user.id) throw new Error("Unauthorized Access");
+    if (session.user.role === "MARKETING_MANAGER" && itemToSync.plan.client.mmId !== session.user.id) throw new Error("Unauthorized Access");
+
     const item = await prisma.contentItem.update({
         where: { id: itemId },
         data: { clickupTaskUrl: taskUrl || null },

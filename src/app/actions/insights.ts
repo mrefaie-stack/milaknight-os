@@ -231,6 +231,19 @@ export async function getTeamClientInsight(clientId: string, type: InsightType):
         throw new Error("Forbidden: Insufficient permissions to view client insights");
     }
 
+    const client = await prisma.client.findUnique({
+        where: { id: clientId },
+        select: { amId: true, mmId: true }
+    });
+    if (!client) throw new Error("Client not found");
+
+    if (session.user.role === "AM" && client.amId !== session.user.id) {
+        throw new Error("Forbidden: Insufficient permissions to view these client insights");
+    }
+    if (session.user.role === "MARKETING_MANAGER" && client.mmId !== session.user.id) {
+        throw new Error("Forbidden: Insufficient permissions to view these client insights");
+    }
+
     const latest = await prisma.clientInsight.findFirst({
         where: { clientId, type },
         orderBy: { createdAt: "desc" },
@@ -253,6 +266,19 @@ export async function getTeamClientInsightHistory(clientId: string, type: Insigh
 
     const allowedRoles = ["ADMIN", "AM", "MARKETING_MANAGER", "CONTENT_LEADER", "CONTENT_TEAM", "ART_LEADER", "ART_TEAM", "SEO_LEAD", "SEO_TEAM"];
     if (!allowedRoles.includes(session.user.role)) return [];
+
+    const client = await prisma.client.findUnique({
+        where: { id: clientId },
+        select: { amId: true, mmId: true }
+    });
+    if (!client) return [];
+
+    if (session.user.role === "AM" && client.amId !== session.user.id) {
+        return [];
+    }
+    if (session.user.role === "MARKETING_MANAGER" && client.mmId !== session.user.id) {
+        return [];
+    }
 
     // All records except the most recent (skip=1)
     const records = await prisma.clientInsight.findMany({

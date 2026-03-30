@@ -17,7 +17,7 @@ export default async function ReportViewPage({ params }: { params: Promise<{ id:
     // Permission Check
     if (session?.user?.role === "CLIENT") {
         const client = await prisma.client.findUnique({ where: { userId: session.user.id } });
-        if (!client || report.clientId !== client.id) return notFound();
+        if (!client || report.clientId !== client.id || report.status !== "SENT") return notFound();
     } else if (session?.user?.role === "AM") {
         if (report.client.amId !== session.user.id) return notFound();
     } else if (session?.user?.role !== "ADMIN" && session?.user?.role !== "MODERATOR" && session?.user?.role !== "MARKETING_MANAGER") {

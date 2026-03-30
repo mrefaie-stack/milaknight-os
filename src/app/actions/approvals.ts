@@ -116,13 +116,22 @@ export async function leaderActOnApproval(id: string, action: "APPROVED" | "REJE
         prisma.approvalRequest.findUnique({
             where: { id },
             include: {
-                creator: { select: { id: true, firstName: true, lastName: true } },
+                creator: { select: { id: true, firstName: true, lastName: true, role: true } },
                 client: { select: { name: true, mmId: true } },
             },
         }),
         prisma.user.findUnique({ where: { id: session.user.id }, select: { firstName: true, lastName: true } }),
     ]);
     if (!request || request.status !== "PENDING_LEADER") throw new Error("Invalid request");
+    
+    // Strict Team-Scoped Verification (BOLA Fix)
+    if (session.user.role !== "ADMIN") {
+        const expectedTeamRole = LEADER_TEAM_ROLE[session.user.role];
+        // Ensure the creator belongs to the exact team this leader manages, or the creatorRole itself matches
+        if (request.creator.role !== expectedTeamRole && request.creatorRole !== expectedTeamRole) {
+            throw new Error("Unauthorized Access: You can only approve requests from your designated team.");
+        }
+    }
 
     const leaderName = actingUser ? `${actingUser.firstName} ${actingUser.lastName}`.trim() : "Leader";
     const link = "/approvals";

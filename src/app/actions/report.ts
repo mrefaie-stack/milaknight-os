@@ -42,6 +42,14 @@ export async function updateReport(reportId: string, metricsData: any, month?: s
     if (session.user.role === "AM") {
         const checkReport = await prisma.report.findUnique({ where: { id: reportId }, include: { client: true } });
         if (!checkReport || checkReport.client.amId !== session.user.id) throw new Error("Unauthorized Access");
+
+        // BOLA Fix: Prevent AM from reassigning the report to a client they do not own
+        if (clientId && clientId !== checkReport.clientId) {
+            const newClient = await prisma.client.findUnique({ where: { id: clientId } });
+            if (!newClient || newClient.amId !== session.user.id) {
+                throw new Error("Unauthorized Access: You cannot reassign this report to a client you do not manage.");
+            }
+        }
     }
 
     const report = await (prisma as any).report.update({

@@ -29,6 +29,23 @@ export async function sendMessage(receiverId: string, text: string) {
     const session = await getServerSession(authOptions);
     if (!session) throw new Error("Unauthorized");
 
+    if (session.user.role === "CLIENT") {
+        const clientRecy = await prisma.client.findFirst({
+            where: {
+                userId: session.user.id,
+                OR: [
+                    { amId: receiverId },
+                    { mmId: receiverId }
+                ]
+            }
+        });
+        const isReceiverAdmin = await prisma.user.findFirst({ where: { id: receiverId, role: "ADMIN" } });
+        
+        if (!clientRecy && !isReceiverAdmin) {
+            throw new Error("Unauthorized Access: Clients can only message their designated AM, MM, or Admins.");
+        }
+    }
+
     const message = await prisma.message.create({
         data: {
             senderId: session.user.id,

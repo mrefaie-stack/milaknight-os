@@ -124,8 +124,15 @@ export async function updateContentItem(itemId: string, planId: string, data: an
         throw new Error("Unauthorized");
     }
 
-    const oldItem = await prisma.contentItem.findUnique({ where: { id: itemId } });
+    const oldItem = await prisma.contentItem.findUnique({
+        where: { id: itemId },
+        include: { plan: { include: { client: true } } }
+    });
     if (!oldItem) throw new Error("Item not found");
+
+    if (session.user.role === "AM" && oldItem.plan.client.amId !== session.user.id) {
+        throw new Error("Unauthorized Access: You do not manage this client's action plans.");
+    }
 
     const updatedItem = await prisma.contentItem.update({
         where: { id: itemId },
@@ -386,6 +393,9 @@ export async function submitActionPlanFeedback(planId: string, itemFeedbacks: { 
         // Update each item with its granular feedback
         for (const fb of itemFeedbacks) {
             if (fb.comment.trim()) {
+                // Security check: ensure the item actually belongs to this plan
+                if (!plan.items.some(i => i.id === fb.itemId)) continue;
+
                 await prisma.contentItem.update({
                     where: { id: fb.itemId },
                     data: {
@@ -532,10 +542,11 @@ export async function unapproveContentItem(itemId: string, planId: string) {
 
     const plan = await prisma.actionPlan.findUnique({
         where: { id: planId },
-        include: { client: true }
+        include: { client: true, items: true }
     });
 
     if (!plan || plan.client.userId !== session.user.id) throw new Error("Unauthorized Access");
+    if (!plan.items.some(i => i.id === itemId)) throw new Error("Item does not belong to this plan");
 
     await prisma.contentItem.update({
         where: { id: itemId },
@@ -592,6 +603,7 @@ export async function approveContentItem(itemId: string, planId: string) {
     });
 
     if (!plan || plan.client.userId !== session.user.id) throw new Error("Unauthorized Access");
+    if (!plan.items.some(i => i.id === itemId)) throw new Error("Item does not belong to this plan");
 
     await prisma.contentItem.update({
         where: { id: itemId },

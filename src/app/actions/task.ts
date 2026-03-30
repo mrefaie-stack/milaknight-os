@@ -19,11 +19,12 @@ export async function createInternalTask(data: {
 
     const client = await prisma.client.findUnique({
         where: { id: data.clientId },
-        select: { id: true, name: true, mmId: true },
+        select: { id: true, name: true, mmId: true, amId: true },
     });
 
     if (!client) throw new Error("Client not found");
     if (!client.mmId) throw new Error("No Marketing Manager assigned to this client");
+    if (session.user.role === "AM" && client.amId !== session.user.id) throw new Error("Unauthorized Access: You cannot create tasks for clients you do not manage.");
 
     const task = await prisma.internalTask.create({
         data: {
