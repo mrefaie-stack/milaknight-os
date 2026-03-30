@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import Anthropic from "@anthropic-ai/sdk";
+import { geminiFlash } from "@/lib/ai/gemini";
 import * as cheerio from "cheerio";
 import { prisma } from "@/lib/prisma";
-const anthropic = new Anthropic();
 
 export async function POST(req: Request) {
     try {
@@ -83,14 +82,12 @@ Requirements for JSON output strictly (no markdown block if possible):
     ]
 }`;
 
-        const aiResponse = await anthropic.messages.create({
-            model: 'claude-sonnet-4-6',
-            max_tokens: 1500,
-            temperature: 0.2,
-            messages: [{ role: 'user', content: prompt }]
+        const aiResponse = await geminiFlash.generateContent({
+            contents: [{ role: 'user', parts: [{ text: prompt }] }],
+            generationConfig: { temperature: 0.2, maxOutputTokens: 1500 }
         });
 
-        const rawText = (aiResponse.content[0] as any).text;
+        const rawText = aiResponse.response.text();
         
         let parsed = null;
         try {

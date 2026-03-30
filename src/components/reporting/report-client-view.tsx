@@ -731,36 +731,7 @@ export function ReportClientView({ report, metrics, role, previousMetrics }: { r
                                                 </div>
                                             </CardHeader>
                                             <CardContent className="p-8 space-y-8 print:p-6 print:space-y-4">
-                                                {/* Hero Platform Stats - Strategic Scorecard */}
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                    <div className="bg-primary/5 rounded-xl p-6 border border-primary/10 flex items-center justify-between">
-                                                        <div>
-                                                            <div className="text-[10px] uppercase font-semibold text-primary/60 mb-1">{isRtl ? 'الأداء الرئيسي' : 'Primary Performance'}</div>
-                                                            <div className="text-3xl font-bold text-primary">
-                                                                {platId === 'google' || platId === 'google_ads' 
-                                                                    ? `${(Number(data.clicks) || 0).toLocaleString()}` 
-                                                                    : `${(Number(data.engagement) || 0).toLocaleString()}`}
-                                                            </div>
-                                                            <div className="text-[10px] font-bold opacity-60">
-                                                                {platId === 'google' || platId === 'google_ads' ? (isRtl ? 'نقرات إستراتيجية' : 'Strategic Clicks') : (isRtl ? 'تفاعلات نشطة' : 'Active Interactions')}
-                                                            </div>
-                                                        </div>
-                                                        <Zap className="h-8 w-8 text-primary/20 rotate-12" />
-                                                    </div>
-                                                    
-                                                    {data.followers > 0 && (
-                                                        <div className="bg-indigo-500/5 rounded-xl p-6 border border-indigo-500/10 flex items-center justify-between">
-                                                            <div>
-                                                                <div className="text-[10px] uppercase font-semibold text-indigo-500/60 mb-1">{isRtl ? 'محرك النمو' : 'Growth Factor'}</div>
-                                                                <div className="text-3xl font-bold text-indigo-500">+{data.followers.toLocaleString()}</div>
-                                                                <div className="text-[10px] font-bold opacity-60">
-                                                                    {platId === 'youtube' ? (isRtl ? 'مشترك جديد' : 'New Subscribers') : (isRtl ? 'متابع جديد' : 'New Followers')}
-                                                                </div>
-                                                            </div>
-                                                            <Users className="h-8 w-8 text-indigo-500/20" />
-                                                        </div>
-                                                    )}
-                                                </div>
+
 
                                                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                                                     {(PLATFORM_METRICS[platId] || []).map((metric, i) => {
@@ -1037,7 +1008,7 @@ export function ReportClientView({ report, metrics, role, previousMetrics }: { r
                         </div>
                         <div className="flex flex-col items-center justify-center p-10 bg-muted/20 rounded-xl relative overflow-hidden shadow-inner">
                             <div className="text-xs font-medium uppercase text-muted-foreground mb-4 tracking-[0.3em]">{t("dashboard.authority_score")}</div>
-                            <div className="text-8xl font-bold text-primary z-10 drop-shadow-2xl">{metrics.seo?.score || 0}</div>
+                            <div className="text-8xl font-bold text-primary z-10 drop-shadow-2xl">{metrics.seo?.score || 0}%</div>
                             <div className="absolute inset-0 flex items-center justify-center opacity-[0.03]">
                                 <TrendingUp className="h-64 w-64" />
                             </div>

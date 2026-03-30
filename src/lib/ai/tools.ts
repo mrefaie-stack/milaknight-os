@@ -1,7 +1,7 @@
-import type Anthropic from "@anthropic-ai/sdk";
+import { FunctionDeclaration, SchemaType } from "@google/generative-ai";
 
 export type AiTool = {
-  definition: Anthropic.Tool;
+  definition: FunctionDeclaration;
   roles: string[]; // Which roles can use this tool
 };
 
@@ -12,8 +12,8 @@ export const aiTools: AiTool[] = [
       name: "get_clients",
       description:
         "Get a list of clients. For ADMIN/MODERATOR: returns all clients. For AM: returns only their assigned clients. Not available for CLIENT role.",
-      input_schema: {
-        type: "object" as const,
+      parameters: {
+        type: SchemaType.OBJECT,
         properties: {},
         required: [],
       },
@@ -25,11 +25,11 @@ export const aiTools: AiTool[] = [
       name: "get_action_plans",
       description:
         "Get action plans. Filtered by role automatically. Optionally filter by clientId.",
-      input_schema: {
-        type: "object" as const,
+      parameters: {
+        type: SchemaType.OBJECT,
         properties: {
           clientId: {
-            type: "string",
+            type: SchemaType.STRING,
             description: "Optional client ID to filter plans for",
           },
         },
@@ -43,8 +43,8 @@ export const aiTools: AiTool[] = [
       name: "get_reports",
       description:
         "Get performance reports. Filtered by role automatically. ADMIN sees all, AM sees their clients, CLIENT sees their own sent reports.",
-      input_schema: {
-        type: "object" as const,
+      parameters: {
+        type: SchemaType.OBJECT,
         properties: {},
         required: [],
       },
@@ -55,11 +55,11 @@ export const aiTools: AiTool[] = [
     definition: {
       name: "get_report_by_id",
       description: "Get a specific report by its ID with full metrics data.",
-      input_schema: {
-        type: "object" as const,
+      parameters: {
+        type: SchemaType.OBJECT,
         properties: {
           reportId: {
-            type: "string",
+            type: SchemaType.STRING,
             description: "The report ID",
           },
         },
@@ -72,8 +72,8 @@ export const aiTools: AiTool[] = [
     definition: {
       name: "get_notifications",
       description: "Get the current user's notifications.",
-      input_schema: {
-        type: "object" as const,
+      parameters: {
+        type: SchemaType.OBJECT,
         properties: {},
         required: [],
       },
@@ -84,8 +84,8 @@ export const aiTools: AiTool[] = [
     definition: {
       name: "get_team_members",
       description: "Get all team members (AMs and Moderators). Admin only.",
-      input_schema: {
-        type: "object" as const,
+      parameters: {
+        type: SchemaType.OBJECT,
         properties: {},
         required: [],
       },
@@ -96,8 +96,8 @@ export const aiTools: AiTool[] = [
     definition: {
       name: "get_recent_activities",
       description: "Get recent activity logs across the system. Admin only.",
-      input_schema: {
-        type: "object" as const,
+      parameters: {
+        type: SchemaType.OBJECT,
         properties: {},
         required: [],
       },
@@ -109,8 +109,8 @@ export const aiTools: AiTool[] = [
       name: "get_meeting_requests",
       description:
         "Get meeting requests. Admin sees all, AM sees their clients, Client sees their own.",
-      input_schema: {
-        type: "object" as const,
+      parameters: {
+        type: SchemaType.OBJECT,
         properties: {},
         required: [],
       },
@@ -122,20 +122,20 @@ export const aiTools: AiTool[] = [
       name: "query_analytics",
       description:
         "Query analytics data from reports. Can compare months, calculate growth, find best performing metrics. Use this to answer questions about performance, followers, engagement, reach, etc.",
-      input_schema: {
-        type: "object" as const,
+      parameters: {
+        type: SchemaType.OBJECT,
         properties: {
           clientId: {
-            type: "string",
+            type: SchemaType.STRING,
             description: "Client ID to query analytics for",
           },
           month: {
-            type: "string",
+            type: SchemaType.STRING,
             description:
               'Specific month to query (format: "YYYY-MM"), or leave empty for latest',
           },
           compareWithPrevious: {
-            type: "boolean",
+            type: SchemaType.BOOLEAN,
             description:
               "If true, also fetch previous month for comparison",
           },
@@ -151,19 +151,19 @@ export const aiTools: AiTool[] = [
     definition: {
       name: "create_client",
       description: "Create a new client profile. Admin/AM only.",
-      input_schema: {
-        type: "object" as const,
+      parameters: {
+        type: SchemaType.OBJECT,
         properties: {
-          name: { type: "string" },
-          industry: { type: "string" },
-          email: { type: "string", description: "Login email for the client" },
-          password: { type: "string", description: "Login password for the client" },
-          package: { type: "string", enum: ["BASIC", "PREMIUM", "ENTERPRISE"] },
-          activeServices: { type: "string", description: "Comma separated list of active platforms" },
-          briefAr: { type: "string" },
-          briefEn: { type: "string" },
-          amId: { type: "string", description: "Account Manager ID" },
-          mmId: { type: "string", description: "Marketing Manager ID" }
+          name: { type: SchemaType.STRING },
+          industry: { type: SchemaType.STRING },
+          email: { type: SchemaType.STRING, description: "Login email for the client" },
+          password: { type: SchemaType.STRING, description: "Login password for the client" },
+          package: { type: SchemaType.STRING, enum: ["BASIC", "PREMIUM", "ENTERPRISE"] },
+          activeServices: { type: SchemaType.STRING, description: "Comma separated list of active platforms" },
+          briefAr: { type: SchemaType.STRING },
+          briefEn: { type: SchemaType.STRING },
+          amId: { type: SchemaType.STRING, description: "Account Manager ID" },
+          mmId: { type: SchemaType.STRING, description: "Marketing Manager ID" }
         },
         required: ["name", "email", "password"],
       },
@@ -174,18 +174,18 @@ export const aiTools: AiTool[] = [
     definition: {
       name: "update_client",
       description: "Update an existing client profile. Admin/AM only.",
-      input_schema: {
-        type: "object" as const,
+      parameters: {
+        type: SchemaType.OBJECT,
         properties: {
-          clientId: { type: "string" },
-          name: { type: "string" },
-          industry: { type: "string" },
-          package: { type: "string", enum: ["BASIC", "PREMIUM", "ENTERPRISE"] },
-          activeServices: { type: "string" },
-          briefAr: { type: "string" },
-          briefEn: { type: "string" },
-          seoScore: { type: "number" },
-          monthlyFee: { type: "number" }
+          clientId: { type: SchemaType.STRING },
+          name: { type: SchemaType.STRING },
+          industry: { type: SchemaType.STRING },
+          package: { type: SchemaType.STRING, enum: ["BASIC", "PREMIUM", "ENTERPRISE"] },
+          activeServices: { type: SchemaType.STRING },
+          briefAr: { type: SchemaType.STRING },
+          briefEn: { type: SchemaType.STRING },
+          seoScore: { type: SchemaType.NUMBER },
+          monthlyFee: { type: SchemaType.NUMBER }
         },
         required: ["clientId"],
       },
@@ -196,10 +196,10 @@ export const aiTools: AiTool[] = [
     definition: {
       name: "delete_client",
       description: "Delete a client profile. This is a destructive action! Admin/AM only.",
-      input_schema: {
-        type: "object" as const,
+      parameters: {
+        type: SchemaType.OBJECT,
         properties: {
-          clientId: { type: "string" }
+          clientId: { type: SchemaType.STRING }
         },
         required: ["clientId"],
       },
@@ -210,14 +210,14 @@ export const aiTools: AiTool[] = [
     definition: {
       name: "create_team_member",
       description: "Create a new team member. Admin/AM only.",
-      input_schema: {
-        type: "object" as const,
+      parameters: {
+        type: SchemaType.OBJECT,
         properties: {
-          email: { type: "string" },
-          password: { type: "string" },
-          firstName: { type: "string" },
-          lastName: { type: "string" },
-          role: { type: "string", enum: ["AM", "MODERATOR", "MARKETING_MANAGER", "CONTENT_TEAM", "CONTENT_LEADER", "ART_TEAM", "ART_LEADER", "SEO_TEAM", "SEO_LEAD", "HR_MANAGER"] }
+          email: { type: SchemaType.STRING },
+          password: { type: SchemaType.STRING },
+          firstName: { type: SchemaType.STRING },
+          lastName: { type: SchemaType.STRING },
+          role: { type: SchemaType.STRING, enum: ["AM", "MODERATOR", "MARKETING_MANAGER", "CONTENT_TEAM", "CONTENT_LEADER", "ART_TEAM", "ART_LEADER", "SEO_TEAM", "SEO_LEAD", "HR_MANAGER"] }
         },
         required: ["email", "password", "firstName", "lastName", "role"],
       },
@@ -228,14 +228,14 @@ export const aiTools: AiTool[] = [
     definition: {
       name: "update_team_member",
       description: "Update a team member's details. Admin/AM only.",
-      input_schema: {
-        type: "object" as const,
+      parameters: {
+        type: SchemaType.OBJECT,
         properties: {
-          userId: { type: "string" },
-          email: { type: "string" },
-          firstName: { type: "string" },
-          lastName: { type: "string" },
-          role: { type: "string" }
+          userId: { type: SchemaType.STRING },
+          email: { type: SchemaType.STRING },
+          firstName: { type: SchemaType.STRING },
+          lastName: { type: SchemaType.STRING },
+          role: { type: SchemaType.STRING }
         },
         required: ["userId"],
       },
@@ -246,10 +246,10 @@ export const aiTools: AiTool[] = [
     definition: {
       name: "delete_team_member",
       description: "Delete a team member. Fails if they have assigned clients. Admin/AM only.",
-      input_schema: {
-        type: "object" as const,
+      parameters: {
+        type: SchemaType.OBJECT,
         properties: {
-          userId: { type: "string" }
+          userId: { type: SchemaType.STRING }
         },
         required: ["userId"],
       },
@@ -260,10 +260,10 @@ export const aiTools: AiTool[] = [
     definition: {
       name: "delete_action_plan",
       description: "Delete an entire action plan. Destructive! Admin/AM only.",
-      input_schema: {
-        type: "object" as const,
+      parameters: {
+        type: SchemaType.OBJECT,
         properties: {
-          planId: { type: "string" }
+          planId: { type: SchemaType.STRING }
         },
         required: ["planId"],
       },
@@ -274,10 +274,10 @@ export const aiTools: AiTool[] = [
     definition: {
       name: "delete_report",
       description: "Delete a performance report. Destructive! Admin/AM only.",
-      input_schema: {
-        type: "object" as const,
+      parameters: {
+        type: SchemaType.OBJECT,
         properties: {
-          reportId: { type: "string" }
+          reportId: { type: SchemaType.STRING }
         },
         required: ["reportId"],
       },
@@ -288,16 +288,16 @@ export const aiTools: AiTool[] = [
     definition: {
       name: "update_content_item",
       description: "Update an existing content item in an action plan. Admin/AM only.",
-      input_schema: {
-        type: "object" as const,
+      parameters: {
+        type: SchemaType.OBJECT,
         properties: {
-          itemId: { type: "string" },
-          planId: { type: "string" },
-          type: { type: "string" },
-          platform: { type: "string" },
-          captionAr: { type: "string" },
-          captionEn: { type: "string" },
-          scheduledDate: { type: "string" },
+          itemId: { type: SchemaType.STRING },
+          planId: { type: SchemaType.STRING },
+          type: { type: SchemaType.STRING },
+          platform: { type: SchemaType.STRING },
+          captionAr: { type: SchemaType.STRING },
+          captionEn: { type: SchemaType.STRING },
+          scheduledDate: { type: SchemaType.STRING },
         },
         required: ["itemId", "planId"],
       },
@@ -309,15 +309,15 @@ export const aiTools: AiTool[] = [
       name: "create_action_plan",
       description:
         'Create a new action plan draft for a client. AM/Admin only. Month format: "YYYY-MM".',
-      input_schema: {
-        type: "object" as const,
+      parameters: {
+        type: SchemaType.OBJECT,
         properties: {
           clientId: {
-            type: "string",
+            type: SchemaType.STRING,
             description: "The client ID to create the plan for",
           },
           month: {
-            type: "string",
+            type: SchemaType.STRING,
             description: 'Month in "YYYY-MM" format, e.g. "2026-03"',
           },
         },
@@ -331,20 +331,20 @@ export const aiTools: AiTool[] = [
       name: "add_content_item",
       description:
         "Add a content item (post, poll, article, email) to an action plan. AM/Admin only.",
-      input_schema: {
-        type: "object" as const,
+      parameters: {
+        type: SchemaType.OBJECT,
         properties: {
           planId: {
-            type: "string",
+            type: SchemaType.STRING,
             description: "The action plan ID",
           },
           type: {
-            type: "string",
+            type: SchemaType.STRING,
             enum: ["POST", "POLL", "ARTICLE", "EMAIL"],
             description: "Type of content",
           },
           platform: {
-            type: "string",
+            type: SchemaType.STRING,
             enum: [
               "Facebook",
               "Instagram",
@@ -357,15 +357,15 @@ export const aiTools: AiTool[] = [
             description: "Target platform",
           },
           captionAr: {
-            type: "string",
+            type: SchemaType.STRING,
             description: "Arabic caption",
           },
           captionEn: {
-            type: "string",
+            type: SchemaType.STRING,
             description: "English caption",
           },
           scheduledDate: {
-            type: "string",
+            type: SchemaType.STRING,
             description: "Scheduled date in ISO format",
           },
         },
@@ -379,11 +379,11 @@ export const aiTools: AiTool[] = [
       name: "submit_plan_for_approval",
       description:
         "Submit an action plan to the client for approval. AM/Admin only.",
-      input_schema: {
-        type: "object" as const,
+      parameters: {
+        type: SchemaType.OBJECT,
         properties: {
           planId: {
-            type: "string",
+            type: SchemaType.STRING,
             description: "The action plan ID to submit",
           },
         },
@@ -396,11 +396,11 @@ export const aiTools: AiTool[] = [
     definition: {
       name: "approve_action_plan",
       description: "Approve an entire action plan. Client only.",
-      input_schema: {
-        type: "object" as const,
+      parameters: {
+        type: SchemaType.OBJECT,
         properties: {
           planId: {
-            type: "string",
+            type: SchemaType.STRING,
             description: "The action plan ID to approve",
           },
         },
@@ -413,15 +413,15 @@ export const aiTools: AiTool[] = [
     definition: {
       name: "approve_content_item",
       description: "Approve a specific content item in an action plan. Client only.",
-      input_schema: {
-        type: "object" as const,
+      parameters: {
+        type: SchemaType.OBJECT,
         properties: {
           itemId: {
-            type: "string",
+            type: SchemaType.STRING,
             description: "The content item ID",
           },
           planId: {
-            type: "string",
+            type: SchemaType.STRING,
             description: "The action plan ID",
           },
         },
@@ -435,11 +435,11 @@ export const aiTools: AiTool[] = [
       name: "schedule_action_plan",
       description:
         "Mark an approved action plan as scheduled. Moderator only.",
-      input_schema: {
-        type: "object" as const,
+      parameters: {
+        type: SchemaType.OBJECT,
         properties: {
           planId: {
-            type: "string",
+            type: SchemaType.STRING,
             description: "The action plan ID to schedule",
           },
         },
@@ -453,11 +453,11 @@ export const aiTools: AiTool[] = [
       name: "publish_report",
       description:
         "Publish/send a report to the client. AM/Admin only.",
-      input_schema: {
-        type: "object" as const,
+      parameters: {
+        type: SchemaType.OBJECT,
         properties: {
           reportId: {
-            type: "string",
+            type: SchemaType.STRING,
             description: "The report ID to publish",
           },
         },
@@ -471,19 +471,19 @@ export const aiTools: AiTool[] = [
       name: "send_notification",
       description:
         "Send a notification/reminder to a specific user.",
-      input_schema: {
-        type: "object" as const,
+      parameters: {
+        type: SchemaType.OBJECT,
         properties: {
           targetUserId: {
-            type: "string",
+            type: SchemaType.STRING,
             description: "The user ID to send the notification to",
           },
           title: {
-            type: "string",
+            type: SchemaType.STRING,
             description: "Notification title",
           },
           message: {
-            type: "string",
+            type: SchemaType.STRING,
             description: "Notification message",
           },
         },
@@ -496,16 +496,16 @@ export const aiTools: AiTool[] = [
     definition: {
       name: "request_meeting",
       description: "Request a meeting. Client only.",
-      input_schema: {
-        type: "object" as const,
+      parameters: {
+        type: SchemaType.OBJECT,
         properties: {
           reason: {
-            type: "string",
+            type: SchemaType.STRING,
             description: "Reason for the meeting",
           },
           teams: {
-            type: "array",
-            items: { type: "string" },
+            type: SchemaType.ARRAY,
+            items: { type: SchemaType.STRING },
             description:
               'Required teams, e.g. ["Content", "Design", "Marketing"]',
           },
@@ -517,7 +517,7 @@ export const aiTools: AiTool[] = [
   },
 ];
 
-export function getToolsForRole(role: string): Anthropic.Tool[] {
+export function getToolsForRole(role: string): FunctionDeclaration[] {
   return aiTools
     .filter((t) => t.roles.includes(role))
     .map((t) => t.definition);

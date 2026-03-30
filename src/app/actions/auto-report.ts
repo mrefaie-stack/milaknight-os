@@ -8,11 +8,9 @@ import { SnapchatAPI } from "@/lib/snapchat-api";
 import { TikTokAPI } from "@/lib/tiktok-api";
 import { YouTubeAPI } from "@/lib/youtube-api";
 import { GoogleAdsAPI } from "@/lib/google-ads-api";
-import Anthropic from "@anthropic-ai/sdk";
+import { geminiFlash } from "@/lib/ai/gemini";
 import { revalidatePath } from "next/cache";
 import { logActivity } from "./activity";
-
-const anthropic = new Anthropic();
 
 export async function generateAutoReport(clientId: string, month: string) {
     const session = await getServerSession(authOptions);
@@ -540,13 +538,9 @@ Respond ONLY with valid JSON — no markdown, no explanation:
   "en": "Professional summary in English (3-4 concise sentences)"
 }`;
 
-    const response = await anthropic.messages.create({
-        model: "claude-sonnet-4-6",
-        max_tokens: 1200,
-        messages: [{ role: "user", content: prompt }]
-    });
-
-    const text = (response.content[0] as any).text.trim();
+    const result = await geminiFlash.generateContent(prompt);
+    let text = result.response.text().trim();
+    text = text.replace(/```json/gi, "").replace(/```/g, "").trim();
     const parsed = JSON.parse(text);
     return `${parsed.ar}\n\n${parsed.en}`;
 }
