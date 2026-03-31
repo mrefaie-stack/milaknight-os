@@ -447,7 +447,7 @@ export function ReportClientView({ report, metrics, role, previousMetrics }: { r
                             </Button>
                         </div>
                     )}
-                    {role === "AM" && (
+                    {(role === "AM" || role === "ADMIN") && (
                         <Button
                             onClick={() => {
                                 const url = `${window.location.origin}/p/report/${report.id}`;
