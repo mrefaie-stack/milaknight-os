@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { sendEmail } from "@/lib/email";
 import { logActivity } from "./activity";
+import { geminiFlash } from "@/lib/ai/gemini";
 
 export async function createReport(clientId: string, month: string, metricsData: any, scheduledSendAt?: Date) {
     const session = await getServerSession(authOptions);
@@ -483,28 +484,83 @@ export async function rejectDeletionRequest(requestId: string) {
     revalidatePath("/admin");
 }
 
-export async function generateReportSummary(metricsData: any) {
+export async function generateReportSummary(metricsData: any, clientId?: string) {
     const session = await getServerSession(authOptions);
     if (!session || (session.user.role !== "AM" && session.user.role !== "ADMIN")) {
         throw new Error("Unauthorized");
     }
 
-    // Heuristic-based summary generation (Bilingual)
-    const metrics = metricsData;
+    // Fetch client name if clientId provided
+    let clientName = "Client";
+    if (clientId) {
+        const client = await (prisma as any).client.findUnique({ where: { id: clientId }, select: { name: true, industry: true } });
+        if (client) clientName = client.name;
+    }
 
-    const summaryAr = `ملخص الأداء: 
-شهد هذا الشهر ${metrics.global?.reach?.value > 1000 ? 'نمواً ملحوظاً في الوصول' : 'أداءً مستقراً'}. 
-تم تحقيق ${metrics.global?.conversions?.value || 0} عملية تحويل بنسبة تفاعل ${metrics.global?.engagement?.value || 0}%.
-التركيز في المرحلة القادمة سيكون على ${metrics.seo?.score < 70 ? 'تحسين السيو' : 'زيادة وتيرة النشر'}.`;
+    // Extract platform data from campaigns structure
+    const campaigns: any[] = metricsData?.campaigns || [];
+    const lines: string[] = [];
 
-    const summaryEn = `Performance Summary:
-This month showed ${metrics.global?.reach?.value > 1000 ? 'significant growth in reach' : 'stable performance'}.
-Achieved ${metrics.global?.conversions?.value || 0} conversions with an engagement rate of ${metrics.global?.engagement?.value || 0}%.
-Next phase focus will be on ${metrics.seo?.score < 70 ? 'improving SEO' : 'increasing posting frequency'}.`;
+    campaigns.forEach((campaign: any, idx: number) => {
+        const platforms = campaign.platforms || {};
+        const label = campaigns.length > 1 ? `Campaign: ${campaign.name || `#${idx + 1}`}` : "";
+        if (label) lines.push(label);
+
+        const fb = platforms.facebook;
+        const ig = platforms.instagram;
+        const snap = platforms.snapchat;
+        const tiktok = platforms.tiktok;
+        const yt = platforms.youtube;
+        const gads = platforms.googleAds;
+        const x = platforms.x || platforms.twitter;
+        const linkedin = platforms.linkedin;
+
+        if (fb) lines.push(`• Facebook — Impressions: ${fb.impressions || 0}, Reach: ${fb.reach || 0}, Engagement: ${fb.engagement || 0}, Clicks: ${fb.clicks || 0}, Followers: ${fb.followers || 0}`);
+        if (ig) lines.push(`• Instagram — Views: ${ig.views || 0}, Reach: ${ig.reach || 0}, Engagement: ${ig.engagement || 0}, Clicks: ${ig.clicks || 0}, Followers: ${ig.followers || 0}`);
+        if (snap) lines.push(`• Snapchat Ads — Impressions: ${snap.impressions || 0}, Swipes: ${snap.swipes || 0}, Spend: $${snap.spend || 0}, Reach: ${snap.reach || 0}`);
+        if (tiktok) lines.push(`• TikTok — Impressions: ${tiktok.impressions || 0}, Clicks: ${tiktok.clicks || 0}, Views: ${tiktok.videoViews || tiktok.views || 0}, Spend: $${tiktok.spend || 0}`);
+        if (yt) lines.push(`• YouTube — Views: ${yt.views || yt.recentViews || 0}, Subscribers: ${yt.subscribers || 0}, Watch Time: ${yt.watchTimeMinutes || 0} min`);
+        if (gads) lines.push(`• Google Ads — Impressions: ${gads.impressions || gads.totalImpressions || 0}, Clicks: ${gads.clicks || gads.totalClicks || 0}, Spend: $${gads.spend || gads.totalCost || 0}, Conversions: ${gads.conversions || gads.totalConversions || 0}`);
+        if (x) lines.push(`• X (Twitter) — Impressions: ${x.impressions || 0}, Engagement: ${x.engagement || 0}, Followers: ${x.followers || 0}`);
+        if (linkedin) lines.push(`• LinkedIn — Impressions: ${linkedin.impressions || 0}, Clicks: ${linkedin.clicks || 0}, Followers: ${linkedin.followers || 0}`);
+    });
+
+    const seo = metricsData?.seo;
+    if (seo && (seo.score > 0 || seo.clicks > 0)) {
+        lines.push(`• SEO — Score: ${seo.score}/100, Clicks: ${seo.clicks || 0}, Impressions: ${seo.impressions || 0}, Speed: ${seo.speed || 0}`);
+    }
+
+    const emailData = metricsData?.emailMarketing;
+    if (emailData?.campaigns?.length > 0) {
+        emailData.campaigns.forEach((ec: any) => {
+            if (ec.emailsSent > 0) lines.push(`• Email Marketing — Sent: ${ec.emailsSent}, Open Rate: ${ec.openRate}%, Click Rate: ${ec.clickRate}%`);
+        });
+    }
+
+    const performanceData = lines.length > 0 ? lines.join("\n") : "No platform data available yet.";
+
+    const prompt = `You are a senior digital marketing analyst writing a professional monthly performance summary for an agency client report.
+
+Client: ${clientName}
+Performance Data:
+${performanceData}
+
+Write a concise, professional bilingual summary (3-4 sentences each) based on the actual numbers above.
+Highlight real achievements, trends, and strategic recommendations.
+Respond ONLY with valid JSON — no markdown, no explanation:
+{
+  "ar": "ملخص احترافي بالعربية (3-4 جمل موجزة واضحة)",
+  "en": "Professional summary in English (3-4 concise sentences)"
+}`;
+
+    const result = await geminiFlash.generateContent(prompt);
+    let text = result.response.text().trim();
+    text = text.replace(/```json/gi, "").replace(/```/g, "").trim();
+    const parsed = JSON.parse(text);
 
     return {
-        summaryAr,
-        summaryEn
+        summaryAr: parsed.ar,
+        summaryEn: parsed.en
     };
 }
 
