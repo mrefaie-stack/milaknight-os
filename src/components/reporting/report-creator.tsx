@@ -926,7 +926,7 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                                     onClick={async () => {
                                         setIsGeneratingSummary(true);
                                         try {
-                                            const result = await generateReportSummary(metrics);
+                                            const result = await generateReportSummary(metrics, currentClientId || undefined);
                                             setMetrics((prev: any) => ({ ...prev, summary: isRtl ? result.summaryAr : result.summaryEn }));
                                             toast.success(isRtl ? "تم توليد الملخص بنجاح" : "Summary generated successfully");
                                         } catch (err) {
