@@ -6,10 +6,10 @@ const apiKey = process.env.GEMINI_API_KEY || "AIzaSyC1mTM8NCTkaeqdQFbqOAD4xyFQg6
 export const genAI = new GoogleGenerativeAI(apiKey);
 
 export const geminiFlash = genAI.getGenerativeModel({
-  model: "gemini-1.5-flash",
+  model: "gemini-2.0-flash",
 });
 
-// Optionally, for tasks requiring more reasoning:
+// For tasks requiring more reasoning:
 export const geminiPro = genAI.getGenerativeModel({
-  model: "gemini-1.5-pro",
+  model: "gemini-2.0-flash",
 });

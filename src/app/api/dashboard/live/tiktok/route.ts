@@ -19,7 +19,12 @@ export async function GET(request: Request) {
         if (!clientProfile) return NextResponse.json({ error: 'Client profile not found' }, { status: 404 });
 
         const connection = await (prisma as any).socialConnection.findFirst({
-            where: { clientId: clientProfile.id, platform: 'TIKTOK', isActive: true },
+            where: {
+                OR: [
+                    { userId: session.user.id, platform: 'TIKTOK', isActive: true },
+                    { clientId: clientProfile.id, platform: 'TIKTOK', isActive: true }
+                ]
+            },
             orderBy: { updatedAt: 'desc' }
         });
         if (!connection) return NextResponse.json({ error: 'TikTok not connected' }, { status: 404 });
@@ -34,7 +39,12 @@ export async function GET(request: Request) {
 
         // Fetch organic connection separately
         const organicConnection = await (prisma as any).socialConnection.findFirst({
-            where: { clientId: clientProfile.id, platform: 'TIKTOK_ORGANIC', isActive: true },
+            where: {
+                OR: [
+                    { userId: session.user.id, platform: 'TIKTOK_ORGANIC', isActive: true },
+                    { clientId: clientProfile.id, platform: 'TIKTOK_ORGANIC', isActive: true }
+                ]
+            },
             orderBy: { updatedAt: 'desc' }
         });
 

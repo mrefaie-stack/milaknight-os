@@ -21,6 +21,13 @@ export async function POST(req: NextRequest) {
     const meta = connection.metadata ? JSON.parse(connection.metadata) : {};
     meta.selectedAdvertiserId = advertiserId;
 
+    // Also backfill clientId if it wasn't set during initial OAuth
+    let clientId = connection.clientId;
+    if (!clientId) {
+        const clientRecord = await (prisma as any).client.findFirst({ where: { userId: session.user.id } });
+        clientId = clientRecord?.id || null;
+    }
+
     // Do NOT change platformAccountId — it must stay as the original OAuth primary ID
     // to avoid breaking the unique constraint on reconnect.
     // selectedAdvertiserId in metadata is what the live route uses.
@@ -28,7 +35,8 @@ export async function POST(req: NextRequest) {
         where: { id: connection.id },
         data: {
             platformAccountName: advertiserName || advertiserId,
-            metadata: JSON.stringify(meta)
+            metadata: JSON.stringify(meta),
+            ...(clientId && !connection.clientId ? { clientId } : {})
         }
     });
 

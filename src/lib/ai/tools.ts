@@ -158,7 +158,7 @@ export const aiTools: AiTool[] = [
           industry: { type: SchemaType.STRING },
           email: { type: SchemaType.STRING, description: "Login email for the client" },
           password: { type: SchemaType.STRING, description: "Login password for the client" },
-          package: { type: SchemaType.STRING, enum: ["BASIC", "PREMIUM", "ENTERPRISE"] },
+          package: { type: SchemaType.STRING, format: "enum", enum: ["BASIC", "PREMIUM", "ENTERPRISE"] },
           activeServices: { type: SchemaType.STRING, description: "Comma separated list of active platforms" },
           briefAr: { type: SchemaType.STRING },
           briefEn: { type: SchemaType.STRING },
@@ -180,7 +180,7 @@ export const aiTools: AiTool[] = [
           clientId: { type: SchemaType.STRING },
           name: { type: SchemaType.STRING },
           industry: { type: SchemaType.STRING },
-          package: { type: SchemaType.STRING, enum: ["BASIC", "PREMIUM", "ENTERPRISE"] },
+          package: { type: SchemaType.STRING, format: "enum", enum: ["BASIC", "PREMIUM", "ENTERPRISE"] },
           activeServices: { type: SchemaType.STRING },
           briefAr: { type: SchemaType.STRING },
           briefEn: { type: SchemaType.STRING },
@@ -217,7 +217,7 @@ export const aiTools: AiTool[] = [
           password: { type: SchemaType.STRING },
           firstName: { type: SchemaType.STRING },
           lastName: { type: SchemaType.STRING },
-          role: { type: SchemaType.STRING, enum: ["AM", "MODERATOR", "MARKETING_MANAGER", "CONTENT_TEAM", "CONTENT_LEADER", "ART_TEAM", "ART_LEADER", "SEO_TEAM", "SEO_LEAD", "HR_MANAGER"] }
+          role: { type: SchemaType.STRING, format: "enum", enum: ["AM", "MODERATOR", "MARKETING_MANAGER", "CONTENT_TEAM", "CONTENT_LEADER", "ART_TEAM", "ART_LEADER", "SEO_TEAM", "SEO_LEAD", "HR_MANAGER"] }
         },
         required: ["email", "password", "firstName", "lastName", "role"],
       },
@@ -340,11 +340,13 @@ export const aiTools: AiTool[] = [
           },
           type: {
             type: SchemaType.STRING,
+            format: "enum",
             enum: ["POST", "POLL", "ARTICLE", "EMAIL"],
             description: "Type of content",
           },
           platform: {
             type: SchemaType.STRING,
+            format: "enum",
             enum: [
               "Facebook",
               "Instagram",
