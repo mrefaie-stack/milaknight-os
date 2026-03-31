@@ -26,7 +26,7 @@ Target Keyword: "${keyword}"
 
 Content Draft:
 """
-${contentText.substring(0, 15000)} // max 15k chars to prevent token limits
+${contentText.substring(0, 15000)}
 """
 
 Return a JSON strictly formatted like this:
