@@ -566,7 +566,10 @@ export function ReportClientView({ report, metrics, role, previousMetrics }: { r
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-8 pb-10 px-6 md:px-10">
-                    <p className={`text-xl md:text-2xl leading-relaxed text-foreground/90 font-medium italic border-primary ${isRtl ? 'border-r-4 pr-8 text-right' : 'border-l-4 pl-8 text-left'}`}>
+                    <p
+                        dir={isRtl ? 'rtl' : 'ltr'}
+                        className={`text-xl md:text-2xl leading-relaxed text-foreground/90 font-medium italic border-primary whitespace-pre-wrap ${isRtl ? 'border-r-4 pr-8 text-right' : 'border-l-4 pl-8 text-left'}`}
+                    >
                         {metrics.summary || t("reports.default_summary")}
                     </p>
                 </CardContent>
