@@ -679,7 +679,7 @@ export function ReportClientView({ report, metrics, role, previousMetrics }: { r
                         dir={isRtl ? 'rtl' : 'ltr'}
                         className={`text-xl md:text-2xl leading-relaxed text-foreground/90 font-medium italic border-primary whitespace-pre-wrap ${isRtl ? 'border-r-4 pr-8 text-right' : 'border-l-4 pl-8 text-left'}`}
                     >
-                        {metrics.summary || t("reports.default_summary")}
+                        {(isRtl ? metrics.summaryAr : metrics.summaryEn) || metrics.summary || t("reports.default_summary")}
                     </p>
                 </CardContent>
             </Card>
