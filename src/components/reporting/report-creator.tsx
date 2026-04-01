@@ -41,10 +41,136 @@ import {
     Twitter,
     Save,
     BarChart3,
-    Image as ImageIcon
+    Image as ImageIcon,
+    Bot,
+    Activity
 } from "lucide-react";
 import { getApprovedPosts } from "@/app/actions/action-plan";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+
+function buildSystemSummary(metrics: any): { ar: string; en: string } {
+    const campaigns = metrics.campaigns || [{ platforms: metrics.platforms || {} }];
+    const agg: Record<string, any> = {};
+    campaigns.forEach((camp: any) => {
+        Object.entries(camp.platforms || {}).forEach(([k, p]: [string, any]) => {
+            const spend = p.paidCampaigns?.length > 0
+                ? p.paidCampaigns.reduce((s: number, c: any) => s + (Number(c.spend) || 0), 0)
+                : (Number(p.spend) || 0);
+            const conversions = p.paidCampaigns?.length > 0
+                ? p.paidCampaigns.reduce((s: number, c: any) => s + (Number(c.results) || 0), 0)
+                : (Number(p.conversions) || 0);
+            if (!agg[k]) {
+                agg[k] = { ...p, spend, conversions };
+            } else {
+                agg[k].followers = (agg[k].followers || 0) + (Number(p.followers) || 0);
+                agg[k].impressions = (agg[k].impressions || 0) + (Number(p.impressions) || 0);
+                agg[k].engagement = (agg[k].engagement || 0) + (Number(p.engagement) || 0);
+                agg[k].views = (agg[k].views || 0) + (Number(p.views) || 0);
+                agg[k].paidReach = (agg[k].paidReach || 0) + (Number(p.paidReach) || 0);
+                agg[k].spend = (agg[k].spend || 0) + spend;
+                agg[k].conversions = (agg[k].conversions || 0) + conversions;
+            }
+        });
+    });
+
+    const totalFollowers = Object.values(agg).reduce((s: number, p: any) => s + (Number(p.followers) || 0), 0);
+    const totalImpressions = Object.values(agg).reduce((s: number, p: any) => s + (Number(p.impressions) || 0), 0);
+    const totalEngagement = Object.values(agg).reduce((s: number, p: any) => s + (Number(p.engagement) || 0), 0);
+    const totalViews = Object.values(agg).reduce((s: number, p: any) => s + (Number(p.views) || 0), 0);
+    const totalSpend = Object.values(agg).reduce((s: number, p: any) => s + (Number(p.spend) || 0), 0);
+    const totalPaidReach = Object.values(agg).reduce((s: number, p: any) => s + (Number(p.paidReach) || 0), 0);
+    const totalConversions = Object.values(agg).reduce((s: number, p: any) => s + (Number(p.conversions) || 0), 0);
+
+    const PNAMES: Record<string, { ar: string; en: string }> = {
+        facebook: { ar: 'فيسبوك', en: 'Facebook' }, instagram: { ar: 'إنستجرام', en: 'Instagram' },
+        tiktok: { ar: 'تيك توك', en: 'TikTok' }, snapchat: { ar: 'سناب شات', en: 'Snapchat' },
+        linkedin: { ar: 'لينكد إن', en: 'LinkedIn' }, youtube: { ar: 'يوتيوب', en: 'YouTube' },
+        x: { ar: 'إكس', en: 'X (Twitter)' }, google: { ar: 'جوجل أدز', en: 'Google Ads' },
+        google_ads: { ar: 'جوجل أدز', en: 'Google Ads' },
+    };
+
+    const activePlatKeys = Object.keys(agg).filter(k => {
+        const p = agg[k];
+        return (p.followers || p.impressions || p.engagement || p.views || p.spend || p.conversions || p.paidReach);
+    });
+
+    const seo = metrics.seo;
+    const hasSeo = seo && (Number(seo.impressions) > 0 || Number(seo.clicks) > 0);
+    const em = metrics.emailMarketing;
+    const emailCamps = em?.campaigns?.length > 0 ? em.campaigns : (em?.emailsSent > 0 ? [em] : []);
+    const totalEmails = emailCamps.reduce((s: number, c: any) => s + (Number(c.emailsSent) || 0), 0);
+    const avgOpenRate = emailCamps.length > 0 ? (emailCamps.reduce((s: number, c: any) => s + (Number(c.openRate) || 0), 0) / emailCamps.length).toFixed(0) : 0;
+
+    const fmt = (n: number) => n.toLocaleString();
+
+    // Arabic
+    const platListAr = activePlatKeys.map(k => PNAMES[k]?.ar || k).join(' و');
+    let ar = `خلال هذه الفترة، أظهرت الحملات الرقمية أداءً ملحوظاً عبر منصات ${platListAr}.\n\n`;
+    if (totalFollowers > 0 || totalImpressions > 0 || totalEngagement > 0) {
+        ar += `📊 الأداء العضوي:\n`;
+        if (totalFollowers > 0) ar += `• استقطب المحتوى ${fmt(totalFollowers)} متابع جديد.\n`;
+        if (totalImpressions > 0) ar += `• بلغت إجمالي الظهورات ${fmt(totalImpressions)}.\n`;
+        if (totalEngagement > 0) ar += `• سجّل المحتوى ${fmt(totalEngagement)} تفاعل.\n`;
+        if (totalViews > 0) ar += `• حقّقت مقاطع الفيديو ${fmt(totalViews)} مشاهدة.\n`;
+        ar += '\n';
+    }
+    if (totalSpend > 0) {
+        ar += `💰 الإعلانات المدفوعة:\n`;
+        ar += `• بلغ إجمالي الاستثمار الإعلاني ${fmt(totalSpend)} ريال سعودي.\n`;
+        if (totalPaidReach > 0) ar += `• وصلت الإعلانات إلى ${fmt(totalPaidReach)} شخص فريد.\n`;
+        if (totalConversions > 0) ar += `• تحقّق ${fmt(totalConversions)} تحويل.\n`;
+        ar += '\n';
+    }
+    if (hasSeo) {
+        ar += `🔍 تحسين محركات البحث:\n`;
+        if (seo.impressions > 0) ar += `• سجّل الموقع ${fmt(Number(seo.impressions))} ظهور في نتائج البحث.\n`;
+        if (seo.clicks > 0) ar += `• حقّق ${fmt(Number(seo.clicks))} نقرة عضوية.\n`;
+        if (seo.score > 0) ar += `• بلغ مؤشر الصحة التقنية ${seo.score}%.\n`;
+        ar += '\n';
+    }
+    if (totalEmails > 0) {
+        ar += `📧 التسويق البريدي:\n`;
+        ar += `• تم إرسال ${fmt(totalEmails)} رسالة بريد إلكتروني.\n`;
+        if (avgOpenRate) ar += `• بلغ معدل الفتح ${avgOpenRate}%.\n`;
+        ar += '\n';
+    }
+    ar += `تعكس هذه النتائج أداءً استراتيجياً متسقاً يسير نحو تحقيق أهداف النمو المستدام.`;
+
+    // English
+    const platListEn = activePlatKeys.map(k => PNAMES[k]?.en || k).join(', ');
+    let en = `This period, digital campaigns delivered notable performance across ${platListEn}.\n\n`;
+    if (totalFollowers > 0 || totalImpressions > 0 || totalEngagement > 0) {
+        en += `📊 Organic Performance:\n`;
+        if (totalFollowers > 0) en += `• Organic content attracted ${fmt(totalFollowers)} new followers.\n`;
+        if (totalImpressions > 0) en += `• Total impressions reached ${fmt(totalImpressions)}.\n`;
+        if (totalEngagement > 0) en += `• Content generated ${fmt(totalEngagement)} engagements.\n`;
+        if (totalViews > 0) en += `• Video content recorded ${fmt(totalViews)} views.\n`;
+        en += '\n';
+    }
+    if (totalSpend > 0) {
+        en += `💰 Paid Advertising:\n`;
+        en += `• Total ad investment reached SAR ${fmt(totalSpend)}.\n`;
+        if (totalPaidReach > 0) en += `• Ads reached ${fmt(totalPaidReach)} unique users.\n`;
+        if (totalConversions > 0) en += `• Achieved ${fmt(totalConversions)} conversions.\n`;
+        en += '\n';
+    }
+    if (hasSeo) {
+        en += `🔍 Search Engine Optimization:\n`;
+        if (seo.impressions > 0) en += `• Website recorded ${fmt(Number(seo.impressions))} search impressions.\n`;
+        if (seo.clicks > 0) en += `• Achieved ${fmt(Number(seo.clicks))} organic clicks.\n`;
+        if (seo.score > 0) en += `• Technical health score reached ${seo.score}%.\n`;
+        en += '\n';
+    }
+    if (totalEmails > 0) {
+        en += `📧 Email Marketing:\n`;
+        en += `• Sent ${fmt(totalEmails)} emails.\n`;
+        if (avgOpenRate) en += `• Open rate reached ${avgOpenRate}%.\n`;
+        en += '\n';
+    }
+    en += `These results reflect consistent strategic performance aligned with sustainable long-term growth objectives.`;
+
+    return { ar: ar.trim(), en: en.trim() };
+}
 
 const PLATFORMS = [
     { id: "facebook", name: "Facebook", icon: Facebook, color: "text-blue-600" },
@@ -180,6 +306,7 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
     const { t, isRtl } = useLanguage();
     const [loading, setLoading] = useState(false);
     const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
+    const [systemSummaries, setSystemSummaries] = useState<{ ar: string; en: string } | null>(null);
     const [scheduledSendAt, setScheduledSendAt] = useState(initialData?.scheduledSendAt ? new Date(initialData.scheduledSendAt).toISOString().split('T')[0] : "");
     const router = useRouter();
 
@@ -917,30 +1044,72 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                             </div>
                         </div>
                         <Card className="border-border bg-card shadow-lg">
-                            <CardHeader className={`border-b border-border flex flex-row items-center justify-between ${isRtl ? 'flex-row-reverse' : ''}`}>
-                                <CardTitle className={`text-xl font-semibold flex items-center gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
-                                    <BarChart3 className="h-5 w-5 text-primary" /> {isRtl ? 'اكتب الملخص أو ولده بذكاء' : 'Write or AI Auto-generate'}
-                                </CardTitle>
-                                <Button
-                                    type="button"
-                                    onClick={async () => {
-                                        setIsGeneratingSummary(true);
-                                        try {
-                                            const result = await generateReportSummary(metrics, currentClientId || undefined);
-                                            setMetrics((prev: any) => ({ ...prev, summary: isRtl ? result.summaryAr : result.summaryEn }));
-                                            toast.success(isRtl ? "تم توليد الملخص بنجاح" : "Summary generated successfully");
-                                        } catch (err) {
-                                            toast.error("Failed to generate summary");
-                                        } finally {
-                                            setIsGeneratingSummary(false);
-                                        }
-                                    }}
-                                    disabled={isGeneratingSummary}
-                                    className="h-10 px-6 rounded-xl bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 font-semibold text-xs"
-                                >
-                                    {isGeneratingSummary ? <Zap className="h-4 w-4 animate-spin mr-2" /> : <Zap className="h-4 w-4 mr-2" />}
-                                    {isRtl ? "توليد بالذكاء الاصطناعي" : "AI Auto Generate"}
-                                </Button>
+                            <CardHeader className={`border-b border-border space-y-3 ${isRtl ? 'text-right' : ''}`}>
+                                <div className={`flex items-center justify-between ${isRtl ? 'flex-row-reverse' : ''}`}>
+                                    <CardTitle className={`text-xl font-semibold flex items-center gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                                        <BarChart3 className="h-5 w-5 text-primary" /> {isRtl ? 'اكتب الملخص أو ولده' : 'Write or Generate Summary'}
+                                    </CardTitle>
+                                    <div className={`flex items-center gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                                        {/* System Auto-Generate */}
+                                        <Button
+                                            type="button"
+                                            onClick={() => {
+                                                const result = buildSystemSummary(metrics);
+                                                setSystemSummaries(result);
+                                                setMetrics((prev: any) => ({ ...prev, summary: isRtl ? result.ar : result.en }));
+                                                toast.success(isRtl ? "تم توليد الملخص من البيانات" : "Summary generated from data");
+                                            }}
+                                            className="h-10 px-4 rounded-xl bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 hover:bg-emerald-500/20 font-semibold text-xs"
+                                        >
+                                            <Activity className={`h-4 w-4 ${isRtl ? 'ml-1.5' : 'mr-1.5'}`} />
+                                            {isRtl ? "توليد من البيانات" : "System Auto-Generate"}
+                                        </Button>
+                                        {/* AI Generate */}
+                                        <Button
+                                            type="button"
+                                            onClick={async () => {
+                                                setIsGeneratingSummary(true);
+                                                try {
+                                                    const result = await generateReportSummary(metrics, currentClientId || undefined);
+                                                    setMetrics((prev: any) => ({ ...prev, summary: isRtl ? result.summaryAr : result.summaryEn }));
+                                                    setSystemSummaries(null);
+                                                    toast.success(isRtl ? "تم توليد الملخص بالذكاء الاصطناعي" : "AI summary generated");
+                                                } catch (err) {
+                                                    toast.error("Failed to generate summary");
+                                                } finally {
+                                                    setIsGeneratingSummary(false);
+                                                }
+                                            }}
+                                            disabled={isGeneratingSummary}
+                                            className="h-10 px-4 rounded-xl bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 font-semibold text-xs"
+                                        >
+                                            {isGeneratingSummary ? <Zap className={`h-4 w-4 animate-spin ${isRtl ? 'ml-1.5' : 'mr-1.5'}`} /> : <Zap className={`h-4 w-4 ${isRtl ? 'ml-1.5' : 'mr-1.5'}`} />}
+                                            {isRtl ? "توليد بالذكاء الاصطناعي" : "AI Generate"}
+                                        </Button>
+                                    </div>
+                                </div>
+                                {/* Language toggle — shown after system-generate */}
+                                {systemSummaries && (
+                                    <div className={`flex items-center gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                                        <span className="text-xs text-muted-foreground font-medium">{isRtl ? 'عرض الملخص بـ:' : 'Show summary in:'}</span>
+                                        <div className="flex rounded-lg border border-border overflow-hidden">
+                                            <button
+                                                type="button"
+                                                onClick={() => setMetrics((prev: any) => ({ ...prev, summary: systemSummaries.ar }))}
+                                                className={`px-4 py-1.5 text-xs font-bold transition-colors ${metrics.summary === systemSummaries.ar ? 'bg-primary text-primary-foreground' : 'hover:bg-muted/50 text-muted-foreground'}`}
+                                            >
+                                                عربي
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setMetrics((prev: any) => ({ ...prev, summary: systemSummaries.en }))}
+                                                className={`px-4 py-1.5 text-xs font-bold transition-colors border-r border-border ${metrics.summary === systemSummaries.en ? 'bg-primary text-primary-foreground' : 'hover:bg-muted/50 text-muted-foreground'}`}
+                                            >
+                                                English
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
                             </CardHeader>
                             <CardContent className="p-8">
                                 <div className="space-y-4">
