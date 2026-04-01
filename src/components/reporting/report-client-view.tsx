@@ -729,21 +729,31 @@ export function ReportClientView({ report, metrics, role, previousMetrics }: { r
                         <CardTitle className="text-xl font-bold">{isRtl ? 'خريطة الانتشار' : 'Attention Map'}</CardTitle>
                         <p className="text-sm text-muted-foreground">{isRtl ? 'توزيع المشاهدات والوصول' : 'Visibility distribution by platform'}</p>
                     </CardHeader>
-                    <CardContent className="h-[300px] px-0">
+                    <CardContent className="h-[400px] px-0">
                         <div dir="ltr">
-                            <ResponsiveContainer width="100%" height={300}>
-                                <PieChart>
-                                    <Pie data={chartData.filter(d => (d.impressions > 0 || d.views > 0)).map(d => ({ ...d, impressions: d.impressions || d.views }))} dataKey="impressions" nameKey="name" cx="50%" cy="45%" outerRadius={90} innerRadius={50} paddingAngle={4}
-                                        label={({ name, percent }: any) => `${name} ${((percent || 0) * 100).toFixed(0)}%`} labelLine={false}>
+                            <ResponsiveContainer width="100%" height={400}>
+                                <PieChart margin={{ top: 10, right: 30, left: 30, bottom: 10 }}>
+                                    <Pie
+                                        data={chartData.filter(d => (d.impressions > 0 || d.views > 0)).map(d => ({ ...d, impressions: d.impressions || d.views }))}
+                                        dataKey="impressions"
+                                        nameKey="name"
+                                        cx="50%"
+                                        cy="45%"
+                                        outerRadius={110}
+                                        innerRadius={55}
+                                        paddingAngle={4}
+                                        label={({ percent }: any) => `${((percent || 0) * 100).toFixed(0)}%`}
+                                        labelLine={true}
+                                    >
                                         {chartData.filter(d => (d.impressions > 0 || d.views > 0)).map((_, index) => (<Cell key={index} fill={["#3b82f6", "#10b981", "#f97316", "#ef4444", "#eab308"][index % 5]} />))}
                                     </Pie>
-                                    <Tooltip 
-                                        contentStyle={{ borderRadius: '16px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(15,15,25,0.95)', color: '#fff' }} 
+                                    <Tooltip
+                                        contentStyle={{ borderRadius: '16px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(15,15,25,0.95)', color: '#fff' }}
                                         itemStyle={{ color: '#fff' }}
                                         labelStyle={{ color: '#fff' }}
-                                        formatter={(v: any) => [v?.toLocaleString(), t("reports.impressions")]} 
+                                        formatter={(v: any) => [v?.toLocaleString(), t("reports.impressions")]}
                                     />
-                                    <Legend />
+                                    <Legend wrapperStyle={{ paddingTop: '12px', fontSize: '12px' }} />
                                 </PieChart>
                             </ResponsiveContainer>
                         </div>

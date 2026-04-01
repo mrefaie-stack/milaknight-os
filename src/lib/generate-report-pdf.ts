@@ -13,6 +13,7 @@ const PLATFORM_NAMES: Record<string, string> = {
     linkedin: "LinkedIn",
     google: "Google Ads",
     youtube: "YouTube",
+    x: "X (Twitter)",
 };
 
 const P: [number, number, number] = [100, 60, 180];   // Primary (indigo)
@@ -25,6 +26,35 @@ const ORANGE: [number, number, number] = [249, 115, 22];
 const BLUE: [number, number, number] = [59, 130, 246];
 const PURPLE: [number, number, number] = [168, 85, 247];
 const TEAL: [number, number, number] = [20, 184, 166];
+
+async function renderTextBlock(
+    doc: any,
+    text: string,
+    x: number,
+    y: number,
+    maxWidth: number,
+    fontSize: number,
+    color: [number, number, number],
+    fontStyle: string = "normal"
+): Promise<number> {
+    // If text contains Arabic, render as image canvas
+    if (containsArabic(text)) {
+        const img = renderArabicTextImage(text, maxWidth, fontSize * 1.6, `rgb(${color[0]},${color[1]},${color[2]})`, "#f9f9fc");
+        doc.addImage(img.dataUrl, "PNG", x, y, img.widthMm, img.heightMm);
+        return img.heightMm;
+    }
+    // Otherwise render as normal PDF text
+    doc.setFontSize(fontSize);
+    doc.setFont("helvetica", fontStyle);
+    doc.setTextColor(color[0], color[1], color[2]);
+    const lines: string[] = doc.splitTextToSize(text, maxWidth);
+    let dy = 0;
+    for (const line of lines) {
+        doc.text(line, x, y + dy);
+        dy += fontSize * 0.45;
+    }
+    return dy;
+}
 
 export async function generateReportPdf(report: any, metrics: any) {
     const { default: jsPDF } = await import("jspdf");
@@ -63,14 +93,12 @@ export async function generateReportPdf(report: any, metrics: any) {
     y = 58;
 
     // ─── GLOBAL TOTALS ────────────────────────────────────────────────────────
-    // NEW: Handle Multi-Campaign structure
     const campaigns = metrics.campaigns || [
         { id: "default", name: "Main", platforms: metrics.platforms || {}, linkedItems: [] }
     ];
 
-    // Aggregated platforms mapping (for charts and global totals)
+    // Aggregated platforms mapping
     const aggregatedPlatforms: Record<string, any> = {};
-
     campaigns.forEach((camp: any) => {
         Object.entries(camp.platforms || {}).forEach(([platId, p]: [string, any]) => {
             if (!aggregatedPlatforms[platId]) {
@@ -98,14 +126,18 @@ export async function generateReportPdf(report: any, metrics: any) {
         return Object.values(p).some((v: any) => Number(v) > 0);
     });
 
+    const getPlatformSpend = (p: any) => Number(p.spend) || 0;
+    const getPlatformResults = (p: any) =>
+        Number(p.conversions) || Number(p.results) || Number(p.messages) || Number(p.leads) || 0;
+
     const totals = {
         impressions: activePlatforms.reduce((a, k) => a + (Number(aggregatedPlatforms[k].impressions) || 0), 0),
         engagement: activePlatforms.reduce((a, k) => a + (Number(aggregatedPlatforms[k].engagement) || 0), 0),
         followers: activePlatforms.reduce((a, k) => a + (Number(aggregatedPlatforms[k].followers) || 0), 0),
         views: activePlatforms.reduce((a, k) => a + (Number(aggregatedPlatforms[k].views) || 0), 0),
-        spend: activePlatforms.reduce((a, k) => a + (Number(aggregatedPlatforms[k].spend) || 0), 0),
+        spend: activePlatforms.reduce((a, k) => a + (getPlatformSpend(aggregatedPlatforms[k])), 0),
         paidReach: activePlatforms.reduce((a, k) => a + (Number(aggregatedPlatforms[k].paidReach) || 0), 0),
-        conversions: activePlatforms.reduce((a, k) => a + (Number(aggregatedPlatforms[k].conversions) || 0), 0),
+        conversions: activePlatforms.reduce((a, k) => a + (getPlatformResults(aggregatedPlatforms[k])), 0),
     };
 
     const cards = [
@@ -115,7 +147,7 @@ export async function generateReportPdf(report: any, metrics: any) {
         { label: "PAID REACH", value: totals.paidReach.toLocaleString(), color: TEAL },
         { label: "VIDEO VIEWS", value: totals.views.toLocaleString(), color: ORANGE },
         { label: "CONVERSIONS", value: totals.conversions.toLocaleString(), color: [239, 68, 68] as [number, number, number] },
-        { label: "AD INVESTMENT", value: `$${totals.spend.toLocaleString()}`, color: ORANGE },
+        { label: "AD INVESTMENT", value: `SAR ${totals.spend.toLocaleString()}`, color: ORANGE },
     ];
 
     // 4 + 3 layout
@@ -146,8 +178,11 @@ export async function generateReportPdf(report: any, metrics: any) {
     y += 28;
 
     // ─── STRATEGIC SUMMARY ────────────────────────────────────────────────────
-    if (metrics.summary) {
-        checkPage(28);
+    const summaryEn = metrics.summaryEn || (!containsArabic(metrics.summary || "") ? metrics.summary : null);
+    const summaryAr = metrics.summaryAr || (containsArabic(metrics.summary || "") ? metrics.summary : null);
+
+    if (summaryEn || summaryAr) {
+        checkPage(20);
         doc.setFillColor(LGRAY[0], LGRAY[1], LGRAY[2]);
         doc.roundedRect(margin, y, cW, 8, 2, 2, "F");
         doc.setFillColor(P[0], P[1], P[2]);
@@ -156,25 +191,30 @@ export async function generateReportPdf(report: any, metrics: any) {
         doc.setFontSize(6);
         doc.setFont("helvetica", "bold");
         doc.text("STRATEGIC SUMMARY", margin + 8, y + 5.5);
-        y += 10;
+        y += 12;
 
-        // Use canvas renderer for Arabic/mixed text (correct RTL + ligatures)
-        if (containsArabic(metrics.summary)) {
-            const summaryImg = renderArabicTextImage(metrics.summary, cW, 20, "#1a1a2e", "#f9f9fc");
-            checkPage(summaryImg.heightMm);
-            doc.addImage(summaryImg.dataUrl, "PNG", margin, y, summaryImg.widthMm, summaryImg.heightMm);
-            y += summaryImg.heightMm + 6;
-        } else {
-            const lines: string[] = doc.splitTextToSize(metrics.summary, cW);
+        // English summary
+        if (summaryEn) {
+            checkPage(12);
+            const lines: string[] = doc.splitTextToSize(summaryEn, cW);
             doc.setTextColor(DARK[0], DARK[1], DARK[2]);
             doc.setFontSize(9);
-            doc.setFont("helvetica", "normal");
+            doc.setFont("helvetica", "italic");
             for (const line of lines) {
-                checkPage(7);
+                checkPage(6);
                 doc.text(line, margin, y);
                 y += 5.5;
             }
-            y += 6;
+            y += 4;
+        }
+
+        // Arabic summary (canvas-rendered for correct RTL + ligatures)
+        if (summaryAr) {
+            checkPage(15);
+            const summaryImg = renderArabicTextImage(summaryAr, cW, 26, "#1a1a2e", "#f9f9fc");
+            checkPage(summaryImg.heightMm + 4);
+            doc.addImage(summaryImg.dataUrl, "PNG", margin, y, summaryImg.widthMm, summaryImg.heightMm);
+            y += summaryImg.heightMm + 6;
         }
     }
 
@@ -195,14 +235,14 @@ export async function generateReportPdf(report: any, metrics: any) {
             (p.followers || 0).toLocaleString(),
             (p.views || 0).toLocaleString(),
             (p.paidReach || 0).toLocaleString(),
-            (p.conversions || 0).toLocaleString(),
-            `$${(p.spend || 0).toLocaleString()}`,
+            getPlatformResults(p).toLocaleString(),
+            `SAR ${getPlatformSpend(p).toLocaleString()}`,
         ];
     });
 
     autoTable(doc, {
         startY: y,
-        head: [["Platform", "Impressions", "Engagements", "Followers", "Views", "Paid Reach", "Conversions", "Ad Spend"]],
+        head: [["Platform", "Impressions", "Engagements", "Followers", "Views", "Paid Reach", "Results", "Ad Spend"]],
         body: fullTable.length ? fullTable : [["No active platforms", "", "", "", "", "", "", ""]],
         styles: { fontSize: 7.5, cellPadding: 3, textColor: [30, 30, 40], lineColor: [220, 220, 230], lineWidth: 0.25 },
         headStyles: { fillColor: P, textColor: WHITE, fontStyle: "bold", fontSize: 7 },
@@ -247,58 +287,65 @@ export async function generateReportPdf(report: any, metrics: any) {
             doc.setFontSize(9);
             doc.setFont("helvetica", "bold");
             doc.text(`${camp.name} — ${name.toUpperCase()}`, margin + 4, y + 5.5);
-
-            // Brief status badge
-            doc.setFillColor(WHITE[0], WHITE[1], WHITE[2], 0.2);
-            doc.setTextColor(WHITE[0], WHITE[1], WHITE[2]);
             doc.setFontSize(6);
             doc.text("PERFORMANCE INSIGHTS", pageW - margin - 4, y + 5.5, { align: "right" });
-
             y += 11;
 
-            // All fields for this platform
+            // Build all metric rows for this platform
             const platformRows: [string, string][] = [];
+
+            // Core metrics
             if (p.impressions) platformRows.push(["Impressions", p.impressions.toLocaleString()]);
+            if (p.views) platformRows.push(["Video Views", p.views.toLocaleString()]);
+            if (p.reach) platformRows.push(["Organic Reach", p.reach.toLocaleString()]);
+            if (p.paidReach) platformRows.push(["Paid Reach", p.paidReach.toLocaleString()]);
             if (p.engagement) platformRows.push(["Engagements", p.engagement.toLocaleString()]);
             if (p.followers) platformRows.push(["New Followers", p.followers.toLocaleString()]);
-            if (p.views) platformRows.push(["Total Views", p.views.toLocaleString()]);
-            if (p.shares) platformRows.push(["Content Shares", p.shares.toLocaleString()]);
-            if (p.saves) platformRows.push(["Post Saves", p.saves.toLocaleString()]);
-            if (p.watchTime) platformRows.push(["Avg. Watch Time", `${p.watchTime}s`]);
-            if (p.paidReach) platformRows.push(["Paid Reach", p.paidReach.toLocaleString()]);
-            if (p.conversions) platformRows.push(["Conversions", p.conversions.toLocaleString()]);
-            if (p.spend) platformRows.push(["Ad Investment", `$${p.spend.toLocaleString()}`]);
+            if (p.currentFollowers) platformRows.push(["Total Followers", p.currentFollowers.toLocaleString()]);
+            if (p.likes) platformRows.push(["Likes", p.likes.toLocaleString()]);
+            if (p.comments) platformRows.push(["Comments", p.comments.toLocaleString()]);
+            if (p.shares) platformRows.push(["Shares", p.shares.toLocaleString()]);
+            if (p.saves) platformRows.push(["Saves", p.saves.toLocaleString()]);
+            if (p.reposts) platformRows.push(["Reposts", p.reposts.toLocaleString()]);
+            if (p.bookmarks) platformRows.push(["Bookmarks", p.bookmarks.toLocaleString()]);
+            if (p.replies) platformRows.push(["Replies", p.replies.toLocaleString()]);
             if (p.clicks) platformRows.push(["Link Clicks", p.clicks.toLocaleString()]);
-            if (p.cpc) platformRows.push(["CPC", `$${p.cpc}`]);
+            if (p.profileVisits) platformRows.push(["Profile Visits", p.profileVisits.toLocaleString()]);
+            if (p.searches) platformRows.push(["Searches", p.searches.toLocaleString()]);
+            if (p.watchTime) platformRows.push(["Watch Time", `${p.watchTime}s`]);
+            if (p.cpc) platformRows.push(["CPC", `SAR ${p.cpc}`]);
 
-            // Calculations
-            const engRate = p.impressions > 0 ? ((p.engagement / p.impressions) * 100).toFixed(2) : "0.00";
+            // Paid ads totals
+            const platSpend = getPlatformSpend(p);
+            const platResults = getPlatformResults(p);
+            if (platSpend > 0) platformRows.push(["Ad Investment", `SAR ${platSpend.toLocaleString()}`]);
+            if (platResults > 0) platformRows.push(["Results / Conversions", platResults.toLocaleString()]);
+
+            // Calculated metrics
+            const baseImpr = p.impressions || p.views || 0;
+            const engRate = baseImpr > 0 ? ((p.engagement / baseImpr) * 100).toFixed(2) : "0.00";
             platformRows.push(["Engagement Rate", `${engRate}%`]);
 
-            if (p.conversions > 0 && p.spend > 0) {
-                const cpa = (p.spend / p.conversions).toFixed(2);
-                platformRows.push(["Cost / Result", `$${cpa}`]);
+            if (platResults > 0 && platSpend > 0) {
+                const cpa = (platSpend / platResults).toFixed(2);
+                platformRows.push(["Cost / Result", `SAR ${cpa}`]);
             }
 
             if (platformRows.length > 0) {
-                // Render as two-column grid (two pairs per row)
                 const chunked: [string, string][][] = [];
                 for (let i = 0; i < platformRows.length; i += 2) {
-                    chunked.push(platformRows.slice(i, i + 2));
+                    chunked.push(platformRows.slice(i, i + 2) as [string, string][]);
                 }
-
                 for (const chunk of chunked) {
                     checkPage(10);
                     chunk.forEach(([label, value], ci) => {
                         const bx = margin + ci * (cW / 2 + 1.5);
                         doc.setFillColor(LGRAY[0], LGRAY[1], LGRAY[2]);
                         doc.roundedRect(bx, y, cW / 2 - 1.5, 10, 1, 1, "F");
-
                         doc.setTextColor(MGRAY[0], MGRAY[1], MGRAY[2]);
                         doc.setFontSize(5.5);
                         doc.setFont("helvetica", "bold");
                         doc.text(label.toUpperCase(), bx + 3, y + 3.5);
-
                         doc.setTextColor(DARK[0], DARK[1], DARK[2]);
                         doc.setFontSize(8.5);
                         doc.text(value, bx + 3, y + 8);
@@ -307,34 +354,89 @@ export async function generateReportPdf(report: any, metrics: any) {
                 }
             }
 
-            // Note: Currently not embedding linked post images in PDF due to complexity of async image loading in jsPDF loop, 
-            // but we can add placeholders or captions if needed. 
-            // For now, focusing on data accuracy.
+            // ── Paid Campaigns breakdown ──────────────────────────────────────
+            if (p.paidCampaigns?.length > 0) {
+                checkPage(14);
+                doc.setFillColor(255, 237, 213); // orange-100
+                doc.roundedRect(margin, y, cW, 7, 1, 1, "F");
+                doc.setTextColor(ORANGE[0], ORANGE[1], ORANGE[2]);
+                doc.setFontSize(6.5);
+                doc.setFont("helvetica", "bold");
+                doc.text("PAID CAMPAIGN DETAILS", margin + 3, y + 4.5);
+                y += 9;
 
+                for (const pc of p.paidCampaigns) {
+                    checkPage(14);
+                    const pcRows: [string, string][] = [
+                        ["Campaign", pc.name || "—"],
+                        ["Objective", (pc.objective || "—").toLowerCase()],
+                        ["Spend", `SAR ${(pc.spend || 0).toLocaleString()}`],
+                        ["Reach", (pc.reach || 0).toLocaleString()],
+                        ["Results", (pc.results || 0).toLocaleString()],
+                    ].filter(([, v]) => v && v !== "—" && v !== "0") as [string, string][];
+
+                    const pcChunked: [string, string][][] = [];
+                    for (let i = 0; i < pcRows.length; i += 2) {
+                        pcChunked.push(pcRows.slice(i, i + 2) as [string, string][]);
+                    }
+                    for (const chunk of pcChunked) {
+                        checkPage(10);
+                        chunk.forEach(([label, value], ci) => {
+                            const bx = margin + ci * (cW / 2 + 1.5);
+                            doc.setFillColor(255, 247, 237); // very light orange
+                            doc.roundedRect(bx, y, cW / 2 - 1.5, 10, 1, 1, "F");
+                            doc.setTextColor(MGRAY[0], MGRAY[1], MGRAY[2]);
+                            doc.setFontSize(5.5);
+                            doc.setFont("helvetica", "bold");
+                            doc.text(label.toUpperCase(), bx + 3, y + 3.5);
+                            doc.setTextColor(DARK[0], DARK[1], DARK[2]);
+                            doc.setFontSize(8.5);
+                            doc.text(value, bx + 3, y + 8);
+                        });
+                        y += 12;
+                    }
+                    y += 2;
+                }
+            }
+
+            // ── Account Manager Note ──────────────────────────────────────────
             if (p.comment) {
-                checkPage(15);
-                doc.setFillColor(P[0], P[1], P[2], 0.05);
-                doc.roundedRect(margin, y, cW, 12, 1, 1, "F");
+                checkPage(20);
+                doc.setFillColor(240, 237, 255); // light indigo background
+                doc.roundedRect(margin, y, cW, 8, 1, 1, "F");
                 doc.setTextColor(P[0], P[1], P[2]);
                 doc.setFontSize(6);
                 doc.setFont("helvetica", "bold");
-                doc.text("ACCOUNT MANAGER NOTE", margin + 3, y + 4);
+                doc.text("ACCOUNT MANAGER NOTE", margin + 3, y + 5);
+                y += 10;
 
-                doc.setTextColor(DARK[0], DARK[1], DARK[2]);
-                doc.setFontSize(7.5);
-                doc.setFont("helvetica", "normal");
-                const commentLines = doc.splitTextToSize(p.comment, cW - 6);
-                doc.text(commentLines, margin + 3, y + 8);
-                y += 15;
+                if (containsArabic(p.comment)) {
+                    checkPage(15);
+                    const commentImg = renderArabicTextImage(p.comment, cW, 22, "#141428", "#f9f9fc");
+                    checkPage(commentImg.heightMm + 4);
+                    doc.addImage(commentImg.dataUrl, "PNG", margin, y, commentImg.widthMm, commentImg.heightMm);
+                    y += commentImg.heightMm + 4;
+                } else {
+                    const commentLines: string[] = doc.splitTextToSize(p.comment, cW - 6);
+                    doc.setTextColor(DARK[0], DARK[1], DARK[2]);
+                    doc.setFontSize(8);
+                    doc.setFont("helvetica", "normal");
+                    for (const line of commentLines) {
+                        checkPage(6);
+                        doc.text(line, margin + 3, y);
+                        y += 5;
+                    }
+                    y += 4;
+                }
             }
 
-            y += 4;
+            y += 6;
         }
     }
 
     // ─── WEBSITE / SEO ────────────────────────────────────────────────────────
     const seo = metrics.seo || metrics.websiteSeo;
-    if (seo && Object.values(seo).some((v: any) => v)) {
+    if (seo && (seo.clicks > 0 || seo.impressions > 0 || seo.score > 0 || seo.speed)) {
         checkPage(30);
         doc.setTextColor(DARK[0], DARK[1], DARK[2]);
         doc.setFontSize(11);
@@ -343,9 +445,12 @@ export async function generateReportPdf(report: any, metrics: any) {
         y += 7;
 
         const seoRows: [string, string][] = [];
-        if (seo.score) seoRows.push(["Authority Score", String(seo.score)]);
+        if (seo.score) seoRows.push(["Authority Score", `${seo.score}%`]);
+        if (seo.impressions) seoRows.push(["Search Impressions", Number(seo.impressions).toLocaleString()]);
+        if (seo.clicks) seoRows.push(["Search Clicks", Number(seo.clicks).toLocaleString()]);
+        if (seo.speed) seoRows.push(["Page Speed", String(seo.speed)]);
         if (seo.rank) seoRows.push(["Keyword / Rank", seo.rank]);
-        if (seo.visits) seoRows.push(["Website Visits", String(seo.visits)]);
+        if (seo.visits) seoRows.push(["Website Visits", Number(seo.visits).toLocaleString()]);
         if (seo.bounce) seoRows.push(["Bounce Rate", `${seo.bounce}%`]);
         if (seo.notes) seoRows.push(["Technical Notes", seo.notes]);
 
@@ -362,8 +467,10 @@ export async function generateReportPdf(report: any, metrics: any) {
     }
 
     // ─── EMAIL MARKETING ─────────────────────────────────────────────────────
-    const em = metrics.emailMarketing;
-    if (em && (em.emailsSent > 0 || em.openRate > 0)) {
+    const emailCampaigns: any[] = metrics.emailCampaigns || (metrics.emailMarketing ? [metrics.emailMarketing] : []);
+    const hasEmail = emailCampaigns.length > 0 && emailCampaigns.some((e: any) => (e.emailsSent || 0) > 0 || (e.openRate || 0) > 0);
+
+    if (hasEmail) {
         checkPage(26);
         doc.setTextColor(DARK[0], DARK[1], DARK[2]);
         doc.setFontSize(11);
@@ -371,23 +478,71 @@ export async function generateReportPdf(report: any, metrics: any) {
         doc.text("EMAIL MARKETING", margin, y);
         y += 7;
 
-        const emRows: [string, string][] = [];
-        if (em.emailsSent) emRows.push(["Emails Sent", em.emailsSent.toLocaleString()]);
-        if (em.openRate) emRows.push(["Open Rate", `${em.openRate}%`]);
-        if (em.clickRate) emRows.push(["Click Rate", `${em.clickRate}%`]);
-        if (em.unsubscribes) emRows.push(["Unsubscribes", String(em.unsubscribes)]);
-        if (em.conversionRate) emRows.push(["Conversion Rate", `${em.conversionRate}%`]);
+        // Totals
+        const totalSent = emailCampaigns.reduce((s: number, c: any) => s + (Number(c.emailsSent) || 0), 0);
+        const avgOpen = emailCampaigns.reduce((s: number, c: any) => s + (Number(c.openRate) || 0), 0) / emailCampaigns.length;
+        const avgClick = emailCampaigns.reduce((s: number, c: any) => s + (Number(c.clickRate) || 0), 0) / emailCampaigns.length;
+
+        const emSummary: [string, string][] = [
+            ["Total Emails Sent", totalSent.toLocaleString()],
+            ["Avg. Open Rate", `${avgOpen.toFixed(1)}%`],
+            ["Avg. Click Rate", `${avgClick.toFixed(1)}%`],
+        ];
 
         autoTable(doc, {
             startY: y,
-            body: emRows,
+            body: emSummary,
             styles: { fontSize: 9, cellPadding: 4 },
             columnStyles: { 0: { fontStyle: "bold", fillColor: LGRAY, cellWidth: 52, textColor: MGRAY } },
             margin: { left: margin, right: margin },
             theme: "plain",
         });
+        y = (doc as any).lastAutoTable.finalY + 6;
 
-        y = (doc as any).lastAutoTable.finalY + 10;
+        // Per-campaign breakdown
+        if (emailCampaigns.length > 1) {
+            for (const camp of emailCampaigns) {
+                if (!camp.emailsSent && !camp.openRate) continue;
+                checkPage(18);
+                doc.setFillColor(255, 241, 242);
+                doc.roundedRect(margin, y, cW, 7, 1, 1, "F");
+                doc.setTextColor(185, 28, 28);
+                doc.setFontSize(7);
+                doc.setFont("helvetica", "bold");
+                doc.text((camp.name || "Campaign").toUpperCase(), margin + 3, y + 4.5);
+                y += 9;
+
+                const campRows: [string, string][] = [];
+                if (camp.emailsSent) campRows.push(["Sent", Number(camp.emailsSent).toLocaleString()]);
+                if (camp.openRate) campRows.push(["Open Rate", `${camp.openRate}%`]);
+                if (camp.clickRate) campRows.push(["Click Rate", `${camp.clickRate}%`]);
+                if (camp.unsubscribes) campRows.push(["Unsubscribes", String(camp.unsubscribes)]);
+
+                const campChunked: [string, string][][] = [];
+                for (let i = 0; i < campRows.length; i += 2) {
+                    campChunked.push(campRows.slice(i, i + 2) as [string, string][]);
+                }
+                for (const chunk of campChunked) {
+                    checkPage(10);
+                    chunk.forEach(([label, value], ci) => {
+                        const bx = margin + ci * (cW / 2 + 1.5);
+                        doc.setFillColor(255, 247, 247);
+                        doc.roundedRect(bx, y, cW / 2 - 1.5, 10, 1, 1, "F");
+                        doc.setTextColor(MGRAY[0], MGRAY[1], MGRAY[2]);
+                        doc.setFontSize(5.5);
+                        doc.setFont("helvetica", "bold");
+                        doc.text(label.toUpperCase(), bx + 3, y + 3.5);
+                        doc.setTextColor(DARK[0], DARK[1], DARK[2]);
+                        doc.setFontSize(8.5);
+                        doc.text(value, bx + 3, y + 8);
+                    });
+                    y += 12;
+                }
+                y += 4;
+            }
+        }
+
+        y += 4;
     }
 
     // ─── WEBSITE PERFORMANCE ─────────────────────────────────────────────────
