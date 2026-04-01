@@ -492,68 +492,123 @@ export function ReportClientView({ report, metrics, role, previousMetrics }: { r
                 </div>
             </div>
 
-            {/* Global Performance Matrix — Row 1 */}
-            <div className={`grid gap-4 grid-cols-2 md:grid-cols-${hasEmail ? '5' : '4'} ${isRtl ? 'flex-row-reverse' : ''}`}>
-                {[
-                    { label: t("reports.impressions"), value: globalTotals.impressions, color: 'bg-primary/5', sub: t("common.combined"), subColor: 'text-emerald-500', icon: <TrendingUp className="h-3 w-3" />, momKey: 'impressions' as const },
-                    { label: t("reports.engagements"), value: globalTotals.engagement, color: 'bg-blue-500/5', sub: t("reports.interactions"), subColor: 'text-blue-500', icon: null, momKey: 'engagement' as const },
-                    { label: t("reports.growth"), value: globalTotals.followers, color: 'bg-purple-500/5', sub: t("reports.new_followers"), subColor: 'text-purple-500', icon: null, momKey: 'followers' as const },
-                    { label: t("reports.investment"), value: globalTotals.spend, rawValue: `SAR ${(globalTotals.spend).toLocaleString()}`, color: 'bg-orange-500/5', sub: t("reports.paid_media"), subColor: 'text-orange-500', icon: <DollarSign className="h-3 w-3" />, momKey: 'spend' as const },
-                    ...(hasEmail ? [{ label: isRtl ? 'البريد الإلكتروني' : 'Email Marketing', value: emailTotals.emailsSent, color: 'bg-rose-500/5', sub: isRtl ? `فتح ${emailTotals.openRate.toFixed(0)}%` : `${emailTotals.openRate.toFixed(0)}% Open Rate`, subColor: 'text-rose-500', icon: <Mail className="h-3 w-3" />, momKey: null }] : []),
-                ].map((card) => {
-                    const delta = card.momKey ? getMoMDelta(card.value || 0, prevGlobal, (m) => m[card.momKey!] || 0) : null;
-                    const isUp = delta?.startsWith('+');
-                    return (
-                        <Card key={card.label} className={`${card.color} border-none shadow-none`}>
-                            <CardHeader className={`pb-2 ${isRtl ? 'text-right' : 'text-left'}`}>
-                                <CardTitle className="section-label text-muted-foreground">{card.label}</CardTitle>
-                            </CardHeader>
-                            <CardContent className={isRtl ? 'text-right' : 'text-left'}>
-                                <div className="text-2xl md:text-4xl font-bold italic">{card.rawValue ?? (card.value || 0).toLocaleString()}</div>
-                                <div className={`text-[10px] font-bold mt-2 flex items-center gap-1 ${card.subColor} ${isRtl ? 'flex-row-reverse' : ''}`}>
-                                    {(card as any).icon}{card.sub}
-                                </div>
-                                {delta && (
-                                    <div className={`mt-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${isUp ? 'bg-emerald-500/10 text-emerald-500' : 'bg-red-500/10 text-red-500'}`}>
-                                        {isUp ? '↑' : '↓'} {delta} {isRtl ? 'مقارنة بالشهر الماضي' : 'vs last month'}
-                                    </div>
-                                )}
-                            </CardContent>
-                        </Card>
-                    );
-                })}
-            </div>
-
-            {/* Global Performance Matrix — Row 2: extra metrics when available */}
-            {(hasViews || hasPaidReach || hasConversions) && (
-                <div className={`grid gap-4 grid-cols-2 md:grid-cols-${[hasViews, hasPaidReach, hasConversions].filter(Boolean).length} mt-0`}>
+            {/* ── ORGANIC OVERVIEW ── */}
+            <div className="space-y-4">
+                <div className={`flex items-center gap-3 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                    <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 px-4 py-1.5 rounded-full">
+                        <TrendingUp className="h-4 w-4" />
+                        <span className="text-sm font-bold tracking-wide uppercase">{isRtl ? 'الأداء العضوي' : 'Organic Overview'}</span>
+                    </div>
+                    <div className="flex-1 h-px bg-border/40" />
+                </div>
+                <div className={`grid gap-4 grid-cols-2 ${[globalTotals.impressions > 0, true, true, hasViews, hasEmail].filter(Boolean).length >= 4 ? 'md:grid-cols-4' : 'md:grid-cols-3'}`}>
+                    {globalTotals.impressions > 0 && (() => {
+                        const delta = getMoMDelta(globalTotals.impressions, prevGlobal, (m) => m.impressions || 0);
+                        const isUp = delta?.startsWith('+');
+                        return (
+                            <Card className="bg-emerald-500/5 border border-emerald-500/10 shadow-none">
+                                <CardHeader className={`pb-2 ${isRtl ? 'text-right' : 'text-left'}`}><CardTitle className="section-label text-muted-foreground">{t("reports.impressions")}</CardTitle></CardHeader>
+                                <CardContent className={isRtl ? 'text-right' : 'text-left'}>
+                                    <div className="text-2xl md:text-4xl font-bold italic text-emerald-500">{globalTotals.impressions.toLocaleString()}</div>
+                                    <div className="text-[10px] font-bold mt-2 text-emerald-500 flex items-center gap-1"><TrendingUp className="h-3 w-3" />{t("common.combined")}</div>
+                                    {delta && <div className={`mt-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${isUp ? 'bg-emerald-500/10 text-emerald-500' : 'bg-red-500/10 text-red-500'}`}>{isUp ? '↑' : '↓'} {delta} {isRtl ? 'مقارنة بالشهر الماضي' : 'vs last month'}</div>}
+                                </CardContent>
+                            </Card>
+                        );
+                    })()}
+                    {(() => {
+                        const delta = getMoMDelta(globalTotals.engagement, prevGlobal, (m) => m.engagement || 0);
+                        const isUp = delta?.startsWith('+');
+                        return (
+                            <Card className="bg-blue-500/5 border border-blue-500/10 shadow-none">
+                                <CardHeader className={`pb-2 ${isRtl ? 'text-right' : 'text-left'}`}><CardTitle className="section-label text-muted-foreground">{t("reports.engagements")}</CardTitle></CardHeader>
+                                <CardContent className={isRtl ? 'text-right' : 'text-left'}>
+                                    <div className="text-2xl md:text-4xl font-bold italic text-blue-500">{globalTotals.engagement.toLocaleString()}</div>
+                                    <div className="text-[10px] font-bold mt-2 text-blue-500">{t("reports.interactions")}</div>
+                                    {delta && <div className={`mt-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${isUp ? 'bg-emerald-500/10 text-emerald-500' : 'bg-red-500/10 text-red-500'}`}>{isUp ? '↑' : '↓'} {delta} {isRtl ? 'مقارنة بالشهر الماضي' : 'vs last month'}</div>}
+                                </CardContent>
+                            </Card>
+                        );
+                    })()}
+                    {(() => {
+                        const delta = getMoMDelta(globalTotals.followers, prevGlobal, (m) => m.followers || 0);
+                        const isUp = delta?.startsWith('+');
+                        return (
+                            <Card className="bg-purple-500/5 border border-purple-500/10 shadow-none">
+                                <CardHeader className={`pb-2 ${isRtl ? 'text-right' : 'text-left'}`}><CardTitle className="section-label text-muted-foreground">{t("reports.growth")}</CardTitle></CardHeader>
+                                <CardContent className={isRtl ? 'text-right' : 'text-left'}>
+                                    <div className="text-2xl md:text-4xl font-bold italic text-purple-500">{globalTotals.followers.toLocaleString()}</div>
+                                    <div className="text-[10px] font-bold mt-2 text-purple-500">{t("reports.new_followers")}</div>
+                                    {delta && <div className={`mt-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${isUp ? 'bg-emerald-500/10 text-emerald-500' : 'bg-red-500/10 text-red-500'}`}>{isUp ? '↑' : '↓'} {delta} {isRtl ? 'مقارنة بالشهر الماضي' : 'vs last month'}</div>}
+                                </CardContent>
+                            </Card>
+                        );
+                    })()}
                     {hasViews && (
-                        <Card className="bg-pink-500/5 border-none shadow-none">
+                        <Card className="bg-pink-500/5 border border-pink-500/10 shadow-none">
                             <CardHeader className={`pb-2 ${isRtl ? 'text-right' : 'text-left'}`}><CardTitle className="section-label text-muted-foreground">{t("common.views")}</CardTitle></CardHeader>
                             <CardContent className={isRtl ? 'text-right' : 'text-left'}>
                                 <div className="text-2xl md:text-4xl font-bold italic text-pink-500">{globalTotals.views.toLocaleString()}</div>
-                                <div className="text-[10px] text-pink-500 font-bold mt-2">{isRtl ? 'تشغيلات الفيديو' : 'Video Plays'}</div>
+                                <div className="text-[10px] font-bold mt-2 text-pink-500">{isRtl ? 'تشغيلات الفيديو' : 'Video Plays'}</div>
                             </CardContent>
                         </Card>
                     )}
-                    {hasPaidReach && (
-                        <Card className="bg-teal-500/5 border-none shadow-none">
-                            <CardHeader className={`pb-2 ${isRtl ? 'text-right' : 'text-left'}`}><CardTitle className="section-label text-muted-foreground">{t("reports.paid_reach")}</CardTitle></CardHeader>
+                    {hasEmail && (
+                        <Card className="bg-rose-500/5 border border-rose-500/10 shadow-none">
+                            <CardHeader className={`pb-2 ${isRtl ? 'text-right' : 'text-left'}`}><CardTitle className="section-label text-muted-foreground">{isRtl ? 'البريد الإلكتروني' : 'Email Marketing'}</CardTitle></CardHeader>
                             <CardContent className={isRtl ? 'text-right' : 'text-left'}>
-                                <div className="text-2xl md:text-4xl font-bold italic text-teal-500">{globalTotals.paidReach.toLocaleString()}</div>
-                                <div className="text-[10px] text-teal-500 font-bold mt-2">{t("reports.targeted_audience")}</div>
+                                <div className="text-2xl md:text-4xl font-bold italic text-rose-500">{emailTotals.emailsSent.toLocaleString()}</div>
+                                <div className="text-[10px] font-bold mt-2 text-rose-500 flex items-center gap-1"><Mail className="h-3 w-3" />{isRtl ? `معدل الفتح ${emailTotals.openRate.toFixed(0)}%` : `${emailTotals.openRate.toFixed(0)}% Open Rate`}</div>
                             </CardContent>
                         </Card>
                     )}
-                    {hasConversions && (
-                        <Card className="bg-rose-500/5 border-none shadow-none">
-                            <CardHeader className={`pb-2 ${isRtl ? 'text-right' : 'text-left'}`}><CardTitle className="section-label text-muted-foreground">{t("reports.conversions")}</CardTitle></CardHeader>
-                            <CardContent className={isRtl ? 'text-right' : 'text-left'}>
-                                <div className="text-2xl md:text-4xl font-bold italic text-rose-500">{globalTotals.conversions.toLocaleString()}</div>
-                                <div className="text-[10px] text-rose-500 font-bold mt-2">{t("reports.completed_actions")}</div>
-                            </CardContent>
-                        </Card>
-                    )}
+                </div>
+            </div>
+
+            {/* ── PAID ADS OVERVIEW ── */}
+            {(hasSpend || hasPaidReach || hasConversions) && (
+                <div className="space-y-4">
+                    <div className={`flex items-center gap-3 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                        <div className="flex items-center gap-2 bg-orange-500/10 border border-orange-500/20 text-orange-500 px-4 py-1.5 rounded-full">
+                            <DollarSign className="h-4 w-4" />
+                            <span className="text-sm font-bold tracking-wide uppercase">{isRtl ? 'الإعلانات المدفوعة' : 'Paid Ads Overview'}</span>
+                        </div>
+                        <div className="flex-1 h-px bg-border/40" />
+                    </div>
+                    <div className={`grid gap-4 grid-cols-2 md:grid-cols-${[hasSpend, hasPaidReach, hasConversions].filter(Boolean).length}`}>
+                        {hasSpend && (() => {
+                            const delta = getMoMDelta(globalTotals.spend, prevGlobal, (m) => m.spend || 0);
+                            const isUp = delta?.startsWith('+');
+                            return (
+                                <Card className="bg-orange-500/5 border border-orange-500/10 shadow-none">
+                                    <CardHeader className={`pb-2 ${isRtl ? 'text-right' : 'text-left'}`}><CardTitle className="section-label text-muted-foreground">{t("reports.investment")}</CardTitle></CardHeader>
+                                    <CardContent className={isRtl ? 'text-right' : 'text-left'}>
+                                        <div className="text-2xl md:text-4xl font-bold italic text-orange-500">SAR {globalTotals.spend.toLocaleString()}</div>
+                                        <div className="text-[10px] font-bold mt-2 text-orange-500 flex items-center gap-1"><DollarSign className="h-3 w-3" />{t("reports.paid_media")}</div>
+                                        {delta && <div className={`mt-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${isUp ? 'bg-emerald-500/10 text-emerald-500' : 'bg-red-500/10 text-red-500'}`}>{isUp ? '↑' : '↓'} {delta} {isRtl ? 'مقارنة بالشهر الماضي' : 'vs last month'}</div>}
+                                    </CardContent>
+                                </Card>
+                            );
+                        })()}
+                        {hasPaidReach && (
+                            <Card className="bg-teal-500/5 border border-teal-500/10 shadow-none">
+                                <CardHeader className={`pb-2 ${isRtl ? 'text-right' : 'text-left'}`}><CardTitle className="section-label text-muted-foreground">{t("reports.paid_reach")}</CardTitle></CardHeader>
+                                <CardContent className={isRtl ? 'text-right' : 'text-left'}>
+                                    <div className="text-2xl md:text-4xl font-bold italic text-teal-500">{globalTotals.paidReach.toLocaleString()}</div>
+                                    <div className="text-[10px] font-bold mt-2 text-teal-500">{t("reports.targeted_audience")}</div>
+                                </CardContent>
+                            </Card>
+                        )}
+                        {hasConversions && (
+                            <Card className="bg-rose-500/5 border border-rose-500/10 shadow-none">
+                                <CardHeader className={`pb-2 ${isRtl ? 'text-right' : 'text-left'}`}><CardTitle className="section-label text-muted-foreground">{t("reports.conversions")}</CardTitle></CardHeader>
+                                <CardContent className={isRtl ? 'text-right' : 'text-left'}>
+                                    <div className="text-2xl md:text-4xl font-bold italic text-rose-500">{globalTotals.conversions.toLocaleString()}</div>
+                                    <div className="text-[10px] font-bold mt-2 text-rose-500">{t("reports.completed_actions")}</div>
+                                </CardContent>
+                            </Card>
+                        )}
+                    </div>
                 </div>
             )}
 
