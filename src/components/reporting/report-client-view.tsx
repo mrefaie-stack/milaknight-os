@@ -72,7 +72,7 @@ export const PLATFORM_METRICS: Record<string, { id: string, labelAr: string, lab
     snapchat: [
         { id: "followers", labelAr: "متابعون جدد", labelEn: "New followers", icon: Users },
         { id: "views", labelAr: "إجمالي المشاهدات", labelEn: "Total views", icon: Eye },
-        { id: "profileVisits", labelAr: "زيارات الملف", labelEn: "Profile views", icon: Eye },
+        { id: "engagement", labelAr: "التفاعلات", labelEn: "Interactions", icon: MousePointer2 },
     ],
     x: [
         { id: "impressions", labelAr: "الظهور", labelEn: "Impressions", icon: Eye },
