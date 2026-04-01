@@ -338,10 +338,14 @@ export function ReportClientView({ report, metrics, role, previousMetrics }: { r
 
     const baseChartData = activePlatforms.map(key => {
         const p = aggregatedPlatforms[key];
-        // Logical mapping: For search/ads, clicks are the primary interaction
         let engagement = Number(p.engagement) || 0;
-        if (['google', 'google_ads', 'google'].includes(key) && engagement === 0) {
+        // Google/Ads: clicks = primary interaction
+        if (['google', 'google_ads'].includes(key) && engagement === 0) {
             engagement = Number(p.clicks) || 0;
+        }
+        // TikTok: no unified engagement field — sum likes + comments + shares
+        if (key === 'tiktok' && engagement === 0) {
+            engagement = (Number(p.likes) || 0) + (Number(p.comments) || 0) + (Number(p.shares) || 0);
         }
 
         return {
