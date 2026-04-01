@@ -2,7 +2,8 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Printer, Facebook, Instagram, Video, Share2, Linkedin, Search, Youtube, TrendingUp, DollarSign, Target, Globe, BarChart3, Send, Mail, Trash2, Download, Loader2, MousePointer2, Zap, MessageSquare, Image as ImageIcon, ExternalLink, Users, Eye, Twitter, Save } from "lucide-react";
+import { Printer, Facebook, Instagram, Video, Share2, Linkedin, Search, Youtube, TrendingUp, DollarSign, Target, Globe, BarChart3, Send, Mail, Trash2, Download, Loader2, MousePointer2, Zap, MessageSquare, Image as ImageIcon, ExternalLink, Users, Eye, Twitter, Save, Info } from "lucide-react";
+import { Tooltip as MetricTooltip, TooltipTrigger as MetricTooltipTrigger, TooltipContent as MetricTooltipContent } from "@/components/ui/tooltip";
 import { Bar, BarChart, Pie, PieChart, Cell, RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, CartesianGrid } from "recharts";
 import { publishReport, requestReportDeletion, submitReportFeedback, approveReportByMM, rejectReportByMM } from "@/app/actions/report";
 import { useState } from "react";
@@ -103,6 +104,19 @@ export const PLATFORM_METRICS: Record<string, { id: string, labelAr: string, lab
 const PLATFORM_COLORS = [
     "text-blue-500", "text-emerald-500", "text-purple-500", "text-pink-500", "text-orange-500", "text-teal-500", "text-rose-500", "text-indigo-500"
 ];
+
+function MetricInfo({ text }: { text: string }) {
+    return (
+        <MetricTooltip>
+            <MetricTooltipTrigger asChild>
+                <Info className="h-3.5 w-3.5 text-muted-foreground/40 cursor-help hover:text-muted-foreground/70 transition-colors flex-shrink-0" />
+            </MetricTooltipTrigger>
+            <MetricTooltipContent className="max-w-[230px] text-center leading-relaxed">
+                {text}
+            </MetricTooltipContent>
+        </MetricTooltip>
+    );
+}
 
 export function ReportClientView({ report, metrics, role, previousMetrics }: { report: any, metrics: any, role: string, previousMetrics?: any }) {
     const { t, isRtl } = useLanguage();
@@ -507,7 +521,12 @@ export function ReportClientView({ report, metrics, role, previousMetrics }: { r
                         const isUp = delta?.startsWith('+');
                         return (
                             <Card className="bg-emerald-500/5 border border-emerald-500/10 shadow-none">
-                                <CardHeader className={`pb-2 ${isRtl ? 'text-right' : 'text-left'}`}><CardTitle className="section-label text-muted-foreground">{t("reports.impressions")}</CardTitle></CardHeader>
+                                <CardHeader className={`pb-2 ${isRtl ? 'text-right' : 'text-left'}`}>
+                                    <div className={`flex items-center gap-1.5 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                                        <CardTitle className="section-label text-muted-foreground">{t("reports.impressions")}</CardTitle>
+                                        <MetricInfo text={isRtl ? 'عدد المرات التي ظهر فيها محتواك أمام الجمهور عبر جميع المنصات' : 'Total times your content was displayed to users across all platforms'} />
+                                    </div>
+                                </CardHeader>
                                 <CardContent className={isRtl ? 'text-right' : 'text-left'}>
                                     <div className="text-2xl md:text-4xl font-bold italic text-emerald-500">{globalTotals.impressions.toLocaleString()}</div>
                                     <div className="text-[10px] font-bold mt-2 text-emerald-500 flex items-center gap-1"><TrendingUp className="h-3 w-3" />{t("common.combined")}</div>
@@ -521,7 +540,12 @@ export function ReportClientView({ report, metrics, role, previousMetrics }: { r
                         const isUp = delta?.startsWith('+');
                         return (
                             <Card className="bg-blue-500/5 border border-blue-500/10 shadow-none">
-                                <CardHeader className={`pb-2 ${isRtl ? 'text-right' : 'text-left'}`}><CardTitle className="section-label text-muted-foreground">{t("reports.engagements")}</CardTitle></CardHeader>
+                                <CardHeader className={`pb-2 ${isRtl ? 'text-right' : 'text-left'}`}>
+                                    <div className={`flex items-center gap-1.5 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                                        <CardTitle className="section-label text-muted-foreground">{t("reports.engagements")}</CardTitle>
+                                        <MetricInfo text={isRtl ? 'مجموع التفاعلات على المحتوى كالإعجابات والتعليقات والمشاركات عبر جميع المنصات' : 'Total likes, comments, shares and interactions on your content across all platforms'} />
+                                    </div>
+                                </CardHeader>
                                 <CardContent className={isRtl ? 'text-right' : 'text-left'}>
                                     <div className="text-2xl md:text-4xl font-bold italic text-blue-500">{globalTotals.engagement.toLocaleString()}</div>
                                     <div className="text-[10px] font-bold mt-2 text-blue-500">{t("reports.interactions")}</div>
@@ -535,7 +559,12 @@ export function ReportClientView({ report, metrics, role, previousMetrics }: { r
                         const isUp = delta?.startsWith('+');
                         return (
                             <Card className="bg-purple-500/5 border border-purple-500/10 shadow-none">
-                                <CardHeader className={`pb-2 ${isRtl ? 'text-right' : 'text-left'}`}><CardTitle className="section-label text-muted-foreground">{t("reports.growth")}</CardTitle></CardHeader>
+                                <CardHeader className={`pb-2 ${isRtl ? 'text-right' : 'text-left'}`}>
+                                    <div className={`flex items-center gap-1.5 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                                        <CardTitle className="section-label text-muted-foreground">{t("reports.growth")}</CardTitle>
+                                        <MetricInfo text={isRtl ? 'عدد المتابعين الجدد الذين انضموا لحساباتك خلال هذا الشهر عبر جميع المنصات' : 'New followers gained across all your accounts this month'} />
+                                    </div>
+                                </CardHeader>
                                 <CardContent className={isRtl ? 'text-right' : 'text-left'}>
                                     <div className="text-2xl md:text-4xl font-bold italic text-purple-500">{globalTotals.followers.toLocaleString()}</div>
                                     <div className="text-[10px] font-bold mt-2 text-purple-500">{t("reports.new_followers")}</div>
@@ -546,7 +575,12 @@ export function ReportClientView({ report, metrics, role, previousMetrics }: { r
                     })()}
                     {hasViews && (
                         <Card className="bg-pink-500/5 border border-pink-500/10 shadow-none">
-                            <CardHeader className={`pb-2 ${isRtl ? 'text-right' : 'text-left'}`}><CardTitle className="section-label text-muted-foreground">{t("common.views")}</CardTitle></CardHeader>
+                            <CardHeader className={`pb-2 ${isRtl ? 'text-right' : 'text-left'}`}>
+                                <div className={`flex items-center gap-1.5 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                                    <CardTitle className="section-label text-muted-foreground">{t("common.views")}</CardTitle>
+                                    <MetricInfo text={isRtl ? 'إجمالي مرات مشاهدة مقاطع الفيديو عبر جميع المنصات' : 'Total video plays across all platforms'} />
+                                </div>
+                            </CardHeader>
                             <CardContent className={isRtl ? 'text-right' : 'text-left'}>
                                 <div className="text-2xl md:text-4xl font-bold italic text-pink-500">{globalTotals.views.toLocaleString()}</div>
                                 <div className="text-[10px] font-bold mt-2 text-pink-500">{isRtl ? 'تشغيلات الفيديو' : 'Video Plays'}</div>
@@ -555,7 +589,12 @@ export function ReportClientView({ report, metrics, role, previousMetrics }: { r
                     )}
                     {hasEmail && (
                         <Card className="bg-rose-500/5 border border-rose-500/10 shadow-none">
-                            <CardHeader className={`pb-2 ${isRtl ? 'text-right' : 'text-left'}`}><CardTitle className="section-label text-muted-foreground">{isRtl ? 'البريد الإلكتروني' : 'Email Marketing'}</CardTitle></CardHeader>
+                            <CardHeader className={`pb-2 ${isRtl ? 'text-right' : 'text-left'}`}>
+                                <div className={`flex items-center gap-1.5 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                                    <CardTitle className="section-label text-muted-foreground">{isRtl ? 'البريد الإلكتروني' : 'Email Marketing'}</CardTitle>
+                                    <MetricInfo text={isRtl ? 'عدد رسائل البريد الإلكتروني المرسلة ومعدل الفتح خلال هذه الفترة' : 'Total emails sent and the percentage of recipients who opened them'} />
+                                </div>
+                            </CardHeader>
                             <CardContent className={isRtl ? 'text-right' : 'text-left'}>
                                 <div className="text-2xl md:text-4xl font-bold italic text-rose-500">{emailTotals.emailsSent.toLocaleString()}</div>
                                 <div className="text-[10px] font-bold mt-2 text-rose-500 flex items-center gap-1"><Mail className="h-3 w-3" />{isRtl ? `معدل الفتح ${emailTotals.openRate.toFixed(0)}%` : `${emailTotals.openRate.toFixed(0)}% Open Rate`}</div>
@@ -581,7 +620,12 @@ export function ReportClientView({ report, metrics, role, previousMetrics }: { r
                             const isUp = delta?.startsWith('+');
                             return (
                                 <Card className="bg-orange-500/5 border border-orange-500/10 shadow-none">
-                                    <CardHeader className={`pb-2 ${isRtl ? 'text-right' : 'text-left'}`}><CardTitle className="section-label text-muted-foreground">{t("reports.investment")}</CardTitle></CardHeader>
+                                    <CardHeader className={`pb-2 ${isRtl ? 'text-right' : 'text-left'}`}>
+                                        <div className={`flex items-center gap-1.5 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                                            <CardTitle className="section-label text-muted-foreground">{t("reports.investment")}</CardTitle>
+                                            <MetricInfo text={isRtl ? 'إجمالي الميزانية الإعلانية المنفقة على جميع الحملات المدفوعة خلال هذه الفترة' : 'Total ad budget spent across all paid campaigns this period'} />
+                                        </div>
+                                    </CardHeader>
                                     <CardContent className={isRtl ? 'text-right' : 'text-left'}>
                                         <div className="text-2xl md:text-4xl font-bold italic text-orange-500">SAR {globalTotals.spend.toLocaleString()}</div>
                                         <div className="text-[10px] font-bold mt-2 text-orange-500 flex items-center gap-1"><DollarSign className="h-3 w-3" />{t("reports.paid_media")}</div>
@@ -592,7 +636,12 @@ export function ReportClientView({ report, metrics, role, previousMetrics }: { r
                         })()}
                         {hasPaidReach && (
                             <Card className="bg-teal-500/5 border border-teal-500/10 shadow-none">
-                                <CardHeader className={`pb-2 ${isRtl ? 'text-right' : 'text-left'}`}><CardTitle className="section-label text-muted-foreground">{t("reports.paid_reach")}</CardTitle></CardHeader>
+                                <CardHeader className={`pb-2 ${isRtl ? 'text-right' : 'text-left'}`}>
+                                    <div className={`flex items-center gap-1.5 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                                        <CardTitle className="section-label text-muted-foreground">{t("reports.paid_reach")}</CardTitle>
+                                        <MetricInfo text={isRtl ? 'عدد الأشخاص الفريدين الذين شاهدوا إعلاناتك المدفوعة مرة واحدة على الأقل' : 'Unique people who saw your paid ads at least once'} />
+                                    </div>
+                                </CardHeader>
                                 <CardContent className={isRtl ? 'text-right' : 'text-left'}>
                                     <div className="text-2xl md:text-4xl font-bold italic text-teal-500">{globalTotals.paidReach.toLocaleString()}</div>
                                     <div className="text-[10px] font-bold mt-2 text-teal-500">{t("reports.targeted_audience")}</div>
@@ -601,7 +650,12 @@ export function ReportClientView({ report, metrics, role, previousMetrics }: { r
                         )}
                         {hasConversions && (
                             <Card className="bg-rose-500/5 border border-rose-500/10 shadow-none">
-                                <CardHeader className={`pb-2 ${isRtl ? 'text-right' : 'text-left'}`}><CardTitle className="section-label text-muted-foreground">{t("reports.conversions")}</CardTitle></CardHeader>
+                                <CardHeader className={`pb-2 ${isRtl ? 'text-right' : 'text-left'}`}>
+                                    <div className={`flex items-center gap-1.5 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                                        <CardTitle className="section-label text-muted-foreground">{t("reports.conversions")}</CardTitle>
+                                        <MetricInfo text={isRtl ? 'عدد الإجراءات المكتملة من خلال الإعلانات كعمليات الشراء والتسجيل والطلبات' : 'Completed actions driven by ads such as purchases, sign-ups or orders'} />
+                                    </div>
+                                </CardHeader>
                                 <CardContent className={isRtl ? 'text-right' : 'text-left'}>
                                     <div className="text-2xl md:text-4xl font-bold italic text-rose-500">{globalTotals.conversions.toLocaleString()}</div>
                                     <div className="text-[10px] font-bold mt-2 text-rose-500">{t("reports.completed_actions")}</div>
