@@ -306,7 +306,6 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
     const { t, isRtl } = useLanguage();
     const [loading, setLoading] = useState(false);
     const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
-    const [systemSummaries, setSystemSummaries] = useState<{ ar: string; en: string } | null>(null);
     const [scheduledSendAt, setScheduledSendAt] = useState(initialData?.scheduledSendAt ? new Date(initialData.scheduledSendAt).toISOString().split('T')[0] : "");
     const router = useRouter();
 
@@ -331,7 +330,8 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                 campaigns: [{ id: "main", name: isRtl ? "الحملة الرئيسية" : "Main Campaign", platforms: {}, linkedItems: [] }],
                 emailMarketing: { emailsSent: 0, openRate: 0, clickRate: 0, unsubscribes: 0 },
                 seo: { score: 0, rank: "", notes: "", speed: 0, mobile: 0 },
-                summary: ""
+                summaryAr: "",
+                summaryEn: ""
             };
         }
 
@@ -346,7 +346,8 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                         : {})
                 },
                 seo: raw.seo || { score: 0, rank: "", notes: "", speed: 0, mobile: 0 },
-                summary: raw.summary || ""
+                summaryAr: raw.summaryAr || "",
+                summaryEn: raw.summaryEn || ""
             };
         }
 
@@ -377,7 +378,7 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
             });
             if (raw.emailMarketing?.campaigns?.length > 0 || raw.emailMarketing?.emailsSent > 0) active.push('email');
             if (raw.seo?.score > 0 || raw.seo?.clicks > 0 || raw.seo?.impressions > 0) active.push('seo');
-            if (raw.summary && raw.summary.length > 0) active.push('summary');
+            if ((raw.summaryAr && raw.summaryAr.length > 0) || (raw.summaryEn && raw.summaryEn.length > 0) || (raw.summary && raw.summary.length > 0)) active.push('summary');
             return active.length > 0 ? active : ["facebook", "instagram", "summary"];
         }
         return ["facebook", "instagram", "summary"];
@@ -626,7 +627,8 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
 
         const finalMetrics = {
             ...metrics,
-            summary: formData.get("summary") as string,
+            summaryAr: metrics.summaryAr || "",
+            summaryEn: metrics.summaryEn || "",
             totals
         };
 
@@ -1055,9 +1057,8 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                                             type="button"
                                             onClick={() => {
                                                 const result = buildSystemSummary(metrics);
-                                                setSystemSummaries(result);
-                                                setMetrics((prev: any) => ({ ...prev, summary: isRtl ? result.ar : result.en }));
-                                                toast.success(isRtl ? "تم توليد الملخص من البيانات" : "Summary generated from data");
+                                                setMetrics((prev: any) => ({ ...prev, summaryAr: result.ar, summaryEn: result.en }));
+                                                toast.success(isRtl ? "تم توليد الملخص من البيانات بالعربي والإنجليزي" : "Summary generated from data in both languages");
                                             }}
                                             className="h-10 px-4 rounded-xl bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 hover:bg-emerald-500/20 font-semibold text-xs"
                                         >
@@ -1071,8 +1072,7 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                                                 setIsGeneratingSummary(true);
                                                 try {
                                                     const result = await generateReportSummary(metrics, currentClientId || undefined);
-                                                    setMetrics((prev: any) => ({ ...prev, summary: isRtl ? result.summaryAr : result.summaryEn }));
-                                                    setSystemSummaries(null);
+                                                    setMetrics((prev: any) => ({ ...prev, summaryAr: result.summaryAr, summaryEn: result.summaryEn }));
                                                     toast.success(isRtl ? "تم توليد الملخص بالذكاء الاصطناعي" : "AI summary generated");
                                                 } catch (err) {
                                                     toast.error("Failed to generate summary");
@@ -1088,44 +1088,39 @@ export function ReportCreatorClient({ clients, initialData }: { clients: any[], 
                                         </Button>
                                     </div>
                                 </div>
-                                {/* Language toggle — shown after system-generate */}
-                                {systemSummaries && (
-                                    <div className={`flex items-center gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
-                                        <span className="text-xs text-muted-foreground font-medium">{isRtl ? 'عرض الملخص بـ:' : 'Show summary in:'}</span>
-                                        <div className="flex rounded-lg border border-border overflow-hidden">
-                                            <button
-                                                type="button"
-                                                onClick={() => setMetrics((prev: any) => ({ ...prev, summary: systemSummaries.ar }))}
-                                                className={`px-4 py-1.5 text-xs font-bold transition-colors ${metrics.summary === systemSummaries.ar ? 'bg-primary text-primary-foreground' : 'hover:bg-muted/50 text-muted-foreground'}`}
-                                            >
-                                                عربي
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => setMetrics((prev: any) => ({ ...prev, summary: systemSummaries.en }))}
-                                                className={`px-4 py-1.5 text-xs font-bold transition-colors border-r border-border ${metrics.summary === systemSummaries.en ? 'bg-primary text-primary-foreground' : 'hover:bg-muted/50 text-muted-foreground'}`}
-                                            >
-                                                English
-                                            </button>
-                                        </div>
-                                    </div>
-                                )}
                             </CardHeader>
                             <CardContent className="p-8">
-                                <div className="space-y-4">
-                                    <p className={`text-sm text-muted-foreground font-semibold ${isRtl ? 'text-right' : ''}`}>
-                                        {isRtl ? 'هذا الملخص يظهر في أعلى التقرير وهو أول ما يقرأه العميل. احرص على أن يعكس الإنجازات الرئيسية والتوصيات الاستراتيجية بوضوح.' : 'This summary appears at the top of the report and is the first thing the client reads. Make sure it reflects key achievements and strategic recommendations.'}
-                                    </p>
-                                    <textarea
-                                        name="summary"
-                                        rows={10}
-                                        required
-                                        value={metrics.summary || ""}
-                                        onChange={(e) => setMetrics((prev: any) => ({ ...prev, summary: e.target.value }))}
-                                        className={`flex w-full rounded-xl border border-border bg-background/50 p-6 text-base font-medium shadow-inner focus:border-primary/50 focus:ring-primary/20 transition-all outline-none leading-relaxed ${isRtl ? 'text-right' : ''}`}
-                                        placeholder={isRtl ? "ملخص أداء هذا الشهر، النتائج الاستراتيجية للمنصات والموقع، وتوصيات الشهر القادم..." : "Summary of this month's performance, strategic results for platforms and website, and recommendations for next month..."}
-                                        dir={isRtl ? 'rtl' : 'ltr'}
-                                    />
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                    {/* Arabic */}
+                                    <div className="space-y-2">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">العربية</span>
+                                            <div className="flex-1 h-px bg-border/40" />
+                                        </div>
+                                        <textarea
+                                            rows={12}
+                                            value={metrics.summaryAr || ""}
+                                            onChange={(e) => setMetrics((prev: any) => ({ ...prev, summaryAr: e.target.value }))}
+                                            className="flex w-full rounded-xl border border-border bg-background/50 p-5 text-sm font-medium shadow-inner focus:border-primary/50 transition-all outline-none leading-relaxed text-right"
+                                            placeholder="ملخص أداء هذا الشهر، النتائج الاستراتيجية والتوصيات..."
+                                            dir="rtl"
+                                        />
+                                    </div>
+                                    {/* English */}
+                                    <div className="space-y-2">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">English</span>
+                                            <div className="flex-1 h-px bg-border/40" />
+                                        </div>
+                                        <textarea
+                                            rows={12}
+                                            value={metrics.summaryEn || ""}
+                                            onChange={(e) => setMetrics((prev: any) => ({ ...prev, summaryEn: e.target.value }))}
+                                            className="flex w-full rounded-xl border border-border bg-background/50 p-5 text-sm font-medium shadow-inner focus:border-primary/50 transition-all outline-none leading-relaxed"
+                                            placeholder="Summary of this month's performance, strategic results and recommendations..."
+                                            dir="ltr"
+                                        />
+                                    </div>
                                 </div>
                             </CardContent>
                         </Card>
