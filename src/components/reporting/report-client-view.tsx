@@ -348,13 +348,19 @@ export function ReportClientView({ report, metrics, role, previousMetrics }: { r
             engagement = (Number(p.likes) || 0) + (Number(p.comments) || 0) + (Number(p.shares) || 0);
         }
 
+        // Facebook stores "Views" as impressions — map to views so it appears in Video Views chart
+        let views = Number(p.views) || 0;
+        if (key === 'facebook' && views === 0) {
+            views = Number(p.impressions) || 0;
+        }
+
         return {
             key,
             name: PLATFORM_NAMES[key as keyof typeof PLATFORM_NAMES] || key,
             impressions: Number(p.impressions) || 0,
             engagement,
             followers: Number(p.followers) || 0,
-            views: Number(p.views) || 0,
+            views,
             spend: getPlatformSpend(p),
             paidReach: Number(p.paidReach) || 0,
             conversions: getPlatformResults(p),
