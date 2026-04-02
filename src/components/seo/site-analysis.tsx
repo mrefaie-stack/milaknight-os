@@ -6,12 +6,18 @@ import {
     Globe, Search, Loader2, ChevronDown, ChevronUp, Download,
     AlertCircle, AlertTriangle, Info, CheckCircle2, Zap,
     Shield, Code2, Link2, Image, FileText, BarChart3,
-    Share2, Database, MapPin, RefreshCw
+    Share2, Database, MapPin, RefreshCw, Copy, Check,
+    TrendingUp, TrendingDown, Minus, Eye, Activity,
+    Lock, Layers, Server, Wifi, FileCode, ListChecks,
+    Filter
 } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import type { SiteAnalysisResponse, SiteIssue, CategoryResult } from "@/app/api/seo/site-analysis/route";
+import type {
+    SiteAnalysisResponse, SiteIssue, CategoryResult,
+    QuickWin, SerpPreview, PerformanceSignals
+} from "@/app/api/seo/site-analysis/route";
 
 // ─────────────────────────── helpers ────────────────────────────────────────
 
@@ -23,8 +29,19 @@ function scoreColor(score: number) {
 }
 
 function gradeColor(grade: string) {
-    const map: Record<string, string> = { A: "text-green-500 border-green-500", B: "text-blue-500 border-blue-500", C: "text-yellow-500 border-yellow-500", D: "text-orange-500 border-orange-500", F: "text-red-500 border-red-500" };
-    return map[grade] || "text-gray-500 border-gray-500";
+    const map: Record<string, string> = {
+        A: "text-green-500 border-green-500 bg-green-500/10",
+        B: "text-blue-500 border-blue-500 bg-blue-500/10",
+        C: "text-yellow-500 border-yellow-500 bg-yellow-500/10",
+        D: "text-orange-500 border-orange-500 bg-orange-500/10",
+        F: "text-red-500 border-red-500 bg-red-500/10"
+    };
+    return map[grade] || "text-gray-500 border-gray-500 bg-gray-500/10";
+}
+
+function gradeLabel(grade: string) {
+    const map: Record<string, string> = { A: "Excellent", B: "Good", C: "Average", D: "Poor", F: "Critical" };
+    return map[grade] || "Unknown";
 }
 
 function severityConfig(severity: SiteIssue["severity"]) {
@@ -39,28 +56,49 @@ function severityConfig(severity: SiteIssue["severity"]) {
 
 function categoryIcon(name: string) {
     const map: Record<string, any> = {
-        "Crawlability": Globe,
-        "On-Page": FileText,
-        "Content": BarChart3,
-        "Technical": Code2,
-        "Structured Data": Database,
-        "Social": Share2,
-        "Security": Shield,
-        "Links": Link2,
-        "Images": Image,
+        "Crawlability":     Globe,
+        "On-Page":          FileText,
+        "Content":          BarChart3,
+        "Technical":        Code2,
+        "Links":            Link2,
+        "Performance":      Activity,
+        "Structured Data":  Database,
+        "Social":           Share2,
+        "Security":         Shield,
         "Internationalization": MapPin,
     };
     return map[name] || FileText;
 }
 
 function categoryScore(cat: CategoryResult) {
-    const score = Math.max(0, 100 - cat.errors * 5 - cat.warnings * 2 - cat.notices * 0.5);
-    return Math.round(score);
+    const total = cat.errors + cat.warnings + cat.notices + cat.passed;
+    if (total === 0) return 100;
+    return Math.max(0, Math.round(100 - cat.errors * 5 - cat.warnings * 2 - cat.notices * 0.5));
+}
+
+// ─────────────────────────── Copy Button ────────────────────────────────────
+
+function CopyButton({ text }: { text: string }) {
+    const [copied, setCopied] = useState(false);
+    const copy = () => {
+        navigator.clipboard.writeText(text);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    };
+    return (
+        <button
+            onClick={copy}
+            className="shrink-0 h-7 w-7 rounded-md flex items-center justify-center bg-muted/80 hover:bg-muted transition-colors"
+            title="Copy code"
+        >
+            {copied ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5 text-muted-foreground" />}
+        </button>
+    );
 }
 
 // ─────────────────────────── Gauge SVG ──────────────────────────────────────
 
-function ScoreGauge({ score, grade }: { score: number; grade: string }) {
+function ScoreGauge({ score }: { score: number }) {
     const radius = 58;
     const circumference = 2 * Math.PI * radius;
     const offset = circumference * (1 - score / 100);
@@ -87,19 +125,24 @@ function ScoreGauge({ score, grade }: { score: number; grade: string }) {
     );
 }
 
-// ─────────────────────────── Issue row ──────────────────────────────────────
+// ─────────────────────────── Issue Row ──────────────────────────────────────
 
 function IssueRow({ issue }: { issue: SiteIssue }) {
     const [open, setOpen] = useState(false);
     const cfg = severityConfig(issue.severity);
     const Icon = cfg.icon;
+
     if (issue.severity === "pass") return (
         <div className={`flex items-center gap-3 px-4 py-2.5 rounded-lg ${cfg.bg} border ${cfg.border}`}>
             <Icon className={`h-4 w-4 shrink-0 ${cfg.color}`} />
             <span className="text-sm font-medium flex-1">{issue.title}</span>
+            {issue.affectedCount !== undefined && issue.affectedCount > 0 && (
+                <span className="text-xs text-muted-foreground">{issue.affectedCount} affected</span>
+            )}
             <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${cfg.badge}`}>Passed</span>
         </div>
     );
+
     return (
         <div className={`rounded-lg border ${cfg.border} overflow-hidden`}>
             <button
@@ -109,10 +152,16 @@ function IssueRow({ issue }: { issue: SiteIssue }) {
                 <Icon className={`h-4 w-4 shrink-0 ${cfg.color}`} />
                 <div className="flex-1 min-w-0">
                     <span className="text-sm font-semibold">{issue.title}</span>
-                    <p className="text-xs text-muted-foreground mt-0.5 truncate">{issue.description}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{issue.description}</p>
                 </div>
-                <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold shrink-0 ${cfg.badge}`}>{cfg.label}</span>
-                {open ? <ChevronUp className="h-4 w-4 text-muted-foreground shrink-0" /> : <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />}
+                <div className="flex items-center gap-2 shrink-0">
+                    {issue.affectedCount !== undefined && issue.affectedCount > 0 && (
+                        <span className="text-xs text-muted-foreground hidden sm:inline">{issue.affectedCount}×</span>
+                    )}
+                    {issue.codeSnippet && <Code2 className="h-3.5 w-3.5 text-muted-foreground/60" title="Has code fix" />}
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${cfg.badge}`}>{cfg.label}</span>
+                    {open ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+                </div>
             </button>
             <AnimatePresence>
                 {open && (
@@ -123,15 +172,26 @@ function IssueRow({ issue }: { issue: SiteIssue }) {
                         transition={{ duration: 0.2 }}
                         className="overflow-hidden"
                     >
-                        <div className="px-4 py-3 border-t border-border/50 space-y-2">
+                        <div className="px-4 py-3 border-t border-border/50 space-y-3">
                             <div>
-                                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Issue</span>
+                                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Issue</span>
                                 <p className="text-sm mt-1">{issue.description}</p>
                             </div>
                             {issue.recommendation && (
                                 <div>
-                                    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">How to Fix</span>
+                                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">How to Fix</span>
                                     <p className="text-sm mt-1 text-emerald-600 dark:text-emerald-400">{issue.recommendation}</p>
+                                </div>
+                            )}
+                            {issue.codeSnippet && (
+                                <div>
+                                    <div className="flex items-center justify-between mb-1">
+                                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Code Fix</span>
+                                        <CopyButton text={issue.codeSnippet} />
+                                    </div>
+                                    <pre className="text-xs bg-muted/60 rounded-lg p-3 overflow-x-auto border border-border/50 font-mono leading-relaxed whitespace-pre-wrap break-all">
+                                        {issue.codeSnippet}
+                                    </pre>
                                 </div>
                             )}
                         </div>
@@ -144,17 +204,23 @@ function IssueRow({ issue }: { issue: SiteIssue }) {
 
 // ─────────────────────────── Category Card ──────────────────────────────────
 
-function CategoryCard({ cat, defaultOpen = false }: { cat: CategoryResult; defaultOpen?: boolean }) {
+type FilterType = "all" | "error" | "warning" | "notice" | "pass";
+
+function CategoryCard({ cat, filterSeverity, defaultOpen = false }: { cat: CategoryResult; filterSeverity: FilterType; defaultOpen?: boolean }) {
     const [open, setOpen] = useState(defaultOpen);
     const Icon = categoryIcon(cat.name);
     const catScore = categoryScore(cat);
     const colors = scoreColor(catScore);
     const hasIssues = cat.errors + cat.warnings + cat.notices > 0;
 
-    const sortedIssues = [...cat.issues].sort((a, b) => {
-        const order = { error: 0, warning: 1, notice: 2, pass: 3 };
-        return order[a.severity] - order[b.severity];
-    });
+    const sortedIssues = [...cat.issues]
+        .filter(i => filterSeverity === "all" || i.severity === filterSeverity)
+        .sort((a, b) => {
+            const order = { error: 0, warning: 1, notice: 2, pass: 3 };
+            return order[a.severity] - order[b.severity];
+        });
+
+    if (filterSeverity !== "all" && sortedIssues.length === 0) return null;
 
     return (
         <div className="rounded-xl border border-border bg-card overflow-hidden">
@@ -166,22 +232,20 @@ function CategoryCard({ cat, defaultOpen = false }: { cat: CategoryResult; defau
                     <Icon className={`h-5 w-5 ${colors.text}`} />
                 </div>
                 <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-semibold">{cat.name}</span>
-                        {hasIssues && (
+                        {hasIssues ? (
                             <div className="flex gap-1">
                                 {cat.errors > 0 && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-red-500/15 text-red-600 font-bold">{cat.errors} err</span>}
                                 {cat.warnings > 0 && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-orange-500/15 text-orange-600 font-bold">{cat.warnings} warn</span>}
                                 {cat.notices > 0 && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-500/15 text-blue-600 font-bold">{cat.notices} notice</span>}
                             </div>
+                        ) : (
+                            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-green-500/15 text-green-600 font-bold">All Passed</span>
                         )}
-                        {!hasIssues && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-green-500/15 text-green-600 font-bold">All Passed</span>}
                     </div>
-                    <div className="mt-1.5 h-1.5 bg-muted rounded-full overflow-hidden w-48">
-                        <div
-                            className="h-full rounded-full transition-all duration-700"
-                            style={{ width: `${catScore}%`, background: colors.stroke }}
-                        />
+                    <div className="mt-1.5 h-1.5 bg-muted rounded-full overflow-hidden w-48 max-w-full">
+                        <div className="h-full rounded-full transition-all duration-700" style={{ width: `${catScore}%`, background: colors.stroke }} />
                     </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
@@ -200,7 +264,10 @@ function CategoryCard({ cat, defaultOpen = false }: { cat: CategoryResult; defau
                         className="overflow-hidden"
                     >
                         <div className="px-4 pb-4 space-y-2 border-t border-border/50 pt-3">
-                            {sortedIssues.map(issue => <IssueRow key={issue.id} issue={issue} />)}
+                            {sortedIssues.length > 0
+                                ? sortedIssues.map(issue => <IssueRow key={issue.id} issue={issue} />)
+                                : <p className="text-sm text-muted-foreground text-center py-2">No issues match current filter</p>
+                            }
                         </div>
                     </motion.div>
                 )}
@@ -209,32 +276,198 @@ function CategoryCard({ cat, defaultOpen = false }: { cat: CategoryResult; defau
     );
 }
 
+// ─────────────────────────── SERP Preview ───────────────────────────────────
+
+function SerpPreviewCard({ serp, url }: { serp: SerpPreview; url: string }) {
+    const hostname = new URL(url).hostname;
+    return (
+        <div className="rounded-2xl border border-border bg-card p-6">
+            <div className="flex items-center gap-2 mb-4">
+                <div className="h-8 w-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                    <Eye className="h-4 w-4 text-blue-500" />
+                </div>
+                <div>
+                    <h3 className="font-bold text-sm">Google SERP Preview</h3>
+                    <p className="text-xs text-muted-foreground">How your page appears in search results</p>
+                </div>
+            </div>
+            <div className="bg-white dark:bg-zinc-950 rounded-xl border border-border/60 p-5 font-sans">
+                {/* Site icon + domain row */}
+                <div className="flex items-center gap-2 mb-1">
+                    <div className="h-5 w-5 rounded-full bg-muted flex items-center justify-center text-[9px] font-bold text-muted-foreground overflow-hidden">
+                        <Globe className="h-3 w-3" />
+                    </div>
+                    <div className="min-w-0">
+                        <div className="text-xs text-gray-700 dark:text-gray-300 font-medium truncate">{hostname}</div>
+                        <div className="text-[10px] text-gray-500 dark:text-gray-500 truncate">{serp.displayUrl}</div>
+                    </div>
+                    <span className="ml-auto text-[10px] border border-gray-300 dark:border-gray-600 rounded px-1.5 py-0.5 text-gray-500">▾</span>
+                </div>
+                {/* Title */}
+                <div className="text-[18px] leading-snug font-normal text-blue-700 dark:text-blue-400 hover:underline cursor-pointer mb-1 truncate">
+                    {serp.title || <span className="text-red-500 italic">(No title tag)</span>}
+                </div>
+                {/* Description */}
+                <div className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed line-clamp-2">
+                    {serp.description || <span className="text-orange-500 italic">(No meta description — Google will auto-generate this from page content)</span>}
+                </div>
+            </div>
+            {/* Length indicators */}
+            <div className="mt-3 flex gap-4 text-xs text-muted-foreground">
+                <div>
+                    Title: <span className={serp.title.length > 60 ? "text-red-500 font-semibold" : serp.title.length < 30 ? "text-orange-500 font-semibold" : "text-green-500 font-semibold"}>
+                        {serp.title.length}/60 chars
+                    </span>
+                </div>
+                <div>
+                    Desc: <span className={serp.description.length > 160 ? "text-red-500 font-semibold" : serp.description.length < 70 ? "text-orange-500 font-semibold" : "text-green-500 font-semibold"}>
+                        {serp.description.length}/160 chars
+                    </span>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// ─────────────────────────── Performance Signals ─────────────────────────────
+
+function PerformancePanel({ perf }: { perf: PerformanceSignals }) {
+    const signals = [
+        { label: "Compression", value: perf.compression, detail: perf.compressionType !== "none" ? perf.compressionType : "disabled", good: perf.compression },
+        { label: "Caching", value: perf.caching, detail: perf.caching ? "enabled" : "no Cache-Control", good: perf.caching },
+        { label: "ETag", value: perf.etag, detail: perf.etag ? "enabled" : "missing", good: perf.etag },
+        { label: "Server Hidden", value: perf.serverHeader === "hidden", detail: perf.serverHeader !== "hidden" ? perf.serverHeader.substring(0, 20) : "hidden ✓", good: perf.serverHeader === "hidden" },
+    ];
+
+    return (
+        <div className="rounded-2xl border border-border bg-card p-6">
+            <div className="flex items-center gap-2 mb-4">
+                <div className="h-8 w-8 rounded-lg bg-violet-500/10 flex items-center justify-center">
+                    <Server className="h-4 w-4 text-violet-500" />
+                </div>
+                <div>
+                    <h3 className="font-bold text-sm">Server & Performance Signals</h3>
+                    <p className="text-xs text-muted-foreground">HTTP headers and resource analysis</p>
+                </div>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                {signals.map(s => (
+                    <div key={s.label} className={`rounded-xl p-3 border ${s.good ? "bg-green-500/5 border-green-500/20" : "bg-red-500/5 border-red-500/20"}`}>
+                        <div className={`text-xs font-bold mb-1 ${s.good ? "text-green-600" : "text-red-500"}`}>
+                            {s.good ? "✓" : "✗"} {s.label}
+                        </div>
+                        <div className="text-xs text-muted-foreground truncate">{s.detail}</div>
+                    </div>
+                ))}
+            </div>
+            <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+                {[
+                    { label: "HTML Size", value: `${perf.htmlSizeKb}KB`, warn: perf.htmlSizeKb > 200 },
+                    { label: "Scripts", value: perf.totalScripts, warn: perf.totalScripts > 15 },
+                    { label: "Blocking Scripts", value: perf.blockingScripts, warn: perf.blockingScripts > 0 },
+                    { label: "Stylesheets", value: perf.totalStylesheets, warn: perf.totalStylesheets > 5 },
+                    { label: "Inline Scripts", value: perf.inlineScripts, warn: perf.inlineScripts > 5 },
+                    { label: "Inline Styles", value: perf.inlineStyles, warn: perf.inlineStyles > 10 },
+                ].map(m => (
+                    <div key={m.label} className="rounded-xl bg-muted/40 p-3 text-center">
+                        <div className={`text-lg font-bold ${m.warn ? "text-orange-500" : "text-foreground"}`}>{m.value}</div>
+                        <div className="text-[10px] text-muted-foreground leading-tight mt-0.5">{m.label}</div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
+// ─────────────────────────── Priority Matrix ─────────────────────────────────
+
+function PriorityMatrix({ wins }: { wins: QuickWin[] }) {
+    const impactOrder = { high: 0, medium: 1, low: 2 };
+    const effortOrder = { easy: 0, medium: 1, hard: 2 };
+
+    const impactColor = (v: string) => ({ high: "text-red-500 bg-red-500/10", medium: "text-orange-500 bg-orange-500/10", low: "text-blue-500 bg-blue-500/10" }[v] || "");
+    const effortColor = (v: string) => ({ easy: "text-green-500 bg-green-500/10", medium: "text-yellow-500 bg-yellow-500/10", hard: "text-red-500 bg-red-500/10" }[v] || "");
+
+    return (
+        <div className="rounded-2xl border border-violet-500/30 bg-gradient-to-br from-violet-500/5 to-purple-500/5 p-6">
+            <div className="flex items-center gap-2 mb-4">
+                <div className="h-8 w-8 rounded-lg bg-violet-500/15 flex items-center justify-center">
+                    <Zap className="h-4 w-4 text-violet-500" />
+                </div>
+                <div>
+                    <h3 className="font-bold">AI Quick Wins</h3>
+                    <p className="text-xs text-muted-foreground">Ranked by impact × effort — start from the top</p>
+                </div>
+            </div>
+            <div className="space-y-3">
+                {[...wins].sort((a, b) => impactOrder[a.impact] - impactOrder[b.impact] || effortOrder[a.effort] - effortOrder[b.effort]).map((win, idx) => (
+                    <div key={idx} className="rounded-xl bg-card border border-border p-4">
+                        <div className="flex items-start gap-3">
+                            <span className="text-xs font-black text-violet-500 bg-violet-500/10 rounded-full h-6 w-6 flex items-center justify-center shrink-0 mt-0.5">
+                                {idx + 1}
+                            </span>
+                            <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap mb-1">
+                                    <span className="font-semibold text-sm">{win.title}</span>
+                                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${impactColor(win.impact)}`}>
+                                        {win.impact?.toUpperCase()} IMPACT
+                                    </span>
+                                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${effortColor(win.effort || "medium")}`}>
+                                        {win.effort?.toUpperCase()} EFFORT
+                                    </span>
+                                </div>
+                                <p className="text-xs text-muted-foreground leading-relaxed">{win.description}</p>
+                                {win.codeSnippet && win.codeSnippet !== "null" && (
+                                    <div className="mt-2">
+                                        <div className="flex items-center justify-between mb-1">
+                                            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Quick Fix</span>
+                                            <CopyButton text={win.codeSnippet} />
+                                        </div>
+                                        <pre className="text-[10px] bg-muted/60 rounded-lg p-2.5 overflow-x-auto border border-border/50 font-mono whitespace-pre-wrap break-all">
+                                            {win.codeSnippet}
+                                        </pre>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
 // ─────────────────────────── Loading steps ──────────────────────────────────
 
 const STEPS = [
-    { label: "Fetching page HTML...", threshold: 20 },
-    { label: "Crawling robots.txt & sitemap...", threshold: 40 },
-    { label: "Auditing on-page SEO...", threshold: 55 },
-    { label: "Checking technical factors...", threshold: 70 },
-    { label: "Analyzing structured data & social...", threshold: 82 },
-    { label: "Generating AI Quick Wins...", threshold: 95 },
+    { label: "Fetching page HTML & response headers...", threshold: 18 },
+    { label: "Parsing robots.txt & sitemap XML...", threshold: 32 },
+    { label: "Auditing On-Page & Content signals...", threshold: 50 },
+    { label: "Checking Technical & Performance factors...", threshold: 65 },
+    { label: "Analyzing Links, Security headers...", threshold: 78 },
+    { label: "Validating Structured Data & Social tags...", threshold: 88 },
+    { label: "Generating AI-powered Quick Wins...", threshold: 96 },
 ];
 
 // ─────────────────────────── Export helpers ──────────────────────────────────
 
 function exportCSV(data: SiteAnalysisResponse) {
-    const rows = [["Category", "Check", "Severity", "Description", "Recommendation"]];
+    const rows = [["Category", "Check", "Severity", "Description", "Recommendation", "Has Code Fix"]];
     for (const cat of data.categories) {
         for (const issue of cat.issues) {
-            rows.push([cat.name, issue.title, issue.severity, issue.description, issue.recommendation]);
+            rows.push([cat.name, issue.title, issue.severity, issue.description, issue.recommendation, issue.codeSnippet ? "Yes" : "No"]);
         }
     }
-    const csv = rows.map(r => r.map(c => `"${c.replace(/"/g, '""')}"`).join(",")).join("\n");
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = `site-audit-${new URL(data.url).hostname}.csv`;
+    link.download = `site-audit-${new URL(data.url).hostname}-${new Date().toISOString().split("T")[0]}.csv`;
     link.click();
+}
+
+function exportPDF(data: SiteAnalysisResponse) {
+    window.print();
 }
 
 // ─────────────────────────── Main Component ─────────────────────────────────
@@ -247,6 +480,7 @@ export function SiteAnalysis() {
     const [stepIdx, setStepIdx] = useState(0);
     const [result, setResult] = useState<SiteAnalysisResponse | null>(null);
     const [error, setError] = useState("");
+    const [filterSeverity, setFilterSeverity] = useState<FilterType>("all");
     const progressRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
     const startProgress = () => {
@@ -255,12 +489,12 @@ export function SiteAnalysis() {
         let p = 5;
         let s = 0;
         progressRef.current = setInterval(() => {
-            p = Math.min(p + Math.random() * 4 + 1, 93);
+            p = Math.min(p + Math.random() * 3 + 0.8, 93);
             s = STEPS.findIndex(step => p < step.threshold);
             if (s === -1) s = STEPS.length - 1;
             setProgress(Math.round(p));
             setStepIdx(s);
-        }, 600);
+        }, 700);
     };
 
     const stopProgress = () => {
@@ -273,6 +507,7 @@ export function SiteAnalysis() {
         if (!url.trim()) return;
         setError("");
         setResult(null);
+        setFilterSeverity("all");
         setIsAnalyzing(true);
         startProgress();
 
@@ -298,7 +533,7 @@ export function SiteAnalysis() {
         }
     };
 
-    const reset = () => { setResult(null); setUrl(""); setError(""); setProgress(0); };
+    const reset = () => { setResult(null); setUrl(""); setError(""); setProgress(0); setFilterSeverity("all"); };
 
     // ── Loading State ───────────────────────────────────────────────────────
     if (isAnalyzing) return (
@@ -315,7 +550,7 @@ export function SiteAnalysis() {
             </div>
 
             <div className="w-full max-w-md text-center space-y-1">
-                <h3 className="text-xl font-bold">{isRtl ? "جاري تحليل الموقع..." : "Analyzing Website..."}</h3>
+                <h3 className="text-xl font-bold">{isRtl ? "جاري التحليل الشامل..." : "Running Full SEO Audit..."}</h3>
                 <p className="text-sm text-muted-foreground">{url}</p>
             </div>
 
@@ -362,11 +597,11 @@ export function SiteAnalysis() {
             </div>
 
             <div className="text-center space-y-2">
-                <h2 className="text-2xl font-bold">{isRtl ? "تحليل SEO شامل للموقع" : "Comprehensive SEO Site Audit"}</h2>
+                <h2 className="text-2xl font-bold">{isRtl ? "تحليل SEO الأقوى على الإطلاق" : "The Most Comprehensive SEO Audit"}</h2>
                 <p className="text-sm text-muted-foreground max-w-md">
                     {isRtl
-                        ? "أكثر من 50 فحص SEO يشمل: الزحف، الصفحة، المحتوى، البيانات البنيوية، الأمان والمزيد"
-                        : "50+ SEO checks covering crawlability, on-page, content, structured data, social, security & more"}
+                        ? "أكثر من 90 فحص: زحف كامل للروبوت وسايت ماب، صفحة، محتوى، روابط، أداء، بيانات بنيوية، سوشال، أمان"
+                        : "90+ checks: full robots.txt & sitemap analysis, on-page, content, links, performance, structured data, social & security"}
                 </p>
             </div>
 
@@ -384,12 +619,12 @@ export function SiteAnalysis() {
                 {error && <p className="text-sm text-red-500">{error}</p>}
                 <Button type="submit" size="lg" className="w-full h-14 rounded-xl text-base font-semibold">
                     <Search className={`h-5 w-5 ${isRtl ? "ml-2" : "mr-2"}`} />
-                    {isRtl ? "ابدأ التحليل الشامل" : "Start Full SEO Audit"}
+                    {isRtl ? "ابدأ التحليل الشامل" : "Start Deep SEO Audit"}
                 </Button>
             </form>
 
-            <div className="flex flex-wrap justify-center gap-3 text-xs text-muted-foreground">
-                {["50+ Checks", "Real-time Scoring", "AI Quick Wins", "Security Headers", "Arabic SEO"].map(t => (
+            <div className="flex flex-wrap justify-center gap-2 text-xs text-muted-foreground">
+                {["90+ Checks", "Robots.txt Deep Parse", "Sitemap Analysis", "SERP Preview", "Code Snippets", "AI Quick Wins", "Security Audit", "Arabic SEO"].map(t => (
                     <span key={t} className="px-3 py-1.5 rounded-full bg-muted/60 font-medium">{t}</span>
                 ))}
             </div>
@@ -397,14 +632,20 @@ export function SiteAnalysis() {
     );
 
     // ── Results State ────────────────────────────────────────────────────────
-    const { score, grade, summary, categories, quickWins, rawMetrics } = result;
+    const { score, grade, summary, categories, quickWins, rawMetrics, serpPreview, performanceSignals, contentQuality } = result;
     const colors = scoreColor(score);
     const gColors = gradeColor(grade);
 
-    const sortedCategories = [...categories].sort((a, b) => {
-        const aScore = categoryScore(a), bScore = categoryScore(b);
-        return aScore - bScore;
-    });
+    const sortedCategories = [...categories].sort((a, b) => categoryScore(a) - categoryScore(b));
+
+    // Filter bar counts
+    const filterCounts = {
+        all: summary.total,
+        error: summary.errors,
+        warning: summary.warnings,
+        notice: summary.notices,
+        pass: summary.passed,
+    };
 
     return (
         <motion.div
@@ -412,19 +653,17 @@ export function SiteAnalysis() {
             animate={{ opacity: 1, y: 0 }}
             className="space-y-6"
         >
-            {/* ── Top Hero ─────────────────────────────────────────────────── */}
+            {/* ── Hero Score ────────────────────────────────────────────────── */}
             <div className="rounded-2xl border border-border bg-card p-6">
                 <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
                     {/* Score gauge */}
                     <div className="flex items-center gap-6 shrink-0">
-                        <ScoreGauge score={score} grade={grade} />
-                        <div>
-                            <div className={`text-6xl font-black border-2 rounded-2xl w-20 h-20 flex items-center justify-center ${gColors}`}>
+                        <ScoreGauge score={score} />
+                        <div className="text-center">
+                            <div className={`text-5xl font-black border-2 rounded-2xl w-18 h-18 w-[72px] h-[72px] flex items-center justify-center ${gColors}`}>
                                 {grade}
                             </div>
-                            <p className="text-xs text-muted-foreground mt-1 text-center">
-                                {grade === "A" ? "Excellent" : grade === "B" ? "Good" : grade === "C" ? "Average" : grade === "D" ? "Poor" : "Critical"}
-                            </p>
+                            <p className="text-xs text-muted-foreground mt-1">{gradeLabel(grade)}</p>
                         </div>
                     </div>
 
@@ -433,12 +672,13 @@ export function SiteAnalysis() {
                         <div className="flex items-start justify-between gap-4 mb-4">
                             <div>
                                 <h3 className="font-bold text-lg truncate max-w-xs">{new URL(result.url).hostname}</h3>
-                                <p className="text-xs text-muted-foreground">Analyzed {new Date(result.analyzedAt).toLocaleString()}</p>
+                                <p className="text-xs text-muted-foreground">
+                                    {summary.total} checks · Analyzed {new Date(result.analyzedAt).toLocaleString()}
+                                </p>
                             </div>
                             <div className="flex gap-2 shrink-0">
                                 <Button variant="outline" size="sm" onClick={() => exportCSV(result)} className="gap-1.5 h-8">
-                                    <Download className="h-3.5 w-3.5" />
-                                    CSV
+                                    <Download className="h-3.5 w-3.5" />CSV
                                 </Button>
                                 <Button variant="outline" size="sm" onClick={reset} className="gap-1.5 h-8">
                                     <RefreshCw className="h-3.5 w-3.5" />
@@ -468,14 +708,14 @@ export function SiteAnalysis() {
                     </div>
                 </div>
 
-                {/* Score bar breakdown by category */}
-                <div className="mt-5 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2">
+                {/* Category mini-scores */}
+                <div className="mt-5 grid grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-2">
                     {categories.map(cat => {
                         const cs = categoryScore(cat);
                         const cc = scoreColor(cs);
                         const CatIcon = categoryIcon(cat.name);
                         return (
-                            <div key={cat.name} className="flex flex-col items-center gap-1 p-2 rounded-lg bg-muted/30">
+                            <div key={cat.name} className="flex flex-col items-center gap-1 p-2 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors cursor-default">
                                 <CatIcon className={`h-4 w-4 ${cc.text}`} />
                                 <span className={`text-lg font-black ${cc.text}`}>{cs}</span>
                                 <span className="text-[9px] text-muted-foreground text-center leading-tight">{cat.name}</span>
@@ -483,55 +723,79 @@ export function SiteAnalysis() {
                         );
                     })}
                 </div>
+
+                {/* Content quality inline */}
+                {contentQuality && (
+                    <div className="mt-4 pt-4 border-t border-border/50 grid grid-cols-3 md:grid-cols-6 gap-3">
+                        {[
+                            { label: "Word Count", value: contentQuality.wordCount.toLocaleString() },
+                            { label: "Content Ratio", value: `${contentQuality.contentToCodeRatio}%` },
+                            { label: "Readability", value: contentQuality.readabilityLabel },
+                            { label: "Avg Sentence", value: `${contentQuality.avgWordsPerSentence} words` },
+                            { label: "Paragraphs", value: contentQuality.paragraphCount },
+                            { label: "Lists", value: contentQuality.listCount },
+                        ].map(m => (
+                            <div key={m.label} className="text-center">
+                                <div className="text-sm font-bold">{m.value}</div>
+                                <div className="text-[10px] text-muted-foreground">{m.label}</div>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
 
-            {/* ── AI Quick Wins ─────────────────────────────────────────────── */}
-            {quickWins.length > 0 && (
-                <div className="rounded-2xl border border-violet-500/30 bg-gradient-to-br from-violet-500/5 to-purple-500/5 p-6">
-                    <div className="flex items-center gap-2 mb-4">
-                        <div className="h-8 w-8 rounded-lg bg-violet-500/15 flex items-center justify-center">
-                            <Zap className="h-4 w-4 text-violet-500" />
-                        </div>
-                        <div>
-                            <h3 className="font-bold">{isRtl ? "أسرع الإصلاحات أثراً" : "AI Quick Wins"}</h3>
-                            <p className="text-xs text-muted-foreground">{isRtl ? "أهم 5 إجراءات لتحسين SEO فوراً" : "Top 5 highest-impact fixes to boost your SEO score"}</p>
-                        </div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                        {quickWins.slice(0, 6).map((win, idx) => {
-                            const impactColor = win.impact === "high" ? "text-red-500 bg-red-500/10" : win.impact === "medium" ? "text-orange-500 bg-orange-500/10" : "text-blue-500 bg-blue-500/10";
+            {/* ── SERP Preview ──────────────────────────────────────────────── */}
+            {serpPreview && <SerpPreviewCard serp={serpPreview} url={result.url} />}
+
+            {/* ── AI Quick Wins / Priority Matrix ────────────────────────────── */}
+            {quickWins.length > 0 && <PriorityMatrix wins={quickWins} />}
+
+            {/* ── Performance Signals ────────────────────────────────────────── */}
+            {performanceSignals && <PerformancePanel perf={performanceSignals} />}
+
+            {/* ── Category Accordion ────────────────────────────────────────── */}
+            <div className="space-y-3">
+                <div className="flex items-center justify-between gap-4 flex-wrap">
+                    <h3 className="font-bold text-lg">{isRtl ? "تفاصيل التدقيق الكامل" : "Full Audit Details"}</h3>
+                    <div className="flex items-center gap-1 flex-wrap">
+                        <Filter className="h-4 w-4 text-muted-foreground shrink-0" />
+                        {(["all", "error", "warning", "notice", "pass"] as FilterType[]).map(f => {
+                            const colors: Record<FilterType, string> = {
+                                all: "text-foreground border-border",
+                                error: "text-red-500 border-red-500/40",
+                                warning: "text-orange-500 border-orange-500/40",
+                                notice: "text-blue-500 border-blue-500/40",
+                                pass: "text-green-500 border-green-500/40",
+                            };
                             return (
-                                <div key={idx} className="rounded-xl bg-card border border-border p-4 space-y-2">
-                                    <div className="flex items-center justify-between gap-2">
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-xs font-black text-violet-500 bg-violet-500/10 rounded-full h-5 w-5 flex items-center justify-center">{idx + 1}</span>
-                                            <span className="font-semibold text-sm">{win.title}</span>
-                                        </div>
-                                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold shrink-0 ${impactColor}`}>
-                                            {win.impact?.toUpperCase()}
-                                        </span>
-                                    </div>
-                                    <p className="text-xs text-muted-foreground leading-relaxed">{win.description}</p>
-                                </div>
+                                <button
+                                    key={f}
+                                    onClick={() => setFilterSeverity(f)}
+                                    className={`px-3 py-1 rounded-full text-xs font-semibold border transition-all ${filterSeverity === f ? `${colors[f]} bg-current/10` : "text-muted-foreground border-transparent hover:border-border"}`}
+                                >
+                                    {f.charAt(0).toUpperCase() + f.slice(1)}
+                                    {filterCounts[f] > 0 && <span className="ml-1 opacity-70">({filterCounts[f]})</span>}
+                                </button>
                             );
                         })}
                     </div>
                 </div>
-            )}
 
-            {/* ── Category Accordion ────────────────────────────────────────── */}
-            <div className="space-y-3">
-                <h3 className="font-bold text-lg">{isRtl ? "تفاصيل التدقيق" : "Audit Details"}</h3>
                 {sortedCategories.map((cat, idx) => (
-                    <CategoryCard key={cat.name} cat={cat} defaultOpen={idx === 0 && (cat.errors > 0 || cat.warnings > 0)} />
+                    <CategoryCard
+                        key={cat.name}
+                        cat={cat}
+                        filterSeverity={filterSeverity}
+                        defaultOpen={idx === 0 && (cat.errors > 0 || cat.warnings > 0)}
+                    />
                 ))}
             </div>
 
             {/* ── Raw Metrics ───────────────────────────────────────────────── */}
             <div className="rounded-2xl border border-border bg-card p-6">
                 <h3 className="font-bold mb-4 flex items-center gap-2">
-                    <BarChart3 className="h-5 w-5 text-primary" />
-                    {isRtl ? "البيانات الخام" : "Raw Metrics"}
+                    <Database className="h-5 w-5 text-primary" />
+                    {isRtl ? "البيانات التقنية الخام" : "Raw Technical Data"}
                 </h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
                     {[
@@ -543,8 +807,13 @@ export function SiteAnalysis() {
                         { label: "Missing Alt", value: rawMetrics.images?.missingAlt },
                         { label: "Schema Types", value: rawMetrics.schemaTypes?.length || 0 },
                         { label: "Hreflang Tags", value: rawMetrics.hreflangTags?.length || 0 },
-                        { label: "Blocking Scripts", value: rawMetrics.performance?.blockingScripts },
                         { label: "SSL", value: rawMetrics.ssl ? "Yes ✓" : "No ✗" },
+                        { label: "Robots.txt", value: rawMetrics.robots?.exists ? `${rawMetrics.robots?.disallowCount} disallows` : "Missing" },
+                        { label: "Sitemap URLs", value: rawMetrics.sitemap?.pageCount || (rawMetrics.sitemap?.exists ? "Index" : "Missing") },
+                        { label: "Blocking Scripts", value: rawMetrics.performance?.blockingScripts },
+                        { label: "Inline Scripts", value: rawMetrics.performance?.inlineScripts },
+                        { label: "Response Time", value: `${rawMetrics.performance?.responseTimeMs || 0}ms` },
+                        { label: "Paragraphs", value: contentQuality?.paragraphCount },
                     ].map(m => (
                         <div key={m.label} className="rounded-xl bg-muted/40 p-3">
                             <div className="text-lg font-bold">{m.value ?? "—"}</div>
