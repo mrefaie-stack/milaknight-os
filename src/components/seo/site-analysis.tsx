@@ -9,7 +9,7 @@ import {
     Share2, Database, MapPin, RefreshCw, Copy, Check,
     TrendingUp, TrendingDown, Minus, Eye, Activity,
     Lock, Layers, Server, Wifi, FileCode, ListChecks,
-    Filter, Users
+    Filter, Users, Gauge, Sparkles, Target, LayoutDashboard
 } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,8 @@ import { Input } from "@/components/ui/input";
 import type {
     SiteAnalysisResponse, SiteIssue, CategoryResult,
     QuickWin, SerpPreview, PerformanceSignals,
-    SiteCompetitor, TargetKeyword
+    SiteCompetitor, TargetKeyword,
+    PageSpeedMetrics, KeywordDensityItem, StrategicSummary
 } from "@/app/api/seo/site-analysis/route";
 
 // ─────────────────────────── helpers ────────────────────────────────────────
@@ -517,17 +518,212 @@ function MarketIntelligencePanel({ competitors, keywords }: { competitors: SiteC
     );
 }
 
+// ─────────────────────── Strategic Summary Panel ────────────────────────────
+
+function StrategicSummaryPanel({ summary }: { summary: StrategicSummary }) {
+    return (
+        <div className="rounded-2xl border border-violet-500/30 bg-gradient-to-br from-violet-500/5 via-card to-card p-6 space-y-5">
+            <div className="flex items-center gap-3">
+                <div className="h-9 w-9 rounded-xl bg-violet-500/15 flex items-center justify-center shrink-0">
+                    <Sparkles className="h-5 w-5 text-violet-500" />
+                </div>
+                <div>
+                    <h3 className="font-bold text-sm">AI Strategic Analysis</h3>
+                    <p className="text-xs text-muted-foreground">Full audit review by AI SEO consultant</p>
+                </div>
+            </div>
+
+            <div className="space-y-1">
+                <h2 className="text-lg font-black leading-tight">{summary.headline}</h2>
+                <p className="text-sm text-muted-foreground leading-relaxed">{summary.executiveSummary}</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="rounded-xl bg-red-500/8 border border-red-500/20 p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                        <Target className="h-4 w-4 text-red-500 shrink-0" />
+                        <span className="text-xs font-bold text-red-500 uppercase tracking-wide">Top Priority</span>
+                    </div>
+                    <p className="text-xs leading-relaxed">{summary.topPriority}</p>
+                </div>
+                <div className="rounded-xl bg-blue-500/8 border border-blue-500/20 p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                        <TrendingUp className="h-4 w-4 text-blue-500 shrink-0" />
+                        <span className="text-xs font-bold text-blue-500 uppercase tracking-wide">Content Opportunities</span>
+                    </div>
+                    <p className="text-xs leading-relaxed">{summary.contentOpportunities}</p>
+                </div>
+                <div className="rounded-xl bg-amber-500/8 border border-amber-500/20 p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                        <Code2 className="h-4 w-4 text-amber-500 shrink-0" />
+                        <span className="text-xs font-bold text-amber-500 uppercase tracking-wide">Technical Health</span>
+                    </div>
+                    <p className="text-xs leading-relaxed">{summary.technicalHealth}</p>
+                </div>
+            </div>
+
+            {summary.actionPlan?.length > 0 && (
+                <div>
+                    <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-2">Action Plan</p>
+                    <ol className="space-y-1.5">
+                        {summary.actionPlan.map((step, i) => (
+                            <li key={i} className="flex items-start gap-2.5 text-sm">
+                                <span className="text-[10px] font-black text-violet-500 bg-violet-500/10 rounded-full h-5 w-5 flex items-center justify-center shrink-0 mt-0.5">{i + 1}</span>
+                                <span className="text-muted-foreground leading-relaxed">{step}</span>
+                            </li>
+                        ))}
+                    </ol>
+                </div>
+            )}
+        </div>
+    );
+}
+
+// ─────────────────────────── Core Web Vitals Panel ──────────────────────────
+
+function cwvStatus(metric: string, value: number): { color: string; status: string } {
+    const thresholds: Record<string, [number, number]> = {
+        lcp:  [2500, 4000],
+        fcp:  [1800, 3000],
+        tbt:  [200,  600],
+        si:   [3400, 5800],
+        tti:  [3800, 7300],
+    };
+    const [good, poor] = thresholds[metric] || [0, 0];
+    if (value <= good) return { color: "text-green-500", status: "Good" };
+    if (value <= poor) return { color: "text-amber-500", status: "Needs Work" };
+    return { color: "text-red-500", status: "Poor" };
+}
+
+function clsStatus(cls: number): { color: string; status: string } {
+    if (cls <= 0.1) return { color: "text-green-500", status: "Good" };
+    if (cls <= 0.25) return { color: "text-amber-500", status: "Needs Work" };
+    return { color: "text-red-500", status: "Poor" };
+}
+
+function CoreWebVitalsPanel({ pageSpeed }: { pageSpeed: PageSpeedMetrics }) {
+    const [tab, setTab] = useState<"mobile" | "desktop">("mobile");
+    const data = tab === "mobile" ? pageSpeed.mobile : pageSpeed.desktop;
+    const sc = data ? scoreColor(data.score) : null;
+
+    return (
+        <div className="rounded-2xl border border-border bg-card p-6">
+            <div className="flex items-center justify-between gap-4 mb-5">
+                <div className="flex items-center gap-3">
+                    <div className="h-9 w-9 rounded-xl bg-green-500/10 flex items-center justify-center shrink-0">
+                        <Gauge className="h-5 w-5 text-green-500" />
+                    </div>
+                    <div>
+                        <h3 className="font-bold text-sm">Core Web Vitals</h3>
+                        <p className="text-xs text-muted-foreground">Real data from Google PageSpeed Insights</p>
+                    </div>
+                </div>
+                <div className="flex gap-1 bg-muted rounded-lg p-1">
+                    {(["mobile", "desktop"] as const).map(t => (
+                        <button
+                            key={t}
+                            onClick={() => setTab(t)}
+                            className={`px-3 py-1 rounded-md text-xs font-semibold transition-all capitalize ${tab === t ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                        >
+                            {t}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            {!data ? (
+                <p className="text-sm text-muted-foreground text-center py-4">PageSpeed data unavailable for this strategy</p>
+            ) : (
+                <>
+                    <div className="flex items-center gap-4 mb-5">
+                        <div className="relative h-20 w-20 shrink-0">
+                            <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
+                                <circle cx="18" cy="18" r="15.9" fill="none" stroke="currentColor" strokeWidth="3" className="text-muted/30" />
+                                <circle cx="18" cy="18" r="15.9" fill="none" stroke={sc!.stroke} strokeWidth="3"
+                                    strokeDasharray={`${data.score} ${100 - data.score}`} strokeLinecap="round" />
+                            </svg>
+                            <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                <span className={`text-lg font-black ${sc!.text}`}>{data.score}</span>
+                                <span className="text-[8px] text-muted-foreground font-medium">/ 100</span>
+                            </div>
+                        </div>
+                        <div>
+                            <div className={`text-3xl font-black border-2 rounded-xl px-3 py-1 inline-block ${gradeColor(data.grade)}`}>{data.grade}</div>
+                            <p className="text-xs text-muted-foreground mt-1">Performance Score · {tab}</p>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        {[
+                            { key: "lcp",  name: "LCP",  value: `${(data.lcp / 1000).toFixed(2)}s`,  hint: "Largest Contentful Paint",  ...cwvStatus("lcp", data.lcp) },
+                            { key: "fcp",  name: "FCP",  value: `${(data.fcp / 1000).toFixed(2)}s`,  hint: "First Contentful Paint",     ...cwvStatus("fcp", data.fcp) },
+                            { key: "cls",  name: "CLS",  value: data.cls.toFixed(3),                  hint: "Cumulative Layout Shift",    ...clsStatus(data.cls) },
+                            { key: "tbt",  name: "TBT",  value: `${data.tbt}ms`,                      hint: "Total Blocking Time",        ...cwvStatus("tbt", data.tbt) },
+                            { key: "si",   name: "SI",   value: `${(data.si / 1000).toFixed(2)}s`,   hint: "Speed Index",                ...cwvStatus("si", data.si) },
+                            { key: "tti",  name: "TTI",  value: `${(data.tti / 1000).toFixed(2)}s`,  hint: "Time to Interactive",        ...cwvStatus("tti", data.tti) },
+                        ].map(m => (
+                            <div key={m.key} className="rounded-xl bg-muted/40 p-3">
+                                <div className="flex items-center justify-between mb-1">
+                                    <span className="text-xs font-bold">{m.name}</span>
+                                    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${m.color} bg-current/10`}>{m.status}</span>
+                                </div>
+                                <div className={`text-xl font-black ${m.color}`}>{m.value}</div>
+                                <div className="text-[10px] text-muted-foreground mt-0.5">{m.hint}</div>
+                            </div>
+                        ))}
+                    </div>
+                </>
+            )}
+        </div>
+    );
+}
+
+// ─────────────────────────── Keyword Density Panel ──────────────────────────
+
+function KeywordDensityPanel({ keywords }: { keywords: KeywordDensityItem[] }) {
+    const max = keywords[0]?.count || 1;
+    return (
+        <div className="rounded-2xl border border-border bg-card p-6">
+            <div className="flex items-center gap-3 mb-5">
+                <div className="h-9 w-9 rounded-xl bg-cyan-500/10 flex items-center justify-center shrink-0">
+                    <LayoutDashboard className="h-5 w-5 text-cyan-500" />
+                </div>
+                <div>
+                    <h3 className="font-bold text-sm">Keyword Density Analysis</h3>
+                    <p className="text-xs text-muted-foreground">Top 20 words actually found in page content</p>
+                </div>
+            </div>
+            <div className="space-y-2">
+                {keywords.map((kw, i) => (
+                    <div key={i} className="flex items-center gap-3">
+                        <span className="text-xs font-mono text-muted-foreground w-5 shrink-0">{i + 1}</span>
+                        <span className="text-sm font-medium w-32 shrink-0 truncate">{kw.keyword}</span>
+                        <div className="flex-1 bg-muted rounded-full h-2 overflow-hidden">
+                            <div
+                                className="h-full bg-cyan-500/70 rounded-full transition-all"
+                                style={{ width: `${(kw.count / max) * 100}%` }}
+                            />
+                        </div>
+                        <span className="text-xs text-muted-foreground w-8 text-right shrink-0">{kw.count}×</span>
+                        <span className="text-xs font-semibold text-cyan-500 w-12 text-right shrink-0">{kw.density}%</span>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
 // ─────────────────────────── Loading steps ──────────────────────────────────
 
 const STEPS = [
-    { label: "Fetching page HTML & response headers...", threshold: 18 },
-    { label: "Parsing robots.txt & sitemap XML...", threshold: 32 },
-    { label: "Auditing On-Page & Content signals...", threshold: 45 },
-    { label: "Checking Technical & Performance factors...", threshold: 60 },
-    { label: "Analyzing Links, Security headers...", threshold: 70 },
-    { label: "Validating Structured Data & Social tags...", threshold: 80 },
-    { label: "Generating AI-powered Quick Wins...", threshold: 88 },
-    { label: "Predicting Market Competitors & Keywords...", threshold: 96 },
+    { label: "Fetching page HTML & response headers...", threshold: 15 },
+    { label: "Running Google PageSpeed Insights (real Core Web Vitals)...", threshold: 28 },
+    { label: "Parsing robots.txt & sitemap XML...", threshold: 40 },
+    { label: "Auditing On-Page & Content signals...", threshold: 52 },
+    { label: "Checking Technical & Performance factors...", threshold: 63 },
+    { label: "Analyzing Links, Security & Structured Data...", threshold: 73 },
+    { label: "Generating AI Quick Wins & Market Intelligence...", threshold: 84 },
+    { label: "Writing AI Strategic Analysis Report...", threshold: 96 },
 ];
 
 // ─────────────────────────── Export helpers ──────────────────────────────────
@@ -705,7 +901,7 @@ export function SiteAnalysis() {
             </form>
 
             <div className="flex flex-wrap justify-center gap-2 text-xs text-muted-foreground">
-                {["90+ Checks", "Robots.txt Deep Parse", "Sitemap Analysis", "SERP Preview", "Code Snippets", "AI Quick Wins", "Security Audit", "Arabic SEO"].map(t => (
+                {["90+ Checks", "Real Core Web Vitals", "AI Strategic Report", "Keyword Density", "Robots.txt Deep Parse", "Sitemap Analysis", "SERP Preview", "Code Snippets", "AI Quick Wins", "Security Audit", "Arabic SEO"].map(t => (
                     <span key={t} className="px-3 py-1.5 rounded-full bg-muted/60 font-medium">{t}</span>
                 ))}
             </div>
@@ -828,11 +1024,20 @@ export function SiteAnalysis() {
             {/* ── SERP Preview ──────────────────────────────────────────────── */}
             {serpPreview && <SerpPreviewCard serp={serpPreview} url={result.url} />}
 
+            {/* ── AI Strategic Summary ──────────────────────────────────────── */}
+            {result.strategicSummary && <StrategicSummaryPanel summary={result.strategicSummary} />}
+
             {/* ── AI Quick Wins / Priority Matrix ────────────────────────────── */}
             {quickWins.length > 0 && <PriorityMatrix wins={quickWins} />}
 
+            {/* ── Core Web Vitals (Real PageSpeed Insights) ─────────────────── */}
+            {result.pageSpeed?.hasRealData && <CoreWebVitalsPanel pageSpeed={result.pageSpeed} />}
+
             {/* ── Performance Signals ────────────────────────────────────────── */}
             {performanceSignals && <PerformancePanel perf={performanceSignals} />}
+
+            {/* ── Keyword Density ────────────────────────────────────────────── */}
+            {result.keywordDensity?.length > 0 && <KeywordDensityPanel keywords={result.keywordDensity} />}
 
             {/* ── Market Intelligence ────────────────────────────────────────── */}
             {((result.competitors && result.competitors.length > 0) || (result.targetKeywords && result.targetKeywords.length > 0)) && (

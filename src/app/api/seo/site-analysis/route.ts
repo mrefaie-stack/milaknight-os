@@ -121,12 +121,98 @@ export interface SiteAnalysisResponse {
     contentQuality: ContentQuality;
     competitors: SiteCompetitor[];
     targetKeywords: TargetKeyword[];
+    pageSpeed: PageSpeedMetrics | null;
+    keywordDensity: KeywordDensityItem[];
+    strategicSummary: StrategicSummary | null;
+}
+
+export interface PageSpeedResult {
+    score: number;
+    lcp: number;
+    fcp: number;
+    cls: number;
+    tbt: number;
+    si: number;
+    tti: number;
+    grade: string;
+}
+
+export interface PageSpeedMetrics {
+    mobile: PageSpeedResult | null;
+    desktop: PageSpeedResult | null;
+    hasRealData: boolean;
+}
+
+export interface KeywordDensityItem {
+    keyword: string;
+    count: number;
+    density: number;
+}
+
+export interface StrategicSummary {
+    headline: string;
+    executiveSummary: string;
+    topPriority: string;
+    contentOpportunities: string;
+    technicalHealth: string;
+    actionPlan: string[];
 }
 
 const CATEGORY_NAMES = [
     "Crawlability", "On-Page", "Content", "Technical",
     "Links", "Performance", "Structured Data", "Social", "Security"
 ] as const;
+
+// ── PageSpeed Insights ────────────────────────────────────────────────────────
+async function fetchPageSpeedData(url: string): Promise<PageSpeedMetrics> {
+    const fetchOne = async (strategy: "mobile" | "desktop"): Promise<PageSpeedResult | null> => {
+        try {
+            const apiUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(url)}&strategy=${strategy}&category=performance`;
+            const res = await fetch(apiUrl, { signal: AbortSignal.timeout(30000) });
+            if (!res.ok) return null;
+            const data = await res.json();
+            const lhr = data.lighthouseResult;
+            if (!lhr) return null;
+            const score = Math.round((lhr.categories?.performance?.score ?? 0) * 100);
+            const audits = lhr.audits ?? {};
+            const lcp  = Math.round(audits["largest-contentful-paint"]?.numericValue ?? 0);
+            const fcp  = Math.round(audits["first-contentful-paint"]?.numericValue ?? 0);
+            const cls  = parseFloat((audits["cumulative-layout-shift"]?.numericValue ?? 0).toFixed(3));
+            const tbt  = Math.round(audits["total-blocking-time"]?.numericValue ?? 0);
+            const si   = Math.round(audits["speed-index"]?.numericValue ?? 0);
+            const tti  = Math.round(audits["interactive"]?.numericValue ?? 0);
+            const grade = score >= 90 ? "A" : score >= 75 ? "B" : score >= 60 ? "C" : score >= 40 ? "D" : "F";
+            return { score, lcp, fcp, cls, tbt, si, tti, grade };
+        } catch { return null; }
+    };
+    const [mobile, desktop] = await Promise.all([fetchOne("mobile"), fetchOne("desktop")]);
+    return { mobile, desktop, hasRealData: !!(mobile || desktop) };
+}
+
+// ── Keyword Density ───────────────────────────────────────────────────────────
+function extractKeywordDensity(text: string, isArabic: boolean): KeywordDensityItem[] {
+    const stopEn = new Set(["the","a","an","and","or","but","in","on","at","to","for","of","with","by","from","is","are","was","were","be","been","have","has","had","do","does","did","will","would","could","should","not","no","this","that","it","its","as","if","so","than","then","when","where","which","who","what","how","all","any","more","most","other","some","also","just","can","we","you","he","she","they","our","your","his","her","their","my","me","us","them","about","into","up","out","get","use","may","one","two","www","http","https","com","page","home","here","there","been","these","those","only","very","each","make","many","such","well","back","even","after","about","their"]);
+    const stopAr = new Set(["في","من","إلى","على","عن","مع","هذا","هذه","هو","هي","هم","كان","كانت","أن","إن","لا","ما","لم","لن","قد","بعد","قبل","أو","و","أي","كل","بين","حتى","عند","منذ","ثم","لأن","التي","الذي","الذين","هذان","كما","أيضا","لكن","الى","له","لها","عليه","عليها","إلا","فإن","وإن","وقد","نحن","أنت","أنا","هذين","ذلك","تلك","أولئك","إذا","حين","بما","بدون"]);
+    const stops = isArabic ? new Set([...stopEn, ...stopAr]) : stopEn;
+
+    const words = text.toLowerCase()
+        .replace(/[^\w\u0600-\u06FF\s]/g, " ")
+        .split(/\s+/)
+        .filter(w => w.length >= 4 && !stops.has(w) && !/^\d+$/.test(w));
+
+    const total = words.length || 1;
+    const freq: Record<string, number> = {};
+    for (const w of words) freq[w] = (freq[w] || 0) + 1;
+
+    return Object.entries(freq)
+        .sort(([, a], [, b]) => b - a)
+        .slice(0, 20)
+        .map(([keyword, count]) => ({
+            keyword,
+            count,
+            density: parseFloat(((count / total) * 100).toFixed(2)),
+        }));
+}
 
 export async function POST(req: Request) {
     try {
@@ -135,6 +221,9 @@ export async function POST(req: Request) {
 
         const { url } = await req.json();
         if (!url?.startsWith("http")) return NextResponse.json({ error: "Valid URL required" }, { status: 400 });
+
+        // Start PageSpeed in parallel immediately — it runs while we do everything else
+        const pageSpeedPromise = fetchPageSpeedData(url);
 
         // ── 1. Fetch main page ──────────────────────────────────────────────
         let html = "";
@@ -423,6 +512,7 @@ export async function POST(req: Request) {
         const urlHasUnderscore = urlObj.pathname.includes("_");
 
         const isArabicContent = /[\u0600-\u06FF]/.test(bodyText.substring(0, 1000));
+        const keywordDensity = extractKeywordDensity(bodyText.substring(0, 12000), isArabicContent);
         const hasRtlDir = htmlDir === "rtl";
         const hasArHreflang = hreflangTags.some(h => h.startsWith("ar"));
 
@@ -1108,55 +1198,101 @@ export async function POST(req: Request) {
         const displayUrl = breadcrumbs.slice(0, 4).join(" › ");
         const serpPreview: SerpPreview = { title: serpTitle || "(No title tag)", description: serpDesc, displayUrl, breadcrumbs };
 
-        // ── 9. AI Quick Wins ────────────────────────────────────────────────
-        let quickWins: QuickWin[] = [];
-        try {
-            const failedIssues = issues
-                .filter(i => i.severity === "error" || i.severity === "warning")
-                .slice(0, 15);
-            const issueSummary = failedIssues.map(i => `[${i.severity.toUpperCase()}] ${i.title}: ${i.description}`).join("\n");
-            const lang = htmlLang.startsWith("ar") ? "Arabic" : "English";
+        // ── 9. AI calls + PageSpeed — all in parallel ───────────────────────
+        const lang = htmlLang.startsWith("ar") ? "Arabic" : "English";
 
-            const prompt = `You are an elite SEO consultant with 15+ years of experience. A site audit for ${finalUrl} found these issues:\n\n${issueSummary}\n\nBased on these findings, provide exactly 6 "Quick Wins" — the highest-impact, most actionable fixes in priority order.\nReturn ONLY a valid JSON array, no markdown, no explanation, no code blocks:\n[\n  {\n    "title": "<short action title in ${lang}, max 6 words>",\n    "impact": "high" | "medium" | "low",\n    "effort": "easy" | "medium" | "hard",\n    "description": "<one precise, actionable sentence: exactly what to do + the specific SEO benefit>",\n    "codeSnippet": "<optional: the exact HTML/config code to fix it, or null>"\n  }\n]`;
+        const [quickWinsResult, marketResult, strategicResult, pageSpeedResult] = await Promise.allSettled([
 
-            const aiRaw = await claudeGenerate(prompt);
-            const match = aiRaw.match(/\[[\s\S]*\]/);
-            if (match) quickWins = JSON.parse(match[0]);
-        } catch {}
+            // 9a. Quick Wins
+            (async (): Promise<QuickWin[]> => {
+                const failedIssues = issues
+                    .filter(i => i.severity === "error" || i.severity === "warning")
+                    .slice(0, 20);
+                const issueSummary = failedIssues.map(i => `[${i.severity.toUpperCase()}] ${i.title}: ${i.description}`).join("\n");
+                const prompt = `You are an elite SEO consultant with 15+ years of experience. A full site audit for ${finalUrl} found these issues:\n\n${issueSummary}\n\nProvide exactly 6 "Quick Wins" — the highest-impact, most actionable fixes in priority order.\nReturn ONLY a valid JSON array, no markdown:\n[\n  {\n    "title": "<short action title in ${lang}, max 6 words>",\n    "impact": "high"|"medium"|"low",\n    "effort": "easy"|"medium"|"hard",\n    "description": "<one precise, actionable sentence: exactly what to do and the specific SEO benefit. In ${lang}>",\n    "codeSnippet": "<optional: the exact HTML/config code to implement the fix, or null>"\n  }\n]`;
+                const raw = await claudeGenerate(prompt);
+                const match = raw.match(/\[[\s\S]*\]/);
+                return match ? JSON.parse(match[0]) : [];
+            })(),
 
-        // ── 9.5 AI Competitors & Keywords ───────────────────────────────────
-        let competitors: SiteCompetitor[] = [];
-        let targetKeywords: TargetKeyword[] = [];
-        try {
-            const lang = htmlLang.startsWith("ar") ? "Arabic" : "English";
-            const prompt = `You are a world-class SEO strategist. 
-I am providing you with the h1 tag, and a 1000 character sample of a website's text content.
+            // 9b. Competitors & Keywords (with more content context)
+            (async (): Promise<{ competitors: SiteCompetitor[]; keywords: TargetKeyword[] }> => {
+                const prompt = `You are a world-class SEO strategist with deep market intelligence.
 URL: ${finalUrl}
+Title: ${title}
 H1: ${h1s[0] || ""}
-Sample Content: ${bodyText.substring(0, 1000)}...
+Meta Description: ${metaDesc.substring(0, 200)}
+Content Sample: ${bodyText.substring(0, 2500)}
 
 Task:
-1. Identify 3 to 5 real, top organic competitors for this exact niche.
-2. Identify exactly 8 high-value SEO target keywords for this site.
-Return ONLY a valid JSON object in this format (NO markdown, NO text outside json):
+1. Identify 4-5 real top organic competitors for this exact niche and market.
+2. Identify exactly 10 high-value SEO target keywords — mix of short-tail and long-tail.
+Return ONLY valid JSON (no markdown, no extra text):
 {
   "competitors": [
-    { "domain": "example.com", "overlapReason": "Short explanation in ${lang}" }
+    { "domain": "example.com", "overlapReason": "Specific reason why they compete — in ${lang}" }
   ],
   "keywords": [
-    { "keyword": "search term", "intent": "Informational" | "Navigational" | "Commercial" | "Transactional", "volume": "e.g., 5.4K", "difficulty": "Low" | "Medium" | "High" }
+    { "keyword": "search term", "intent": "Informational"|"Navigational"|"Commercial"|"Transactional", "volume": "e.g., 5.4K", "difficulty": "Low"|"Medium"|"High" }
   ]
 }`;
-            const aiMarketRaw = await claudeGenerate(prompt);
-            const match = aiMarketRaw.match(/\{[\s\S]*\}/);
-            if (match) {
+                const raw = await claudeGenerate(prompt);
+                const match = raw.match(/\{[\s\S]*\}/);
+                if (!match) return { competitors: [], keywords: [] };
                 const parsed = JSON.parse(match[0]);
-                competitors = parsed.competitors || [];
-                targetKeywords = parsed.keywords || [];
-            }
-        } catch(e) {
-            console.error("Market Intelligence Error:", e);
-        }
+                return { competitors: parsed.competitors || [], keywords: parsed.keywords || [] };
+            })(),
+
+            // 9c. Strategic Summary — reads the full audit report
+            (async (): Promise<StrategicSummary | null> => {
+                const errIssues = issues.filter(i => i.severity === "error");
+                const warnIssues = issues.filter(i => i.severity === "warning");
+                const passedCount = issues.filter(i => i.severity === "pass").length;
+                const criticalList = errIssues.map(i => `• ${i.title}: ${i.description}`).join("\n");
+                const warningList = warnIssues.slice(0, 15).map(i => `• ${i.title}: ${i.description}`).join("\n");
+
+                const prompt = `You are a senior SEO consultant delivering a professional audit report to a client.
+
+Website: ${finalUrl}
+Page Title: ${title}
+Meta Description: ${metaDesc.substring(0, 200)}
+Content Preview: ${bodyText.substring(0, 1500)}
+
+FULL AUDIT RESULTS:
+Score: ${score}/100 (Grade: ${grade})
+Total Checks: ${issues.length} | Errors: ${errIssues.length} | Warnings: ${warnIssues.length} | Passed: ${passedCount}
+
+CRITICAL ERRORS (${errIssues.length}):
+${criticalList || "None found"}
+
+KEY WARNINGS (${warnIssues.length}):
+${warningList || "None found"}
+
+Write a professional, specific strategic SEO analysis for THIS site. Be direct and data-driven. Return ONLY valid JSON (no markdown):
+{
+  "headline": "<8-10 word professional headline about this site's SEO state — in ${lang}>",
+  "executiveSummary": "<2-3 sentences: overall SEO health, the specific issues holding this site back, and the single biggest untapped opportunity. Specific to this site, not generic. In ${lang}>",
+  "topPriority": "<The single most critical action that will have the highest ranking impact for this specific site — in ${lang}>",
+  "contentOpportunities": "<1-2 sentences: specific content gaps and keyword opportunities based on the detected niche and content. In ${lang}>",
+  "technicalHealth": "<1 sentence: honest technical SEO health rating with the key blocker identified — in ${lang}>",
+  "actionPlan": ["<specific action 1>", "<specific action 2>", "<specific action 3>", "<specific action 4>", "<specific action 5>"]
+}`;
+                const raw = await claudeGenerate(prompt);
+                const match = raw.match(/\{[\s\S]*\}/);
+                if (!match) return null;
+                return JSON.parse(match[0]);
+            })(),
+
+            // 9d. PageSpeed (already running since start of request)
+            pageSpeedPromise,
+        ]);
+
+        const quickWins: QuickWin[]             = quickWinsResult.status === "fulfilled" ? quickWinsResult.value : [];
+        const marketData                         = marketResult.status === "fulfilled" ? marketResult.value : { competitors: [], keywords: [] };
+        const competitors: SiteCompetitor[]     = marketData.competitors;
+        const targetKeywords: TargetKeyword[]   = marketData.keywords;
+        const strategicSummary: StrategicSummary | null = strategicResult.status === "fulfilled" ? strategicResult.value : null;
+        const pageSpeed: PageSpeedMetrics | null = pageSpeedResult.status === "fulfilled" ? pageSpeedResult.value : null;
 
         // ── 10. Build response ──────────────────────────────────────────────
         const rawMetrics = {
@@ -1245,6 +1381,9 @@ Return ONLY a valid JSON object in this format (NO markdown, NO text outside jso
             contentQuality,
             competitors,
             targetKeywords,
+            pageSpeed: pageSpeed ?? null,
+            keywordDensity,
+            strategicSummary: strategicSummary ?? null,
         };
 
         try {
