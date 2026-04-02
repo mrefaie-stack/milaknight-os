@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { geminiFlash } from "@/lib/ai/gemini";
+import { claudeGenerate } from "@/lib/ai/claude";
 import { prisma } from "@/lib/prisma";
 
 export async function POST(req: Request) {
@@ -9,41 +9,51 @@ export async function POST(req: Request) {
         const session = await getServerSession(authOptions);
         if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-        const { keyword, audience, tone = "Professional" } = await req.json();
+        const { keyword, audience, tone = "Professional", language = "ar" } = await req.json();
         
         if (!keyword) {
             return NextResponse.json({ error: "Keyword is required" }, { status: 400 });
         }
 
-        const prompt = `You are a world-class SEO strategist and Content Director. 
-Your task is to create a highly optimized SEO Content Brief for writers.
+        const isArabic = language === "ar" || /[\u0600-\u06FF]/.test(keyword);
+        const langInstruction = isArabic
+            ? `Write the brief entirely in Arabic. The content will be published in Arabic for an Arab audience. Consider Arabic search behavior, use Arabic SEO best practices, and ensure all headings and meta tags are in Arabic. The URL slug should be in English/transliterated.`
+            : `Write the brief in English. Follow standard English SEO best practices.`;
+
+        const prompt = `You are a world-class SEO strategist and Content Director with deep expertise in ${isArabic ? 'Arabic' : 'English'} digital marketing.
+${langInstruction}
+
+Create a comprehensive, production-ready SEO Content Brief for the writing team.
+
 Target Keyword: "${keyword}"
-Target Audience: "${audience || 'General public'}"
+Target Audience: "${audience || (isArabic ? 'الجمهور العربي العام' : 'General public')}"
 Tone of Voice: "${tone}"
 
-Provide the output strictly in this JSON format without any other text (no markdown wrapping if possible):
+Return ONLY valid JSON (no markdown, no explanation):
 {
-    "metaTitle": "Highly clickable meta title (max 60 chars)",
-    "metaDescription": "Compelling meta description with keyword (max 155 chars)",
-    "suggestedUrl": "The URL slug",
-    "primaryKeyword": "...",
-    "lsiKeywords": ["LSI 1", "LSI 2", "LSI 3", "LSI 4", "LSI 5", "LSI 6"],
-    "wordCountTarget": 1500,
+    "metaTitle": "<Clickable meta title max 60 chars, must include keyword>",
+    "metaDescription": "<Compelling meta description max 155 chars with keyword and CTA>",
+    "suggestedUrl": "<lowercase-english-slug-with-hyphens>",
+    "primaryKeyword": "<exact target keyword>",
+    "secondaryKeywords": ["<related keyword 1>", "<related keyword 2>", "<related keyword 3>"],
+    "lsiKeywords": ["<LSI 1>", "<LSI 2>", "<LSI 3>", "<LSI 4>", "<LSI 5>", "<LSI 6>", "<LSI 7>", "<LSI 8>"],
+    "searchIntent": "Informational" | "Transactional" | "Commercial" | "Navigational",
+    "wordCountTarget": <recommended word count as integer>,
+    "readingLevel": "Simple" | "Intermediate" | "Advanced",
     "outline": [
-        { "type": "H1", "text": "...", "notes": "..." },
-        { "type": "H2", "text": "...", "notes": "..." },
-        { "type": "H3", "text": "...", "notes": "..." },
-        { "type": "H2", "text": "...", "notes": "..." }
+        { "type": "H1", "text": "<heading text>", "notes": "<guidance for writer>" },
+        { "type": "H2", "text": "<heading text>", "notes": "<guidance>" },
+        { "type": "H3", "text": "<heading text>", "notes": "<guidance>" },
+        { "type": "H2", "text": "<heading text>", "notes": "<guidance>" },
+        { "type": "H2", "text": "<heading text>", "notes": "<guidance>" },
+        { "type": "H2", "text": "FAQ", "notes": "Include 3-5 frequently asked questions" }
     ],
-    "writerInstructions": "Brief paragraph telling the content team exactly how to approach this piece for maximal SEO impact."
+    "internalLinkingSuggestions": ["<page/topic to link to internally>", "..."],
+    "contentGaps": ["<subtopic competitors likely cover that we should too>", "..."],
+    "writerInstructions": "<Detailed paragraph with exact writing direction, tone guidance, and SEO tips specific to this keyword>"
 }`;
 
-        const response = await geminiFlash.generateContent({
-            contents: [{ role: 'user', parts: [{ text: prompt }] }],
-            generationConfig: { temperature: 0.7, maxOutputTokens: 2000 }
-        });
-
-        const rawText = response.response.text();
+        const rawText = await claudeGenerate(prompt);
         
         // Try parsing JSON safely in case Claude added markdown backticks
         let parsed = null;
@@ -59,7 +69,7 @@ Provide the output strictly in this JSON format without any other text (no markd
                 data: {
                     userId: (session.user as any).id,
                     toolName: "CONTENT_BRIEF",
-                    inputData: JSON.stringify({ keyword, audience, tone }),
+                    inputData: JSON.stringify({ keyword, audience, tone, language }),
                     resultData: JSON.stringify(parsed)
                 }
             });

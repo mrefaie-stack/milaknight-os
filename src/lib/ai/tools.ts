@@ -1,4 +1,5 @@
 import { FunctionDeclaration, SchemaType } from "@google/generative-ai";
+import type Anthropic from "@anthropic-ai/sdk";
 
 export type AiTool = {
   definition: FunctionDeclaration;
@@ -531,4 +532,37 @@ export function isToolAllowedForRole(
 ): boolean {
   const tool = aiTools.find((t) => t.definition.name === toolName);
   return tool ? tool.roles.includes(role) : false;
+}
+
+// ---- Claude (Anthropic) format ----
+
+function toJsonSchema(schema: any): any {
+  if (!schema) return { type: "object", properties: {} };
+  const typeMap: Record<string, string> = {
+    OBJECT: "object", STRING: "string", NUMBER: "number",
+    BOOLEAN: "boolean", ARRAY: "array", INTEGER: "integer",
+  };
+  const out: any = {};
+  if (schema.type) out.type = typeMap[String(schema.type).toUpperCase()] ?? String(schema.type).toLowerCase();
+  if (schema.description) out.description = schema.description;
+  if (schema.enum) out.enum = schema.enum;
+  if (schema.properties) {
+    out.properties = {};
+    for (const [k, v] of Object.entries(schema.properties)) {
+      out.properties[k] = toJsonSchema(v);
+    }
+  }
+  if (schema.required) out.required = schema.required;
+  if (schema.items) out.items = toJsonSchema(schema.items);
+  return out;
+}
+
+export function getClaudeToolsForRole(role: string): Anthropic.Tool[] {
+  return aiTools
+    .filter((t) => t.roles.includes(role))
+    .map((t) => ({
+      name: t.definition.name,
+      description: t.definition.description ?? "",
+      input_schema: toJsonSchema(t.definition.parameters) as Anthropic.Tool["input_schema"],
+    }));
 }

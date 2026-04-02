@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { geminiFlash } from "@/lib/ai/gemini";
+import { claudeGenerate } from "@/lib/ai/claude";
 import { prisma } from "@/lib/prisma";
 
 export async function POST(req: Request) {
@@ -15,41 +15,51 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Missing keyword or content" }, { status: 400 });
         }
 
-        const prompt = `You are an expert SEO Content Reviewer. 
-Evaluate the provided text against the target keyword. Check for:
-1. Keyword Density (calculate roughly and check if it's stuffed or too low).
-2. Presence of Keyword in strategic places (assuming first paragraph, headers, conclusion).
-3. Readability and flow.
-4. Missing semantic relevance (LSI keywords that should exist).
+        // Detect language from content (simple heuristic)
+        const isArabic = /[\u0600-\u06FF]/.test(contentText.substring(0, 500));
+        const langNote = isArabic
+            ? "The content is in Arabic. Apply Arabic SEO best practices: keyword placement in RTL context, Arabic morphology (root words count as keyword matches), and Arabic readability standards."
+            : "The content is in English.";
+
+        const prompt = `You are a Senior SEO Content Strategist with expertise in Arabic and English digital content.
+${langNote}
+
+Deeply evaluate the provided content draft against the target keyword and return a comprehensive SEO audit.
 
 Target Keyword: "${keyword}"
 
 Content Draft:
 """
-${contentText.substring(0, 15000)}
+${contentText.substring(0, 20000)}
 """
 
-Return a JSON strictly formatted like this:
+Analyze these dimensions:
+1. Keyword Density — exact count and percentage, is it optimal (1-2%)?
+2. Keyword Placement — in title/H1, intro paragraph, subheadings, conclusion?
+3. Semantic Coverage — are related LSI and NLP keywords present?
+4. Readability — sentence length, structure, paragraphing
+5. Content Depth — does it thoroughly cover the topic?
+6. Missing Topics — what subtopics should be added based on search intent?
+7. Keyword Cannibalization Risk — does the content compete with itself?
+8. Call-to-Action — is there a clear CTA aligned with the keyword's intent?
+
+Return ONLY valid JSON (no markdown):
 {
-    "seoScore": 0-100,
+    "seoScore": <0-100>,
     "densityState": "Perfect" | "Low" | "Stuffed",
-    "wordCount": 1200,
-    "positiveHighlights": [
-        "What was done well...",
-        "..."
-    ],
-    "improvementAreas": [
-        "What needs changing...",
-        "..."
-    ]
+    "keywordDensityPercent": <float>,
+    "wordCount": <integer>,
+    "keywordCount": <integer>,
+    "positiveHighlights": ["<specific thing done well>", "..."],
+    "improvementAreas": ["<specific actionable suggestion>", "..."],
+    "missingLsiKeywords": ["<keyword>", "..."],
+    "missingTopics": ["<topic/subtopic to add>", "..."],
+    "readabilityScore": "Excellent" | "Good" | "Fair" | "Poor",
+    "contentDepth": "Comprehensive" | "Adequate" | "Thin",
+    "ctaPresent": true | false
 }`;
 
-        const aiResponse = await geminiFlash.generateContent({
-            contents: [{ role: 'user', parts: [{ text: prompt }] }],
-            generationConfig: { temperature: 0.2, maxOutputTokens: 1000 }
-        });
-
-        const rawText = aiResponse.response.text();
+        const rawText = await claudeGenerate(prompt);
         
         let parsed = null;
         try {

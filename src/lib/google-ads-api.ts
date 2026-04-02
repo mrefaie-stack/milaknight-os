@@ -132,26 +132,46 @@ export class GoogleAdsAPI {
         }
     }
 
-    async generateKeywordIdeas(customerId: string, keywords: string[]): Promise<any[]> {
-        const payload = {
-            keywordSeed: { keywords: keywords.slice(0, 20) }, // Limit to 20 seed keywords
-            pageSize: 50
+    async generateKeywordIdeas(
+        customerId: string,
+        keywords: string[],
+        options: { geoTargetId?: string; languageId?: string } = {}
+    ): Promise<any[]> {
+        const payload: any = {
+            keywordSeed: { keywords: keywords.slice(0, 20) },
+            pageSize: 100,
         };
+
+        // Add geo targeting if provided (e.g. "2682" for Saudi Arabia)
+        if (options.geoTargetId) {
+            payload.geoTargetConstants = [`geoTargetConstants/${options.geoTargetId}`];
+        }
+
+        // Add language targeting if provided (e.g. "1019" for Arabic, "1000" for English)
+        if (options.languageId) {
+            payload.language = `languageConstants/${options.languageId}`;
+        }
+
         try {
             const res = await fetch(`${GADS_BASE}/customers/${customerId}:generateKeywordIdeas`, {
                 method: 'POST',
                 headers: this.headers(customerId),
                 body: JSON.stringify(payload)
             });
-            if (!res.ok) return [];
+            if (!res.ok) {
+                console.error('generateKeywordIdeas error:', res.status, await res.text().catch(() => ''));
+                return [];
+            }
             const data = await res.json();
             return (data.results || []).map((r: any) => ({
-                keyword: r.keywordIdeaMetrics?.text || r.keywordIdea?.text || '',
+                // text is at root level, NOT inside keywordIdeaMetrics
+                keyword: r.text || '',
                 volume: Number(r.keywordIdeaMetrics?.avgMonthlySearches) || 0,
                 competition: r.keywordIdeaMetrics?.competition || 'UNSPECIFIED',
                 cpc: (Number(r.keywordIdeaMetrics?.lowTopOfPageBidMicros) || 0) / 1_000_000
-            }));
-        } catch {
+            })).filter((r: any) => r.keyword); // Remove empty keyword entries
+        } catch (err) {
+            console.error('generateKeywordIdeas exception:', err);
             return [];
         }
     }
