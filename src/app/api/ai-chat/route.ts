@@ -1,11 +1,11 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { getToolsForRole, isToolAllowedForRole } from "@/lib/ai/tools";
+import { getClaudeToolsForRole, isToolAllowedForRole } from "@/lib/ai/tools";
 import { buildSystemPrompt } from "@/lib/ai/system-prompt";
 import { executeTool } from "@/lib/ai/tool-executor";
-import { genAI } from "@/lib/ai/gemini";
-import { Content, Part } from "@google/generative-ai";
+import { anthropic, CLAUDE_SONNET } from "@/lib/ai/claude";
+import type Anthropic from "@anthropic-ai/sdk";
 
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
@@ -37,143 +37,113 @@ export async function POST(req: Request) {
       data: {
         conversationId: convId,
         role: "user",
-        content: typeof lastUserMessage.content === 'string' ? lastUserMessage.content : JSON.stringify(lastUserMessage.content),
+        content:
+          typeof lastUserMessage.content === "string"
+            ? lastUserMessage.content
+            : JSON.stringify(lastUserMessage.content),
       },
     });
   }
 
-  // Build Gemini messages from conversation history
-  // Anthropic array history often contained raw strings, but we map it to Gemini Parts.
-  const geminiMessages: Content[] = messages
+  // Convert to Claude message format
+  const claudeMessages: Anthropic.MessageParam[] = messages
     .filter((m: any) => typeof m.content === "string" && m.content.trim() !== "")
     .map((m: any) => ({
-      role: m.role === "assistant" ? "model" : "user",
-      parts: [{ text: m.content }],
+      role: m.role === "assistant" ? "assistant" : "user",
+      content: m.content as string,
     }));
 
-  const tools = getToolsForRole(userRole);
-  const systemPrompt = buildSystemPrompt({
-    name: userName,
-    role: userRole,
-    id: userId,
-  });
+  const tools = getClaudeToolsForRole(userRole);
+  const systemPrompt = buildSystemPrompt({ name: userName, role: userRole, id: userId });
 
-  const model = genAI.getGenerativeModel({
-    model: "gemini-2.0-flash",
-    systemInstruction: { role: "system", parts: [{ text: systemPrompt }] },
-    tools: tools.length > 0 ? [{ functionDeclarations: tools }] : undefined,
-  });
-
-  // Create a readable stream for SSE
   const encoder = new TextEncoder();
+
   const stream = new ReadableStream({
     async start(controller) {
       try {
         let fullResponse = "";
         let allToolCalls: Array<{ name: string; input: unknown }> = [];
-
-        // Process with tool use loop
-        let currentMessages = [...geminiMessages];
+        let currentMessages: Anthropic.MessageParam[] = [...claudeMessages];
         let continueLoop = true;
 
         while (continueLoop) {
-          const resultStream = await model.generateContentStream({
-            contents: currentMessages,
+          const response = await anthropic.messages.create({
+            model: CLAUDE_SONNET,
+            max_tokens: 8192,
+            system: systemPrompt,
+            messages: currentMessages,
+            tools: tools.length > 0 ? tools : undefined,
           });
 
           continueLoop = false;
-          let chunkTextBuffer = "";
-          let assistantParts: Part[] = [];
-          let currentToolResultParts: Part[] = [];
 
-          for await (const chunk of resultStream.stream) {
-            const chunkText = chunk.text();
-            if (chunkText) {
-              fullResponse += chunkText;
-              chunkTextBuffer += chunkText;
-              // Send text chunk
-              controller.enqueue(
-                encoder.encode(
-                  `data: ${JSON.stringify({ type: "text", content: chunkText })}\n\n`
-                )
-              );
-            }
+          const assistantContent: Anthropic.ContentBlock[] = response.content;
+          const toolResults: Anthropic.ToolResultBlockParam[] = [];
 
-            const calls = chunk.functionCalls();
-            if (calls && calls.length > 0) {
-              for (const call of calls) {
-                const toolName = call.name;
-                const toolInput = call.args as Record<string, unknown>;
+          for (const block of assistantContent) {
+            if (block.type === "text") {
+              // Stream text in small chunks for real-time feel
+              const text = block.text;
+              fullResponse += text;
 
-                assistantParts.push({ functionCall: call });
-
-                // Security check
-                if (!isToolAllowedForRole(toolName, userRole)) {
-                  currentToolResultParts.push({
-                    functionResponse: {
-                      name: toolName,
-                      response: { error: `Tool ${toolName} is not available for your role` },
-                    },
-                  });
-                  continueLoop = true;
-                  continue;
-                }
-
-                // Notify client about tool execution
+              // Split into ~40-char chunks
+              const chunkSize = 40;
+              for (let i = 0; i < text.length; i += chunkSize) {
+                const chunk = text.slice(i, i + chunkSize);
                 controller.enqueue(
                   encoder.encode(
-                    `data: ${JSON.stringify({
-                      type: "tool_start",
-                      tool: toolName,
-                      input: toolInput,
-                    })}\n\n`
+                    `data: ${JSON.stringify({ type: "text", content: chunk })}\n\n`
                   )
                 );
+              }
+            } else if (block.type === "tool_use") {
+              const toolName = block.name;
+              const toolInput = block.input as Record<string, unknown>;
 
-                // Execute tool
-                let rawResult;
-                try {
-                    rawResult = await executeTool(toolName, toolInput, userRole, userId);
-                } catch(e: any) {
-                    rawResult = JSON.stringify({ error: e.message || String(e) });
-                }
-
-                allToolCalls.push({ name: toolName, input: toolInput });
-
-                controller.enqueue(
-                  encoder.encode(
-                    `data: ${JSON.stringify({
-                      type: "tool_end",
-                      tool: toolName,
-                    })}\n\n`
-                  )
-                );
-
-                let parsedResult = {};
-                try {
-                    parsedResult = JSON.parse(rawResult);
-                } catch {
-                    parsedResult = { result: rawResult };
-                }
-
-                currentToolResultParts.push({
-                  functionResponse: {
-                    name: toolName,
-                    response: parsedResult,
-                  },
+              // Security check
+              if (!isToolAllowedForRole(toolName, userRole)) {
+                toolResults.push({
+                  type: "tool_result",
+                  tool_use_id: block.id,
+                  content: JSON.stringify({ error: `Tool ${toolName} is not available for your role` }),
                 });
                 continueLoop = true;
+                continue;
               }
+
+              controller.enqueue(
+                encoder.encode(
+                  `data: ${JSON.stringify({ type: "tool_start", tool: toolName, input: toolInput })}\n\n`
+                )
+              );
+
+              let rawResult: string;
+              try {
+                rawResult = await executeTool(toolName, toolInput, userRole, userId);
+              } catch (e: any) {
+                rawResult = JSON.stringify({ error: e.message || String(e) });
+              }
+
+              allToolCalls.push({ name: toolName, input: toolInput });
+
+              controller.enqueue(
+                encoder.encode(
+                  `data: ${JSON.stringify({ type: "tool_end", tool: toolName })}\n\n`
+                )
+              );
+
+              toolResults.push({
+                type: "tool_result",
+                tool_use_id: block.id,
+                content: rawResult,
+              });
+              continueLoop = true;
             }
           }
 
-          if (chunkTextBuffer) {
-              assistantParts.push({ text: chunkTextBuffer });
-          }
-
-          if (continueLoop && currentToolResultParts.length > 0) {
-             currentMessages.push({ role: "model", parts: assistantParts });
-             currentMessages.push({ role: "user", parts: currentToolResultParts });
+          if (continueLoop && toolResults.length > 0) {
+            currentMessages.push({ role: "assistant", content: assistantContent });
+            currentMessages.push({ role: "user", content: toolResults });
           }
         }
 
@@ -183,14 +153,10 @@ export async function POST(req: Request) {
             conversationId: convId,
             role: "assistant",
             content: fullResponse || "Action completed via tools.",
-            toolCalls:
-              allToolCalls.length > 0
-                ? JSON.stringify(allToolCalls)
-                : null,
+            toolCalls: allToolCalls.length > 0 ? JSON.stringify(allToolCalls) : null,
           },
         });
 
-        // Send conversation ID and done signal
         controller.enqueue(
           encoder.encode(
             `data: ${JSON.stringify({ type: "done", conversationId: convId })}\n\n`
@@ -199,11 +165,9 @@ export async function POST(req: Request) {
         controller.close();
       } catch (error: any) {
         console.error("AI stream error:", error);
-        // Sometimes the SDK throws unhandled errors from safety filters
-        const message = error?.message || "Unknown error";
         controller.enqueue(
           encoder.encode(
-            `data: ${JSON.stringify({ type: "error", content: message })}\n\n`
+            `data: ${JSON.stringify({ type: "error", content: error?.message || "Unknown error" })}\n\n`
           )
         );
         controller.close();

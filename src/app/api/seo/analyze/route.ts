@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { geminiFlash } from "@/lib/ai/gemini";
+import { claudeGenerate } from "@/lib/ai/claude";
 import { GoogleAdsAPI } from "@/lib/google-ads-api";
 import { prisma } from "@/lib/prisma";
 
@@ -68,8 +68,7 @@ Return ONLY a valid JSON object with the following structure:
 }
 `;
 
-        const msg = await geminiFlash.generateContent(claudePrompt);
-        const textContent = msg.response.text();
+        const textContent = await claudeGenerate(claudePrompt);
         
         let seoPlan;
         try {
