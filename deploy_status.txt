@@ -1,0 +1,24 @@
+1. Connecting to deploy new Market Intelligence features...
+2. Connected!
+3. Files uploaded successfully! Rebuilding server...
+
+> milaknight-os@0.1.0 build
+> prisma generate && next build
+
+warn The configuration property `package.json#prisma` is deprecated and will be removed in Prisma 7. Please migrate to a Prisma config file (e.g., `prisma.config.ts`).
+For more information, see: https://pris.ly/prisma-config
+
+Prisma schema loaded from prisma/schema.prisma
+Environment variables loaded from .env
+
+✔ Generated Prisma Client (v6.19.2) to ./node_modules/@prisma/client in 1.77s
+
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+
+Tip: Interested in query caching in just a few lines of code? Try Accelerate today! https://pris.ly/tip-3-accelerate
+
+  Suggestion: If you intended to restart next build, terminate the other process, and then try again.
+⨯ Unable to acquire lock at /root/milaknight-os/.next/lock, is another instance of next build running?
+
+
+=== 4. SERVER DEPLOYMENT COMPLETE! ===

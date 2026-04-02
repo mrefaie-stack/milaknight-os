@@ -9,14 +9,15 @@ import {
     Share2, Database, MapPin, RefreshCw, Copy, Check,
     TrendingUp, TrendingDown, Minus, Eye, Activity,
     Lock, Layers, Server, Wifi, FileCode, ListChecks,
-    Filter
+    Filter, Users
 } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type {
     SiteAnalysisResponse, SiteIssue, CategoryResult,
-    QuickWin, SerpPreview, PerformanceSignals
+    QuickWin, SerpPreview, PerformanceSignals,
+    SiteCompetitor, TargetKeyword
 } from "@/app/api/seo/site-analysis/route";
 
 // ─────────────────────────── helpers ────────────────────────────────────────
@@ -158,7 +159,7 @@ function IssueRow({ issue }: { issue: SiteIssue }) {
                     {issue.affectedCount !== undefined && issue.affectedCount > 0 && (
                         <span className="text-xs text-muted-foreground hidden sm:inline">{issue.affectedCount}×</span>
                     )}
-                    {issue.codeSnippet && <Code2 className="h-3.5 w-3.5 text-muted-foreground/60" title="Has code fix" />}
+                    {issue.codeSnippet && <Code2 className="h-3.5 w-3.5 text-muted-foreground/60" />}
                     <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${cfg.badge}`}>{cfg.label}</span>
                     {open ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
                 </div>
@@ -437,16 +438,96 @@ function PriorityMatrix({ wins }: { wins: QuickWin[] }) {
     );
 }
 
+// ─────────────────────────── Market & Keyword Intelligence ───────────────────
+
+function MarketIntelligencePanel({ competitors, keywords }: { competitors: SiteCompetitor[], keywords: TargetKeyword[] }) {
+    const isRtl = document.documentElement.dir === "rtl";
+    const intentColor = (intent: string) => {
+        switch(intent.toLowerCase()) {
+            case "informational": return "bg-blue-500/15 text-blue-600 dark:text-blue-400";
+            case "transactional": return "bg-green-500/15 text-green-600 dark:text-green-400";
+            case "commercial": return "bg-amber-500/15 text-amber-600 dark:text-amber-400";
+            default: return "bg-purple-500/15 text-purple-600 dark:text-purple-400";
+        }
+    };
+    const diffColor = (diff: string) => {
+        switch(diff.toLowerCase()) {
+            case "low": return "text-green-500";
+            case "medium": return "text-amber-500";
+            case "high": return "text-red-500";
+            default: return "text-muted-foreground";
+        }
+    };
+
+    return (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="rounded-2xl border border-border bg-card p-6">
+                <div className="flex items-center gap-2 mb-4">
+                    <div className="h-8 w-8 rounded-lg bg-orange-500/10 flex items-center justify-center shrink-0">
+                        <Users className="h-4 w-4 text-orange-500" />
+                    </div>
+                    <div>
+                        <h3 className="font-bold text-sm">{isRtl ? "أبرز المنافسين" : "Top Organic Competitors"}</h3>
+                        <p className="text-xs text-muted-foreground">{isRtl ? "المنافسين في نفس المجال" : "Direct niche competitors"}</p>
+                    </div>
+                </div>
+                <div className="space-y-3">
+                    {competitors?.length > 0 ? competitors.map((c, i) => (
+                        <div key={i} className="flex flex-col gap-1 p-3 rounded-xl bg-muted/40 border border-border/50">
+                            <div className="font-semibold text-sm text-primary underline underline-offset-2 decoration-primary/30 break-all">{c.domain}</div>
+                            <div className="text-xs text-muted-foreground leading-relaxed">{c.overlapReason}</div>
+                        </div>
+                    )) : (
+                        <p className="text-xs text-muted-foreground">No competitors found.</p>
+                    )}
+                </div>
+            </div>
+
+            <div className="rounded-2xl border border-border bg-card p-6">
+                <div className="flex items-center gap-2 mb-4">
+                    <div className="h-8 w-8 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0">
+                        <TrendingUp className="h-4 w-4 text-emerald-500" />
+                    </div>
+                    <div>
+                        <h3 className="font-bold text-sm">{isRtl ? "الكلمات المفتاحية المستهدفة" : "Target SEO Keywords"}</h3>
+                        <p className="text-xs text-muted-foreground">{isRtl ? "أهم فرص الكلمات لموقعك" : "High-value keyword opportunities"}</p>
+                    </div>
+                </div>
+                <div className="space-y-2">
+                    {keywords?.length > 0 ? keywords.map((kw, i) => (
+                        <div key={i} className="flex items-center justify-between gap-3 p-3 rounded-xl bg-muted/40 border border-border/50">
+                            <div className="min-w-0 flex-1">
+                                <div className="font-semibold text-sm truncate" title={kw.keyword}>{kw.keyword}</div>
+                                <div className="flex items-center gap-2 mt-1">
+                                    <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider ${intentColor(kw.intent)}`}>{kw.intent}</span>
+                                    <span className="text-xs font-mono text-muted-foreground">{kw.volume || "N/A"} vol</span>
+                                </div>
+                            </div>
+                            <div className="text-center shrink-0 px-2">
+                                <div className={`text-xs font-bold capitalize ${diffColor(kw.difficulty)}`}>{kw.difficulty}</div>
+                                <div className="text-[9px] text-muted-foreground uppercase opacity-70">Diff</div>
+                            </div>
+                        </div>
+                    )) : (
+                        <p className="text-xs text-muted-foreground">No keywords found.</p>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+}
+
 // ─────────────────────────── Loading steps ──────────────────────────────────
 
 const STEPS = [
     { label: "Fetching page HTML & response headers...", threshold: 18 },
     { label: "Parsing robots.txt & sitemap XML...", threshold: 32 },
-    { label: "Auditing On-Page & Content signals...", threshold: 50 },
-    { label: "Checking Technical & Performance factors...", threshold: 65 },
-    { label: "Analyzing Links, Security headers...", threshold: 78 },
-    { label: "Validating Structured Data & Social tags...", threshold: 88 },
-    { label: "Generating AI-powered Quick Wins...", threshold: 96 },
+    { label: "Auditing On-Page & Content signals...", threshold: 45 },
+    { label: "Checking Technical & Performance factors...", threshold: 60 },
+    { label: "Analyzing Links, Security headers...", threshold: 70 },
+    { label: "Validating Structured Data & Social tags...", threshold: 80 },
+    { label: "Generating AI-powered Quick Wins...", threshold: 88 },
+    { label: "Predicting Market Competitors & Keywords...", threshold: 96 },
 ];
 
 // ─────────────────────────── Export helpers ──────────────────────────────────
@@ -752,6 +833,11 @@ export function SiteAnalysis() {
 
             {/* ── Performance Signals ────────────────────────────────────────── */}
             {performanceSignals && <PerformancePanel perf={performanceSignals} />}
+
+            {/* ── Market Intelligence ────────────────────────────────────────── */}
+            {((result.competitors && result.competitors.length > 0) || (result.targetKeywords && result.targetKeywords.length > 0)) && (
+                <MarketIntelligencePanel competitors={result.competitors} keywords={result.targetKeywords} />
+            )}
 
             {/* ── Category Accordion ────────────────────────────────────────── */}
             <div className="space-y-3">

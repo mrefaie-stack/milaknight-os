@@ -106,7 +106,13 @@
       "Bash(cat -n /tmp/dr-saigh/app/blog/[slug]/page.js)",
       "Bash(cat -n /tmp/dr-saigh/app/operations/[slug]/page.js)",
       "Bash(cat -n /tmp/drmunifi/app/[lang]/operation-details/[slug]/page.jsx)",
-      "Bash(cat -n /tmp/drmunifi/app/[lang]/blogs/[slug]/page.jsx)"
+      "Bash(cat -n /tmp/drmunifi/app/[lang]/blogs/[slug]/page.jsx)",
+      "Bash(ls \"/c/Users/madao/.gemini/antigravity/playground/milaknight-os/src/app/\\(dashboard\\)/seo-team/\")",
+      "Bash(cat:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run:*)",
+      "Bash(sed -i 's/import { KeywordExplorer } from \"@\\\\/components\\\\/seo\\\\/keyword-explorer\";/import { KeywordExplorerTabs } from \"@\\\\/components\\\\/seo\\\\/keyword-explorer-tabs\";/' \"src/app/\\(dashboard\\)/seo-lead/keyword-explorer/page.tsx\")",
+      "Bash(sed -i 's/<KeywordExplorer \\\\/>/<KeywordExplorerTabs \\\\/>/' \"src/app/\\(dashboard\\)/seo-lead/keyword-explorer/page.tsx\")"
     ]
   }
 }

@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { claudeGenerate } from "@/lib/ai/claude";
+import { GoogleAdsAPI } from "@/lib/google-ads-api";
+import { COUNTRY_GEO_IDS, LANGUAGE_IDS } from "@/app/api/seo/keyword-explorer/route";
 import * as cheerio from "cheerio";
 import { prisma } from "@/lib/prisma";
 
@@ -66,6 +68,45 @@ export interface ContentQuality {
     listCount: number;
 }
 
+export interface NicheKeyword {
+    keyword: string;
+    category: "Transactional" | "Informational" | "Commercial" | "Question" | "Local" | "Adjacent";
+    volume: number;
+    competition: string;
+    cpc: string;
+    opportunityScore: number;
+    goldenScore: number;
+    isHiddenGem: boolean;
+    intent: string;
+    source: "AI+Data" | "AI Only" | "Data Expanded";
+}
+
+export interface NicheIntelligence {
+    niche: string;
+    subNiche: string;
+    targetAudience: string;
+    detectedLanguage: string;
+    mainTopics: string[];
+    contentSummary: string;
+    seedKeywords: string[];
+    keywords: NicheKeyword[];
+    hasRealData: boolean;
+    totalKeywords: number;
+    hiddenGems: number;
+}
+
+export interface SiteCompetitor {
+    domain: string;
+    overlapReason: string;
+}
+
+export interface TargetKeyword {
+    keyword: string;
+    intent: "Informational" | "Navigational" | "Commercial" | "Transactional";
+    volume: string;
+    difficulty: "Low" | "Medium" | "High";
+}
+
 export interface SiteAnalysisResponse {
     url: string;
     analyzedAt: string;
@@ -78,6 +119,8 @@ export interface SiteAnalysisResponse {
     serpPreview: SerpPreview;
     performanceSignals: PerformanceSignals;
     contentQuality: ContentQuality;
+    competitors: SiteCompetitor[];
+    targetKeywords: TargetKeyword[];
 }
 
 const CATEGORY_NAMES = [
@@ -1081,6 +1124,40 @@ export async function POST(req: Request) {
             if (match) quickWins = JSON.parse(match[0]);
         } catch {}
 
+        // ── 9.5 AI Competitors & Keywords ───────────────────────────────────
+        let competitors: SiteCompetitor[] = [];
+        let targetKeywords: TargetKeyword[] = [];
+        try {
+            const lang = htmlLang.startsWith("ar") ? "Arabic" : "English";
+            const prompt = `You are a world-class SEO strategist. 
+I am providing you with the h1 tag, and a 1000 character sample of a website's text content.
+URL: ${finalUrl}
+H1: ${h1s[0] || ""}
+Sample Content: ${bodyText.substring(0, 1000)}...
+
+Task:
+1. Identify 3 to 5 real, top organic competitors for this exact niche.
+2. Identify exactly 8 high-value SEO target keywords for this site.
+Return ONLY a valid JSON object in this format (NO markdown, NO text outside json):
+{
+  "competitors": [
+    { "domain": "example.com", "overlapReason": "Short explanation in ${lang}" }
+  ],
+  "keywords": [
+    { "keyword": "search term", "intent": "Informational" | "Navigational" | "Commercial" | "Transactional", "volume": "e.g., 5.4K", "difficulty": "Low" | "Medium" | "High" }
+  ]
+}`;
+            const aiMarketRaw = await claudeGenerate(prompt);
+            const match = aiMarketRaw.match(/\{[\s\S]*\}/);
+            if (match) {
+                const parsed = JSON.parse(match[0]);
+                competitors = parsed.competitors || [];
+                targetKeywords = parsed.keywords || [];
+            }
+        } catch(e) {
+            console.error("Market Intelligence Error:", e);
+        }
+
         // ── 10. Build response ──────────────────────────────────────────────
         const rawMetrics = {
             title: { text: title, length: title.length },
@@ -1166,6 +1243,8 @@ export async function POST(req: Request) {
             serpPreview,
             performanceSignals,
             contentQuality,
+            competitors,
+            targetKeywords,
         };
 
         try {
