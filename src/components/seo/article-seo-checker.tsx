@@ -35,7 +35,6 @@ interface CheckResult {
     };
     overallScore: number;
     passed: boolean;
-    summary: string;
 }
 
 /* ─── Score ring ─────────────────────────────────── */
@@ -331,7 +330,6 @@ export function ArticleSeoChecker() {
                             <ScoreRing score={result.overallScore} passed={result.passed} />
                             <div className="flex-1 space-y-1">
                                 <p className="text-sm font-semibold">{isRtl ? "تقييم المقال" : "Article Assessment"}</p>
-                                <p className="text-sm text-muted-foreground leading-relaxed">{result.summary}</p>
                                 <div className={cn("flex flex-wrap gap-3 pt-1 text-xs text-muted-foreground", isRtl ? "flex-row-reverse" : "")}>
                                     <span className="flex items-center gap-1">
                                         <BookOpen className="h-3.5 w-3.5" />
