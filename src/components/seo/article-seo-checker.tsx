@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { SeoHistoryViewer } from "./seo-history-viewer";
 
 /* ─── Types ──────────────────────────────────────── */
 interface LsiResult   { keyword: string; occurrences: number; passed: boolean }
@@ -194,6 +195,13 @@ export function ArticleSeoChecker() {
                             : "Audit articles before publishing — keyword, LSI, headings, and word count"}
                     </p>
                 </div>
+                <SeoHistoryViewer
+                    toolName="ARTICLE_SEO_CHECKER"
+                    onSelect={(resultData) => {
+                        setResult(resultData);
+                        setError(null);
+                    }}
+                />
             </div>
 
             {/* ── Form ── */}

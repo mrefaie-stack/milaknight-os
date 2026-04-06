@@ -48,6 +48,7 @@ export function SeoHistoryViewer({ toolName, onSelect }: HistoryViewerProps) {
 
     const formatInputLabel = (inputData: any) => {
         if (!inputData) return "Unknown";
+        if (inputData.focusKeyword) return `"${inputData.focusKeyword}"`;
         if (inputData.keyword) return `"${inputData.keyword}"`;
         if (inputData.url) return inputData.url.replace(/^https?:\/\//, '').substring(0, 30);
         return "Previous Run";
