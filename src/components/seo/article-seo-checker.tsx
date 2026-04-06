@@ -15,8 +15,9 @@ import { cn } from "@/lib/utils";
 import { SeoHistoryViewer } from "./seo-history-viewer";
 
 /* ─── Types ──────────────────────────────────────── */
-interface LsiResult   { keyword: string; occurrences: number; passed: boolean }
+interface LsiResult     { keyword: string; occurrences: number; passed: boolean }
 interface HeadingResult { heading: string; found: boolean }
+interface DetectedHeading { text: string; level: number }
 
 interface CheckResult {
     wordCount: number;
@@ -29,6 +30,8 @@ interface CheckResult {
     };
     lsiKeywords: LsiResult[];
     requiredHeadings: HeadingResult[];
+    allDetectedHeadings: DetectedHeading[];
+    extraHeadings: DetectedHeading[];
     wordCountCheck: {
         wordCount: number;
         meetsMinimum: boolean;
@@ -37,6 +40,27 @@ interface CheckResult {
     overallScore: number;
     passed: boolean;
 }
+
+/* ─── Live heading extractor (client-side) ───────── */
+function extractHeadingsFromText(text: string): DetectedHeading[] {
+    const headings: DetectedHeading[] = [];
+    const lines = text.split("\n");
+    for (const line of lines) {
+        const match = line.match(/^(#{1,6})\s+(.+)$/);
+        if (match) headings.push({ level: match[1].length, text: match[2].trim() });
+    }
+    return headings;
+}
+
+const H_COLORS: Record<number, string> = {
+    1: "text-foreground font-bold text-base",
+    2: "text-foreground font-semibold text-sm",
+    3: "text-muted-foreground font-medium text-sm",
+    4: "text-muted-foreground text-xs",
+    5: "text-muted-foreground text-xs",
+    6: "text-muted-foreground text-xs",
+};
+const H_INDENT: Record<number, string> = { 1: "", 2: "pl-3", 3: "pl-6", 4: "pl-9", 5: "pl-9", 6: "pl-9" };
 
 /* ─── Score ring ─────────────────────────────────── */
 function ScoreRing({ score, passed }: { score: number; passed: boolean }) {
@@ -263,15 +287,44 @@ export function ArticleSeoChecker() {
                     <label className="text-sm font-medium flex items-center gap-1.5">
                         <AlignLeft className="h-3.5 w-3.5 text-cyan-500" />
                         {isRtl ? "نص المقال كاملاً" : "Full Article Content"}
+                        <span className="text-xs text-muted-foreground font-normal">
+                            {isRtl ? "— استخدم # للعناوين (# H1 · ## H2 · ### H3)" : "— use # for headings (# H1 · ## H2 · ### H3)"}
+                        </span>
                     </label>
-                    <Textarea
-                        dir={isRtl ? "rtl" : "ltr"}
-                        placeholder={isRtl ? "الصق نص المقال كاملاً هنا..." : "Paste the full article text here..."}
-                        value={content}
-                        onChange={e => setContent(e.target.value)}
-                        className="min-h-[240px] font-mono text-sm"
-                        required
-                    />
+                    <div className="grid md:grid-cols-2 gap-3">
+                        <Textarea
+                            dir={isRtl ? "rtl" : "ltr"}
+                            placeholder={isRtl
+                                ? "# عنوان المقال\n\nالصق نص المقال هنا...\n\n## عنوان فرعي\n\nنص..."
+                                : "# Article Title\n\nPaste article text here...\n\n## Sub Heading\n\nContent..."}
+                            value={content}
+                            onChange={e => setContent(e.target.value)}
+                            className="min-h-[260px] font-mono text-sm"
+                            required
+                        />
+                        {/* Live heading detector */}
+                        <div className="rounded-lg border border-border bg-muted/30 p-3 min-h-[260px] overflow-y-auto">
+                            <p className={cn("text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2", isRtl ? "text-right" : "")}>
+                                {isRtl ? "العناوين المكتشفة" : "Detected Headings"}
+                            </p>
+                            {extractHeadingsFromText(content).length === 0 ? (
+                                <p className="text-xs text-muted-foreground/60 mt-4 text-center">
+                                    {isRtl ? "لم يُكتشف أي عنوان بعد" : "No headings detected yet"}
+                                </p>
+                            ) : (
+                                <div className="space-y-1">
+                                    {extractHeadingsFromText(content).map((h, i) => (
+                                        <div key={i} className={cn("flex items-center gap-2", H_INDENT[h.level], isRtl ? "flex-row-reverse" : "")}>
+                                            <span className="text-[9px] font-bold text-cyan-500 shrink-0 w-6 text-center">
+                                                H{h.level}
+                                            </span>
+                                            <span className={cn("truncate", H_COLORS[h.level])}>{h.text}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
                     <p className={cn("text-xs text-muted-foreground", isRtl ? "text-right" : "")}>
                         {wordCount > 0 ? (
                             <>
@@ -475,6 +528,29 @@ export function ArticleSeoChecker() {
                                             >
                                                 {h.found ? (isRtl ? "موجود ✓" : "Found ✓") : (isRtl ? "مفقود ✗" : "Missing ✗")}
                                             </Badge>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Extra headings (informational) */}
+                        {result.extraHeadings && result.extraHeadings.length > 0 && (
+                            <div className="rounded-xl border border-blue-500/20 bg-blue-500/5 p-4">
+                                <p className={cn("text-xs font-semibold uppercase tracking-wider text-blue-500 mb-3 flex items-center gap-1.5", isRtl ? "flex-row-reverse text-right" : "")}>
+                                    <span>ℹ</span>
+                                    {isRtl ? "عناوين إضافية في المقال (مش في قائمتك)" : "Extra Headings in Article (not in your list)"}
+                                </p>
+                                <div className="space-y-1.5">
+                                    {result.extraHeadings.map((h, i) => (
+                                        <div key={i} className={cn(
+                                            "flex items-center gap-3 py-1.5 border-b border-border/50 last:border-0",
+                                            isRtl ? "flex-row-reverse text-right" : "",
+                                        )}>
+                                            <Badge variant="outline" className="text-[9px] border-blue-500/30 text-blue-500 bg-blue-500/5 shrink-0 font-bold">
+                                                H{h.level}
+                                            </Badge>
+                                            <span className="flex-1 text-sm text-muted-foreground">{h.text}</span>
                                         </div>
                                     ))}
                                 </div>

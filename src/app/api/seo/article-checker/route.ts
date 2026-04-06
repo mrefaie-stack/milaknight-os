@@ -18,6 +18,28 @@ function headingPresent(text: string, heading: string): boolean {
     return text.toLowerCase().includes(heading.toLowerCase().trim());
 }
 
+interface DetectedHeading { text: string; level: number }
+
+function extractHeadings(content: string): DetectedHeading[] {
+    const headings: DetectedHeading[] = [];
+
+    // Markdown: # H1  ## H2  ### H3 etc.
+    const mdRegex = /^(#{1,6})\s+(.+)$/gm;
+    let match;
+    while ((match = mdRegex.exec(content)) !== null) {
+        headings.push({ level: match[1].length, text: match[2].trim() });
+    }
+
+    // HTML tags: <h1>...</h1>
+    const htmlRegex = /<h([1-6])[^>]*>(.*?)<\/h[1-6]>/gi;
+    while ((match = htmlRegex.exec(content)) !== null) {
+        const text = match[2].replace(/<[^>]+>/g, "").trim();
+        if (text) headings.push({ level: parseInt(match[1]), text });
+    }
+
+    return headings;
+}
+
 export async function POST(req: Request) {
     try {
         const session = await getServerSession(authOptions);
@@ -29,13 +51,13 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Missing content or focus keyword" }, { status: 400 });
         }
 
-        const lsiList: string[]     = Array.isArray(lsiKeywords)      ? lsiKeywords      : [];
-        const headingList: string[] = Array.isArray(requiredHeadings)  ? requiredHeadings : [];
+        const lsiList: string[]     = Array.isArray(lsiKeywords)     ? lsiKeywords     : [];
+        const headingList: string[] = Array.isArray(requiredHeadings) ? requiredHeadings : [];
 
         // ── Word count ────────────────────────────────
-        const wordCount      = countWords(content);
-        const meetsMinimum   = wordCount >= 800;
-        const meetsTarget    = wordCount >= 1000;
+        const wordCount    = countWords(content);
+        const meetsMinimum = wordCount >= 800;
+        const meetsTarget  = wordCount >= 1000;
 
         // ── Focus keyword ─────────────────────────────
         const kwOccurrences  = countOccurrences(content, focusKeyword);
@@ -55,6 +77,17 @@ export async function POST(req: Request) {
             found: headingPresent(content, h),
         }));
 
+        // ── Detected headings from content ────────────
+        const allDetected = extractHeadings(content);
+
+        // Extra = detected headings NOT in the required list
+        const extraHeadings = allDetected.filter(dh =>
+            !headingList.some(req =>
+                dh.text.toLowerCase().includes(req.toLowerCase().trim()) ||
+                req.toLowerCase().trim().includes(dh.text.toLowerCase())
+            )
+        );
+
         // ── Score ─────────────────────────────────────
         const checks: boolean[] = [
             kwPassed,
@@ -64,13 +97,17 @@ export async function POST(req: Request) {
         ];
         const passedCount  = checks.filter(Boolean).length;
         const overallScore = Math.round((passedCount / checks.length) * 100);
-        const passed       = kwPassed && meetsMinimum && lsiResults.every(l => l.passed) && headingResults.every(h => h.found);
+        const passed       = kwPassed && meetsMinimum
+            && lsiResults.every(l => l.passed)
+            && headingResults.every(h => h.found);
 
         const result = {
             wordCount,
             focusKeyword: { keyword: focusKeyword, occurrences: kwOccurrences, minRequired, passed: kwPassed, densityPercent },
             lsiKeywords: lsiResults,
             requiredHeadings: headingResults,
+            allDetectedHeadings: allDetected,
+            extraHeadings,
             wordCountCheck: { wordCount, meetsMinimum, meetsTarget },
             overallScore,
             passed,
