@@ -3,6 +3,23 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
+/* Strip HTML tags to get plain text */
+function stripHtml(html: string): string {
+    return html
+        .replace(/<br\s*\/?>/gi, "\n")
+        .replace(/<\/p>/gi, "\n")
+        .replace(/<\/div>/gi, "\n")
+        .replace(/<\/li>/gi, "\n")
+        .replace(/<[^>]+>/g, "")
+        .replace(/&nbsp;/g, " ")
+        .replace(/&amp;/g, "&")
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">")
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'")
+        .trim();
+}
+
 function countWords(text: string): number {
     return text.trim().split(/\s+/).filter(Boolean).length;
 }
@@ -23,18 +40,20 @@ interface DetectedHeading { text: string; level: number }
 function extractHeadings(content: string): DetectedHeading[] {
     const headings: DetectedHeading[] = [];
 
-    // Markdown: # H1  ## H2  ### H3 etc.
-    const mdRegex = /^(#{1,6})\s+(.+)$/gm;
+    // HTML tags: <h1>...</h1> — works for Word paste
+    const htmlRegex = /<h([1-6])[^>]*>([\s\S]*?)<\/h[1-6]>/gi;
     let match;
-    while ((match = mdRegex.exec(content)) !== null) {
-        headings.push({ level: match[1].length, text: match[2].trim() });
+    while ((match = htmlRegex.exec(content)) !== null) {
+        const text = match[2].replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").trim();
+        if (text) headings.push({ level: parseInt(match[1]), text });
     }
 
-    // HTML tags: <h1>...</h1>
-    const htmlRegex = /<h([1-6])[^>]*>(.*?)<\/h[1-6]>/gi;
-    while ((match = htmlRegex.exec(content)) !== null) {
-        const text = match[2].replace(/<[^>]+>/g, "").trim();
-        if (text) headings.push({ level: parseInt(match[1]), text });
+    // Markdown: # H1 ## H2 — fallback for plain text
+    if (headings.length === 0) {
+        const mdRegex = /^(#{1,6})\s+(.+)$/gm;
+        while ((match = mdRegex.exec(content)) !== null) {
+            headings.push({ level: match[1].length, text: match[2].trim() });
+        }
     }
 
     return headings;
@@ -54,33 +73,34 @@ export async function POST(req: Request) {
         const lsiList: string[]     = Array.isArray(lsiKeywords)     ? lsiKeywords     : [];
         const headingList: string[] = Array.isArray(requiredHeadings) ? requiredHeadings : [];
 
+        // Plain text for word count + keyword matching
+        const plainText = stripHtml(content);
+
         // ── Word count ────────────────────────────────
-        const wordCount    = countWords(content);
+        const wordCount    = countWords(plainText);
         const meetsMinimum = wordCount >= 800;
         const meetsTarget  = wordCount >= 1000;
 
         // ── Focus keyword ─────────────────────────────
-        const kwOccurrences  = countOccurrences(content, focusKeyword);
+        const kwOccurrences  = countOccurrences(plainText, focusKeyword);
         const minRequired    = Math.max(7, Math.ceil(wordCount / 1000 * 7));
         const kwPassed       = kwOccurrences >= minRequired;
         const densityPercent = wordCount > 0 ? parseFloat(((kwOccurrences / wordCount) * 100).toFixed(2)) : 0;
 
         // ── LSI keywords ──────────────────────────────
         const lsiResults = lsiList.map(kw => {
-            const occurrences = countOccurrences(content, kw);
+            const occurrences = countOccurrences(plainText, kw);
             return { keyword: kw, occurrences, passed: occurrences >= 2 };
         });
 
         // ── Required headings ─────────────────────────
         const headingResults = headingList.map(h => ({
             heading: h,
-            found: headingPresent(content, h),
+            found: headingPresent(plainText, h),
         }));
 
         // ── Detected headings from content ────────────
         const allDetected = extractHeadings(content);
-
-        // Extra = detected headings NOT in the required list
         const extraHeadings = allDetected.filter(dh =>
             !headingList.some(req =>
                 dh.text.toLowerCase().includes(req.toLowerCase().trim()) ||
