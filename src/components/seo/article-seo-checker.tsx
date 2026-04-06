@@ -71,13 +71,25 @@ function TagInput({
 }) {
     const [input, setInput] = useState("");
 
-    const addTag = () => {
-        const trimmed = input.trim();
-        if (trimmed && !values.includes(trimmed)) onChange([...values, trimmed]);
-        setInput("");
+    const addItems = (raw: string) => {
+        const items = raw.split(/\n/).map(s => s.trim()).filter(Boolean);
+        const next = [...values];
+        for (const item of items) {
+            if (!next.includes(item)) next.push(item);
+        }
+        onChange(next);
     };
 
     const removeTag = (i: number) => onChange(values.filter((_, idx) => idx !== i));
+
+    const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+        const text = e.clipboardData.getData("text");
+        if (text.includes("\n")) {
+            e.preventDefault();
+            addItems(text);
+            setInput("");
+        }
+    };
 
     return (
         <div className={cn("space-y-1.5", isRtl ? "text-right" : "")}>
@@ -91,10 +103,17 @@ function TagInput({
                     placeholder={isRtl ? placeholderAr : placeholder}
                     value={input}
                     onChange={e => setInput(e.target.value)}
-                    onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); addTag(); } }}
+                    onKeyDown={e => {
+                        if (e.key === "Enter") {
+                            e.preventDefault();
+                            addItems(input);
+                            setInput("");
+                        }
+                    }}
+                    onPaste={handlePaste}
                     className="flex-1"
                 />
-                <Button type="button" variant="outline" size="sm" onClick={addTag} className="shrink-0 gap-1 px-3">
+                <Button type="button" variant="outline" size="sm" onClick={() => { addItems(input); setInput(""); }} className="shrink-0 gap-1 px-3">
                     <Plus className="h-3.5 w-3.5" />
                     {isRtl ? "أضف" : "Add"}
                 </Button>
