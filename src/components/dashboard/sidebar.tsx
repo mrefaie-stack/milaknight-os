@@ -8,7 +8,7 @@ import {
     MessageSquare, ShieldCheck, Trash2, Bell, Search,
     Sparkles, Plus, CalendarDays, Link2, Activity, CheckSquare,
     Layers, Newspaper, TrendingUp, Target,
-    ChevronLeft, ChevronRight, Key, FileText
+    ChevronLeft, ChevronRight, Key, FileText, FileSearch
 } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
 import { LanguageToggle } from "@/components/ui/language-toggle";
@@ -189,8 +189,6 @@ export function DashboardSidebar({ role, user }: { role: string; user: any }) {
     const ROLE_LINKS: Record<string, NavLink[]> = {
         ART_TEAM:       makeTeamLinks("art-team"),
         ART_LEADER:     makeLeaderLinks("art-leader"),
-        CONTENT_TEAM:   makeTeamLinks("content-team"),
-        CONTENT_LEADER: makeLeaderLinks("content-leader"),
         SEO_TEAM:       [
             { href: "/seo-team",              label: t("common.overview"),                          icon: LayoutDashboard },
             { href: "/admin/meetings",       label: isRtl ? "الاجتماعات" : "Meetings",            icon: CalendarDays    },
@@ -203,7 +201,8 @@ export function DashboardSidebar({ role, user }: { role: string; user: any }) {
             { href: "/seo-team/keyword-explorer", label: isRtl ? "مستكشف الكلمات" : "Keyword Explorer", icon: Key },
             { href: "/seo-team/content-brief", label: isRtl ? "مولد خطط المحتوى" : "Content Briefs", icon: FileText },
             { href: "/seo-team/technical-audit", label: isRtl ? "المدقق التقني" : "Technical Audit", icon: ShieldCheck },
-            { href: "/seo-team/content-optimizer", label: isRtl ? "مُقيّم المحتوى" : "Content Optimizer", icon: Activity }
+            { href: "/seo-team/content-optimizer", label: isRtl ? "مُقيّم المحتوى" : "Content Optimizer", icon: Activity },
+            { href: "/seo-team/article-checker", label: isRtl ? "مدقق SEO للمقالات" : "Article SEO Checker", icon: FileSearch },
         ],
         SEO_LEAD:       [
             { href: "/seo-lead",              label: t("common.overview"),                          icon: LayoutDashboard },
@@ -218,7 +217,16 @@ export function DashboardSidebar({ role, user }: { role: string; user: any }) {
             { href: "/seo-lead/keyword-explorer", label: isRtl ? "مستكشف الكلمات" : "Keyword Explorer", icon: Key },
             { href: "/seo-lead/content-brief", label: isRtl ? "مولد خطط المحتوى" : "Content Briefs", icon: FileText },
             { href: "/seo-lead/technical-audit", label: isRtl ? "المدقق التقني" : "Technical Audit", icon: ShieldCheck },
-            { href: "/seo-lead/content-optimizer", label: isRtl ? "مُقيّم المحتوى" : "Content Optimizer", icon: Activity }
+            { href: "/seo-lead/content-optimizer", label: isRtl ? "مُقيّم المحتوى" : "Content Optimizer", icon: Activity },
+            { href: "/seo-lead/article-checker", label: isRtl ? "مدقق SEO للمقالات" : "Article SEO Checker", icon: FileSearch },
+        ],
+        CONTENT_TEAM: [
+            ...makeTeamLinks("content-team"),
+            { href: "/content-team/article-checker", label: isRtl ? "مدقق SEO للمقالات" : "Article SEO Checker", icon: FileSearch },
+        ],
+        CONTENT_LEADER: [
+            ...makeLeaderLinks("content-leader"),
+            { href: "/content-leader/article-checker", label: isRtl ? "مدقق SEO للمقالات" : "Article SEO Checker", icon: FileSearch },
         ],
     };
 
